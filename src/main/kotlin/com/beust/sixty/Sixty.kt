@@ -15,12 +15,22 @@ interface ICpu {
 }
 
 interface Instruction {
+    /**
+     * Number of bytes occupied by this op (1, 2, or 3).
+     */
     val size: Int
+
+    /**
+     * This should be a property and not a constant since the value of the timing can change for certain ops when
+     * a page boundary is crossed.
+     */
     val timing: Int
+
     fun runDebug() {
         println(toString())
         run()
     }
+
     fun run()
 }
 
@@ -113,7 +123,7 @@ abstract class InstructionBase(val computer: Computer): Instruction {
     val word by lazy { memory.byte(cpu.PC + 2).toInt().shl(8).or(memory.byte(cpu.PC + 1).toInt()) }
 }
 
-/** 0x00 */
+/** 0x00, BRK */
 class Brk(c: Computer): InstructionBase(c) {
     override val size = 1
     override val timing = 7
@@ -121,7 +131,7 @@ class Brk(c: Computer): InstructionBase(c) {
     override fun toString(): String = "BRK"
 }
 
-/** 0x20 */
+/** 0x20, JSR $1234*/
 class Jsr(c: Computer): InstructionBase(c) {
     override val size = 3
     override val timing = 6
@@ -133,7 +143,7 @@ class Jsr(c: Computer): InstructionBase(c) {
     override fun toString(): String = "JSR $${word.toHex()}"
 }
 
-/** 0x44 */
+/** 0x44, LDY #$12 */
 class LdyImm(c: Computer): InstructionBase(c) {
     override val size = 2
     override val timing = 2
