@@ -3,7 +3,7 @@ package com.beust.sixty
 import java.util.*
 
 private fun Byte.toHex(): String = String.format("%02x", this.toInt())
-private fun Int.toHex(): String = String.format("%02x", this.toInt())
+private fun Int.toHex(): String = String.format("%02x", this)
 
 /**
  * Specs used:
@@ -23,7 +23,7 @@ interface Instruction {
     fun run()
 }
 
-class Memory(private vararg val bytes: Int) {
+class Memory(vararg bytes: Int) {
     private val content: ByteArray = ByteArray(4096)
 
     init {
@@ -70,7 +70,7 @@ class StackPointer {
         pushByte(a.shr(8).toByte())
     }
     fun popWord(): Int = popByte().toInt().shl(8).or(popByte().toInt())
-    fun peek() = stack.peek()
+//    fun peek(): Byte = stack.peek()
     fun isEmpty() = stack.isEmpty()
     override fun toString(): String {
         return stack.map { it.toHex()}.joinToString(" ")
@@ -81,7 +81,7 @@ data class Cpu(var A: Byte = 0, var X: Byte = 0, var Y: Byte = 0, var PC: Int = 
         val SP: StackPointer = StackPointer()) : ICpu {
     override fun nextInstruction(computer: Computer): Instruction {
         val op = computer.memory.byte(PC).toInt() and 0xff
-        val result = when(op.toInt()) {
+        val result = when(op) {
             0x00 -> Brk(computer)
             0x20 -> Jsr(computer)
             0xff -> LdyImm(computer)
@@ -105,15 +105,15 @@ abstract class InstructionBase(val computer: Computer): Instruction {
     val cpu by lazy { computer.cpu }
     val memory by lazy { computer.memory }
     val pc  by lazy { cpu.PC}
-    val pc1 by lazy { cpu.PC + 1}
-    val pc2 by lazy { cpu.PC + 2}
+//    val pc1 by lazy { cpu.PC + 1}
+//    val pc2 by lazy { cpu.PC + 2}
     val b1 by lazy { memory.byte(cpu.PC + 1) }
-    val b2 by lazy { memory.byte(cpu.PC + 2) }
+//    val b2 by lazy { memory.byte(cpu.PC + 2) }
     val word by lazy { memory.byte(cpu.PC + 2).toInt().shl(8).or(memory.byte(cpu.PC + 1).toInt()) }
 }
 
 /** 0x00 */
-class Brk(val c: Computer): InstructionBase(c) {
+class Brk(c: Computer): InstructionBase(c) {
     override val size = 1
     override val timing = 7
     override fun run() {}
@@ -121,7 +121,7 @@ class Brk(val c: Computer): InstructionBase(c) {
 }
 
 /** 0x20 */
-class Jsr(val c: Computer): InstructionBase(c) {
+class Jsr(c: Computer): InstructionBase(c) {
     override val size = 3
     override val timing = 6
     override fun run() {
@@ -133,7 +133,7 @@ class Jsr(val c: Computer): InstructionBase(c) {
 }
 
 /** 0x44 */
-class LdyImm(val c: Computer): InstructionBase(c) {
+class LdyImm(c: Computer): InstructionBase(c) {
     override val size = 2
     override val timing = 2
     override fun run() { cpu.Y = memory.byte(cpu.PC + 1) }
@@ -141,7 +141,7 @@ class LdyImm(val c: Computer): InstructionBase(c) {
 }
 
 /** 0x60 */
-class Rts(val c: Computer): InstructionBase(c) {
+class Rts(c: Computer): InstructionBase(c) {
     override val size = 1
     override val timing = 6
     override fun run() { computer.cpu.PC = cpu.SP.popWord() }
@@ -149,7 +149,7 @@ class Rts(val c: Computer): InstructionBase(c) {
 }
 
 /** 0x85, STA ($10) */
-class StaZp(val c: Computer): InstructionBase(c) {
+class StaZp(c: Computer): InstructionBase(c) {
     override val size = 2
     override val timing = 3
     override fun run() { memory.setByte(b1.toInt(), cpu.A) }
@@ -157,7 +157,7 @@ class StaZp(val c: Computer): InstructionBase(c) {
 }
 
 /** 0x91, STA ($12),Y */
-class StaIndY(val c: Computer): InstructionBase(c) {
+class StaIndY(c: Computer): InstructionBase(c) {
     override val size = 2
     override val timing = 6
     override fun run() {
@@ -168,7 +168,7 @@ class StaIndY(val c: Computer): InstructionBase(c) {
 }
 
 /** 0xa9, LDA #$10 */
-class LdaImm(val c: Computer): InstructionBase(c) {
+class LdaImm(c: Computer): InstructionBase(c) {
     override val size = 2
     override val timing = 2
     override fun run() { cpu.A = memory.byte(cpu.PC + 1) }
@@ -176,14 +176,12 @@ class LdaImm(val c: Computer): InstructionBase(c) {
 }
 
 /** 0xe8, INX */
-class Inx(val c: Computer): InstructionBase(c) {
+class Inx(c: Computer): InstructionBase(c) {
     override val size = 1
     override val timing = 2
     override fun run() { cpu.X++ }
     override fun toString(): String = "INX"
 }
-
-fun byteArray(vararg ints: Int) = ByteArray(ints.size) { pos -> ints[pos].toByte() }
 
 fun main() {
     val memory = Memory(0xa9, 0x23)
