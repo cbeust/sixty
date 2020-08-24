@@ -65,7 +65,20 @@ class SixtyTest {
         }
     }
 
-    /*
+    fun StaIndY() {
+        // memory(4) points to address 8, then we add Y to it to produce 10. Store $42 in memory(10)
+        // STA ($4), Y
+        computer(0x91, 4, 0, 0, 8, 0, 0, 0, 0, 0, 0, 0, 0, 0).let { computer ->
+            assertThat(computer.memory.byte(10)).isNotEqualTo(0x42)
+            computer.cpu.A = 0x42
+            computer.cpu.Y = 2
+            computer.cpu.nextInstruction(computer).runBase()
+            assertThat(computer.memory.byte(10)).isEqualTo(0x42)
+        }
+
+    }
+
+/*
 $0600    a9 00     LDA #$00
 $0602    85 10     STA $10
 $0604    a9 02     LDA #$02

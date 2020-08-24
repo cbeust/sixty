@@ -34,7 +34,7 @@ class Memory(private vararg val bytes: Int) {
     fun setByte(i: Int, b1: Byte) { content[i] = b1 }
 
     override fun toString(): String {
-        return content.slice(0..10).map { it.toInt().and(0xff).toHex()}.joinToString(" ")
+        return content.slice(0..16).map { it.toInt().and(0xff).toHex()}.joinToString(" ")
     }
 
 }
@@ -87,6 +87,7 @@ data class Cpu(var A: Byte = 0, var X: Byte = 0, var Y: Byte = 0, var PC: Int = 
             0xff -> LdyImm(computer)
             0x60 -> Rts(computer)
             0x85 -> StaZp(computer)
+            0x91 -> StaIndY(computer)
             0xa9 -> LdaImm(computer)
             0xe8 -> Inx(computer)
             else -> TODO("NOT IMPLEMENTED: ${op.toHex()}")
@@ -147,7 +148,7 @@ class Rts(val c: Computer): InstructionBase(c) {
     override fun toString(): String = "RTS"
 }
 
-/** 0x85 */
+/** 0x85, STA ($10) */
 class StaZp(val c: Computer): InstructionBase(c) {
     override val size = 2
     override val timing = 3
@@ -155,7 +156,18 @@ class StaZp(val c: Computer): InstructionBase(c) {
     override fun toString(): String = "LDA #$" + memory.byte(cpu.PC + 1).toHex()
 }
 
-/** 0xa9 */
+/** 0x91, STA ($12),Y */
+class StaIndY(val c: Computer): InstructionBase(c) {
+    override val size = 2
+    override val timing = 6
+    override fun run() {
+        val target = memory.byte(word + 1).toInt().shl(8).or(memory.byte(word).toInt())
+        memory.setByte(target + cpu.Y, cpu.A)
+    }
+    override fun toString(): String = "STA ($${word.toHex()}), Y"
+}
+
+/** 0xa9, LDA #$10 */
 class LdaImm(val c: Computer): InstructionBase(c) {
     override val size = 2
     override val timing = 2
@@ -163,7 +175,7 @@ class LdaImm(val c: Computer): InstructionBase(c) {
     override fun toString(): String = "LDA #$" + computer.memory.byte(computer.cpu.PC + 1).toHex()
 }
 
-/** 0xe8 */
+/** 0xe8, INX */
 class Inx(val c: Computer): InstructionBase(c) {
     override val size = 1
     override val timing = 2
