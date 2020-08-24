@@ -8,6 +8,7 @@ private fun Int.toHex(): String = String.format("%02x", this)
 /**
  * Specs used:
  * https://en.wikipedia.org/wiki/MOS_Technology_6502
+ * http://www.6502.org/tutorials/6502opcodes.html
  */
 interface ICpu {
     fun nextInstruction(computer: Computer): Instruction
@@ -16,7 +17,7 @@ interface ICpu {
 interface Instruction {
     val size: Int
     val timing: Int
-    fun runBase() {
+    fun runDebug() {
         println(toString())
         run()
     }
@@ -49,7 +50,7 @@ class Computer(val cpu: Cpu = Cpu(), val memory: Memory) {
             } else {
                 val inst = cpu.nextInstruction(this)
                 print(cpu.PC.toHex() + ": ")
-                inst.runBase()
+                inst.runDebug()
                 cpu.PC += inst.size
             }
         }

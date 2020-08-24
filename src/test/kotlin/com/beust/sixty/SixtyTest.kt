@@ -38,7 +38,7 @@ class SixtyTest {
             computer.cpu.let { cpu ->
                 assertThat(cpu.SP.isEmpty())
                 cpu.nextInstruction(computer).let { inst ->
-                    inst.runBase()
+                    inst.runDebug()
                     assertThat(cpu.PC).isEqualTo(0x1234 - inst.size)
                 }
             }
@@ -50,7 +50,7 @@ class SixtyTest {
         val expected = 0x23
         computer(0xa9, expected).let { computer ->
             assertThat(computer.cpu.A).isNotEqualTo(expected.toByte())
-            computer.cpu.nextInstruction(computer).runBase()
+            computer.cpu.nextInstruction(computer).runDebug()
             assertThat(computer.cpu.A).isEqualTo(expected.toByte())
         }
     }
@@ -66,13 +66,13 @@ class SixtyTest {
     }
 
     fun StaIndY() {
-        // memory(4) points to address 8, then we add Y to it to produce 10. Store $42 in memory(10)
+        // memory(4) points to address 8, then we add Y(2) to it to produce 10. Store $42 in memory(10)
         // STA ($4), Y
         computer(0x91, 4, 0, 0, 8, 0, 0, 0, 0, 0, 0, 0, 0, 0).let { computer ->
             assertThat(computer.memory.byte(10)).isNotEqualTo(0x42)
             computer.cpu.A = 0x42
             computer.cpu.Y = 2
-            computer.cpu.nextInstruction(computer).runBase()
+            computer.cpu.nextInstruction(computer).runDebug()
             assertThat(computer.memory.byte(10)).isEqualTo(0x42)
         }
 
