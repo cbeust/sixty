@@ -105,8 +105,26 @@ class SixtyTest {
     }
 
     fun bne() {
-        computer(0xea, 0xd0, -3).let { computer ->
+        computer(0xd0, 0, 0x90, 1, 0x60, 0xa9, 1, 0x60).let { computer ->
+            assertThat(computer.cpu.A).isEqualTo(0)
             computer.run()
+            assertThat(computer.cpu.A).isEqualTo(1)
+        }
+    }
+
+    fun bcc() {
+        computer(0xa9, 0, 0x90, 1, 0x60, 0xa9, 1, 0x60).let { computer ->
+            assertThat(computer.cpu.A).isEqualTo(0)
+            computer.run()
+            assertThat(computer.cpu.A).isEqualTo(1)
+        }
+    }
+
+    fun incZp() {
+        computer(0xe6, 0x3, 0x60, 0x42).let { computer ->
+            assertThat(computer.memory.byte(3)).isEqualTo(0x42)
+            computer.run()
+            assertThat(computer.memory.byte(3)).isEqualTo(0x43)
         }
     }
 /*

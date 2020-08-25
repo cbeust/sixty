@@ -66,6 +66,19 @@ class Computer(val cpu: Cpu = Cpu(), val memory: Memory) {
         }
     }
 
+    fun disassemble(pc: Int = cpu.PC) {
+        var done = false
+        while (! done) {
+            if ((memory.byte(cpu.PC) == 0x60.toByte() && cpu.SP.isEmpty()) ||
+                    memory.byte(cpu.PC) == 0.toByte()) {
+                done = true
+            }
+            val inst = cpu.nextInstruction(this)
+            println(cpu.PC.toHex() + ": " + inst.toString())
+            cpu.PC += inst.size
+        }
+    }
+
     override fun toString(): String {
         return "{Computer cpu:$cpu}\n$memory"
     }
@@ -132,10 +145,12 @@ data class Cpu(var A: Byte = 0, var X: Byte = 0, var Y: Byte = 0, var PC: Int = 
             0xff -> LdyImm(computer)
             0x60 -> Rts(computer)
             0x85 -> StaZp(computer)
+            0x90 -> Bcc(computer)
             0x91 -> StaIndY(computer)
             0xa9 -> LdaImm(computer)
             0xc8 -> Iny(computer)
             0xd0 -> Bne(computer)
+            0xe6 -> IncZp(computer)
             0xe8 -> Inx(computer)
             0xea -> Nop(computer)
             else -> TODO("NOT IMPLEMENTED: ${op.toHex()}")
@@ -229,6 +244,20 @@ class StaZp(c: Computer): InstructionBase(c) {
     override fun toString(): String = "LDA #$" + memory.byte(cpu.PC + 1).toHex()
 }
 
+open class BranchBase(c: Computer, val name: String, val condition: () -> Boolean): InstructionBase(c) {
+    override val size = 2
+    /** TODO(Varied timing if the branch is taken/not taken and if it crosses a page) */
+    override val timing = 2
+    override fun run() {
+        if (condition()) cpu.PC += b1Signed
+    }
+    override fun toString(): String
+            = "$name ${(cpu.PC + size + b1Signed).toHex()}"
+}
+
+/** 0x90, BCC */
+class Bcc(computer: Computer): BranchBase(computer, "BCC", { computer.cpu.P.C == 0 })
+
 /** 0x91, STA ($12),Y */
 class StaIndY(c: Computer): InstructionBase(c) {
     override val size = 2
@@ -257,14 +286,14 @@ class Iny(c: Computer): InstructionBase(c) {
 }
 
 /** 0xd0, BNE */
-class Bne(c: Computer): InstructionBase(c) {
+class Bne(computer: Computer): BranchBase(computer, "BNE", { computer.cpu.P.Z == 0 })
+
+/** 0xe6, INC $10 */
+class IncZp(c: Computer): InstructionBase(c) {
     override val size = 2
-    /** TODO(Varied timing if the branch is taken/not taken and if it crosses a page) */
-    override val timing = 2
-    override fun run() {
-        if (cpu.P.Z == 0) cpu.PC += b1Signed
-    }
-    override fun toString(): String = "BNE ${(cpu.PC - b1).toHex()}"
+    override val timing = 4
+    override fun run() { memory.setByte(b1, (memory.byte(b1) + 1).toByte()) }
+    override fun toString(): String = "INC $${b1.toHex()}"
 }
 
 /** 0xe8, INX */
