@@ -141,14 +141,16 @@ data class Cpu(var A: Byte = 0, var X: Byte = 0, var Y: Byte = 0, var PC: Int = 
         val result = when(op) {
             0x00 -> Brk(computer)
             0x20 -> Jsr(computer)
-            0x44 -> CpyImm(computer)
-            0xff -> LdyImm(computer)
             0x60 -> Rts(computer)
             0x85 -> StaZp(computer)
             0x90 -> Bcc(computer)
             0x91 -> StaIndY(computer)
+            0xa0 -> LdyImm(computer)
+            0xa5 -> LdaZp(computer)
             0xa9 -> LdaImm(computer)
+            0xc0 -> CpyImm(computer)
             0xc8 -> Iny(computer)
+            0xc9 -> CmpImm(computer)
             0xd0 -> Bne(computer)
             0xe6 -> IncZp(computer)
             0xe8 -> Inx(computer)
@@ -198,34 +200,37 @@ class Jsr(c: Computer): InstructionBase(c) {
 
 fun Byte.unsigned() = java.lang.Byte.toUnsignedInt(this)
 
-/** 0x44, CPY $#12 */
-class CpyImm(c: Computer): InstructionBase(c) {
+abstract class CmpImmBase(c: Computer, val name: String): InstructionBase(c) {
     override val size = 2
     override val timing = 2
+    abstract val value: Byte
+
     override fun run() {
-        if (cpu.Y.toInt() != b1) {
+        if (value.toInt() != b1) {
             cpu.P.Z = 0
         } else {
             cpu.P.Z = 1
         }
-        if (cpu.Y.toInt() < b1) {
+        if (value.toInt() < b1) {
             cpu.P.C = 0
         } else {
             cpu.P.C = 1
         }
-        val sub = cpu.Y.toInt() - b1
+        val sub = value.toInt() - b1
         cpu.P.N = sub.and(0x80).shr(7)
     }
 
-    override fun toString(): String = "JSR $${word.toHex()}"
+    override fun toString(): String = "$name #$${b1.toHex()}"
 }
 
-/** 0x44, LDY #$12 */
-class LdyImm(c: Computer): InstructionBase(c) {
-    override val size = 2
-    override val timing = 2
-    override fun run() { cpu.Y = memory.byte(cpu.PC + 1) }
-    override fun toString(): String = "LDY #$" + memory.byte(cpu.PC + 1).toHex()
+/** 0xc9, CMP $#12 */
+class CmpImm(c: Computer): CmpImmBase(c, "CMP") {
+    override val value get() = computer.cpu.A
+}
+
+/** 0xc0, CPY $#12 */
+class CpyImm(c: Computer): CmpImmBase(c, "CPY") {
+    override val value get() = computer.cpu.Y
 }
 
 /** 0x60, RTS */
@@ -240,8 +245,8 @@ class Rts(c: Computer): InstructionBase(c) {
 class StaZp(c: Computer): InstructionBase(c) {
     override val size = 2
     override val timing = 3
-    override fun run() { memory.setByte(b1.toInt(), cpu.A) }
-    override fun toString(): String = "LDA #$" + memory.byte(cpu.PC + 1).toHex()
+    override fun run() { memory.setByte(b1, cpu.A) }
+    override fun toString(): String = "STA $" + memory.byte(cpu.PC + 1).toHex()
 }
 
 open class BranchBase(c: Computer, val name: String, val condition: () -> Boolean): InstructionBase(c) {
@@ -263,18 +268,34 @@ class StaIndY(c: Computer): InstructionBase(c) {
     override val size = 2
     override val timing = 6
     override fun run() {
-        val target = memory.byte(word + 1).toInt().shl(8).or(memory.byte(word).toInt())
+        val target = memory.byte(word).toInt()
         memory.setByte(target + cpu.Y, cpu.A)
     }
-    override fun toString(): String = "STA ($${word.toHex()}), Y"
+    override fun toString(): String = "STA ($${b1.toHex()}),Y"
+}
+
+/** 0xa5, LDA #$10 */
+class LdaZp(c: Computer): InstructionBase(c) {
+    override val size = 2
+    override val timing = 3
+    override fun run() { cpu.A = memory.byte(cpu.PC + 1) }
+    override fun toString(): String = "LDA $" + computer.memory.byte(computer.cpu.PC + 1).toHex()
+}
+
+abstract class LdImmBase(c: Computer, val name: String): InstructionBase(c) {
+    override val size = 2
+    override val timing = 2
+    override fun toString(): String = "$name #$" + b1.toHex()
+}
+
+/** 0xa0, LDY #$10 */
+class LdyImm(c: Computer): LdImmBase(c, "LDY") {
+    override fun run() { cpu.Y = b1.toByte() }
 }
 
 /** 0xa9, LDA #$10 */
-class LdaImm(c: Computer): InstructionBase(c) {
-    override val size = 2
-    override val timing = 2
-    override fun run() { cpu.A = memory.byte(cpu.PC + 1) }
-    override fun toString(): String = "LDA #$" + computer.memory.byte(computer.cpu.PC + 1).toHex()
+class LdaImm(c: Computer): LdImmBase(c, "LDA") {
+    override fun run() { cpu.A = b1.toByte() }
 }
 
 /** 0xc8, INY */
