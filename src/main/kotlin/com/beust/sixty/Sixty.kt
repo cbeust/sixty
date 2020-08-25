@@ -42,7 +42,10 @@ class Memory(vararg bytes: Int) {
     }
 
     fun byte(i: Int) = content[i]
-    fun setByte(i: Int, b1: Byte) { content[i] = b1 }
+    fun setByte(i: Int, b1: Byte) {
+        println("mem[${i.toHex()}]=${b1.toHex()}")
+        content[i] = b1
+    }
 
     override fun toString(): String {
         return content.slice(0..16).map { it.toInt().and(0xff).toHex()}.joinToString(" ")
@@ -60,7 +63,8 @@ class Computer(val cpu: Cpu = Cpu(), val memory: Memory) {
             } else {
                 val inst = cpu.nextInstruction(this)
                 print(cpu.PC.toHex() + ": ")
-                inst.runDebug()
+                // @@
+                inst.run()
                 cpu.PC += inst.size
             }
         }
@@ -69,8 +73,9 @@ class Computer(val cpu: Cpu = Cpu(), val memory: Memory) {
     fun disassemble(pc: Int = cpu.PC) {
         var done = false
         while (! done) {
-            if ((memory.byte(cpu.PC) == 0x60.toByte() && cpu.SP.isEmpty()) ||
-                    memory.byte(cpu.PC) == 0.toByte()) {
+            val p = memory.byte(cpu.PC)
+            if ((p == 0x60.toByte() && cpu.SP.isEmpty()) ||
+                    p == 0.toByte()) {
                 done = true
             }
             val inst = cpu.nextInstruction(this)
@@ -141,6 +146,7 @@ data class Cpu(var A: Byte = 0, var X: Byte = 0, var Y: Byte = 0, var PC: Int = 
         val result = when(op) {
             0x00 -> Brk(computer)
             0x20 -> Jsr(computer)
+            0x4c -> Jsr(computer)
             0x60 -> Rts(computer)
             0x85 -> StaZp(computer)
             0x90 -> Bcc(computer)
@@ -184,6 +190,17 @@ class Brk(c: Computer): InstructionBase(c) {
     override val timing = 7
     override fun run() {}
     override fun toString(): String = "BRK"
+}
+
+/** 0x4c, JMP $1234 */
+class Jmp(c: Computer): InstructionBase(c) {
+    override val size = 3
+    override val timing = 3
+    override fun run() {
+        cpu.PC = word - size
+    }
+
+    override fun toString(): String = "JMP $${word.toHex()}"
 }
 
 /** 0x20, JSR $1234*/
@@ -268,18 +285,20 @@ class StaIndY(c: Computer): InstructionBase(c) {
     override val size = 2
     override val timing = 6
     override fun run() {
-        val target = memory.byte(word).toInt()
-        memory.setByte(target + cpu.Y, cpu.A)
+        val target = memory.byte(b1 + 1).toInt().shl(8).or(memory.byte(b1).toInt())
+        memory.setByte((target.toUInt() + cpu.Y.toUInt()).toInt(), cpu.A)
     }
     override fun toString(): String = "STA ($${b1.toHex()}),Y"
 }
 
-/** 0xa5, LDA #$10 */
+/** 0xa5, LDA $10 */
 class LdaZp(c: Computer): InstructionBase(c) {
     override val size = 2
     override val timing = 3
-    override fun run() { cpu.A = memory.byte(cpu.PC + 1) }
-    override fun toString(): String = "LDA $" + computer.memory.byte(computer.cpu.PC + 1).toHex()
+    override fun run() {
+        cpu.A = memory.byte(b1)
+    }
+    override fun toString(): String = "LDA $" + b1.toHex()
 }
 
 abstract class LdImmBase(c: Computer, val name: String): InstructionBase(c) {

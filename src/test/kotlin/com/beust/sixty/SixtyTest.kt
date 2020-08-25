@@ -129,25 +129,59 @@ class SixtyTest {
     }
 
     fun fillingScreen() {
-        computer(0xa9, 0x00, 0x85, 0x10, 0xa9, 0x02, 0x85, 0x11, 0xa0, 0xff, 0xa9, 0x28
-                , 0x91, 0x10, 0xc8, 0xc0, 0xff, 0xd0, 0xf9, 0xe6, 0x11, 0xa5, 0x11, 0xc9
-                , 0x06, 0x90, 0xf1, 0x60).disassemble()
+        val c = computer(0x4c, 5, 0, 0xea, 0xea, 0xa9, 0x00, 0x85, 0x3, 0xa9, 0x02, 0x85, 0x4,
+                0xa0, 0xff, 0xa9, 0x28, 0x91, 0x3, 0xc8,
+                0xc0, 0xff, // CPY #$ff
+                0xd0, 0xf9, 0xe6, 0x4,
+                0xa5, 0x3,
+                0xc9, 0x03,
+                0x90, 0xf1,
+                0x60)
+//        c.disassemble()
+        c.run()
     }
 /*
-$0600    a9 00     LDA #$00
-$0602    85 10     STA $10
-$0604    a9 02     LDA #$02
-$0606    85 11     STA $11
-$0608    a0 ff     LDY #$ff
-$060a    a9 28     LDA #$28
-$060c    91 10     STA ($10),Y
-$060e    c8        INY
-$060f    c0 ff     CPY #$ff
-$0611    d0 f9     BNE $060c
-$0613    e6 11     INC $11
-$0615    a5 11     LDA $11
-$0617    c9 06     CMP #$06
-$0619    90 f1     BCC $060c
+
+Address  Hexdump   Dissassembly
+-------------------------------
+$0600    4c 05 06  JMP $0605
+$0603    ea        NOP
+$0604    ea        NOP
+$0605    a9 00     LDA #$00
+$0607    8d 01 06  STA $0601
+$060a    a9 02     LDA #$02
+$060c    8d 02 06  STA $0602
+$060f    a0 ff     LDY #$ff
+$0611    a9 02     LDA #$02
+$0613    91 03     STA ($03),Y
+$0615    c8        INY
+$0616    c0 ff     CPY #$ff
+$0618    d0 f9     BNE $0613
+$061a    ee 02 06  INC $0602
+$061d    a5 03     LDA $03
+$061f    c9 06     CMP #$06
+$0621    90 f0     BCC $0613
+
+
+jmp start
+nop
+nop
+start:
+lda #$00
+sta $601
+lda #$02
+sta $602
+ldy #$ff
+lda #$2
+loop:
+sta ($3),y
+iny
+cpy #$ff
+bne loop
+inc $602
+lda $3
+cmp #6
+bcc loop
 
      */
 }
