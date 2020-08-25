@@ -1,8 +1,11 @@
+@file:Suppress("EXPERIMENTAL_API_USAGE")
+
 package com.beust.sixty
 
 import java.util.*
 
 private fun Byte.toHex(): String = String.format("%02x", this.toInt())
+private fun UByte.toHex(): String = String.format("%02x", this.toInt())
 private fun Int.toHex(): String = String.format("%02x", this)
 
 /**
@@ -35,15 +38,19 @@ interface Instruction {
 }
 
 class Memory(vararg bytes: Int) {
-    private val content: ByteArray = ByteArray(4096)
+    private val content: UByteArray = UByteArray(4096)
 
     init {
-        bytes.map { it.toByte() }.toByteArray().copyInto(content)
+        bytes.map { it.toUByte() }.toUByteArray().copyInto(content)
     }
 
+    fun byte(i: UByte) = content[i.toInt()]
     fun byte(i: Int) = content[i]
-    fun setByte(i: Int, b1: Byte) {
+    fun setByte(i: Int, b1: UByte) {
         println("mem[${i.toHex()}]=${b1.toHex()}")
+        if (i == 0x2ff) {
+            println("problem")
+        }
         content[i] = b1
     }
 
@@ -55,17 +62,19 @@ class Memory(vararg bytes: Int) {
 
 class Computer(val cpu: Cpu = Cpu(), val memory: Memory) {
     fun run() {
+        var n = 0
         var done = false
         while (! done) {
-            if ((memory.byte(cpu.PC) == 0x60.toByte() && cpu.SP.isEmpty()) ||
-                    memory.byte(cpu.PC) == 0.toByte()) {
+            if ((memory.byte(cpu.PC) == 0x60.toUByte() && cpu.SP.isEmpty()) ||
+                    memory.byte(cpu.PC) == 0.toUByte()) {
                 done = true
             } else {
                 val inst = cpu.nextInstruction(this)
                 print(cpu.PC.toHex() + ": ")
                 // @@
-                inst.run()
+                inst.runDebug()
                 cpu.PC += inst.size
+                n++
             }
         }
     }
@@ -74,8 +83,8 @@ class Computer(val cpu: Cpu = Cpu(), val memory: Memory) {
         var done = false
         while (! done) {
             val p = memory.byte(cpu.PC)
-            if ((p == 0x60.toByte() && cpu.SP.isEmpty()) ||
-                    p == 0.toByte()) {
+            if ((p == 0x60.toUByte() && cpu.SP.isEmpty()) ||
+                    p == 0.toUByte()) {
                 done = true
             }
             val inst = cpu.nextInstruction(this)
@@ -109,44 +118,44 @@ class StackPointer {
 class StatusFlags {
     private val bits = BitSet(8)
 
-    private fun bit(n: Int) = if (bits.get(n)) 1 else 0
-    private fun bit(n: Int, value: Int) = bits.set(n, value != 0)
+    private fun bit(n: Int) = if (bits.get(n)) 1u else 0u
+    private fun bit(n: Int, value: UInt) = bits.set(n, value != 0u)
 
-    var N: Int // Negative
+    var N: UInt // Negative
         get() = bit(7)
         set(v) = bit(7, v)
 
-    var V: Int // Overflow
+    var V: UInt // Overflow
         get() = bit(6)
         set(v) = bit(6, v)
 
-    var D: Int // Decimal
+    var D: UInt // Decimal
         get() = bit(3)
         set(v) = bit(3, v)
 
-    var I: Int // Interrupt disable
+    var I: UInt // Interrupt disable
         get() = bit(2)
         set(v) = bit(2, v)
 
-    var Z: Int // Zero
+    var Z: UInt // Zero
         get() = bit(1)
         set(v) = bit(1, v)
 
-    var C: Int // Carry
+    var C: UInt // Carry
         get() = bit(0)
         set(v) = bit(0, v)
 
     override fun toString() = "{N=$N V=$V D=$D I=$I Z=$Z C=$C}"
 }
 
-data class Cpu(var A: Byte = 0, var X: Byte = 0, var Y: Byte = 0, var PC: Int = 0,
+data class Cpu(var A: UByte = 0u, var X: UByte = 0u, var Y: UByte = 0u, var PC: Int = 0,
         val SP: StackPointer = StackPointer(), val P: StatusFlags = StatusFlags()) : ICpu {
     override fun nextInstruction(computer: Computer): Instruction {
         val op = computer.memory.byte(PC).toInt() and 0xff
         val result = when(op) {
             0x00 -> Brk(computer)
             0x20 -> Jsr(computer)
-            0x4c -> Jsr(computer)
+            0x4c -> Jmp(computer)
             0x60 -> Rts(computer)
             0x85 -> StaZp(computer)
             0x90 -> Bcc(computer)
@@ -178,8 +187,7 @@ abstract class InstructionBase(val computer: Computer): Instruction {
     val pc  by lazy { cpu.PC}
 //    val pc1 by lazy { cpu.PC + 1}
 //    val pc2 by lazy { cpu.PC + 2}
-    val b1 by lazy { b1Signed.unsigned() }
-    val b1Signed by lazy { memory.byte(cpu.PC + 1) }
+    val b1 by lazy { memory.byte(cpu.PC + 1) }
 //    val b2 by lazy { memory.byte(cpu.PC + 2) }
     val word by lazy { memory.byte(cpu.PC + 2).toInt().shl(8).or(memory.byte(cpu.PC + 1).toInt()) }
 }
@@ -203,7 +211,7 @@ class Jmp(c: Computer): InstructionBase(c) {
     override fun toString(): String = "JMP $${word.toHex()}"
 }
 
-/** 0x20, JSR $1234*/
+/** 0x20, JSR $1234 */
 class Jsr(c: Computer): InstructionBase(c) {
     override val size = 3
     override val timing = 6
@@ -220,21 +228,22 @@ fun Byte.unsigned() = java.lang.Byte.toUnsignedInt(this)
 abstract class CmpImmBase(c: Computer, val name: String): InstructionBase(c) {
     override val size = 2
     override val timing = 2
-    abstract val value: Byte
+
+    abstract val value: UByte
 
     override fun run() {
-        if (value.toInt() != b1) {
-            cpu.P.Z = 0
+        if (value != b1) {
+            cpu.P.Z = 0u
         } else {
-            cpu.P.Z = 1
+            cpu.P.Z = 1u
         }
-        if (value.toInt() < b1) {
-            cpu.P.C = 0
+        if (value < b1) {
+            cpu.P.C = 0u
         } else {
-            cpu.P.C = 1
+            cpu.P.C = 1u
         }
-        val sub = value.toInt() - b1
-        cpu.P.N = sub.and(0x80).shr(7)
+        val sub = value - b1
+        cpu.P.N = sub.and(0x80u).shr(7)
     }
 
     override fun toString(): String = "$name #$${b1.toHex()}"
@@ -262,7 +271,7 @@ class Rts(c: Computer): InstructionBase(c) {
 class StaZp(c: Computer): InstructionBase(c) {
     override val size = 2
     override val timing = 3
-    override fun run() { memory.setByte(b1, cpu.A) }
+    override fun run() { memory.setByte(b1.toInt(), cpu.A) }
     override fun toString(): String = "STA $" + memory.byte(cpu.PC + 1).toHex()
 }
 
@@ -271,21 +280,21 @@ open class BranchBase(c: Computer, val name: String, val condition: () -> Boolea
     /** TODO(Varied timing if the branch is taken/not taken and if it crosses a page) */
     override val timing = 2
     override fun run() {
-        if (condition()) cpu.PC += b1Signed
+        if (condition()) cpu.PC += b1.toInt()
     }
     override fun toString(): String
-            = "$name ${(cpu.PC + size + b1Signed).toHex()}"
+            = "$name ${(cpu.PC + size + b1.toInt()).toHex()}"
 }
 
 /** 0x90, BCC */
-class Bcc(computer: Computer): BranchBase(computer, "BCC", { computer.cpu.P.C == 0 })
+class Bcc(computer: Computer): BranchBase(computer, "BCC", { computer.cpu.P.C == 0u })
 
 /** 0x91, STA ($12),Y */
 class StaIndY(c: Computer): InstructionBase(c) {
     override val size = 2
     override val timing = 6
     override fun run() {
-        val target = memory.byte(b1 + 1).toInt().shl(8).or(memory.byte(b1).toInt())
+        val target = memory.byte(b1.toInt() + 1).toInt().shl(8).or(memory.byte(b1.toInt()).toInt())
         memory.setByte((target.toUInt() + cpu.Y.toUInt()).toInt(), cpu.A)
     }
     override fun toString(): String = "STA ($${b1.toHex()}),Y"
@@ -309,12 +318,12 @@ abstract class LdImmBase(c: Computer, val name: String): InstructionBase(c) {
 
 /** 0xa0, LDY #$10 */
 class LdyImm(c: Computer): LdImmBase(c, "LDY") {
-    override fun run() { cpu.Y = b1.toByte() }
+    override fun run() { cpu.Y = b1 }
 }
 
 /** 0xa9, LDA #$10 */
 class LdaImm(c: Computer): LdImmBase(c, "LDA") {
-    override fun run() { cpu.A = b1.toByte() }
+    override fun run() { cpu.A = b1 }
 }
 
 /** 0xc8, INY */
@@ -326,13 +335,13 @@ class Iny(c: Computer): InstructionBase(c) {
 }
 
 /** 0xd0, BNE */
-class Bne(computer: Computer): BranchBase(computer, "BNE", { computer.cpu.P.Z == 0 })
+class Bne(computer: Computer): BranchBase(computer, "BNE", { computer.cpu.P.Z == 0u })
 
 /** 0xe6, INC $10 */
 class IncZp(c: Computer): InstructionBase(c) {
     override val size = 2
     override val timing = 4
-    override fun run() { memory.setByte(b1, (memory.byte(b1) + 1).toByte()) }
+    override fun run() { memory.setByte(b1.toInt(), (memory.byte(b1) + 1u).toUByte()) }
     override fun toString(): String = "INC $${b1.toHex()}"
 }
 
