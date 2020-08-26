@@ -19,8 +19,6 @@ fun assertNotRegister(register: Int, expected: Int) {
     assertThat(register).isNotEqualTo(expected)
 }
 
-
-@Suppress("EXPERIMENTAL_API_USAGE")
 @Test
 class SixtyTest {
     fun inxy() {
@@ -167,7 +165,14 @@ class SixtyTest {
         }
     }
 
-    @Test(enabled = false)
+    private fun assertMemory(memory: Memory, start: Int, end: Int, expected: Int) {
+        (start .. end).forEach {
+            assertThat(memory.byte(it))
+                    .withFailMessage("Expected index $it to be $expected but was ${memory.byte(it)}")
+                    .isEqualTo(expected)
+        }
+    }
+
     fun fillingScreen() {
         val c = computer(0x4c, 5, 0, 0xea, 0xea,
                 0xa9, 0x00,
@@ -179,14 +184,17 @@ class SixtyTest {
                 0xa9, 0x28, // LDA #$28
                 0x91, 0x3, // STA ($03),Y
                 0xc8, // INY
-                0xd0, 0xfb, // BNE $5
+                0xd0, 0xf9, // BNE $5
                 0xe6, 0x4, // INC $04
                 0xa5, 0x4,  // LDA $04
                 0xc9, 0x04, // CMP #$03
-                0x90, 0xf3, // BNE $5
+                0x90, 0xf1, // BCC $5
                 0x60)
-//        c.disassemble()
         c.run()
+        // Fill the memory 0x200-0x3ff with value 0x28, make sure the surrounding areas remain at 0
+        assertMemory(c.memory, 0x30, 0x1ff, 0)
+        assertMemory(c.memory, 0x200, 0x3ff, 0x28)
+        assertMemory(c.memory, 0x400, 0x500, 0)
     }
 /*
 

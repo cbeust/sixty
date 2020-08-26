@@ -46,7 +46,7 @@ class Memory(vararg bytes: Int) {
 
     fun byte(i: Int) = content[i].toInt()
     fun setByte(i: Int, b1: Int) {
-        println("mem[${i.toHex()}]=${b1.toHex()}")
+//        println("mem[${i.toHex()}]=${b1.toHex()}")
         if (i == 0x2ff) {
             println("problem")
         }
