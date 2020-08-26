@@ -7,16 +7,16 @@ import kotlin.math.exp
 
 fun computer(vararg bytes: Int) = Computer(memory = Memory(*bytes))
 
-fun assertFlag(n: String, flag: UInt, expected: Int) {
-    assertThat(flag.toInt()).isEqualTo(expected).withFailMessage("Flag $n")
+fun assertFlag(n: String, flag: Boolean, expected: Int) {
+    assertThat(flag.int()).isEqualTo(expected).withFailMessage("Flag $n")
 }
 
-fun assertRegister(register: UByte, expected: Int) {
-    assertThat(register.toInt()).isEqualTo(expected)
+fun assertRegister(register: Int, expected: Int) {
+    assertThat(register).isEqualTo(expected)
 }
 
-fun assertNotRegister(register: UByte, expected: Int) {
-    assertThat(register.toInt()).isNotEqualTo(expected)
+fun assertNotRegister(register: Int, expected: Int) {
+    assertThat(register).isNotEqualTo(expected)
 }
 
 
@@ -64,9 +64,9 @@ class SixtyTest {
         // lda #$23
         val expected = 0x23
         with(computer(0xa9, expected)) {
-            assertThat(cpu.A).isNotEqualTo(expected.toUByte())
+            assertThat(cpu.A).isNotEqualTo(expected)
             cpu.nextInstruction(this).runDebug()
-            assertThat(cpu.A).isEqualTo(expected.toUByte())
+            assertThat(cpu.A).isEqualTo(expected)
         }
     }
 
@@ -74,9 +74,9 @@ class SixtyTest {
         // lda #$23
         val expected = 0x23
         with(computer(0xa9, expected, 0x85, 0x8, 0)) {
-            assertThat(memory.byte(0x8)).isNotEqualTo(expected.toUByte())
+            assertThat(memory.byte(0x8)).isNotEqualTo(expected)
             run()
-            assertThat(memory.byte(0x8)).isEqualTo(expected.toUByte())
+            assertThat(memory.byte(0x8)).isEqualTo(expected)
         }
     }
 
@@ -90,14 +90,14 @@ class SixtyTest {
         // STA ($4), Y
         with(computer(0x91, 4, 0, 0, 8, 0, 0, 0, 0, 0, 0, 0, 0, 0)) {
             assertThat(memory.byte(10)).isNotEqualTo(0x42)
-            cpu.A = 0x42u
-            cpu.Y = 2u
+            cpu.A = 0x42
+            cpu.Y = 2
             cpu.nextInstruction(this).runDebug()
             assertMemory(10, 0x42)
         }
     }
 
-    private fun cmpFlags(compared: Int, y: UByte, n: Int, z: Int, c: Int) {
+    private fun cmpFlags(y: Int, compared: Int, n: Int, z: Int, c: Int) {
         with(computer(0xc0, compared)) {
             cpu.Y = y
             with(cpu.P) {
@@ -115,11 +115,11 @@ class SixtyTest {
     }
 
     fun cpyImm() {
-        // CPY #$80 with #$7F
-        cmpFlags(0x80, 0x7fu, 0, 0, 1) // P: 0x31  N=0 Z=0 C=1
+        // LDY #$80, CPY #$7F
+        cmpFlags(0x80, 0x7f, 0, 0, 1) // P: 0x31  N=0 Z=0 C=1
 
-        // CPY #$FF with 1
-        cmpFlags(0xff, 1u, 0, 0, 1) // P: 0x31  N=0 Z=0 C=1
+        // LDY #$1, CPY #$FF
+        cmpFlags(1, 0xff, 0, 0, 0) // P: 0x31  N=0 Z=0 C=1
     }
 
     fun bne() {
@@ -156,9 +156,8 @@ class SixtyTest {
 
     @Test(dataProvider = "a")
     fun adcImm(a: Int, valueToAdd: Int, expected: Int, n: Int, v: Int, c: Int) {
-        println("=== Testing $a $valueToAdd $expected $n $v $c")
         with(computer(0x69, valueToAdd)) {
-            cpu.A = a.toUByte()
+            cpu.A = a
             cpu.nextInstruction(this).runDebug()
             assertRegister(cpu.A, expected)
             assertFlag("N", cpu.P.N, n)
