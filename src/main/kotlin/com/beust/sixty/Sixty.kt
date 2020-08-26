@@ -1,4 +1,4 @@
-@file:Suppress("EXPERIMENTAL_API_USAGE")
+@file:Suppress("EXPERIMENTAL_API_USAGE", "EXPERIMENTAL_UNSIGNED_LITERALS")
 
 package com.beust.sixty
 
@@ -146,6 +146,33 @@ class StatusFlags {
         set(v) = bit(0, v)
 
     override fun toString() = "{N=$N V=$V D=$D I=$I Z=$Z C=$C}"
+
+    /** true if the value is 0 */
+    fun updateZ(newValue: UByte) {
+        Z = if (newValue == 0.toUByte()) 1u else 0u
+    }
+
+    /** Bit 7 of the value */
+    fun updateN(value: Byte) {
+        N = if (value.toInt().and(0x80) == 0) 0u else 1u
+    }
+
+    fun updateN(value: Byte, b1: Byte) {
+        N = if (value.toInt() - b1.toInt() < 0) 1u else 0u
+    }
+
+    fun setC(v: Boolean) { C = if (v) 1u else 0u }
+
+    fun setZAndN(reg: Int) {
+        Z = if (reg == 0) 1u else 0u
+        N = if (reg and 0x80 != 0) 1u else 0u
+    }
+
+    fun updateV(a: Byte, b1: Byte) {
+        val sum = a + b1
+        V = if (sum >= 128 || sum <= -127) 1u else 0u
+    }
+
 }
 
 data class Cpu(var A: UByte = 0u, var X: UByte = 0u, var Y: UByte = 0u, var PC: Int = 0,
@@ -157,6 +184,7 @@ data class Cpu(var A: UByte = 0u, var X: UByte = 0u, var Y: UByte = 0u, var PC: 
             0x20 -> Jsr(computer)
             0x4c -> Jmp(computer)
             0x60 -> Rts(computer)
+            0x69 -> AdcImm(computer)
             0x85 -> StaZp(computer)
             0x90 -> Bcc(computer)
             0x91 -> StaIndY(computer)
@@ -185,10 +213,7 @@ abstract class InstructionBase(val computer: Computer): Instruction {
     val cpu by lazy { computer.cpu }
     val memory by lazy { computer.memory }
     val pc  by lazy { cpu.PC}
-//    val pc1 by lazy { cpu.PC + 1}
-//    val pc2 by lazy { cpu.PC + 2}
     val b1 by lazy { memory.byte(cpu.PC + 1) }
-//    val b2 by lazy { memory.byte(cpu.PC + 2) }
     val word by lazy { memory.byte(cpu.PC + 2).toInt().shl(8).or(memory.byte(cpu.PC + 1).toInt()) }
 }
 
@@ -223,8 +248,6 @@ class Jsr(c: Computer): InstructionBase(c) {
     override fun toString(): String = "JSR $${word.toHex()}"
 }
 
-fun Byte.unsigned() = java.lang.Byte.toUnsignedInt(this)
-
 abstract class CmpImmBase(c: Computer, val name: String): InstructionBase(c) {
     override val size = 2
     override val timing = 2
@@ -232,18 +255,9 @@ abstract class CmpImmBase(c: Computer, val name: String): InstructionBase(c) {
     abstract val value: UByte
 
     override fun run() {
-        if (value != b1) {
-            cpu.P.Z = 0u
-        } else {
-            cpu.P.Z = 1u
-        }
-        if (value < b1) {
-            cpu.P.C = 0u
-        } else {
-            cpu.P.C = 1u
-        }
-        val sub = value - b1
-        cpu.P.N = sub.and(0x80u).shr(7)
+        cpu.P.updateZ(value)
+        cpu.P.setC(value >= b1)
+        cpu.P.updateN(value.toByte(), b1.toByte())
     }
 
     override fun toString(): String = "$name #$${b1.toHex()}"
@@ -267,6 +281,22 @@ class Rts(c: Computer): InstructionBase(c) {
     override fun toString(): String = "RTS"
 }
 
+/** 0x69, ADC #$12 */
+class AdcImm(c: Computer): InstructionBase(c) {
+    override val size = 2
+    override val timing = 2
+    override fun run() {
+        val oldA = cpu.A.toByte()
+        val newValue = cpu.A.toInt() + b1.toInt()
+        cpu.A = newValue.toUByte()
+        cpu.P.updateN(newValue.toByte())
+        cpu.P.updateV(oldA, b1.toByte())
+        cpu.P.setZAndN(newValue)
+        cpu.P.setC(newValue.and(0x100) != 0)
+    }
+    override fun toString(): String = " ADC #${b1.toHex()}"
+}
+
 /** 0x85, STA ($10) */
 class StaZp(c: Computer): InstructionBase(c) {
     override val size = 2
@@ -280,10 +310,10 @@ open class BranchBase(c: Computer, val name: String, val condition: () -> Boolea
     /** TODO(Varied timing if the branch is taken/not taken and if it crosses a page) */
     override val timing = 2
     override fun run() {
-        if (condition()) cpu.PC += b1.toInt()
+        if (condition()) cpu.PC += b1.toByte()  // needs to be signed here
     }
     override fun toString(): String
-            = "$name ${(cpu.PC + size + b1.toInt()).toHex()}"
+            = "$name ${(cpu.PC + size + b1.toByte()).toHex()}"
 }
 
 /** 0x90, BCC */
@@ -297,7 +327,7 @@ class StaIndY(c: Computer): InstructionBase(c) {
         val target = memory.byte(b1.toInt() + 1).toInt().shl(8).or(memory.byte(b1.toInt()).toInt())
         memory.setByte((target.toUInt() + cpu.Y.toUInt()).toInt(), cpu.A)
     }
-    override fun toString(): String = "STA ($${b1.toHex()}),Y"
+    override fun toString(): String = "STA ($${b1.toByte().toHex()}),Y"
 }
 
 /** 0xa5, LDA $10 */
@@ -326,11 +356,21 @@ class LdaImm(c: Computer): LdImmBase(c, "LDA") {
     override fun run() { cpu.A = b1 }
 }
 
+abstract class IncBase(c: Computer): InstructionBase(c) {
+    protected fun updateFlags(newValue: UByte) {
+        cpu.P.updateZ(newValue)
+        cpu.P.updateN(newValue.toByte())
+    }
+}
+
 /** 0xc8, INY */
-class Iny(c: Computer): InstructionBase(c) {
+class Iny(c: Computer): IncBase(c) {
     override val size = 1
     override val timing = 2
-    override fun run() { cpu.Y++ }
+    override fun run() {
+        cpu.Y++
+        updateFlags(cpu.Y)
+    }
     override fun toString(): String = "INY"
 }
 
@@ -338,18 +378,25 @@ class Iny(c: Computer): InstructionBase(c) {
 class Bne(computer: Computer): BranchBase(computer, "BNE", { computer.cpu.P.Z == 0u })
 
 /** 0xe6, INC $10 */
-class IncZp(c: Computer): InstructionBase(c) {
+class IncZp(c: Computer): IncBase(c) {
     override val size = 2
     override val timing = 4
-    override fun run() { memory.setByte(b1.toInt(), (memory.byte(b1) + 1u).toUByte()) }
+    override fun run() {
+        val newValue = (memory.byte(b1) + 1u).toUByte()
+        memory.setByte(b1.toInt(), newValue)
+        updateFlags(newValue)
+    }
     override fun toString(): String = "INC $${b1.toHex()}"
 }
 
 /** 0xe8, INX */
-class Inx(c: Computer): InstructionBase(c) {
+class Inx(c: Computer): IncBase(c) {
     override val size = 1
     override val timing = 2
-    override fun run() { cpu.X++ }
+    override fun run() {
+        cpu.X++
+        updateFlags(cpu.X)
+    }
     override fun toString(): String = "INX"
 }
 

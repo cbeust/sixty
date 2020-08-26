@@ -1,48 +1,61 @@
 package com.beust.sixty
 
 import org.assertj.core.api.Assertions.assertThat
+import org.testng.annotations.DataProvider
 import org.testng.annotations.Test
+import kotlin.math.exp
 
+fun computer(vararg bytes: Int) = Computer(memory = Memory(*bytes))
+
+fun assertFlag(n: String, flag: UInt, expected: Int) {
+    assertThat(flag.toInt()).isEqualTo(expected).withFailMessage("Flag $n")
+}
+
+fun assertRegister(register: UByte, expected: Int) {
+    assertThat(register.toInt()).isEqualTo(expected)
+}
+
+fun assertNotRegister(register: UByte, expected: Int) {
+    assertThat(register.toInt()).isNotEqualTo(expected)
+}
+
+
+@Suppress("EXPERIMENTAL_API_USAGE")
 @Test
 class SixtyTest {
-    fun computer(vararg bytes: Int) = Computer(memory = Memory(*bytes))
-
     fun inxy() {
         // inx * 2, iny * 2
-        computer(0xe8, 0xe8, 0xc8, 0xc8, 0).let { computer ->
-            assertRegister(computer.cpu.X, 0)
-            assertRegister(computer.cpu.Y, 0)
-            computer.run()
-            assertRegister(computer.cpu.X, 2)
-            assertRegister(computer.cpu.Y, 2)
+        with(computer(0xe8, 0xe8, 0xc8, 0xc8, 0)) {
+            assertRegister(cpu.X, 0)
+            assertRegister(cpu.Y, 0)
+            run()
+            assertRegister(cpu.X, 2)
+            assertRegister(cpu.Y, 2)
         }
     }
 
     fun rts() {
-        computer(
+        with(computer(
             0x20, 0x8, 0,   // jsr $8
             0xa9, 0x12,     // lda #$12
             0x60,
             0xea, 0xea,  // nop
             0x60   // rts
-        ).let { computer ->
-            computer.cpu.let { cpu ->
-                assertNotRegister(cpu.A, 0x12)
-                computer.run()
-                assertRegister(cpu.A, 0x12)
-            }
+        )) {
+            assertNotRegister(cpu.A, 0x12)
+            run()
+            assertRegister(cpu.A, 0x12)
         }
     }
 
     fun jsr() {
         // jsr $1234
-        computer(0x20, 0x34, 0x12, 0xEA, 0xEA, 0xEA).let { computer ->
-            computer.cpu.let { cpu ->
-                assertThat(cpu.SP.isEmpty())
-                cpu.nextInstruction(computer).let { inst ->
-                    inst.runDebug()
-                    assertThat(cpu.PC).isEqualTo(0x1234 - inst.size)
-                }
+        with(computer(0x20, 0x34, 0x12, 0xEA, 0xEA, 0xEA)) {
+            assertThat(cpu.SP.isEmpty())
+            cpu.nextInstruction(this).let { inst ->
+                inst.runDebug()
+                assertThat(cpu.PC).isEqualTo(0x1234 - inst.size)
+                // Need to test SP
             }
         }
     }
@@ -50,20 +63,20 @@ class SixtyTest {
     fun lda() {
         // lda #$23
         val expected = 0x23
-        computer(0xa9, expected).let { computer ->
-            assertThat(computer.cpu.A).isNotEqualTo(expected.toUByte())
-            computer.cpu.nextInstruction(computer).runDebug()
-            assertThat(computer.cpu.A).isEqualTo(expected.toUByte())
+        with(computer(0xa9, expected)) {
+            assertThat(cpu.A).isNotEqualTo(expected.toUByte())
+            cpu.nextInstruction(this).runDebug()
+            assertThat(cpu.A).isEqualTo(expected.toUByte())
         }
     }
 
     fun staZp() {
         // lda #$23
         val expected = 0x23
-        computer(0xa9, expected, 0x85, 0x8, 0).let { computer ->
-            assertThat(computer.memory.byte(0x8)).isNotEqualTo(expected.toUByte())
-            computer.run()
-            assertThat(computer.memory.byte(0x8)).isEqualTo(expected.toUByte())
+        with(computer(0xa9, expected, 0x85, 0x8, 0)) {
+            assertThat(memory.byte(0x8)).isNotEqualTo(expected.toUByte())
+            run()
+            assertThat(memory.byte(0x8)).isEqualTo(expected.toUByte())
         }
     }
 
@@ -75,89 +88,103 @@ class SixtyTest {
     fun StaIndY() {
         // memory(4) points to address 8, then we add Y(2) to it to produce 10. Store $42 in memory(10)
         // STA ($4), Y
-        computer(0x91, 4, 0, 0, 8, 0, 0, 0, 0, 0, 0, 0, 0, 0).let { computer ->
-            assertThat(computer.memory.byte(10)).isNotEqualTo(0x42)
-            computer.cpu.A = 0x42u
-            computer.cpu.Y = 2u
-            computer.cpu.nextInstruction(computer).runDebug()
-            computer.assertMemory(10, 0x42)
+        with(computer(0x91, 4, 0, 0, 8, 0, 0, 0, 0, 0, 0, 0, 0, 0)) {
+            assertThat(memory.byte(10)).isNotEqualTo(0x42)
+            cpu.A = 0x42u
+            cpu.Y = 2u
+            cpu.nextInstruction(this).runDebug()
+            assertMemory(10, 0x42)
         }
     }
 
-    private fun cmpFlags(compared: Int, y: UByte, z: Int, c: Int, n: Int) {
-        computer(0x44, compared).let { computer ->
-            computer.cpu.Y = y
-            computer.cpu.P.let {
-                assertFlag(it.Z, 0)
-                assertFlag(it.C, 0)
-                assertFlag(it.N, 0)
+    private fun cmpFlags(compared: Int, y: UByte, n: Int, z: Int, c: Int) {
+        with(computer(0xc0, compared)) {
+            cpu.Y = y
+            with(cpu.P) {
+                assertFlag("N", N, 0)
+                assertFlag("Z", Z, 0)
+                assertFlag("C", C, 0)
             }
-            CpyImm(computer).runDebug()
-            computer.cpu.P.let {
-                assertFlag(it.Z, z)
-                assertFlag(it.C, c)
-                assertFlag(it.N, n)
+            CpyImm(this).runDebug()
+            with(cpu.P) {
+                assertFlag("N", N, n)
+                assertFlag("Z", Z, z)
+                assertFlag("C", C, c)
             }
         }
     }
 
     fun cpyImm() {
         // CPY #$80 with #$7F
-        cmpFlags(0x80, 0x7fu, 0, 0, 1)
+        cmpFlags(0x80, 0x7fu, 0, 0, 1) // P: 0x31  N=0 Z=0 C=1
 
         // CPY #$FF with 1
-        cmpFlags(0xff, 1u, 0, 0, 0)
+        cmpFlags(0xff, 1u, 0, 0, 1) // P: 0x31  N=0 Z=0 C=1
     }
 
     fun bne() {
-        computer(0xd0, 0, 0x90, 1, 0x60, 0xa9, 1, 0x60).let { computer ->
-            assertRegister(computer.cpu.A, 0)
-            computer.run()
-            assertRegister(computer.cpu.A, 1)
+        with(computer(0xd0, 0, 0x90, 1, 0x60, 0xa9, 1, 0x60)) {
+            assertRegister(cpu.A, 0)
+            run()
+            assertRegister(cpu.A, 1)
         }
     }
 
-    @Test(enabled = false)
-    fun assertFlag(flag: UInt, expected: Int) {
-        assertThat(flag.toInt()).isEqualTo(expected)
-    }
-
-    @Test(enabled = false)
-    fun assertRegister(register: UByte, expected: Int) {
-        assertThat(register.toInt()).isEqualTo(expected)
-    }
-
-    @Test(enabled = false)
-    fun assertNotRegister(register: UByte, expected: Int) {
-        assertThat(register.toInt()).isNotEqualTo(expected)
-    }
-
     fun bcc() {
-        computer(0xa9, 0, 0x90, 1, 0x60, 0xa9, 1, 0x60).let { computer ->
-            assertRegister(computer.cpu.A, 0)
-            computer.run()
-            assertRegister(computer.cpu.A, 1)
+        with(computer(0xa9, 0, 0x90, 1, 0x60, 0xa9, 1, 0x60)) {
+            assertRegister(cpu.A, 0)
+            run()
+            assertRegister(cpu.A, 1)
         }
     }
 
     fun incZp() {
-        computer(0xe6, 0x3, 0x60, 0x42).let { computer ->
-            computer.assertMemory(3, 0x42)
-            computer.run()
-            computer.assertMemory(3, 0x43)
+        with(computer(0xe6, 0x3, 0x60, 0x42)) {
+            assertMemory(3, 0x42)
+            run()
+            assertMemory(3, 0x43)
         }
     }
 
-    @Test(enabled = true)
+    @DataProvider(name ="a")
+    fun adcImmProvider() = arrayOf(
+            // N V . .  D I Z C
+//            arrayOf(7, -2, 5, 0, 0, 1)  // expected 0x31  0011 0001 (001)
+            arrayOf(7, 2, 9, 0, 0, 0) // 0x30 (000)
+            , arrayOf(7, 0x80, 0x87, 1, 0, 0) // 0xb0 (100)
+    )
+
+    @Test(dataProvider = "a")
+    fun adcImm(a: Int, valueToAdd: Int, expected: Int, n: Int, v: Int, c: Int) {
+        println("=== Testing $a $valueToAdd $expected $n $v $c")
+        with(computer(0x69, valueToAdd)) {
+            cpu.A = a.toUByte()
+            cpu.nextInstruction(this).runDebug()
+            assertRegister(cpu.A, expected)
+            assertFlag("N", cpu.P.N, n)
+            assertFlag("V", cpu.P.V, v)
+            assertFlag("C", cpu.P.C, c)
+            println(cpu)
+        }
+    }
+
+    @Test(enabled = false)
     fun fillingScreen() {
-        val c = computer(0x4c, 5, 0, 0xea, 0xea, 0xa9, 0x00, 0x85, 0x3, 0xa9, 0x02, 0x85, 0x4,
-                0xa0, 0xff, 0xa9, 0x28, 0x91, 0x3, 0xc8,
-                0xc0, 0xff, // CPY #$ff
-                0xd0, 0xf9, // BNE $11
-                0xe6, 0x4,
-                0xa5, 0x3,
-                0xc9, 0x03,
-                0x90, 0xf1,
+        val c = computer(0x4c, 5, 0, 0xea, 0xea,
+                0xa9, 0x00,
+                0x85, 0x3,
+                0xa9, 0x02,
+                0x85, 0x4,
+
+                0xa0, 0x0, // LDY 0
+                0xa9, 0x28, // LDA #$28
+                0x91, 0x3, // STA ($03),Y
+                0xc8, // INY
+                0xd0, 0xfb, // BNE $5
+                0xe6, 0x4, // INC $04
+                0xa5, 0x4,  // LDA $04
+                0xc9, 0x04, // CMP #$03
+                0x90, 0xf3, // BNE $5
                 0x60)
 //        c.disassemble()
         c.run()
