@@ -108,6 +108,30 @@ class Main : Application() {
     }
 }
 
+class HiResScreen(private val canvas: Canvas) {
+    private val width = 140
+    private val height = 192
+    private val blockWidth = 5
+    private val blockHeight = 5
+    private val gap = 2
+    private val fullWidth = (blockWidth + gap) * width + 40
+    private val fullHeight = (blockHeight + gap) * height + 40
+    private val interleaving = listOf(
+            0, 0x80, 0x100, 0x180, 0x200, 0x280, 0x300, 0x380,
+            0x28, 0xa8, 0x128, 0x1a8, 0x228, 0x2a8, 0x328, 0x3a8,
+            0x50, 0xd0, 0x150, 0x1d0, 0x250, 0x2d0, 0x350, 0x3d0)
+
+    init {
+        with(canvas.graphicsContext2D) {
+            fill = Color.BLACK
+            fillRect(0.0, 0.0, fullWidth.toDouble(), fullHeight.toDouble())
+        }
+    }
+
+    fun drawMemoryLocation(location: Int, value: Int) {
+    }
+}
+
 class TextScreen(private val canvas: Canvas) {
     private val width = 40
     private val height = 24
