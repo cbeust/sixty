@@ -14,6 +14,8 @@ import javafx.scene.input.KeyEvent
 import javafx.scene.layout.AnchorPane
 import javafx.scene.paint.Color
 import javafx.stage.Stage
+import java.io.File
+import java.nio.file.Paths
 import kotlin.system.exitProcess
 
 fun main() {
@@ -82,29 +84,45 @@ class Main : Application() {
         }
         with(Computer(memory = Memory(size = 65536))) {
             memory.listener = listener
-            memory.init(0, 0x4c, 5, 0, 0xea, 0xea,
-                    0xa9, 0x00, // LDA #0
-                    0x85, 0x3,  // STA 3
-                    0xa9, 0x04, // LDA #2
-                    0x85, 0x4,  // STA 4
-
-                    0xa0, 0x0, // LDY 0
-                    0xa9, 0x41, // LDA #$28
-                    0x91, 0x3, // STA ($03),Y
-                    0xc8, // INY
-                    0xd0, 0xf9, // BNE $5
-                    0xe6, 0x4, // INC $04
-                    0xa5, 0x4,  // LDA $04
-                    0xc9, 0x08, // CMP #$03
-                    0x90, 0xf1, // BCC $5
-                    0x60)
-//            (0..39).forEach { x ->
-//                (0..24).forEach { y ->
-//                    memory.setByte(0x400 + (y * 40) + x, (x % 10) + '0'.toInt())
-//                }
-//            }
+//            fillScreen(memory)
+//            fillWithNumbers(memory)
+            loadPic(memory)
             run()
         }
+    }
+
+    private fun loadPic(memory: Memory) {
+        val bytes = Paths.get("d:", "PD", "Apple disks", "fishgame.pic").toFile().readBytes()
+        (4..bytes.size - 1).forEach {
+            memory.setByte(it - 4, bytes[it].toInt())
+        }
+    }
+
+    private fun fillWithNumbers(memory: Memory) {
+        (0..40).forEach { x ->
+            (0..24).forEach { y ->
+                memory.setByte(0x400 + (y * 40) + x, (x % 10) + '0'.toInt())
+            }
+        }
+    }
+
+    private fun fillScreen(memory: Memory) {
+        memory.init(0, 0x4c, 5, 0, 0xea, 0xea,
+                0xa9, 0x00, // LDA #0
+                0x85, 0x3,  // STA 3
+                0xa9, 0x04, // LDA #2
+                0x85, 0x4,  // STA 4
+
+                0xa0, 0x0, // LDY 0
+                0xa9, 0x40, // LDA #$28
+                0x91, 0x3, // STA ($03),Y
+                0xc8, // INY
+                0xd0, 0xf9, // BNE $5
+                0xe6, 0x4, // INC $04
+                0xa5, 0x4,  // LDA $04
+                0xc9, 0x08, // CMP #$03
+                0x90, 0xf1, // BCC $5
+                0x60)
     }
 }
 

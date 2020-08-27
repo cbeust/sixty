@@ -69,11 +69,16 @@ class Memory(size: Int = 4096, vararg bytes: Int) {
     }
 
     fun setByte(i: Int, value: Int) {
-        if (DEBUG_MEMORY) println("mem[${i.toHex()}] = ${value.toHex()}")
         if (interceptor != null) {
             val response = interceptor!!.onWrite(i, value)
-            if (response.allow) content[i] = value
+            if (response.allow) {
+                if (DEBUG_MEMORY) println("mem[${i.toHex()}] = ${value.toHex()} (allowed)")
+                content[i] = value
+            } else {
+                if (DEBUG_MEMORY) println("mem[${i.toHex()}] = ${value.toHex()} (denied)")
+            }
         } else {
+            if (DEBUG_MEMORY) println("mem[${i.toHex()}] = ${value.toHex()}")
             content[i] = value
         }
         listener?.onWrite(i, value)
