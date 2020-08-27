@@ -34,11 +34,11 @@ class SixtyTest {
 
     fun rts() {
         with(computer(
-            0x20, 0x8, 0,   // jsr $8
-            0xa9, 0x12,     // lda #$12
-            0x60,
-            0xea, 0xea,  // nop
-            0x60   // rts
+                0x20, 0x8, 0,   // jsr $8
+                0xa9, 0x12,     // lda #$12
+                0x60,
+                0xea, 0xea,  // nop
+                0x60   // rts
         )) {
             assertNotRegister(cpu.A, 0x12)
             run()
@@ -144,7 +144,7 @@ class SixtyTest {
         }
     }
 
-    @DataProvider(name ="a")
+    @DataProvider(name = "a")
     fun adcImmProvider() = arrayOf(
             // N V . .  D I Z C
 //            arrayOf(7, -2, 5, 0, 0, 1)  // expected 0x31  0011 0001 (001)
@@ -165,78 +165,39 @@ class SixtyTest {
     }
 
     private fun assertMemory(memory: Memory, start: Int, end: Int, expected: Int) {
-        (start .. end).forEach {
+        (start..end).forEach {
             assertThat(memory.byte(it))
                     .withFailMessage("Expected index $it to be $expected but was ${memory.byte(it)}")
                     .isEqualTo(expected)
         }
     }
 
+    /**
+     * Fill the memory 0x200-0x3ff with value 0x28.
+     */
     fun fillingScreen() {
         val c = computer(0x4c, 5, 0, 0xea, 0xea,
-                0xa9, 0x00,
-                0x85, 0x3,
-                0xa9, 0x02,
-                0x85, 0x4,
-
-                0xa0, 0x0, // LDY 0
+                0xa9, 0x00, // LDA #0
+                0x85, 0x3,  // STA #03
+                0xa9, 0x02, // LDA #2
+                0x85, 0x4,  // STA #04
+                0xa0, 0x0,  // LDY 0
                 0xa9, 0x28, // LDA #$28
-                0x91, 0x3, // STA ($03),Y
-                0xc8, // INY
+                0x91, 0x3,  // STA ($03),Y
+                0xc8,       // INY
                 0xd0, 0xf9, // BNE $5
-                0xe6, 0x4, // INC $04
+                0xe6, 0x4,  // INC $04
                 0xa5, 0x4,  // LDA $04
                 0xc9, 0x04, // CMP #$03
                 0x90, 0xf1, // BCC $5
                 0x60)
+
+        // Make sure the entire memory is 0 before the run
+        assertMemory(c.memory, 0x30, 0x1ff, 0)
         c.run()
-        // Fill the memory 0x200-0x3ff with value 0x28, make sure the surrounding areas remain at 0
+        // Make sure only 0x200-0x3ff contains the value
         assertMemory(c.memory, 0x30, 0x1ff, 0)
         assertMemory(c.memory, 0x200, 0x3ff, 0x28)
         assertMemory(c.memory, 0x400, 0x500, 0)
     }
-/*
-
-Address  Hexdump   Dissassembly
--------------------------------
-$0600    4c 05 06  JMP $0605
-$0603    ea        NOP
-$0604    ea        NOP
-$0605    a9 00     LDA #$00
-$0607    8d 01 06  STA $0601
-$060a    a9 02     LDA #$02
-$060c    8d 02 06  STA $0602
-$060f    a0 ff     LDY #$ff
-$0611    a9 02     LDA #$02
-$0613    91 03     STA ($03),Y
-$0615    c8        INY
-$0616    c0 ff     CPY #$ff
-$0618    d0 f9     BNE $0613
-$061a    ee 02 06  INC $0602
-$061d    a5 03     LDA $03
-$061f    c9 06     CMP #$06
-$0621    90 f0     BCC $0613
-
-
-jmp start
-nop
-nop
-start:
-lda #$00
-sta $601
-lda #$02
-sta $602
-ldy #$ff
-lda #$2
-loop:
-sta ($3),y
-iny
-cpy #$ff
-bne loop
-inc $602
-lda $3
-cmp #6
-bcc loop
-
-     */
 }
