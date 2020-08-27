@@ -37,9 +37,17 @@ interface Instruction {
     }
 
     fun run()
+
+    /**
+     * @return 1 if a page bounday was crossed, 0 otherwise
+     */
+    fun pageCrossed(old: Int, new: Int): Int {
+        return if (old.and(0x80).xor(new.and(0x80)) != 0) 1 else 0
+    }
 }
 
 class Memory(size: Int = 4096, vararg bytes: Int) {
+    var interceptor: MemoryInterceptor? = null
     var listener: MemoryListener? = null
     private val content: IntArray = IntArray(size)
 
@@ -48,15 +56,27 @@ class Memory(size: Int = 4096, vararg bytes: Int) {
     }
 
     fun byte(i: Int): Int {
-        val result = content[i]
+        val result = if (interceptor != null) {
+            val response = interceptor!!.onRead(i)
+            if (response.allow) response.value
+            else content[i]
+        } else {
+            content[i]
+        }
+
         listener?.onRead(i, result)
         return result
     }
 
     fun setByte(i: Int, value: Int) {
         if (DEBUG_MEMORY) println("mem[${i.toHex()}] = ${value.toHex()}")
+        if (interceptor != null) {
+            val response = interceptor!!.onWrite(i, value)
+            if (response.allow) content[i] = value
+        } else {
+            content[i] = value
+        }
         listener?.onWrite(i, value)
-        content[i] = value
     }
 
     override fun toString(): String {
@@ -72,14 +92,23 @@ class Memory(size: Int = 4096, vararg bytes: Int) {
     }
 }
 
+interface MemoryInterceptor {
+    class Response(val allow: Boolean, val value: Int)
+
+    fun onRead(location: Int): Response
+    fun onWrite(location: Int, value: Int): Response
+}
+
 interface MemoryListener {
     fun onRead(location: Int, value: Int)
     fun onWrite(location: Int, value: Int)
 }
 
-class Computer(val cpu: Cpu = Cpu(), val memory: Memory, val memoryListener: MemoryListener? = null) {
+class Computer(val cpu: Cpu = Cpu(), val memory: Memory, memoryListener: MemoryListener? = null,
+        memoryInterceptor: MemoryInterceptor? = null) {
     init {
         memory.listener = memoryListener
+        memory.interceptor = memoryInterceptor
     }
 
     fun run() {
@@ -204,7 +233,7 @@ class StatusFlags {
 data class Cpu(var A: Int = 0, var X: Int = 0, var Y: Int = 0, var PC: Int = 0,
         val SP: StackPointer = StackPointer(), val P: StatusFlags = StatusFlags()) : ICpu {
     override fun nextInstruction(computer: Computer): Instruction {
-        val op = computer.memory.byte(PC).toInt() and 0xff
+        val op = computer.memory.byte(PC) and 0xff
         val result = when(op) {
             0x00 -> Brk(computer)
             0x20 -> Jsr(computer)
@@ -238,9 +267,9 @@ data class Cpu(var A: Int = 0, var X: Int = 0, var Y: Int = 0, var PC: Int = 0,
 abstract class InstructionBase(val computer: Computer): Instruction {
     val cpu by lazy { computer.cpu }
     val memory by lazy { computer.memory }
-    val pc  by lazy { cpu.PC}
-    val operand by lazy { memory.byte(cpu.PC + 1) }
-    val word by lazy { memory.byte(cpu.PC + 2).toInt().shl(8).or(memory.byte(cpu.PC + 1).toInt()) }
+    val pc by lazy { cpu.PC}
+    val operand by lazy { memory.byte(pc + 1) }
+    val word by lazy { memory.byte(pc + 2).shl(8).or(memory.byte(pc + 1)) }
 }
 
 /** 0x00, BRK */
@@ -336,9 +365,14 @@ class StaZp(c: Computer): InstructionBase(c) {
 open class BranchBase(c: Computer, val name: String, val condition: () -> Boolean): InstructionBase(c) {
     override val size = 2
     /** TODO(Varied timing if the branch is taken/not taken and if it crosses a page) */
-    override val timing = 2
+    override var timing = 2
     override fun run() {
-        if (condition()) cpu.PC += operand.toByte()  // needs to be signed here
+        if (condition()) {
+            val old = cpu.PC
+            cpu.PC += operand.toByte()
+            timing++
+            timing += pageCrossed(old, cpu.PC)
+        }  // needs to be signed here
     }
     override fun toString(): String
             = "$name ${(cpu.PC + size + operand.toByte()).toHex()}"
