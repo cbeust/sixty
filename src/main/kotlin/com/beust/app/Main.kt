@@ -49,14 +49,14 @@ class Main : Application() {
         val canvas = Canvas(800.0, 400.0)
         root.children.add(canvas)
 
-        root.widthProperty().addListener { e: Observable? ->
-            canvas.width = width
-            blockWidth = (canvas.width / (Display.WIDTH + SPACE)).toInt()
-        }
-        root.heightProperty().addListener { e: Observable? ->
-            canvas.height = height
-            blockHeight = (canvas.height / (Display.HEIGHT + SPACE)).toInt()
-        }
+//        root.widthProperty().addListener { e: Observable? ->
+//            canvas.width = width
+//            blockWidth = (canvas.width / (Display.WIDTH + SPACE)).toInt()
+//        }
+//        root.heightProperty().addListener { e: Observable? ->
+//            canvas.height = height
+//            blockHeight = (canvas.height / (Display.HEIGHT + SPACE)).toInt()
+//        }
 
 
 //        with(canvas.parent as AnchorPane) {

@@ -91,7 +91,7 @@ class Computer(val cpu: Cpu = Cpu(), val memory: Memory, val memoryListener: Mem
                 done = true
             } else {
                 val inst = cpu.nextInstruction(this)
-                print(cpu.PC.toHex() + ": ")
+                if (DEBUG_ASM) print(cpu.PC.toHex() + ": ")
                 inst.runDebug()
                 cpu.PC += inst.size
                 n++
@@ -107,7 +107,7 @@ class Computer(val cpu: Cpu = Cpu(), val memory: Memory, val memoryListener: Mem
                 done = true
             }
             val inst = cpu.nextInstruction(this)
-            println(cpu.PC.toHex() + ": " + inst.toString())
+            if (DEBUG_ASM) println(cpu.PC.toHex() + ": " + inst.toString())
             cpu.PC += inst.size
         }
     }
@@ -440,5 +440,5 @@ fun main() {
     val memory = Memory(0xa9, 0x23)
     val computer = Computer(memory = memory)
     computer.cpu.nextInstruction(computer).run()
-    println(computer.cpu)
+//    println(computer.cpu)
 }

@@ -161,7 +161,6 @@ class SixtyTest {
             assertFlag("N", cpu.P.N, n)
             assertFlag("V", cpu.P.V, v)
             assertFlag("C", cpu.P.C, c)
-            println(cpu)
         }
     }
 
