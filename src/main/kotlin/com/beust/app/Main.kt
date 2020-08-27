@@ -3,10 +3,8 @@ package com.beust.app
 import com.beust.sixty.Computer
 import com.beust.sixty.Memory
 import com.beust.sixty.MemoryListener
-import com.beust.sixty.toHex
 import javafx.application.Application
 import javafx.application.Platform
-import javafx.beans.Observable
 import javafx.event.EventHandler
 import javafx.fxml.FXMLLoader
 import javafx.scene.Scene
@@ -133,11 +131,10 @@ class TextScreen(private val canvas: Canvas) {
         drawCharacter(x, y, value.toChar())
     }
 
-    fun drawCharacter(x: Int, y: Int, character: Char) {
+    private fun drawCharacter(x: Int, y: Int, character: Char) {
         if (x < width && y < height) {
             val xx = x * (fontWidth + gap)
             val yy = y * (fontHeight + gap)
-            println("Drawing at ($x,$y) ($xx,$yy): $character")
             with(canvas.graphicsContext2D) {
                 fill = Color.WHITE
                 fillText(character.toString(), xx.toDouble(), yy.toDouble())

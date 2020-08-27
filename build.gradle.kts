@@ -28,7 +28,7 @@ dependencies {
 }
 
 application {
-    mainClassName = "com.beust.sixty.MainKt"
+    mainClassName = "com.beust.app.MainKt"
 }
 
 tasks {

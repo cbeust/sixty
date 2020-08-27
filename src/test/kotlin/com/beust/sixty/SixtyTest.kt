@@ -5,7 +5,7 @@ import org.testng.annotations.DataProvider
 import org.testng.annotations.Test
 import kotlin.math.exp
 
-fun computer(vararg bytes: Int) = Computer(memory = Memory(*bytes))
+fun computer(vararg bytes: Int) = Computer(memory = Memory(4096, *bytes))
 
 fun assertFlag(n: String, flag: Boolean, expected: Int) {
     assertThat(flag.int()).isEqualTo(expected).withFailMessage("Flag $n")
