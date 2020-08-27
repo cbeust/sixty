@@ -1,12 +1,14 @@
-@file:Suppress("EXPERIMENTAL_API_USAGE", "EXPERIMENTAL_UNSIGNED_LITERALS")
+//@file:Suppress("EXPERIMENTAL_API_USAGE", "EXPERIMENTAL_UNSIGNED_LITERALS")
 
 package com.beust.sixty
 
 import java.util.*
 
-private fun Byte.toHex(): String = String.format("%02x", this.toInt())
-private fun UByte.toHex(): String = String.format("%02x", this.toInt())
-private fun Int.toHex(): String = String.format("%02x", this)
+val DEBUG_ASM = false
+val DEBUG_MEMORY = false
+
+fun Byte.toHex(): String = String.format("%02x", this.toInt())
+fun Int.toHex(): String = String.format("%02x", this)
 
 /**
  * Specs used:
@@ -30,36 +32,56 @@ interface Instruction {
     val timing: Int
 
     fun runDebug() {
-        println(toString())
+        if (DEBUG_ASM) println(toString())
         run()
     }
 
     fun run()
 }
 
-class Memory(vararg bytes: Int) {
-    private val content: UByteArray = UByteArray(4096)
+class Memory(size: Int = 4096, vararg bytes: Int) {
+    var listener: MemoryListener? = null
+    private val content: IntArray = IntArray(size)
 
     init {
-        bytes.map { it.toUByte() }.toUByteArray().copyInto(content)
+        bytes.copyInto(content)
     }
 
-    fun byte(i: Int) = content[i].toInt()
-    fun setByte(i: Int, b1: Int) {
-//        println("mem[${i.toHex()}]=${b1.toHex()}")
-        if (i == 0x2ff) {
-            println("problem")
-        }
-        content[i] = b1.toUByte()
+    fun byte(i: Int): Int {
+        val result = content[i]
+        listener?.onRead(i, result)
+        return result
+    }
+
+    fun setByte(i: Int, value: Int) {
+        if (DEBUG_MEMORY) println("mem[${i.toHex()}] = ${value.toHex()}")
+        listener?.onWrite(i, value)
+        content[i] = value
     }
 
     override fun toString(): String {
-        return content.slice(0..16).map { it.toInt().and(0xff).toHex()}.joinToString(" ")
+        return content.slice(0..16).map { it.and(0xff).toHex()}.joinToString(" ")
     }
 
+    fun init(i: Int, vararg bytes: Int) {
+        var ii = i
+        bytes.forEach { b ->
+            setByte(i + ii, b)
+            ii++
+        }
+    }
 }
 
-class Computer(val cpu: Cpu = Cpu(), val memory: Memory) {
+interface MemoryListener {
+    fun onRead(location: Int, value: Int)
+    fun onWrite(location: Int, value: Int)
+}
+
+class Computer(val cpu: Cpu = Cpu(), val memory: Memory, val memoryListener: MemoryListener? = null) {
+    init {
+        memory.listener = memoryListener
+    }
+
     fun run() {
         var n = 0
         var done = false
@@ -70,7 +92,6 @@ class Computer(val cpu: Cpu = Cpu(), val memory: Memory) {
             } else {
                 val inst = cpu.nextInstruction(this)
                 print(cpu.PC.toHex() + ": ")
-                // @@
                 inst.runDebug()
                 cpu.PC += inst.size
                 n++
