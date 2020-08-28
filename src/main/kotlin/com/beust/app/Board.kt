@@ -4,8 +4,8 @@ import javafx.scene.canvas.Canvas
 import javafx.scene.paint.Color
 
 class Board(val canvas: Canvas, val width: Int, val height: Int) {
-    val blockWidth = 10.0
-    val blockHeight = 2.0
+    val blockWidth = 4.0
+    val blockHeight = 4.0
     val gap = 0
 
     init {

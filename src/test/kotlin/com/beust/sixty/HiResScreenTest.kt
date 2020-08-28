@@ -7,9 +7,13 @@ import org.testng.annotations.Test
 
 @Test
 class HiResScreenTest {
+    /**
+     * * PDCCBBAA PGGFFEED
+     */
     @DataProvider
     fun bp() = arrayOf(
-            arrayOf(0xdd, 0xbb, 1, 1, 1, 3, 1, 3, 1, 3, 1)
+            arrayOf(0xdd, 0xbb, 1, 1, 1, 3, 1, 3, 1, 3, 1),
+            arrayOf(0xf7, 0xee, 1, 1, 3, 1, 3, 2, 3, 1, 3)  // 1111_0111 1110_1110
     )
 
     @Test(dataProvider = "bp")

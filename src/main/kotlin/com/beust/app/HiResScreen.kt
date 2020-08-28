@@ -50,7 +50,8 @@ class HiResScreen(private val canvas: Canvas) {
     }
 
     fun drawMemoryLocation(memory: Memory, location: Int, value: Int) {
-        val bitPattern = if (location %2 == 0) {
+        val even = location % 2 == 0
+        val bitPattern = if (even) {
             val byte0 = memory.byte(location)
             val byte1 = memory.byte(location + 1)
             BitPattern(byte0, byte1)
@@ -66,7 +67,7 @@ class HiResScreen(private val canvas: Canvas) {
         //
         // Calculate x,y
         //
-        val evenLocation = if (location % 2 == 0) location else location - 1
+        val evenLocation = if (even) location else location - 1
         val loc = evenLocation - 0x2000
         var closest = Integer.MAX_VALUE
         var key = -1
@@ -78,7 +79,7 @@ class HiResScreen(private val canvas: Canvas) {
             }
         }
         val y = lineMap[key]
-        val x = loc - key
+        val x = ((loc - key) / 2) * 7
 
         //
         // Now we have x,y and 7 pixels to write
@@ -93,6 +94,7 @@ class HiResScreen(private val canvas: Canvas) {
             return result
         }
         var i = 0
+        println("=== Location " + location.toHex())
         drawPixel(x + i++, y!!, color(bitPattern.p0, bitPattern.aa))
         drawPixel(x + i++, y, color(bitPattern.p0, bitPattern.bb))
         drawPixel(x + i++, y, color(bitPattern.p0, bitPattern.cc))
@@ -101,6 +103,7 @@ class HiResScreen(private val canvas: Canvas) {
         drawPixel(x + i++, y, color(bitPattern.p1, bitPattern.ff))
         drawPixel(x + i++, y, color(bitPattern.p1, bitPattern.gg))
 
+        println("")
     }
 
     fun Color.s() = when(this) {
@@ -108,6 +111,7 @@ class HiResScreen(private val canvas: Canvas) {
         Color.WHITE -> "white"
         Color.GREEN -> "green"
         Color.VIOLET -> "violet"
+        Color.MAGENTA -> "magenta"
         Color.ORANGE -> "orange"
         Color.BLUE -> "blue"
         else -> this.toString()
