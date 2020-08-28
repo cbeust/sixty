@@ -3,6 +3,7 @@ package com.beust.app
 import com.beust.sixty.Computer
 import com.beust.sixty.Memory
 import com.beust.sixty.MemoryListener
+import com.beust.sixty.toHex
 import javafx.application.Application
 import javafx.application.Platform
 import javafx.event.EventHandler
@@ -14,7 +15,6 @@ import javafx.scene.input.KeyEvent
 import javafx.scene.layout.AnchorPane
 import javafx.scene.paint.Color
 import javafx.stage.Stage
-import java.io.File
 import java.nio.file.Paths
 import kotlin.system.exitProcess
 
@@ -71,6 +71,8 @@ class Main : Application() {
         stage.show()
 
         val textScreen = TextScreen(canvas)
+        val hiresScreen = HiResScreen(canvas)
+
         val listener = object: MemoryListener {
             override fun onRead(location: Int, value: Int) {
             }
@@ -86,7 +88,7 @@ class Main : Application() {
             memory.listener = listener
 //            fillScreen(memory)
 //            fillWithNumbers(memory)
-            loadPic(memory)
+//            loadPic(memory)
             run()
         }
     }
@@ -134,19 +136,51 @@ class HiResScreen(private val canvas: Canvas) {
     private val gap = 2
     private val fullWidth = (blockWidth + gap) * width + 40
     private val fullHeight = (blockHeight + gap) * height + 40
+
+    /**
+     * 2000-2027
+     */
+    private val consecutives = listOf(0, 0x400, 0x800, 0xc00, 0x1000, 0x1400, 0x1800, 0x1c00)
     private val interleaving = listOf(
             0, 0x80, 0x100, 0x180, 0x200, 0x280, 0x300, 0x380,
             0x28, 0xa8, 0x128, 0x1a8, 0x228, 0x2a8, 0x328, 0x3a8,
             0x50, 0xd0, 0x150, 0x1d0, 0x250, 0x2d0, 0x350, 0x3d0)
+    private val lineMap = hashMapOf<Int, Int>()
 
     init {
+        var l = 0
+        interleaving.forEach { il ->
+            consecutives.forEach { c ->
+                lineMap[il + c] = l++
+            }
+        }
         with(canvas.graphicsContext2D) {
             fill = Color.BLACK
             fillRect(0.0, 0.0, fullWidth.toDouble(), fullHeight.toDouble())
         }
+        (0..0x1fff).forEach {
+            drawMemoryLocation(it, 1)
+        }
     }
 
     fun drawMemoryLocation(location: Int, value: Int) {
+        var closest = Integer.MAX_VALUE
+        var key = -1
+        lineMap.entries.forEach { entry ->
+            val k = entry.key
+            val v = entry.value
+            val distance = location - k
+            if (distance in 0 .. closest) {
+                closest = distance
+                key = k
+            }
+        }
+        val y = lineMap[key]
+        val x = location - key
+        drawPixel(x, y!!, value)
+    }
+
+    private fun drawPixel(x: Int, y: Int, value: Int) {
     }
 }
 
