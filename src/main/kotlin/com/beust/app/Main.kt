@@ -98,7 +98,6 @@ class Main : Application() {
         val bytes = Paths.get("d:", "PD", "Apple disks", "fishgame.pic").toFile().readBytes()
         memory.setByte(0, 0)
         (4..bytes.size - 1).forEach {
-            println("Loading location $it")
             memory.setByte(0x2000 + it - 4, bytes[it].toInt())
         }
     }

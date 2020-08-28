@@ -50,25 +50,24 @@ class HiResScreen(private val canvas: Canvas) {
     }
 
     fun drawMemoryLocation(memory: Memory, location: Int, value: Int) {
-        if (location %2 == 0) {
+        val bitPattern = if (location %2 == 0) {
             val byte0 = memory.byte(location)
             val byte1 = memory.byte(location + 1)
-            val bp = BitPattern(byte0, byte1)
-            println(bp)
+            BitPattern(byte0, byte1)
         } else {
             // DD BB
             // 1101_1101  1011_1011
             // aa:1 bb:3 cc:1 dd:3 ee:1 ff:3 gg: 1
             val byte0 = memory.byte(location - 1)
             val byte1 = memory.byte(location)
-            val bp = BitPattern(byte0, byte1)
-            println(bp)
+            BitPattern(byte0, byte1)
         }
 
         //
         // Calculate x,y
         //
-        val loc = location - 0x2000
+        val evenLocation = if (location % 2 == 0) location else location - 1
+        val loc = evenLocation - 0x2000
         var closest = Integer.MAX_VALUE
         var key = -1
         lineMap.keys.forEach { k ->
@@ -81,9 +80,27 @@ class HiResScreen(private val canvas: Canvas) {
         val y = lineMap[key]
         val x = loc - key
 
+        //
+        // Now we have x,y and 7 pixels to write
+        //
+        fun color(group: Int, bits: Int): Color {
+            val result = when(bits) {
+                0 -> Color.BLACK
+                3 -> Color.WHITE
+                2 -> if (group == 0) Color.GREEN else Color.ORANGE
+                else -> if (group == 0) Color.MAGENTA else Color.BLUE
+            }
+            return result
+        }
+        var i = 0
+        drawPixel(x + i++, y!!, color(bitPattern.p0, bitPattern.aa))
+        drawPixel(x + i++, y, color(bitPattern.p0, bitPattern.bb))
+        drawPixel(x + i++, y, color(bitPattern.p0, bitPattern.cc))
+        drawPixel(x + i++, y, color(bitPattern.p0, bitPattern.dd))
+        drawPixel(x + i++, y, color(bitPattern.p1, bitPattern.ee))
+        drawPixel(x + i++, y, color(bitPattern.p1, bitPattern.ff))
+        drawPixel(x + i++, y, color(bitPattern.p1, bitPattern.gg))
 
-
-        drawPixel(x, y!!, value)
     }
 
     fun Color.s() = when(this) {
@@ -96,35 +113,9 @@ class HiResScreen(private val canvas: Canvas) {
         else -> this.toString()
     }
 
-    private fun drawPixel(x: Int, y: Int, value: Int) {
-        val context = canvas.graphicsContext2D
-        val group = value.and(0x80).shr(7)
-
-        fun color(group: Int, bits: Int): Color {
-            val result = when(bits) {
-                0 -> Color.BLACK
-                3 -> Color.WHITE
-                2 -> if (group == 0) Color.GREEN else Color.ORANGE
-                else -> if (group == 0) Color.VIOLET else Color.BLUE
-            }
-
-            return result
-        }
-
-        fun draw(mask: Int, shift: Int, x: Int, y: Int) {
-            val color1 = value.and(mask).shr(shift)
-            val actualColor = color(group, color1)
-            val cn = actualColor.s()
-            val b = value.b()
-            context.fill = actualColor
-            println("  $x,$y ${(value.and(0xff)).toHex()} ${actualColor.s()}")
-            // 1101_1101
-            board.draw(x, y, actualColor)
-        }
-
-        draw(3 /* 0000_0011 */, 0, x, y)
-        draw(0xc /* 0000_1100 */, 2, x + 1, y)
-        draw(0x30 /* 0011_0000 */, 4, x + 2, y)
+    private fun drawPixel(x: Int, y: Int, color: Color) {
+        println("Drawing $x,$y with ${color.s()}")
+        board.draw(x, y, color)
     }
 }
 
