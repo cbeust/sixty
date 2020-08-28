@@ -88,7 +88,7 @@ class Main : Application() {
             memory.listener = listener
 //            fillScreen(memory)
 //            fillWithNumbers(memory)
-//            loadPic(memory)
+            loadPic(memory)
             run()
         }
     }
@@ -96,7 +96,7 @@ class Main : Application() {
     private fun loadPic(memory: Memory) {
         val bytes = Paths.get("d:", "PD", "Apple disks", "fishgame.pic").toFile().readBytes()
         (4..bytes.size - 1).forEach {
-            memory.setByte(it - 4, bytes[it].toInt())
+            memory.setByte(0x2000 + it - 4, bytes[it].toInt())
         }
     }
 
@@ -155,20 +155,21 @@ class HiResScreen(private val canvas: Canvas) {
             }
         }
         with(canvas.graphicsContext2D) {
-            fill = Color.BLACK
+            fill = Color.WHITE
             fillRect(0.0, 0.0, fullWidth.toDouble(), fullHeight.toDouble())
+            fill = Color.GREEN
+            fillRect(50.0, 50.0, 50.0, 50.0)
         }
-        (0..0x1fff).forEach {
-            drawMemoryLocation(it, 1)
-        }
+        drawMemoryLocation(0x0000, 0x2a)
+//        (0..0x1fff).forEach {
+//            drawMemoryLocation(it, 1)
+//        }
     }
 
     fun drawMemoryLocation(location: Int, value: Int) {
         var closest = Integer.MAX_VALUE
         var key = -1
-        lineMap.entries.forEach { entry ->
-            val k = entry.key
-            val v = entry.value
+        lineMap.keys.forEach { k ->
             val distance = location - k
             if (distance in 0 .. closest) {
                 closest = distance
@@ -181,6 +182,32 @@ class HiResScreen(private val canvas: Canvas) {
     }
 
     private fun drawPixel(x: Int, y: Int, value: Int) {
+        val context = canvas.graphicsContext2D
+        val group = value.and(0x80).shr(7)
+
+        fun color(group: Int, bits: Int): Color {
+            val result = if (bits == 0) Color.BLACK
+            else if (bits == 3) Color.WHITE
+            else if (bits == 2) if (group == 0) Color.VIOLET else Color.BLACK
+            else if (group == 0) Color.GREEN else Color.ORANGE
+            println("Group $group, bits $bits, color $result")
+            return result
+        }
+
+        val mask = 0x60  // 0110_0000
+        val color1 = value.and(mask).shr(5)
+        context.fill = color(group, color1)
+        context.rect(x.toDouble(), y.toDouble(), 10.0, 10.0)
+
+        val mask2 = 0x18  // 0001_1000
+        val color2 = value.and(mask2).shr(3)
+        context.fill = color(group, color2)
+        context.rect(x.toDouble() + 1, y.toDouble(), 10.0, 10.0)
+
+        val mask3 = 0x6  // 0000_0110
+        val color3 = value.and(mask3).shr(1)
+        context.fill = color(group, color3)
+        context.rect(x.toDouble() + 2, y.toDouble(), 10.0, 10.0)
     }
 }
 
