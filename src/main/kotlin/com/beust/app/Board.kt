@@ -4,13 +4,13 @@ import javafx.scene.canvas.Canvas
 import javafx.scene.paint.Color
 
 class Board(val canvas: Canvas, val width: Int, val height: Int) {
-    val blockWidth = 4.0
-    val blockHeight = 4.0
+    val blockWidth = 6.0
+    val blockHeight = 3.0
     val gap = 0
 
     init {
-        val fullWidth = (blockWidth + gap) * width
-        val fullHeight = (blockHeight + gap) * height
+        val fullWidth = (blockWidth + gap) * width + 20
+        val fullHeight = (blockHeight + gap) * height + 20
         canvas.widthProperty().set(fullWidth)
         canvas.heightProperty().set(fullHeight)
         with(canvas.graphicsContext2D) {
