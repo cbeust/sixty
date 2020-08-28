@@ -7,8 +7,9 @@ import java.util.*
 val DEBUG_ASM = false
 val DEBUG_MEMORY = false
 
-fun Byte.toHex(): String = String.format("%02x", this.toInt())
-fun Int.toHex(): String = String.format("%02x", this)
+fun logMem(i: Int, value: Int, extra: String = "") {
+    println("mem[${i.toHex()}] = ${(value.and(0xff)).toHex()} $extra")
+}
 
 /**
  * Specs used:
@@ -72,13 +73,13 @@ class Memory(size: Int = 4096, vararg bytes: Int) {
         if (interceptor != null) {
             val response = interceptor!!.onWrite(i, value)
             if (response.allow) {
-                if (DEBUG_MEMORY) println("mem[${i.toHex()}] = ${value.toHex()} (allowed)")
+                if (DEBUG_MEMORY) logMem(i, value, "(allowed)")
                 content[i] = value
             } else {
-                if (DEBUG_MEMORY) println("mem[${i.toHex()}] = ${value.toHex()} (denied)")
+                if (DEBUG_MEMORY) logMem(i, value, "(denied)")
             }
         } else {
-            if (DEBUG_MEMORY) println("mem[${i.toHex()}] = ${value.toHex()}")
+            if (DEBUG_MEMORY) logMem(i, value)
             content[i] = value
         }
         listener?.onWrite(i, value)

@@ -3,7 +3,6 @@ package com.beust.app
 import com.beust.sixty.Computer
 import com.beust.sixty.Memory
 import com.beust.sixty.MemoryListener
-import com.beust.sixty.toHex
 import javafx.application.Application
 import javafx.application.Platform
 import javafx.event.EventHandler
@@ -13,7 +12,6 @@ import javafx.scene.canvas.Canvas
 import javafx.scene.input.KeyCode
 import javafx.scene.input.KeyEvent
 import javafx.scene.layout.AnchorPane
-import javafx.scene.paint.Color
 import javafx.stage.Stage
 import java.nio.file.Paths
 import kotlin.system.exitProcess
@@ -71,7 +69,8 @@ class Main : Application() {
         stage.show()
 
         val textScreen = TextScreen(canvas)
-        val hiresScreen = HiResScreen(canvas)
+        val graphicsScreen = HiResScreen(canvas)
+        val memory = Memory(size = 65536)
 
         val listener = object: MemoryListener {
             override fun onRead(location: Int, value: Int) {
@@ -80,11 +79,13 @@ class Main : Application() {
             override fun onWrite(location: Int, value: Int) {
                 if (location >= 0x400 && location < 0x7ff) {
                     textScreen.drawMemoryLocation(location, value)
+                } else if (location >= 0x2000 && location <= 0x3fff) {
+                    graphicsScreen.drawMemoryLocation(memory, location, value)
                 }
             }
 
         }
-        with(Computer(memory = Memory(size = 65536))) {
+        with(Computer(memory = memory)) {
             memory.listener = listener
 //            fillScreen(memory)
 //            fillWithNumbers(memory)
@@ -95,7 +96,9 @@ class Main : Application() {
 
     private fun loadPic(memory: Memory) {
         val bytes = Paths.get("d:", "PD", "Apple disks", "fishgame.pic").toFile().readBytes()
+        memory.setByte(0, 0)
         (4..bytes.size - 1).forEach {
+            println("Loading location $it")
             memory.setByte(0x2000 + it - 4, bytes[it].toInt())
         }
     }
@@ -128,120 +131,3 @@ class Main : Application() {
     }
 }
 
-class HiResScreen(private val canvas: Canvas) {
-    private val width = 140
-    private val height = 192
-    private val blockWidth = 5
-    private val blockHeight = 5
-    private val gap = 2
-    private val fullWidth = (blockWidth + gap) * width + 40
-    private val fullHeight = (blockHeight + gap) * height + 40
-
-    /**
-     * 2000-2027
-     */
-    private val consecutives = listOf(0, 0x400, 0x800, 0xc00, 0x1000, 0x1400, 0x1800, 0x1c00)
-    private val interleaving = listOf(
-            0, 0x80, 0x100, 0x180, 0x200, 0x280, 0x300, 0x380,
-            0x28, 0xa8, 0x128, 0x1a8, 0x228, 0x2a8, 0x328, 0x3a8,
-            0x50, 0xd0, 0x150, 0x1d0, 0x250, 0x2d0, 0x350, 0x3d0)
-    private val lineMap = hashMapOf<Int, Int>()
-
-    init {
-        var l = 0
-        interleaving.forEach { il ->
-            consecutives.forEach { c ->
-                lineMap[il + c] = l++
-            }
-        }
-        with(canvas.graphicsContext2D) {
-            fill = Color.WHITE
-            fillRect(0.0, 0.0, fullWidth.toDouble(), fullHeight.toDouble())
-            fill = Color.GREEN
-            fillRect(50.0, 50.0, 50.0, 50.0)
-        }
-        drawMemoryLocation(0x0000, 0x2a)
-//        (0..0x1fff).forEach {
-//            drawMemoryLocation(it, 1)
-//        }
-    }
-
-    fun drawMemoryLocation(location: Int, value: Int) {
-        var closest = Integer.MAX_VALUE
-        var key = -1
-        lineMap.keys.forEach { k ->
-            val distance = location - k
-            if (distance in 0 .. closest) {
-                closest = distance
-                key = k
-            }
-        }
-        val y = lineMap[key]
-        val x = location - key
-        drawPixel(x, y!!, value)
-    }
-
-    private fun drawPixel(x: Int, y: Int, value: Int) {
-        val context = canvas.graphicsContext2D
-        val group = value.and(0x80).shr(7)
-
-        fun color(group: Int, bits: Int): Color {
-            val result = if (bits == 0) Color.BLACK
-            else if (bits == 3) Color.WHITE
-            else if (bits == 2) if (group == 0) Color.VIOLET else Color.BLACK
-            else if (group == 0) Color.GREEN else Color.ORANGE
-            println("Group $group, bits $bits, color $result")
-            return result
-        }
-
-        val mask = 0x60  // 0110_0000
-        val color1 = value.and(mask).shr(5)
-        context.fill = color(group, color1)
-        context.rect(x.toDouble(), y.toDouble(), 10.0, 10.0)
-
-        val mask2 = 0x18  // 0001_1000
-        val color2 = value.and(mask2).shr(3)
-        context.fill = color(group, color2)
-        context.rect(x.toDouble() + 1, y.toDouble(), 10.0, 10.0)
-
-        val mask3 = 0x6  // 0000_0110
-        val color3 = value.and(mask3).shr(1)
-        context.fill = color(group, color3)
-        context.rect(x.toDouble() + 2, y.toDouble(), 10.0, 10.0)
-    }
-}
-
-class TextScreen(private val canvas: Canvas) {
-    private val width = 40
-    private val height = 24
-    private val fontWidth = 10
-    private val fontHeight = 10
-    private val gap = 5
-    private val fullWidth = (fontWidth + gap) * width + 40
-    private val fullHeight = (fontHeight + gap) * height + 40
-
-    init {
-        with(canvas.graphicsContext2D) {
-            fill = Color.BLACK
-            fillRect(0.0, 0.0, fullWidth.toDouble(), fullHeight.toDouble())
-        }
-    }
-
-    fun drawMemoryLocation(location: Int, value: Int) {
-        val z = location - 0x400
-        val x = z % width
-        val y = z / width
-        drawCharacter(x, y, value.toChar())
-    }
-
-    private fun drawCharacter(x: Int, y: Int, character: Char) {
-        if (x < width && y < height) {
-            val xx = x * (fontWidth + gap)
-            val yy = y * (fontHeight + gap)
-            with(canvas.graphicsContext2D) {
-                fill = Color.WHITE
-                fillText(character.toString(), xx.toDouble(), yy.toDouble())
-            }
-        }
-    }
-}
