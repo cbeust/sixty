@@ -12,19 +12,25 @@ class HiResScreenTest {
      */
     @DataProvider
     fun bp() = arrayOf(
-            arrayOf(0xdd, 0xbb, 1, 1, 1, 3, 1, 3, 1, 3, 1),
-            arrayOf(0xf7, 0xee, 1, 1, 3, 1, 3, 2, 3, 1, 3)  // 1111_0111 1110_1110
+//            arrayOf(0xf7, 0xee, 1, 1, 3, 1, 3, 2, 3, 1, 3)  // 1111_0111 1110_1110
+//            arrayOf(0xdd, 0xbb, 1, 1, 1, 3, 1, 3, 1, 3, 1)
+//            arrayOf(0x6e, 0x00, 1, 0, 2, 3, 2, 1, 0, 0, 0) // 0110_1110 0000_0000
+            arrayOf(0xe0, 0x00, 1, 0, 0, 0, 2, 1, 0, 0, 0)  // 1110_0000 0000_0000
     )
 
     @Test(dataProvider = "bp")
     fun bitPatterns(byte0: Int, byte1: Int, p0: Int, p1: Int, a: Int, b: Int, c: Int, d: Int, e: Int, f: Int, g: Int) {
-        val bp = BitPattern(byte0, byte1)
-        assertThat(bp.aa).isEqualTo(a)
-        assertThat(bp.bb).isEqualTo(b)
-        assertThat(bp.cc).isEqualTo(c)
-        assertThat(bp.dd).isEqualTo(d)
-        assertThat(bp.ee).isEqualTo(e)
-        assertThat(bp.ff).isEqualTo(f)
-        assertThat(bp.gg).isEqualTo(g)
+        with(BitPattern(byte0, byte1)) {
+            println(colorStrings())
+            assertThat(this.p0).isEqualTo(p0)
+            assertThat(this.p1).isEqualTo(p1)
+            assertThat(aa).isEqualTo(a)
+            assertThat(bb).isEqualTo(b)
+            assertThat(cc).isEqualTo(c)
+            assertThat(dd).isEqualTo(d)
+            assertThat(ee).isEqualTo(e)
+            assertThat(ff).isEqualTo(f)
+            assertThat(gg).isEqualTo(g)
+        }
     }
 }
