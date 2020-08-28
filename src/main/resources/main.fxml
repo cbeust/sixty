@@ -3,7 +3,7 @@
 <?import javafx.scene.canvas.Canvas?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.layout.*?>
-<AnchorPane xmlns:fx="http://javafx.com/fxml/1" stylesheets="style.css" prefWidth="1000" prefHeight="800">
+<AnchorPane xmlns:fx="http://javafx.com/fxml/1" stylesheets="style.css">
 <!--    <Canvas id="canvas" AnchorPane.leftAnchor="0" AnchorPane.rightAnchor="0" AnchorPane.topAnchor="0" AnchorPane.bottomAnchor="0">-->
 
 <!--    </Canvas>-->
