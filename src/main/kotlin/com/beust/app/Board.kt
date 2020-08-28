@@ -1,6 +1,7 @@
 package com.beust.app
 
 import javafx.scene.canvas.Canvas
+import javafx.scene.layout.AnchorPane
 import javafx.scene.paint.Color
 
 class Board(val canvas: Canvas, val width: Int, val height: Int) {
@@ -9,14 +10,16 @@ class Board(val canvas: Canvas, val width: Int, val height: Int) {
     val gap = 0
 
     init {
-        val fullWidth = (blockWidth + gap) * width + 20
-        val fullHeight = (blockHeight + gap) * height + 20
-        canvas.widthProperty().set(fullWidth)
-        canvas.heightProperty().set(fullHeight)
-        with(canvas.graphicsContext2D) {
-            fill = Color.WHITE
-            fillRect(0.0, 0.0, fullWidth, fullHeight)
+        val fullWidth = (blockWidth + gap) * width
+        val fullHeight = (blockHeight + gap) * height
+        with(canvas.parent as AnchorPane) {
+            prefWidth = fullWidth
+            prefHeight = fullHeight
         }
+//        with(canvas.graphicsContext2D) {
+//            fill = Color.BLUE
+//            fillRect(0.0, 0.0, fullWidth, fullHeight)
+//        }
     }
 
     fun draw(x: Int, y: Int, color: Color) {

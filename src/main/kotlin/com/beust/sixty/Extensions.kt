@@ -1,5 +1,7 @@
 package com.beust.sixty
 
+import javafx.scene.paint.Color
+
 fun Byte.toHex(): String = String.format("%02x", this.toInt())
 fun Int.toHex(): String = String.format("%02x", this)
 
@@ -17,4 +19,15 @@ fun Int.b(): String {
         }
     }
     return result.joinToString("")
+}
+
+fun Color.s() = when(this) {
+    Color.BLACK -> "black"
+    Color.WHITE -> "white"
+    Color.GREEN -> "green"
+    Color.VIOLET -> "violet"
+    Color.MAGENTA -> "magenta"
+    Color.ORANGE -> "orange"
+    Color.BLUE -> "blue"
+    else -> this.toString()
 }

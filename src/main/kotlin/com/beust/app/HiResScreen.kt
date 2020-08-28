@@ -1,7 +1,7 @@
 package com.beust.app
 
 import com.beust.sixty.Memory
-import com.beust.sixty.b
+import com.beust.sixty.s
 import com.beust.sixty.toHex
 import javafx.scene.canvas.Canvas
 import javafx.scene.paint.Color
@@ -24,7 +24,7 @@ class HiResScreen(private val canvas: Canvas) {
     private val gap = 2
     private val fullWidth = (blockWidth + gap) * width + 40
     private val fullHeight = (blockHeight + gap) * height + 40
-    private val board = Board(canvas, 600, 400)
+    private val board = Board(canvas, width, height)
 
     /**
      * 2000-2027
@@ -81,69 +81,29 @@ class HiResScreen(private val canvas: Canvas) {
         val y = lineMap[key]
         val x = ((loc - key) / 2) * 7
 
-        //
-        // Now we have x,y and 7 pixels to write
-        //
-        fun color(group: Int, bits: Int): Color {
-            val result = when(bits) {
-                0 -> Color.BLACK
-                3 -> Color.WHITE
-                2 -> if (group == 0) Color.GREEN else Color.ORANGE
-                else -> if (group == 0) Color.MAGENTA else Color.BLUE
-            }
-            return result
-        }
         var i = 0
-        println("=== Location " + location.toHex())
-        drawPixel(x + i++, y!!, color(bitPattern.p0, bitPattern.aa))
-        drawPixel(x + i++, y, color(bitPattern.p0, bitPattern.bb))
-        drawPixel(x + i++, y, color(bitPattern.p0, bitPattern.cc))
-        drawPixel(x + i++, y, color(if (even) bitPattern.p0 else bitPattern.p1, bitPattern.dd))
-        drawPixel(x + i++, y, color(bitPattern.p1, bitPattern.ee))
-        drawPixel(x + i++, y, color(bitPattern.p1, bitPattern.ff))
-        drawPixel(x + i++, y, color(bitPattern.p1, bitPattern.gg))
+//        println("=== Location " + location.toHex() + " at $x, $y")
+//        if (bitPattern.colors().contains(Color.ORANGE)) {// && x >=140.0) {
+//            println("PROBLEM")
+//        }
 
-        println("")
+        fun drawPixel(x: Int, y: Int, color: Color) {
+            if (color == Color.ORANGE) {
+                println("Drawing $${location.toHex()} $x,$y with ${color.s()}")
+            }
+            board.draw(x, y, color)
+        }
+
+        drawPixel(x + i++, y!!, BitPattern.color(bitPattern.p0, bitPattern.aa, x))
+        drawPixel(x + i++, y, BitPattern.color(bitPattern.p0, bitPattern.bb, x))
+        drawPixel(x + i++, y, BitPattern.color(bitPattern.p0, bitPattern.cc, x))
+        drawPixel(x + i++, y, BitPattern.color(if (even) bitPattern.p0 else bitPattern.p1, bitPattern.dd, x))
+        drawPixel(x + i++, y, BitPattern.color(bitPattern.p1, bitPattern.ee, x))
+        drawPixel(x + i++, y, BitPattern.color(bitPattern.p1, bitPattern.ff, x))
+        drawPixel(x + i++, y, BitPattern.color(bitPattern.p1, bitPattern.gg, x))
+
+//        println("")
     }
 
-    fun Color.s() = when(this) {
-        Color.BLACK -> "black"
-        Color.WHITE -> "white"
-        Color.GREEN -> "green"
-        Color.VIOLET -> "violet"
-        Color.MAGENTA -> "magenta"
-        Color.ORANGE -> "orange"
-        Color.BLUE -> "blue"
-        else -> this.toString()
-    }
-
-    private fun drawPixel(x: Int, y: Int, color: Color) {
-        println("Drawing $x,$y with ${color.s()}")
-        board.draw(x, y, color)
-    }
 }
 
-class BitPattern(byte0: Int, byte1: Int) {
-    var p0: Int = 0
-    var aa: Int = 0
-    var bb: Int = 0
-    var cc: Int = 0
-
-    var p1: Int = 0
-    var dd: Int = 0
-    var ee: Int = 0
-    var ff: Int = 0
-    var gg: Int = 0
-
-    init {
-        p0 = byte0.and(0x80).shr(7)
-        aa = byte0.and(0x3)
-        bb = byte0.and(0xc).shr(2)
-        cc = byte0.and(0x30).shr(4)
-        dd = byte1.and(1).shl(1).or(byte0.and(0x40).shr(6))
-        ee = byte1.and(6).shr(1)
-        ff = byte1.and(0x18).shr(3)
-        gg = byte1.and(0x60).shr(5)
-        p1 = byte1.and(0x80).shr(7)
-    }
-}

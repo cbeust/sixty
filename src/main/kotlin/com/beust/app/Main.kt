@@ -44,7 +44,7 @@ class Main : Application() {
          }
 
 //        val canvas = root.lookup("#canvas") as Canvas
-        val canvas = Canvas(800.0, 400.0)
+        val canvas = Canvas(1000.0, 600.0)
         root.children.add(canvas)
 
 //        root.widthProperty().addListener { e: Observable? ->
@@ -90,6 +90,8 @@ class Main : Application() {
 //            fillScreen(memory)
 //            fillWithNumbers(memory)
             loadPic(memory)
+//            memory.setByte(0x2000, 0x6e)
+//            memory.setByte(0x2001, 0)
             run()
         }
     }
