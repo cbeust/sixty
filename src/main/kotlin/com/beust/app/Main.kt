@@ -37,12 +37,12 @@ class Main : Application() {
         stage.scene = scene
 
         scene.setOnKeyPressed { event: KeyEvent ->
-            when(event.code) {
+            when (event.code) {
                 KeyCode.Q -> {
                     stage.close()
                 }
             }
-         }
+        }
 
 //        val canvas = root.lookup("#canvas") as Canvas
         val canvas = Canvas(1000.0, 600.0)
@@ -74,8 +74,8 @@ class Main : Application() {
         val memory = Memory(65536, 0xa9, 0x41, 0x4c, 0xed, 0xfd).apply {
             load("d:\\pd\\Apple Disks\\apple2eu.rom", 0xc000)
             load("d:\\pd\\Apple Disks\\dos", 0x9600)
-//            setByte(0x36, 0xbd)
-//            setByte(0x37, 0x9e)
+            this[0x36] = 0xbd
+            this[0x37] = 0x9e
         }
 
         val listener = object: MemoryListener {
@@ -96,9 +96,9 @@ class Main : Application() {
 //            fillScreen(memory)
 //            fillWithNumbers(memory)
             loadPic(memory)
-//            memory.setByte(0x2000, 0x6e)
-//            memory.setByte(0x2001, 0)
-            memory[0] = 0
+            if (false) {
+                memory[0] = 0
+            }
             run()
         }
     }

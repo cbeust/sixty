@@ -110,72 +110,6 @@ class Memory(val size: Int = 0x10000, vararg bytes: Int) {
     }
 }
 
-interface MemoryInterceptor {
-    class Response(val allow: Boolean, val value: Int)
-
-    fun onRead(location: Int): Response
-    fun onWrite(location: Int, value: Int): Response
-}
-
-interface MemoryListener {
-    fun onRead(location: Int, value: Int)
-    fun onWrite(location: Int, value: Int)
-}
-
-class Computer(val cpu: Cpu = Cpu(), val memory: Memory, memoryListener: MemoryListener? = null,
-        memoryInterceptor: MemoryInterceptor? = null) {
-    init {
-        memory.listener = memoryListener
-        memory.interceptor = memoryInterceptor
-    }
-
-    fun run() {
-        var n = 0
-        var done = false
-        while (! done) {
-            if ((memory[cpu.PC] == 0x60 && cpu.SP.isEmpty()) ||
-                    memory[cpu.PC] == 0) {
-                done = true
-            } else {
-                val inst = cpu.nextInstruction(this)
-                if (DEBUG_ASM) disassemble(cpu.PC, 1)
-                inst.run()
-                cpu.PC += inst.size
-                n++
-            }
-        }
-    }
-
-    fun clone(): Computer {
-        return Computer(cpu.clone(), Memory(memory.size, *memory.content))
-    }
-
-    fun disassemble(add: Int = cpu.PC, length: Int = 10) {
-        with (clone()) {
-            cpu.PC = add
-            var pc = cpu.PC
-            var done = false
-            var n = length
-            while (! done) {
-                val p = memory[pc]
-                val inst = cpu.nextInstruction(this, noThrows = true)
-                val bytes = StringBuffer(inst.opCode.h())
-                bytes.append(if (inst.size > 1) (" " + memory[pc + 1].h()) else "   ")
-                bytes.append(if (inst.size == 3) (" " + memory[pc + 2].h()) else "   ")
-                println(pc.h() + ": " + bytes.toString() + "  " + inst.toString())
-                cpu.PC += inst.size
-                pc += inst.size
-                if (--n <= 0) done = true
-            }
-        }
-    }
-
-    override fun toString(): String {
-        return "{Computer cpu:$cpu}\n$memory"
-    }
-
-}
-
 class StackPointer {
     private val stack = Stack<Byte>()
     fun pushByte(a: Byte) = stack.push(a)
@@ -272,6 +206,7 @@ data class Cpu(var A: Int = 0, var X: Int = 0, var Y: Int = 0, var PC: Int = 0,
             0x6c -> JmpIndirect(computer)
             0x69 -> AdcImm(computer)
             0x85 -> StaZp(computer)
+            0x8d -> StaAbsolute(computer)
             0x90 -> Bcc(computer)
             0x91 -> StaIndY(computer)
             0xa0 -> LdyImm(computer)
@@ -408,6 +343,15 @@ class StaZp(c: Computer): InstructionBase(c) {
     override val timing = 3
     override fun run() { memory[operand] = cpu.A }
     override fun toString(): String = "STA $" + memory[cpu.PC + 1].h()
+}
+
+/** 0x8d, STA ($1234) */
+class StaAbsolute(c: Computer): InstructionBase(c) {
+    override val opCode = 0x8d
+    override val size = 3
+    override val timing = 4
+    override fun run() { memory[word] = cpu.A }
+    override fun toString(): String = "STA $${word.h()}"
 }
 
 open class BranchBase(c: Computer, opCode: Int, val name: String, val condition: () -> Boolean): InstructionBase(c) {

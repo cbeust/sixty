@@ -5,7 +5,7 @@ import org.testng.annotations.DataProvider
 import org.testng.annotations.Test
 import kotlin.math.exp
 
-fun computer(vararg bytes: Int) = Computer(memory = Memory(4096, *bytes))
+fun computer(vararg bytes: Int) = Computer(memory = Memory(bytes = *bytes))
 
 fun assertFlag(n: String, flag: Boolean, expected: Int) {
     assertThat(flag.int()).isEqualTo(expected).withFailMessage("Flag $n")
@@ -80,7 +80,7 @@ class SixtyTest {
 
     @Test(enabled = false)
     fun Computer.assertMemory(index: Int, value: Int) {
-        assertThat(memory[index].toInt()).isEqualTo(value)
+        assertThat(memory[index]).isEqualTo(value)
     }
 
     fun StaIndY() {
@@ -207,6 +207,14 @@ class SixtyTest {
 //            disassemble()
             run()
             assertRegister(cpu.A, 0x42)
+        }
+    }
+
+    fun staAbsolute() {
+        with(computer(0xa9, 0x42, 0x8d, 0x34, 0x12, 0)) {
+            assertMemory(0x1234, 0)
+            run()
+            assertMemory(0x1234, 0x42)
         }
     }
 }
