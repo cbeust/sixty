@@ -160,32 +160,6 @@ class StatusFlags {
 
     override fun toString() = "{N=${N.int()} V=${V.int()} D=${D.int()} I=${I.int()} Z=${Z.int()} C=${C.int()}"
 
-//    /** true if the value is 0 */
-//    fun updateZ(newValue: UByte) {
-//        Z = if (newValue == 0.toUByte()) 1u else 0u
-//    }
-//
-//    /** Bit 7 of the value */
-//    fun updateN(value: Byte) {
-//        N = if (value.toInt().and(0x80) == 0) 0u else 1u
-//    }
-//
-//    fun updateN(value: Byte, b1: Byte) {
-//        N = if (value.toInt() - b1.toInt() < 0) 1u else 0u
-//    }
-//
-//    fun setC(v: Boolean) { C = if (v) 1u else 0u }
-//
-//    fun setZAndN(reg: Int) {
-//        Z = if (reg == 0) 1u else 0u
-//        N = if (reg and 0x80 != 0) 1u else 0u
-//    }
-//
-//    fun updateV(a: Byte, b1: Byte) {
-//        val sum = a + b1
-//        V = if (sum >= 128 || sum <= -127) 1u else 0u
-//    }
-
     fun setArithmeticFlags(reg: Int) {
         Z = reg == 0
         N = reg.and(0x80) != 0
@@ -206,10 +180,13 @@ data class Cpu(var A: Int = 0, var X: Int = 0, var Y: Int = 0, var PC: Int = 0,
             0x6c -> JmpIndirect(computer)
             0x69 -> AdcImm(computer)
             0x85 -> StaZp(computer)
+            0x8c -> StyAbsolute(computer)
             0x8d -> StaAbsolute(computer)
+            0x8e -> StxAbsolute(computer)
             0x90 -> Bcc(computer)
             0x91 -> StaIndY(computer)
             0xa0 -> LdyImm(computer)
+            0xa2 -> LdxImm(computer)
             0xa5 -> LdaZp(computer)
             0xa9 -> LdaImm(computer)
             0xc0 -> CpyImm(computer)
@@ -345,6 +322,15 @@ class StaZp(c: Computer): InstructionBase(c) {
     override fun toString(): String = "STA $" + memory[cpu.PC + 1].h()
 }
 
+/** 0x8c, STY ($1234) */
+class StyAbsolute(c: Computer): InstructionBase(c) {
+    override val opCode = 0x8c
+    override val size = 3
+    override val timing = 4
+    override fun run() { memory[word] = cpu.Y }
+    override fun toString(): String = "STY $${word.h()}"
+}
+
 /** 0x8d, STA ($1234) */
 class StaAbsolute(c: Computer): InstructionBase(c) {
     override val opCode = 0x8d
@@ -352,6 +338,15 @@ class StaAbsolute(c: Computer): InstructionBase(c) {
     override val timing = 4
     override fun run() { memory[word] = cpu.A }
     override fun toString(): String = "STA $${word.h()}"
+}
+
+/** 0x8e, STX ($1234) */
+class StxAbsolute(c: Computer): InstructionBase(c) {
+    override val opCode = 0x8e
+    override val size = 3
+    override val timing = 4
+    override fun run() { memory[word] = cpu.X }
+    override fun toString(): String = "STX $${word.h()}"
 }
 
 open class BranchBase(c: Computer, opCode: Int, val name: String, val condition: () -> Boolean): InstructionBase(c) {
@@ -407,6 +402,11 @@ abstract class LdImmBase(c: Computer, opCode: Int, val name: String): Instructio
 /** 0xa0, LDY #$10 */
 class LdyImm(c: Computer): LdImmBase(c, 0xa0, "LDY") {
     override fun run() { cpu.Y = operand }
+}
+
+/** 0xa2, LDX #$10 */
+class LdxImm(c: Computer): LdImmBase(c, 0xa2, "LDX") {
+    override fun run() { cpu.X = operand }
 }
 
 /** 0xa9, LDA #$10 */

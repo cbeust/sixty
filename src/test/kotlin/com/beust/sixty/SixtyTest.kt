@@ -210,11 +210,17 @@ class SixtyTest {
         }
     }
 
-    fun staAbsolute() {
-        with(computer(0xa9, 0x42, 0x8d, 0x34, 0x12, 0)) {
+    private fun storeAbsolute(loadOp: Int, storeOp: Int) {
+        with(computer(loadOp, 0x42, storeOp, 0x34, 0x12, 0)) {
             assertMemory(0x1234, 0)
             run()
             assertMemory(0x1234, 0x42)
         }
     }
+
+    fun staAbsolute() = storeAbsolute(0xa9, 0x8d)  // LDA #$42, STA $1234
+
+    fun stxAbsolute() = storeAbsolute(0xa2, 0x8e)  // LDX #$42, STX $1234
+
+    fun styAbsolute() = storeAbsolute(0xa0, 0x8c) // LDY #$42, STY $1234
 }
