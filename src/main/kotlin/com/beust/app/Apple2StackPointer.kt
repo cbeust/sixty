@@ -24,4 +24,5 @@ class Apple2StackPointer(override var S: Int = 0xff, private val memory: Memory)
 
     override fun isEmpty(): Boolean = S == 0xff
 
+    override fun toString() = "{S=$S}"
 }

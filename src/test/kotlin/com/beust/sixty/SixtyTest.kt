@@ -4,7 +4,6 @@ import com.beust.app.Apple2StackPointer
 import org.assertj.core.api.Assertions.assertThat
 import org.testng.annotations.DataProvider
 import org.testng.annotations.Test
-import kotlin.math.exp
 
 fun assertFlag(n: String, flag: Boolean, expected: Int) {
     assertThat(flag.int()).isEqualTo(expected).withFailMessage("Flag $n")
@@ -84,7 +83,7 @@ abstract class BaseTest {
         assertThat(memory[index]).isEqualTo(value)
     }
 
-    fun StaIndY() {
+    fun staIndY() {
         // memory(4) points to address 8, then we add Y(2) to it to produce 10. Store $42 in memory(10)
         // STA ($4), Y
         with(computer(0x91, 4, 0, 0, 8, 0, 0, 0, 0, 0, 0, 0, 0, 0)) {
@@ -226,14 +225,19 @@ abstract class BaseTest {
     fun styAbsolute() = storeAbsolute(0xa0, 0x8c) // LDY #$42, STY $1234
 }
 
-class CpuTest: BaseTest() {
-    override fun computer(vararg bytes: Int) = Computer(memory = Memory(bytes = *bytes))
-}
-
 class Apple2Test: BaseTest() {
     override fun computer(vararg bytes: Int): Computer {
         val memory = Memory(bytes = *bytes)
         val stackPointer = Apple2StackPointer(memory = memory)
         return Computer(Cpu(SP = stackPointer), memory)
+    }
+
+    fun tsx() {
+        with(computer(0xa9, 0, 0x20, 5, 0, 0xba)) {
+            assertRegister(cpu.X, 0)
+            run()
+            assertRegister(cpu.SP.S, 0xfd)
+            assertRegister(cpu.X, 0xfd)
+        }
     }
 }

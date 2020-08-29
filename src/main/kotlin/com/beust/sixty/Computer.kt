@@ -53,7 +53,7 @@ class Computer(val cpu: Cpu = Cpu(), val memory: Memory, memoryListener: MemoryL
                 val bytes = StringBuffer(inst.opCode.h())
                 bytes.append(if (inst.size > 1) (" " + memory[pc + 1].h()) else "   ")
                 bytes.append(if (inst.size == 3) (" " + memory[pc + 2].h()) else "   ")
-                pc.h() + ": " + bytes.toString() + "  " + inst.toString().let {
+                (pc.h() + ": " + bytes.toString() + "  " + inst.toString()).let {
                     result.add(it)
                     if (print) println(it)
                 }

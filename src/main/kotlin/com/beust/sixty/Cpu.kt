@@ -132,6 +132,7 @@ data class Cpu(var A: Int = 0, var X: Int = 0, var Y: Int = 0, var PC: Int = 0,
             0xa2 -> LdxImm(computer)
             0xa5 -> LdaZp(computer)
             0xa9 -> LdaImm(computer)
+            0xba -> Tsx(computer)
             0xc0 -> CpyImm(computer)
             0xc8 -> Iny(computer)
             0xc9 -> CmpImm(computer)
@@ -357,6 +358,15 @@ class LdxImm(c: Computer): LdImmBase(c, 0xa2, "LDX") {
 /** 0xa9, LDA #$10 */
 class LdaImm(c: Computer): LdImmBase(c, 0xa9, "LDA") {
     override fun run() { cpu.A = operand }
+}
+
+/** 0xba, TSX */
+class Tsx(c: Computer): InstructionBase(c) {
+    override val opCode = 0xba
+    override val size = 1
+    override val timing = 2
+    override fun run() { cpu.X = cpu.SP.S }
+    override fun toString(): String = "TSX"
 }
 
 abstract class IncBase(c: Computer, override val opCode: Int): InstructionBase(c) {
