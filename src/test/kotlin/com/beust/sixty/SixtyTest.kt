@@ -175,7 +175,7 @@ abstract class BaseTest {
      * Fill the memory 0x200-0x3ff with value 0x28.
      */
     fun fillingScreen() {
-        val c = computer(0x4c, 5, 0, 0xea, 0xea,
+        with(computer(0x4c, 5, 0, 0xea, 0xea,
                 0xa9, 0x00, // LDA #0
                 0x85, 0x3,  // STA #03
                 0xa9, 0x02, // LDA #2
@@ -189,21 +189,21 @@ abstract class BaseTest {
                 0xa5, 0x4,  // LDA $04
                 0xc9, 0x04, // CMP #$03
                 0x90, 0xf1, // BCC $5
-                0x60)
+                0x60)) {
 
-        // Make sure the entire memory is 0 before the run
-        assertMemory(c.memory, 0x30, 0x1ff, 0)
-        c.run()
-        // Make sure only 0x200-0x3ff contains the value
-        assertMemory(c.memory, 0x30, 0x1ff, 0)
-        assertMemory(c.memory, 0x200, 0x3ff, 0x28)
-        assertMemory(c.memory, 0x400, 0x500, 0)
+            // Make sure the entire memory is 0 before the run
+            assertMemory(memory, 0x30, 0x1ff, 0)
+            run()
+            // Make sure only 0x200-0x3ff contains the value
+            assertMemory(memory, 0x30, 0x1ff, 0)
+            assertMemory(memory, 0x200, 0x3ff, 0x28)
+            assertMemory(memory, 0x400, 0x500, 0)
+        }
     }
 
     fun jmpIndirect() {
         with(computer(0xa9, 0, 0x6c, 5, 0, 7, 0, 0xa9, 0x42, 0)) {
             assertRegister(cpu.A, 0)
-//            disassemble()
             run()
             assertRegister(cpu.A, 0x42)
         }
@@ -222,5 +222,94 @@ abstract class BaseTest {
     fun stxAbsolute() = storeAbsolute(0xa2, 0x8e)  // LDX #$42, STX $1234
 
     fun styAbsolute() = storeAbsolute(0xa0, 0x8c) // LDY #$42, STY $1234
+
+    fun ldaIndx() {
+        with(computer(0x4c, 6, 0, // JMP $0006
+                0x56, 0x34, 0x12,
+                0xa2, 1,   // 0006: LDX #1
+                0xbd, 4, 0, // LDA $0004,X
+                0)) {
+            assertRegister(cpu.A, 0)
+            run()
+            assertRegister(cpu.A, 0x12)
+        }
+    }
+
+    fun staZpX() {
+        with(computer(0xa9, 0x42, 0xa2, 0x1, 0x95, 0xf0)) {
+            memory[0xf0] = 0x12
+            memory[0xf1] = 0x34
+            memory[0xf2] = 0x56
+            assertMemory(0xf1, 0x34)
+            run()
+            assertMemory(0xf1, 0x42)
+        }
+    }
+
+    fun tax() {
+        with(computer(0xa9, 0x42, 0xaa)) {
+            assertRegister(cpu.A, 0)
+            assertRegister(cpu.X, 0)
+            run()
+            assertRegister(cpu.A, 0x42)
+            assertRegister(cpu.X, 0x42)
+        }
+    }
+
+    fun tay() {
+        with(computer(0xa9, 0x42, 0xa8)) {
+            assertRegister(cpu.A, 0)
+            assertRegister(cpu.Y, 0)
+            run()
+            assertRegister(cpu.A, 0x42)
+            assertRegister(cpu.Y, 0x42)
+        }
+    }
+
+    fun txa() {
+        with(computer(0xa2, 0x42, 0x8a)) {
+            assertRegister(cpu.A, 0)
+            assertRegister(cpu.X, 0)
+            run()
+            assertRegister(cpu.A, 0x42)
+            assertRegister(cpu.X, 0x42)
+        }
+    }
+
+    fun tya() {
+        with(computer(0xa0, 0x42, 0x98)) {
+            assertRegister(cpu.A, 0)
+            assertRegister(cpu.Y, 0)
+            run()
+            assertRegister(cpu.A, 0x42)
+            assertRegister(cpu.Y, 0x42)
+        }
+    }
+
+    fun dex() {
+        with(computer(0xa2, 0x42, 0xca)) {
+            assertRegister(cpu.X, 0)
+            run()
+            assertRegister(cpu.X, 0x41)
+        }
+        with(computer(0xa2, 0x00, 0xca)) {
+            assertRegister(cpu.X, 0)
+            run()
+            assertRegister(cpu.X.and(0xff), 0xff)
+        }
+    }
+
+    fun dey() {
+        with(computer(0xa0, 0x42, 0x88)) {
+            assertRegister(cpu.Y, 0)
+            run()
+            assertRegister(cpu.Y, 0x41)
+        }
+        with(computer(0xa0, 0x00, 0x88)) {
+            assertRegister(cpu.Y, 0)
+            run()
+            assertRegister(cpu.Y.and(0xff), 0xff)
+        }
+    }
 }
 

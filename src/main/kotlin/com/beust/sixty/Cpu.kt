@@ -5,7 +5,7 @@ package com.beust.sixty
 import java.util.*
 
 fun logMem(i: Int, value: Int, extra: String = "") {
-    println("mem[${i.h()}] = ${(value.and(0xff)).h()} $extra")
+    println("mem[${i.hh()}] = ${(value.and(0xff)).h()} $extra")
 }
 
 /**
@@ -84,21 +84,27 @@ data class Cpu(var A: Int = 0, var X: Int = 0, var Y: Int = 0, var PC: Int = 0,
             0x6c -> JmpIndirect(computer)
             0x69 -> AdcImm(computer)
             0x85 -> StaZp(computer)
+            0x88 -> Dey(computer)
             0x8c -> StyAbsolute(computer)
             0x8d -> StaAbsolute(computer)
             0x8e -> StxAbsolute(computer)
+            0x8a -> Txa(computer)
             0x90 -> Bcc(computer)
             0x91 -> StaIndY(computer)
             0x95 -> StaZpX(computer)
+            0x98 -> Tya(computer)
             0xa0 -> LdyImm(computer)
             0xa2 -> LdxImm(computer)
             0xa5 -> LdaZp(computer)
+            0xa8 -> Tay(computer)
             0xa9 -> LdaImm(computer)
+            0xaa -> Tax(computer)
             0xba -> Tsx(computer)
             0xbd -> LdaIndX(computer)
             0xc0 -> CpyImm(computer)
             0xc8 -> Iny(computer)
             0xc9 -> CmpImm(computer)
+            0xca -> Dex(computer)
             0xd0 -> Bne(computer)
             0xe6 -> IncZp(computer)
             0xe8 -> Inx(computer)
@@ -231,6 +237,14 @@ class StaZp(c: Computer): InstructionBase(c) {
     override fun toString(): String = "STA $" + memory[cpu.PC + 1].h()
 }
 
+/** 0x88, INX */
+class Dey(c: Computer): RegisterInstruction(c, 0x88, "DEY") {
+    override fun run() {
+        cpu.Y--
+        cpu.P.setArithmeticFlags(cpu.Y)
+    }
+}
+
 /** 0x8c, STY ($1234) */
 class StyAbsolute(c: Computer): InstructionBase(c) {
     override val opCode = 0x8c
@@ -256,6 +270,14 @@ class StxAbsolute(c: Computer): InstructionBase(c) {
     override val timing = 4
     override fun run() { memory[word] = cpu.X }
     override fun toString(): String = "STX $${word.hh()}"
+}
+
+/** 0x8a, TXA */
+class Txa(c: Computer): RegisterInstruction(c, 0x8a, "TXA") {
+    override fun run() {
+        cpu.A = cpu.X
+        cpu.P.setArithmeticFlags(cpu.A)
+    }
 }
 
 open class BranchBase(c: Computer, override val opCode: Int, val name: String, val condition: () -> Boolean)
@@ -285,7 +307,6 @@ class StaIndY(c: Computer): InstructionBase(c) {
     override val size = 2
     override val timing = 6
     override fun run() {
-        memory[operand + cpu.Y] = cpu.A
         val target = memory[operand + 1].shl(8).or(memory[operand])
         memory[target + cpu.Y] = cpu.A
     }
@@ -303,6 +324,14 @@ class StaZpX(c: Computer): InstructionBase(c) {
     override fun toString(): String = "STA $${operand.h()},X"
 }
 
+/** 0x98, TYA */
+class Tya(c: Computer): RegisterInstruction(c, 0x98, "TYA") {
+    override fun run() {
+        cpu.A = cpu.Y
+        cpu.P.setArithmeticFlags(cpu.A)
+    }
+}
+
 /** 0xa5, LDA $10 */
 class LdaZp(c: Computer): InstructionBase(c) {
     override val opCode = 0xa5
@@ -312,6 +341,14 @@ class LdaZp(c: Computer): InstructionBase(c) {
         cpu.A = memory[operand]
     }
     override fun toString(): String = "LDA $" + operand.h()
+}
+
+/** 0xa8, TAY */
+class Tay(c: Computer): RegisterInstruction(c, 0xa8, "TAY") {
+    override fun run() {
+        cpu.Y = cpu.A
+        cpu.P.setArithmeticFlags(cpu.Y)
+    }
 }
 
 abstract class LdImmBase(c: Computer, override val opCode: Int, val name: String): InstructionBase(c) {
@@ -333,6 +370,14 @@ class LdxImm(c: Computer): LdImmBase(c, 0xa2, "LDX") {
 /** 0xa9, LDA #$10 */
 class LdaImm(c: Computer): LdImmBase(c, 0xa9, "LDA") {
     override fun run() { cpu.A = operand }
+}
+
+/** 0xaa, TAX */
+class Tax(c: Computer): RegisterInstruction(c, 0xaa, "TAX") {
+    override fun run() {
+        cpu.X = cpu.A
+        cpu.P.setArithmeticFlags(cpu.X)
+    }
 }
 
 /** 0xba, TSX */
@@ -365,14 +410,27 @@ abstract class IncBase(c: Computer, override val opCode: Int): InstructionBase(c
 }
 
 /** 0xc8, INY */
-class Iny(c: Computer): IncBase(c, 0xc8) {
-    override val size = 1
-    override val timing = 2
+class Iny(c: Computer): RegisterInstruction(c, 0xc8, "INY") {
     override fun run() {
         cpu.Y = (cpu.Y + 1).and(0xff)
         cpu.P.setArithmeticFlags(cpu.Y)
     }
-    override fun toString(): String = "INY"
+}
+
+abstract open class RegisterInstruction(c: Computer, override val opCode: Int, val name: String)
+    : InstructionBase(c)
+{
+    override val size = 1
+    override val timing = 2
+    override fun toString(): String = name
+}
+
+/** 0xca, DEX */
+class Dex(c: Computer): RegisterInstruction(c, 0xca, "DEX") {
+    override fun run() {
+        cpu.X--
+        cpu.P.setArithmeticFlags(cpu.X)
+    }
 }
 
 /** 0xd0, BNE */
@@ -389,15 +447,11 @@ class IncZp(c: Computer): IncBase(c, 0xe6) {
 }
 
 /** 0xe8, INX */
-class Inx(c: Computer): IncBase(c, 0xe8) {
-    override val size = 1
-    override val timing = 2
+class Inx(c: Computer): RegisterInstruction(c, 0xe8, "INX") {
     override fun run() {
-        val newValue = cpu.X + 1
-        cpu.P.setArithmeticFlags(newValue)
-        cpu.X = newValue
+        cpu.X = (cpu.X + 1).and(0xff)
+        cpu.P.setArithmeticFlags(cpu.X)
     }
-    override fun toString(): String = "INX"
 }
 
 /** 0xea, NOP */

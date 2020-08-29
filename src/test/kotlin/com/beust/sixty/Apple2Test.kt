@@ -17,29 +17,4 @@ class Apple2Test: BaseTest() {
             assertRegister(cpu.X, 0xfd)
         }
     }
-
-    fun ldaIndx() {
-        with(computer(0x4c, 6, 0, // JMP $0006
-                0x56, 0x34, 0x12,
-                0xa2, 1,   // 0006: LDX #1
-                0xbd, 4, 0, // LDA $0004,X
-                0)) {
-            assertRegister(cpu.A, 0)
-            disassemble()
-            run()
-            assertRegister(cpu.A, 0x12)
-        }
-    }
-
-    fun staZpX() {
-        with(computer(0xa9, 0x42, 0xa2, 0x1, 0x95, 0xf0)) {
-            memory[0xf0] = 0x12
-            memory[0xf1] = 0x34
-            memory[0xf2] = 0x56
-            disassemble()
-            assertMemory(0xf1, 0x34)
-            run()
-            assertMemory(0xf1, 0x42)
-        }
-    }
 }
