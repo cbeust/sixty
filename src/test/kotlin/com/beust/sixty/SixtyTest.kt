@@ -51,7 +51,7 @@ class SixtyTest {
         with(computer(0x20, 0x34, 0x12, 0xEA, 0xEA, 0xEA)) {
             assertThat(cpu.SP.isEmpty())
             cpu.nextInstruction(this).let { inst ->
-                inst.runDebug()
+                inst.run()
                 assertThat(cpu.PC).isEqualTo(0x1234 - inst.size)
                 // Need to test SP
             }
@@ -63,7 +63,7 @@ class SixtyTest {
         val expected = 0x23
         with(computer(0xa9, expected)) {
             assertThat(cpu.A).isNotEqualTo(expected)
-            cpu.nextInstruction(this).runDebug()
+            cpu.nextInstruction(this).run()
             assertThat(cpu.A).isEqualTo(expected)
         }
     }
@@ -90,7 +90,7 @@ class SixtyTest {
             assertThat(memory.byte(10)).isNotEqualTo(0x42)
             cpu.A = 0x42
             cpu.Y = 2
-            cpu.nextInstruction(this).runDebug()
+            cpu.nextInstruction(this).run()
             assertMemory(10, 0x42)
         }
     }
@@ -103,7 +103,7 @@ class SixtyTest {
                 assertFlag("Z", Z, 0)
                 assertFlag("C", C, 0)
             }
-            CpyImm(this).runDebug()
+            CpyImm(this).run()
             with(cpu.P) {
                 assertFlag("N", N, n)
                 assertFlag("Z", Z, z)
@@ -156,7 +156,7 @@ class SixtyTest {
     fun adcImm(a: Int, valueToAdd: Int, expected: Int, n: Int, v: Int, c: Int) {
         with(computer(0x69, valueToAdd)) {
             cpu.A = a
-            cpu.nextInstruction(this).runDebug()
+            cpu.nextInstruction(this).run()
             assertRegister(cpu.A, expected)
             assertFlag("N", cpu.P.N, n)
             assertFlag("V", cpu.P.V, v)
@@ -204,6 +204,7 @@ class SixtyTest {
     fun jmpIndirect() {
         with(computer(0xa9, 0, 0x6c, 5, 0, 7, 0, 0xa9, 0x42, 0)) {
             assertRegister(cpu.A, 0)
+//            disassemble()
             run()
             assertRegister(cpu.A, 0x42)
         }

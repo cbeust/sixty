@@ -15,10 +15,16 @@ fun logMem(i: Int, value: Int, extra: String = "") {
  * http://www.6502.org/tutorials/6502opcodes.html
  */
 interface ICpu {
-    fun nextInstruction(computer: Computer): Instruction
+    fun nextInstruction(computer: Computer, noThrows: Boolean = false): Instruction
+    fun clone(): Cpu
 }
 
 interface Instruction {
+    /**
+     * Opcode of this instruction
+     */
+    val opCode: Int
+
     /**
      * Number of bytes occupied by this op (1, 2, or 3).
      */
@@ -30,11 +36,6 @@ interface Instruction {
      */
     val timing: Int
 
-    fun runDebug() {
-        if (DEBUG_ASM) println(toString())
-        run()
-    }
-
     fun run()
 
     /**
@@ -45,10 +46,10 @@ interface Instruction {
     }
 }
 
-class Memory(size: Int = 4096, vararg bytes: Int) {
+class Memory(val size: Int = 0x10000, vararg bytes: Int) {
     var interceptor: MemoryInterceptor? = null
     var listener: MemoryListener? = null
-    private val content: IntArray = IntArray(size)
+    val content: IntArray = IntArray(size)
 
     init {
         bytes.copyInto(content)
@@ -137,24 +138,34 @@ class Computer(val cpu: Cpu = Cpu(), val memory: Memory, memoryListener: MemoryL
                 done = true
             } else {
                 val inst = cpu.nextInstruction(this)
-                if (DEBUG_ASM) print(cpu.PC.h() + ": ")
-                inst.runDebug()
+                if (DEBUG_ASM) disassemble(cpu.PC, 1)
+                inst.run()
                 cpu.PC += inst.size
                 n++
             }
         }
     }
 
-    fun disassemble(pc: Int = cpu.PC) {
-        var done = false
-        while (! done) {
-            val p = memory.byte(cpu.PC)
-            if ((p == 0x60 && cpu.SP.isEmpty()) || p == 0) {
-                done = true
+    fun clone(): Computer {
+        return Computer(cpu.clone(), Memory(memory.size, *memory.content))
+    }
+
+    fun disassemble(address: Int = cpu.PC, length: Int = 10) {
+        with (clone()) {
+            var pc = address
+            var done = false
+            var n = length
+            while (! done) {
+                val p = memory.byte(cpu.PC)
+                val inst = cpu.nextInstruction(this, noThrows = true)
+                val bytes = StringBuffer(inst.opCode.h())
+                bytes.append(if (inst.size > 1) (" " + memory.byte(cpu.PC + 1).h()) else "   ")
+                bytes.append(if (inst.size == 3) (" " + memory.byte(cpu.PC + 2).h()) else "   ")
+                println(pc.h() + ": " + bytes.toString() + "  " + inst.toString())
+                cpu.PC += inst.size
+                pc = cpu.PC
+                if (--n <= 0) done = true
             }
-            val inst = cpu.nextInstruction(this)
-            if (DEBUG_ASM) println(cpu.PC.h() + ": " + inst.toString())
-            cpu.PC += inst.size
         }
     }
 
@@ -249,7 +260,8 @@ class StatusFlags {
 
 data class Cpu(var A: Int = 0, var X: Int = 0, var Y: Int = 0, var PC: Int = 0,
         val SP: StackPointer = StackPointer(), val P: StatusFlags = StatusFlags()) : ICpu {
-    override fun nextInstruction(computer: Computer): Instruction {
+    override fun clone() = Cpu(A, X, Y, PC, SP, P)
+    override fun nextInstruction(computer: Computer, noThrows: Boolean): Instruction {
         val op = computer.memory.byte(PC) and 0xff
         val result = when(op) {
             0x00 -> Brk(computer)
@@ -271,7 +283,7 @@ data class Cpu(var A: Int = 0, var X: Int = 0, var Y: Int = 0, var PC: Int = 0,
             0xe6 -> IncZp(computer)
             0xe8 -> Inx(computer)
             0xea -> Nop(computer)
-            else -> TODO("NOT IMPLEMENTED: ${PC.h()}: ${op.h()}")
+            else -> if (noThrows) Unknown(computer, op) else TODO("NOT IMPLEMENTED: ${PC.h()}: ${op.h()}")
         }
 
         return result
@@ -292,6 +304,7 @@ abstract class InstructionBase(val computer: Computer): Instruction {
 
 /** 0x00, BRK */
 class Brk(c: Computer): InstructionBase(c) {
+    override val opCode = 0
     override val size = 1
     override val timing = 7
     override fun run() {}
@@ -300,6 +313,7 @@ class Brk(c: Computer): InstructionBase(c) {
 
 /** 0x4c, JMP $1234 */
 class Jmp(c: Computer): InstructionBase(c) {
+    override val opCode = 0x4c
     override val size = 3
     override val timing = 3
     override fun run() {
@@ -311,6 +325,7 @@ class Jmp(c: Computer): InstructionBase(c) {
 
 /** 0x20, JSR $1234 */
 class Jsr(c: Computer): InstructionBase(c) {
+    override val opCode = 0x20
     override val size = 3
     override val timing = 6
     override fun run() {
@@ -339,16 +354,19 @@ abstract class CmpImmBase(c: Computer, val name: String): InstructionBase(c) {
 
 /** 0xc9, CMP $#12 */
 class CmpImm(c: Computer): CmpImmBase(c, "CMP") {
+    override val opCode = 0xc9
     override val register get() = computer.cpu.A
 }
 
 /** 0xc0, CPY $#12 */
 class CpyImm(c: Computer): CmpImmBase(c, "CPY") {
+    override val opCode = 0xc0
     override val register get() = computer.cpu.Y
 }
 
 /** 0x60, RTS */
 class Rts(c: Computer): InstructionBase(c) {
+    override val opCode = 0x60
     override val size = 1
     override val timing = 6
     override fun run() { computer.cpu.PC = cpu.SP.popWord() }
@@ -357,6 +375,7 @@ class Rts(c: Computer): InstructionBase(c) {
 
 /** 0x69, ADC #$12 */
 class AdcImm(c: Computer): InstructionBase(c) {
+    override val opCode = 0x69
     override val size = 2
     override val timing = 2
     override fun run() {
@@ -374,25 +393,24 @@ class AdcImm(c: Computer): InstructionBase(c) {
 
 /** 0x6c, JMP ($0036) */
 class JmpIndirect(c: Computer): InstructionBase(c) {
+    override val opCode = 0x6c
     override val size = 3
     override val timing = 5
-    override fun run() {
-        val target = memory.wordAt(word)
-        cpu.PC = target -  size
-    }
-
+    override fun run() { cpu.PC = memory.wordAt(word) -  size }
     override fun toString(): String = "JMP ($${word.h()})"
 }
 
 /** 0x85, STA ($10) */
 class StaZp(c: Computer): InstructionBase(c) {
+    override val opCode = 0x85
     override val size = 2
     override val timing = 3
     override fun run() { memory.setByte(operand.toInt(), cpu.A) }
     override fun toString(): String = "STA $" + memory.byte(cpu.PC + 1).h()
 }
 
-open class BranchBase(c: Computer, val name: String, val condition: () -> Boolean): InstructionBase(c) {
+open class BranchBase(c: Computer, opCode: Int, val name: String, val condition: () -> Boolean): InstructionBase(c) {
+    override val opCode = opCode
     override val size = 2
     /** TODO(Varied timing if the branch is taken/not taken and if it crosses a page) */
     override var timing = 2
@@ -409,10 +427,11 @@ open class BranchBase(c: Computer, val name: String, val condition: () -> Boolea
 }
 
 /** 0x90, BCC */
-class Bcc(computer: Computer): BranchBase(computer, "BCC", { ! computer.cpu.P.C })
+class Bcc(computer: Computer): BranchBase(computer, 0x90, "BCC", { ! computer.cpu.P.C })
 
 /** 0x91, STA ($12),Y */
 class StaIndY(c: Computer): InstructionBase(c) {
+    override val opCode = 0x91
     override val size = 2
     override val timing = 6
     override fun run() {
@@ -424,6 +443,7 @@ class StaIndY(c: Computer): InstructionBase(c) {
 
 /** 0xa5, LDA $10 */
 class LdaZp(c: Computer): InstructionBase(c) {
+    override val opCode = 0xa5
     override val size = 2
     override val timing = 3
     override fun run() {
@@ -432,23 +452,25 @@ class LdaZp(c: Computer): InstructionBase(c) {
     override fun toString(): String = "LDA $" + operand.h()
 }
 
-abstract class LdImmBase(c: Computer, val name: String): InstructionBase(c) {
+abstract class LdImmBase(c: Computer, opCode: Int, val name: String): InstructionBase(c) {
+    override val opCode = opCode
     override val size = 2
     override val timing = 2
     override fun toString(): String = "$name #$" + operand.h()
 }
 
 /** 0xa0, LDY #$10 */
-class LdyImm(c: Computer): LdImmBase(c, "LDY") {
+class LdyImm(c: Computer): LdImmBase(c, 0xa0, "LDY") {
     override fun run() { cpu.Y = operand }
 }
 
 /** 0xa9, LDA #$10 */
-class LdaImm(c: Computer): LdImmBase(c, "LDA") {
+class LdaImm(c: Computer): LdImmBase(c, 0xa9, "LDA") {
     override fun run() { cpu.A = operand }
 }
 
-abstract class IncBase(c: Computer): InstructionBase(c) {
+abstract class IncBase(c: Computer, opCode: Int): InstructionBase(c) {
+    override val opCode = opCode
     protected fun calculate(oldValue: Int): Int {
         val result = (oldValue + 1).and(0xff)
         cpu.P.setArithmeticFlags(result)
@@ -457,7 +479,7 @@ abstract class IncBase(c: Computer): InstructionBase(c) {
 }
 
 /** 0xc8, INY */
-class Iny(c: Computer): IncBase(c) {
+class Iny(c: Computer): IncBase(c, 0xc8) {
     override val size = 1
     override val timing = 2
     override fun run() {
@@ -468,10 +490,10 @@ class Iny(c: Computer): IncBase(c) {
 }
 
 /** 0xd0, BNE */
-class Bne(computer: Computer): BranchBase(computer, "BNE", { ! computer.cpu.P.Z })
+class Bne(computer: Computer): BranchBase(computer, 0xd0, "BNE", { ! computer.cpu.P.Z })
 
 /** 0xe6, INC $10 */
-class IncZp(c: Computer): IncBase(c) {
+class IncZp(c: Computer): IncBase(c, 0xe6) {
     override val size = 2
     override val timing = 4
     override fun run() {
@@ -481,7 +503,7 @@ class IncZp(c: Computer): IncBase(c) {
 }
 
 /** 0xe8, INX */
-class Inx(c: Computer): IncBase(c) {
+class Inx(c: Computer): IncBase(c, 0xe8) {
     override val size = 1
     override val timing = 2
     override fun run() {
@@ -494,10 +516,19 @@ class Inx(c: Computer): IncBase(c) {
 
 /** 0xea, NOP */
 class Nop(c: Computer): InstructionBase(c) {
+    override val opCode = 0xea
     override val size = 1
     override val timing = 2
     override fun run() { }
     override fun toString(): String = "NOP"
+}
+
+/** Unknown */
+class Unknown(c: Computer, override val opCode: Int): InstructionBase(c) {
+    override val size = 1
+    override val timing = 1
+    override fun run() { }
+    override fun toString(): String = "???"
 }
 
 fun main() {
