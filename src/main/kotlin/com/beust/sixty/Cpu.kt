@@ -89,6 +89,7 @@ data class Cpu(var A: Int = 0, var X: Int = 0, var Y: Int = 0, var PC: Int = 0,
             0x8e -> StxAbsolute(computer)
             0x90 -> Bcc(computer)
             0x91 -> StaIndY(computer)
+            0x95 -> StaZpX(computer)
             0xa0 -> LdyImm(computer)
             0xa2 -> LdxImm(computer)
             0xa5 -> LdaZp(computer)
@@ -284,10 +285,22 @@ class StaIndY(c: Computer): InstructionBase(c) {
     override val size = 2
     override val timing = 6
     override fun run() {
+        memory[operand + cpu.Y] = cpu.A
         val target = memory[operand + 1].shl(8).or(memory[operand])
         memory[target + cpu.Y] = cpu.A
     }
     override fun toString(): String = "STA ($${operand.toByte().h()}),Y"
+}
+
+/** 0x95, STA $12,X */
+class StaZpX(c: Computer): InstructionBase(c) {
+    override val opCode = 0x95
+    override val size = 2
+    override val timing = 4
+    override fun run() {
+        memory[operand + cpu.X] = cpu.A
+    }
+    override fun toString(): String = "STA $${operand.h()},X"
 }
 
 /** 0xa5, LDA $10 */

@@ -30,4 +30,16 @@ class Apple2Test: BaseTest() {
             assertRegister(cpu.A, 0x12)
         }
     }
+
+    fun staZpX() {
+        with(computer(0xa9, 0x42, 0xa2, 0x1, 0x95, 0xf0)) {
+            memory[0xf0] = 0x12
+            memory[0xf1] = 0x34
+            memory[0xf2] = 0x56
+            disassemble()
+            assertMemory(0xf1, 0x34)
+            run()
+            assertMemory(0xf1, 0x42)
+        }
+    }
 }
