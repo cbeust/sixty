@@ -5,7 +5,8 @@ import org.testng.annotations.DataProvider
 import org.testng.annotations.Test
 
 fun assertFlag(n: String, flag: Boolean, expected: Int) {
-    assertThat(flag.int()).isEqualTo(expected).withFailMessage("Flag $n")
+    assertThat(flag.int()).withFailMessage("Expected flag $n to be $expected but found ${flag.int()}")
+            .isEqualTo(expected)
 }
 
 fun assertRegister(register: Int, expected: Int) {
@@ -335,6 +336,34 @@ abstract class BaseTest {
             assertRegister(cpu.Y, 0)
             run()
             assertRegister(cpu.Y.and(0xff), 0xff)
+        }
+    }
+
+    fun ldaAbsolute() {
+        with(computer(0xad, 0x34, 0x12)) {
+            memory[0x1234] = 0xa0
+            assertRegister(cpu.A, 0)
+            run()
+            assertRegister(cpu.A, 0xa0)
+        }
+    }
+
+    fun asl() {
+        with(computer(0xa9, 2, 0xa)) {
+            assertRegister(cpu.A, 0)
+            run()
+            assertRegister(cpu.A, 4)
+            assertFlag("N", cpu.P.N, 0)
+            assertFlag("Z", cpu.P.Z, 0)
+            assertFlag("C", cpu.P.C, 0)
+        }
+        with(computer(0xa9, 0xff, 0xa)) { // LDA #$ff, ASL
+            assertRegister(cpu.A, 0)
+            run()
+            assertRegister(cpu.A, 0xfe)
+            assertFlag("N", cpu.P.N, 1)
+            assertFlag("Z", cpu.P.Z, 0)
+            assertFlag("C", cpu.P.C, 1)
         }
     }
 }

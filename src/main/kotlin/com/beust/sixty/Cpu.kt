@@ -78,6 +78,7 @@ data class Cpu(var A: Int = 0, var X: Int = 0, var Y: Int = 0, var PC: Int = 0,
         val op = computer.memory[PC] and 0xff
         val result = when(op) {
             0x00 -> Brk(computer)
+            0x0a -> Asl(computer)
             0x10 -> Bpl(computer)
             0x20 -> Jsr(computer)
             0x30 -> Bmi(computer)
@@ -101,6 +102,7 @@ data class Cpu(var A: Int = 0, var X: Int = 0, var Y: Int = 0, var PC: Int = 0,
             0xa8 -> Tay(computer)
             0xa9 -> LdaImm(computer)
             0xaa -> Tax(computer)
+            0xad -> LdaAbsolute(computer)
             0xba -> Tsx(computer)
             0xbd -> LdaIndX(computer)
             0xc0 -> CpyImm(computer)
@@ -137,6 +139,20 @@ class Brk(c: Computer): InstructionBase(c) {
     override val timing = 7
     override fun run() {}
     override fun toString(): String = "BRK"
+}
+
+/** 0x0a, ASL */
+class Asl(c: Computer): InstructionBase(c) {
+    override val opCode = 0xa
+    override val size = 1
+    override val timing = 2
+    override fun run() {
+        cpu.P.C = if (cpu.A.and(0x80) != 0) true else false
+        val newValue = cpu.A.shl(1).and(0xff)
+        cpu.P.setArithmeticFlags(newValue)
+        cpu.A = newValue
+    }
+    override fun toString(): String = "ASL"
 }
 
 /** 0x10, BPL */
@@ -387,6 +403,18 @@ class Tax(c: Computer): RegisterInstruction(c, 0xaa, "TAX") {
         cpu.P.setArithmeticFlags(cpu.X)
     }
 }
+
+/** 0xad, LDA $1234 */
+class LdaAbsolute(c: Computer): InstructionBase(c) {
+    override val opCode = 0xad
+    override val size = 3
+    override val timing = 4
+    override fun run() {
+        cpu.A = memory[word]
+    }
+    override fun toString(): String = "LDA $${word.hh()}"
+}
+
 
 /** 0xba, TSX */
 class Tsx(c: Computer): InstructionBase(c) {
