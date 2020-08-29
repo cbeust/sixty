@@ -6,7 +6,7 @@ import java.io.File
 import java.util.*
 
 fun logMem(i: Int, value: Int, extra: String = "") {
-    println("mem[${i.toHex()}] = ${(value.and(0xff)).toHex()} $extra")
+    println("mem[${i.h()}] = ${(value.and(0xff)).h()} $extra")
 }
 
 /**
@@ -84,7 +84,7 @@ class Memory(size: Int = 4096, vararg bytes: Int) {
     }
 
     override fun toString(): String {
-        return content.slice(0..16).map { it.and(0xff).toHex()}.joinToString(" ")
+        return content.slice(0..16).map { it.and(0xff).h()}.joinToString(" ")
     }
 
     fun init(i: Int, vararg bytes: Int) {
@@ -137,7 +137,7 @@ class Computer(val cpu: Cpu = Cpu(), val memory: Memory, memoryListener: MemoryL
                 done = true
             } else {
                 val inst = cpu.nextInstruction(this)
-                if (DEBUG_ASM) print(cpu.PC.toHex() + ": ")
+                if (DEBUG_ASM) print(cpu.PC.h() + ": ")
                 inst.runDebug()
                 cpu.PC += inst.size
                 n++
@@ -153,7 +153,7 @@ class Computer(val cpu: Cpu = Cpu(), val memory: Memory, memoryListener: MemoryL
                 done = true
             }
             val inst = cpu.nextInstruction(this)
-            if (DEBUG_ASM) println(cpu.PC.toHex() + ": " + inst.toString())
+            if (DEBUG_ASM) println(cpu.PC.h() + ": " + inst.toString())
             cpu.PC += inst.size
         }
     }
@@ -176,7 +176,7 @@ class StackPointer {
 //    fun peek(): Byte = stack.peek()
     fun isEmpty() = stack.isEmpty()
     override fun toString(): String {
-        return stack.map { it.toHex()}.joinToString(" ")
+        return stack.map { it.h()}.joinToString(" ")
     }
 }
 
@@ -271,14 +271,14 @@ data class Cpu(var A: Int = 0, var X: Int = 0, var Y: Int = 0, var PC: Int = 0,
             0xe6 -> IncZp(computer)
             0xe8 -> Inx(computer)
             0xea -> Nop(computer)
-            else -> TODO("NOT IMPLEMENTED: ${PC.toHex()}: ${op.toHex()}")
+            else -> TODO("NOT IMPLEMENTED: ${PC.h()}: ${op.h()}")
         }
 
         return result
     }
 
     override fun toString(): String {
-        return "{Cpu A=${A.toHex()} X=${X.toHex()} Y=${Y.toHex()} PC=${PC.toHex()} P=$P SP=$SP}"
+        return "{Cpu A=${A.h()} X=${X.h()} Y=${Y.h()} PC=${PC.h()} P=$P SP=$SP}"
     }
 }
 
@@ -306,7 +306,7 @@ class Jmp(c: Computer): InstructionBase(c) {
         cpu.PC = word - size
     }
 
-    override fun toString(): String = "JMP $${word.toHex()}"
+    override fun toString(): String = "JMP $${word.h()}"
 }
 
 /** 0x20, JSR $1234 */
@@ -318,7 +318,7 @@ class Jsr(c: Computer): InstructionBase(c) {
         cpu.PC = word - size
     }
 
-    override fun toString(): String = "JSR $${word.toHex()}"
+    override fun toString(): String = "JSR $${word.h()}"
 }
 
 abstract class CmpImmBase(c: Computer, val name: String): InstructionBase(c) {
@@ -334,7 +334,7 @@ abstract class CmpImmBase(c: Computer, val name: String): InstructionBase(c) {
         cpu.P.N = (tmp and 0x80) != 0
     }
 
-    override fun toString(): String = "$name #$${operand.toHex()}"
+    override fun toString(): String = "$name #$${operand.h()}"
 }
 
 /** 0xc9, CMP $#12 */
@@ -369,7 +369,7 @@ class AdcImm(c: Computer): InstructionBase(c) {
         cpu.P.setArithmeticFlags(result)
         cpu.A = result
     }
-    override fun toString(): String = " ADC #${operand.toHex()}"
+    override fun toString(): String = "ADC #${operand.h()}"
 }
 
 /** 0x6c, JMP ($0036) */
@@ -381,7 +381,7 @@ class JmpIndirect(c: Computer): InstructionBase(c) {
         cpu.PC = target -  size
     }
 
-    override fun toString(): String = "JMP ($${word.toHex()})"
+    override fun toString(): String = "JMP ($${word.h()})"
 }
 
 /** 0x85, STA ($10) */
@@ -389,7 +389,7 @@ class StaZp(c: Computer): InstructionBase(c) {
     override val size = 2
     override val timing = 3
     override fun run() { memory.setByte(operand.toInt(), cpu.A) }
-    override fun toString(): String = "STA $" + memory.byte(cpu.PC + 1).toHex()
+    override fun toString(): String = "STA $" + memory.byte(cpu.PC + 1).h()
 }
 
 open class BranchBase(c: Computer, val name: String, val condition: () -> Boolean): InstructionBase(c) {
@@ -405,7 +405,7 @@ open class BranchBase(c: Computer, val name: String, val condition: () -> Boolea
         }  // needs to be signed here
     }
     override fun toString(): String
-            = "$name ${(cpu.PC + size + operand.toByte()).toHex()}"
+            = "$name $${(cpu.PC + size + operand.toByte()).h()}"
 }
 
 /** 0x90, BCC */
@@ -419,7 +419,7 @@ class StaIndY(c: Computer): InstructionBase(c) {
         val target = memory.byte(operand.toInt() + 1).toInt().shl(8).or(memory.byte(operand.toInt()).toInt())
         memory.setByte((target.toUInt() + cpu.Y.toUInt()).toInt(), cpu.A)
     }
-    override fun toString(): String = "STA ($${operand.toByte().toHex()}),Y"
+    override fun toString(): String = "STA ($${operand.toByte().h()}),Y"
 }
 
 /** 0xa5, LDA $10 */
@@ -429,13 +429,13 @@ class LdaZp(c: Computer): InstructionBase(c) {
     override fun run() {
         cpu.A = memory.byte(operand)
     }
-    override fun toString(): String = "LDA $" + operand.toHex()
+    override fun toString(): String = "LDA $" + operand.h()
 }
 
 abstract class LdImmBase(c: Computer, val name: String): InstructionBase(c) {
     override val size = 2
     override val timing = 2
-    override fun toString(): String = "$name #$" + operand.toHex()
+    override fun toString(): String = "$name #$" + operand.h()
 }
 
 /** 0xa0, LDY #$10 */
@@ -477,7 +477,7 @@ class IncZp(c: Computer): IncBase(c) {
     override fun run() {
         memory.setByte(operand, calculate(memory.byte(operand)))
     }
-    override fun toString(): String = "INC $${operand.toHex()}"
+    override fun toString(): String = "INC $${operand.h()}"
 }
 
 /** 0xe8, INX */

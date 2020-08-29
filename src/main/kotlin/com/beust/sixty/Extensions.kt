@@ -2,8 +2,8 @@ package com.beust.sixty
 
 import javafx.scene.paint.Color
 
-fun Byte.toHex(): String = String.format("%02x", this.toInt())
-fun Int.toHex(): String = String.format("%02x", this)
+fun Byte.h(): String = String.format("%02x", this.toInt()).toUpperCase()
+fun Int.h(): String = String.format("%02x", this).toUpperCase()
 
 //fun Int.b() = Integer.toBinaryString(this)
 

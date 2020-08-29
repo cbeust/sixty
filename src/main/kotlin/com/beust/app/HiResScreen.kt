@@ -1,8 +1,6 @@
 package com.beust.app
 
 import com.beust.sixty.Memory
-import com.beust.sixty.s
-import com.beust.sixty.toHex
 import javafx.scene.canvas.Canvas
 import javafx.scene.paint.Color
 
