@@ -31,3 +31,5 @@ fun Color.s() = when(this) {
     Color.BLUE -> "blue"
     else -> this.toString()
 }
+
+fun Boolean.int(): Int = if (this) 1 else 0

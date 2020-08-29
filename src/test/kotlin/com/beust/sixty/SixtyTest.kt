@@ -1,11 +1,10 @@
 package com.beust.sixty
 
+import com.beust.app.Apple2StackPointer
 import org.assertj.core.api.Assertions.assertThat
 import org.testng.annotations.DataProvider
 import org.testng.annotations.Test
 import kotlin.math.exp
-
-fun computer(vararg bytes: Int) = Computer(memory = Memory(bytes = *bytes))
 
 fun assertFlag(n: String, flag: Boolean, expected: Int) {
     assertThat(flag.int()).isEqualTo(expected).withFailMessage("Flag $n")
@@ -20,7 +19,9 @@ fun assertNotRegister(register: Int, expected: Int) {
 }
 
 @Test
-class SixtyTest {
+abstract class BaseTest {
+    abstract fun computer(vararg bytes: Int): Computer
+
     fun inxy() {
         // inx * 2, iny * 2
         with(computer(0xe8, 0xe8, 0xc8, 0xc8, 0)) {
@@ -223,4 +224,16 @@ class SixtyTest {
     fun stxAbsolute() = storeAbsolute(0xa2, 0x8e)  // LDX #$42, STX $1234
 
     fun styAbsolute() = storeAbsolute(0xa0, 0x8c) // LDY #$42, STY $1234
+}
+
+class CpuTest: BaseTest() {
+    override fun computer(vararg bytes: Int) = Computer(memory = Memory(bytes = *bytes))
+}
+
+class Apple2Test: BaseTest() {
+    override fun computer(vararg bytes: Int): Computer {
+        val memory = Memory(bytes = *bytes)
+        val stackPointer = Apple2StackPointer(memory = memory)
+        return Computer(Cpu(SP = stackPointer), memory)
+    }
 }

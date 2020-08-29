@@ -2,7 +2,6 @@
 
 package com.beust.sixty
 
-import java.io.File
 import java.util.*
 
 fun logMem(i: Int, value: Int, extra: String = "") {
@@ -46,87 +45,31 @@ interface Instruction {
     }
 }
 
-class Memory(val size: Int = 0x10000, vararg bytes: Int) {
-    var interceptor: MemoryInterceptor? = null
-    var listener: MemoryListener? = null
-    val content: IntArray = IntArray(size)
-
-    init {
-        bytes.copyInto(content)
-    }
-
-    operator fun get(i: Int): Int {
-        val result = if (interceptor != null) {
-            val response = interceptor!!.onRead(i)
-            if (response.allow) response.value
-            else content[i]
-        } else {
-            content[i]
-        }
-
-        listener?.onRead(i, result)
-        return result.and(0xff)
-    }
-
-    operator fun set(i: Int, value: Int) {
-        if (interceptor != null) {
-            val response = interceptor!!.onWrite(i, value)
-            if (response.allow) {
-                if (DEBUG_MEMORY) logMem(i, value, "(allowed)")
-                content[i] = value
-            } else {
-                if (DEBUG_MEMORY) logMem(i, value, "(denied)")
-            }
-        } else {
-            if (DEBUG_MEMORY) logMem(i, value)
-            content[i] = value
-        }
-        listener?.onWrite(i, value)
-    }
-
-    override fun toString(): String {
-        return content.slice(0..16).map { it.and(0xff).h()}.joinToString(" ")
-    }
-
-    fun init(i: Int, vararg bytes: Int) {
-        var ii = i
-        bytes.forEach { b ->
-            set(i + ii, b)
-            ii++
-        }
-    }
-
-    fun load(file: String, address: Int) {
-//        File(file).readBytes().map { it.toInt() }.toIntArray().copyInto(content, address)
-        File(file).readBytes().forEachIndexed { index, v ->
-            if (index + address < 0xffff) {
-                content[index + address] = v.toInt()
-            }
-        }
-    }
-
-    fun wordAt(word: Int): Int {
-        return get(word + 1).shl(8).or(get(word))
-    }
+interface IStackPointer {
+    val S: Int // The S register. Actually a byte
+    fun pushByte(a: Byte)
+    fun popByte(): Byte
+    fun pushWord(a: Int)
+    fun popWord(): Int
+    fun isEmpty(): Boolean
 }
 
-class StackPointer {
+class InMemoryStackPointer : IStackPointer {
     private val stack = Stack<Byte>()
-    fun pushByte(a: Byte) = stack.push(a)
-    fun popByte() = stack.pop()
-    fun pushWord(a: Int) {
+
+    override val S = stack.size
+    override fun pushByte(a: Byte) { stack.push(a) }
+    override fun popByte() = stack.pop()
+    override fun pushWord(a: Int) {
         pushByte(a.toByte())
         pushByte(a.shr(8).toByte())
     }
-    fun popWord(): Int = popByte().toInt().shl(8).or(popByte().toInt())
-//    fun peek(): Byte = stack.peek()
-    fun isEmpty() = stack.isEmpty()
+    override fun popWord(): Int = popByte().toInt().shl(8).or(popByte().toInt())
+    override fun isEmpty() = stack.isEmpty()
     override fun toString(): String {
         return stack.map { it.h()}.joinToString(" ")
     }
 }
-
-fun Boolean.int(): Int = if (this) 1 else 0
 
 class StatusFlags {
     private val bits = BitSet(8)
@@ -168,7 +111,7 @@ class StatusFlags {
 }
 
 data class Cpu(var A: Int = 0, var X: Int = 0, var Y: Int = 0, var PC: Int = 0,
-        val SP: StackPointer = StackPointer(), val P: StatusFlags = StatusFlags()) : ICpu {
+        val SP: IStackPointer = InMemoryStackPointer(), val P: StatusFlags = StatusFlags()) : ICpu {
     override fun clone() = Cpu(A, X, Y, PC, SP, P)
     override fun nextInstruction(computer: Computer, noThrows: Boolean): Instruction {
         val op = computer.memory[PC] and 0xff
@@ -282,7 +225,9 @@ class Rts(c: Computer): InstructionBase(c) {
     override val opCode = 0x60
     override val size = 1
     override val timing = 6
-    override fun run() { computer.cpu.PC = cpu.SP.popWord() }
+    override fun run() {
+        computer.cpu.PC = cpu.SP.popWord()
+    }
     override fun toString(): String = "RTS"
 }
 

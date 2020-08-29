@@ -1,6 +1,7 @@
 package com.beust.app
 
 import com.beust.sixty.Computer
+import com.beust.sixty.Cpu
 import com.beust.sixty.Memory
 import com.beust.sixty.MemoryListener
 import javafx.application.Application
@@ -13,7 +14,6 @@ import javafx.scene.input.KeyCode
 import javafx.scene.input.KeyEvent
 import javafx.scene.layout.AnchorPane
 import javafx.stage.Stage
-import java.lang.System.load
 import java.nio.file.Paths
 import kotlin.system.exitProcess
 
@@ -91,7 +91,8 @@ class Main : Application() {
             }
 
         }
-        with(Computer(memory = memory)) {
+        val appleCpu = Cpu(SP = Apple2StackPointer(memory = memory))
+        with(Computer(memory = memory, cpu = appleCpu)) {
             memory.listener = listener
 //            fillScreen(memory)
 //            fillWithNumbers(memory)
