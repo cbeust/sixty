@@ -78,7 +78,9 @@ data class Cpu(var A: Int = 0, var X: Int = 0, var Y: Int = 0, var PC: Int = 0,
         val op = computer.memory[PC] and 0xff
         val result = when(op) {
             0x00 -> Brk(computer)
+            0x10 -> Bpl(computer)
             0x20 -> Jsr(computer)
+            0x30 -> Bmi(computer)
             0x4c -> Jmp(computer)
             0x60 -> Rts(computer)
             0x6c -> JmpIndirect(computer)
@@ -137,6 +139,9 @@ class Brk(c: Computer): InstructionBase(c) {
     override fun toString(): String = "BRK"
 }
 
+/** 0x10, BPL */
+class Bpl(computer: Computer): BranchBase(computer, 0x10, "BPL", { ! computer.cpu.P.N })
+
 /** 0x4c, JMP $1234 */
 class Jmp(c: Computer): InstructionBase(c) {
     override val opCode = 0x4c
@@ -161,6 +166,9 @@ class Jsr(c: Computer): InstructionBase(c) {
 
     override fun toString(): String = "JSR $${word.hh()}"
 }
+
+/** 0x30, BMI */
+class Bmi(computer: Computer): BranchBase(computer, 0x30, "BMI", { computer.cpu.P.N })
 
 abstract class CmpImmBase(c: Computer, val name: String): InstructionBase(c) {
     override val size = 2

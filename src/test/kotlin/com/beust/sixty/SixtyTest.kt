@@ -127,6 +127,32 @@ abstract class BaseTest {
         }
     }
 
+    fun bpl() {
+        with(computer(0xa9, 0x10, // lda #$10
+                0xc9, 9,          // cmp #$9
+                0x10, 1,          // bpl 7
+                0x60,
+                0xa9, 0x42,        // 0007: lda #$42
+                0)) {
+            assertRegister(cpu.A, 0)
+            run()
+            assertRegister(cpu.A, 0x42)
+        }
+    }
+
+    fun bmi() {
+        with(computer(0xa9, 0x10, // lda #$10
+                0xc9, 0x11,       // cmp #$11
+                0x30, 1,          // bmi 7
+                0x60,
+                0xa9, 0x42,        // 0007: lda #$42
+                0)) {
+            assertRegister(cpu.A, 0)
+            run()
+            assertRegister(cpu.A, 0x42)
+        }
+    }
+
     fun bcc() {
         with(computer(0xa9, 0, 0x90, 1, 0x60, 0xa9, 1, 0x60)) {
             assertRegister(cpu.A, 0)
