@@ -73,8 +73,9 @@ class Main : Application() {
         val graphicsScreen = HiResScreen(canvas)
         val memory = Memory(65536, 0xa9, 0x41, 0x4c, 0xed, 0xfd).apply {
             load("d:\\pd\\Apple Disks\\apple2eu.rom", 0xc000)
-            setByte(0x36, 0xbd)
-            setByte(0x37, 0x9e)
+            load("d:\\pd\\Apple Disks\\dos", 0x9600)
+//            setByte(0x36, 0xbd)
+//            setByte(0x37, 0x9e)
         }
 
         val listener = object: MemoryListener {
@@ -97,6 +98,7 @@ class Main : Application() {
             loadPic(memory)
 //            memory.setByte(0x2000, 0x6e)
 //            memory.setByte(0x2001, 0)
+            memory.setByte(0, 0)
             run()
         }
     }

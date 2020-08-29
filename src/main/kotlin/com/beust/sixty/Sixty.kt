@@ -65,7 +65,7 @@ class Memory(val size: Int = 0x10000, vararg bytes: Int) {
         }
 
         listener?.onRead(i, result)
-        return result
+        return result.and(0xff)
     }
 
     fun setByte(i: Int, value: Int) {
@@ -150,20 +150,21 @@ class Computer(val cpu: Cpu = Cpu(), val memory: Memory, memoryListener: MemoryL
         return Computer(cpu.clone(), Memory(memory.size, *memory.content))
     }
 
-    fun disassemble(address: Int = cpu.PC, length: Int = 10) {
+    fun disassemble(add: Int = cpu.PC, length: Int = 10) {
         with (clone()) {
-            var pc = address
+            cpu.PC = add
+            var pc = cpu.PC
             var done = false
             var n = length
             while (! done) {
-                val p = memory.byte(cpu.PC)
+                val p = memory.byte(pc)
                 val inst = cpu.nextInstruction(this, noThrows = true)
                 val bytes = StringBuffer(inst.opCode.h())
-                bytes.append(if (inst.size > 1) (" " + memory.byte(cpu.PC + 1).h()) else "   ")
-                bytes.append(if (inst.size == 3) (" " + memory.byte(cpu.PC + 2).h()) else "   ")
+                bytes.append(if (inst.size > 1) (" " + memory.byte(pc + 1).h()) else "   ")
+                bytes.append(if (inst.size == 3) (" " + memory.byte(pc + 2).h()) else "   ")
                 println(pc.h() + ": " + bytes.toString() + "  " + inst.toString())
                 cpu.PC += inst.size
-                pc = cpu.PC
+                pc += inst.size
                 if (--n <= 0) done = true
             }
         }
