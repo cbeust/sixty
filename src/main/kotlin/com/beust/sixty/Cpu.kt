@@ -349,8 +349,9 @@ class StxAbsolute(c: Computer): InstructionBase(c) {
     override fun toString(): String = "STX $${word.h()}"
 }
 
-open class BranchBase(c: Computer, opCode: Int, val name: String, val condition: () -> Boolean): InstructionBase(c) {
-    override val opCode = opCode
+open class BranchBase(c: Computer, override val opCode: Int, val name: String, val condition: () -> Boolean)
+    : InstructionBase(c)
+{
     override val size = 2
     /** TODO(Varied timing if the branch is taken/not taken and if it crosses a page) */
     override var timing = 2
@@ -375,8 +376,8 @@ class StaIndY(c: Computer): InstructionBase(c) {
     override val size = 2
     override val timing = 6
     override fun run() {
-        val target = memory[operand + 1].toInt().shl(8).or(memory[operand].toInt())
-        memory[(target.toUInt() + cpu.Y.toUInt()).toInt()] = cpu.A
+        val target = memory[operand + 1].shl(8).or(memory[operand])
+        memory[target + cpu.Y] = cpu.A
     }
     override fun toString(): String = "STA ($${operand.toByte().h()}),Y"
 }
@@ -392,8 +393,7 @@ class LdaZp(c: Computer): InstructionBase(c) {
     override fun toString(): String = "LDA $" + operand.h()
 }
 
-abstract class LdImmBase(c: Computer, opCode: Int, val name: String): InstructionBase(c) {
-    override val opCode = opCode
+abstract class LdImmBase(c: Computer, override val opCode: Int, val name: String): InstructionBase(c) {
     override val size = 2
     override val timing = 2
     override fun toString(): String = "$name #$" + operand.h()
@@ -414,8 +414,7 @@ class LdaImm(c: Computer): LdImmBase(c, 0xa9, "LDA") {
     override fun run() { cpu.A = operand }
 }
 
-abstract class IncBase(c: Computer, opCode: Int): InstructionBase(c) {
-    override val opCode = opCode
+abstract class IncBase(c: Computer, override val opCode: Int): InstructionBase(c) {
     protected fun calculate(oldValue: Int): Int {
         val result = (oldValue + 1).and(0xff)
         cpu.P.setArithmeticFlags(result)
