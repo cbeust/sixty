@@ -4,6 +4,7 @@ import javafx.scene.paint.Color
 
 fun Byte.h(): String = String.format("%02x", this.toInt()).toUpperCase()
 fun Int.h(): String = String.format("%02x", this).toUpperCase()
+fun Int.hh(): String = String.format("%04x", this).toUpperCase()
 
 //fun Int.b() = Integer.toBinaryString(this)
 

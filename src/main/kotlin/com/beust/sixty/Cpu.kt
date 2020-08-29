@@ -71,45 +71,6 @@ class InMemoryStackPointer : IStackPointer {
     }
 }
 
-class StatusFlags {
-    private val bits = BitSet(8)
-
-    private fun bit(n: Int) = bits.get(n)
-    private fun bit(n: Int, value: Boolean) = bits.set(n, value)
-
-    var N: Boolean // Negative
-        get() = bit(7)
-        set(v) = bit(7, v)
-
-    var V: Boolean // Overflow
-        get() = bit(6)
-        set(v) = bit(6, v)
-
-    var D: Boolean // Decimal
-        get() = bit(3)
-        set(v) = bit(3, v)
-
-    var I: Boolean // Interrupt disable
-        get() = bit(2)
-        set(v) = bit(2, v)
-
-    var Z: Boolean // Zero
-        get() = bit(1)
-        set(v) = bit(1, v)
-
-    var C: Boolean // Carry
-        get() = bit(0)
-        set(v) = bit(0, v)
-
-    override fun toString() = "{N=${N.int()} V=${V.int()} D=${D.int()} I=${I.int()} Z=${Z.int()} C=${C.int()}"
-
-    fun setArithmeticFlags(reg: Int) {
-        Z = reg == 0
-        N = reg.and(0x80) != 0
-    }
-
-}
-
 data class Cpu(var A: Int = 0, var X: Int = 0, var Y: Int = 0, var PC: Int = 0,
         val SP: IStackPointer = InMemoryStackPointer(), val P: StatusFlags = StatusFlags()) : ICpu {
     override fun clone() = Cpu(A, X, Y, PC, SP, P)
@@ -133,6 +94,7 @@ data class Cpu(var A: Int = 0, var X: Int = 0, var Y: Int = 0, var PC: Int = 0,
             0xa5 -> LdaZp(computer)
             0xa9 -> LdaImm(computer)
             0xba -> Tsx(computer)
+            0xbd -> LdaIndX(computer)
             0xc0 -> CpyImm(computer)
             0xc8 -> Iny(computer)
             0xc9 -> CmpImm(computer)
@@ -177,7 +139,7 @@ class Jmp(c: Computer): InstructionBase(c) {
         cpu.PC = word - size
     }
 
-    override fun toString(): String = "JMP $${word.h()}"
+    override fun toString(): String = "JMP $${word.hh()}"
 }
 
 /** 0x20, JSR $1234 */
@@ -190,7 +152,7 @@ class Jsr(c: Computer): InstructionBase(c) {
         cpu.PC = word - size
     }
 
-    override fun toString(): String = "JSR $${word.h()}"
+    override fun toString(): String = "JSR $${word.hh()}"
 }
 
 abstract class CmpImmBase(c: Computer, val name: String): InstructionBase(c) {
@@ -256,7 +218,7 @@ class JmpIndirect(c: Computer): InstructionBase(c) {
     override val size = 3
     override val timing = 5
     override fun run() { cpu.PC = memory.wordAt(word) -  size }
-    override fun toString(): String = "JMP ($${word.h()})"
+    override fun toString(): String = "JMP ($${word.hh()})"
 }
 
 /** 0x85, STA ($10) */
@@ -274,7 +236,7 @@ class StyAbsolute(c: Computer): InstructionBase(c) {
     override val size = 3
     override val timing = 4
     override fun run() { memory[word] = cpu.Y }
-    override fun toString(): String = "STY $${word.h()}"
+    override fun toString(): String = "STY $${word.hh()}"
 }
 
 /** 0x8d, STA ($1234) */
@@ -283,7 +245,7 @@ class StaAbsolute(c: Computer): InstructionBase(c) {
     override val size = 3
     override val timing = 4
     override fun run() { memory[word] = cpu.A }
-    override fun toString(): String = "STA $${word.h()}"
+    override fun toString(): String = "STA $${word.hh()}"
 }
 
 /** 0x8e, STX ($1234) */
@@ -292,7 +254,7 @@ class StxAbsolute(c: Computer): InstructionBase(c) {
     override val size = 3
     override val timing = 4
     override fun run() { memory[word] = cpu.X }
-    override fun toString(): String = "STX $${word.h()}"
+    override fun toString(): String = "STX $${word.hh()}"
 }
 
 open class BranchBase(c: Computer, override val opCode: Int, val name: String, val condition: () -> Boolean)
@@ -367,6 +329,18 @@ class Tsx(c: Computer): InstructionBase(c) {
     override val timing = 2
     override fun run() { cpu.X = cpu.SP.S }
     override fun toString(): String = "TSX"
+}
+
+/** 0xbd, LDA $1234,X */
+class LdaIndX(c: Computer): InstructionBase(c) {
+    override val opCode = 0xbd
+    override val size = 3
+    override var timing = 4 // variable
+    override fun run() {
+        cpu.A = memory[word + cpu.X]
+        timing += pageCrossed(word, word + cpu.X)
+    }
+    override fun toString(): String = "LDA $${word.hh()},X"
 }
 
 abstract class IncBase(c: Computer, override val opCode: Int): InstructionBase(c) {

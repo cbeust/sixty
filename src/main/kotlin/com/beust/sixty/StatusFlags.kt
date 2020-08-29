@@ -1,0 +1,42 @@
+package com.beust.sixty
+
+import java.util.*
+
+class StatusFlags {
+    private val bits = BitSet(8)
+
+    private fun bit(n: Int) = bits.get(n)
+    private fun bit(n: Int, value: Boolean) = bits.set(n, value)
+
+    var N: Boolean // Negative
+        get() = bit(7)
+        set(v) = bit(7, v)
+
+    var V: Boolean // Overflow
+        get() = bit(6)
+        set(v) = bit(6, v)
+
+    var D: Boolean // Decimal
+        get() = bit(3)
+        set(v) = bit(3, v)
+
+    var I: Boolean // Interrupt disable
+        get() = bit(2)
+        set(v) = bit(2, v)
+
+    var Z: Boolean // Zero
+        get() = bit(1)
+        set(v) = bit(1, v)
+
+    var C: Boolean // Carry
+        get() = bit(0)
+        set(v) = bit(0, v)
+
+    override fun toString() = "{N=${N.int()} V=${V.int()} D=${D.int()} I=${I.int()} Z=${Z.int()} C=${C.int()}"
+
+    fun setArithmeticFlags(reg: Int) {
+        Z = reg == 0
+        N = reg.and(0x80) != 0
+    }
+
+}
