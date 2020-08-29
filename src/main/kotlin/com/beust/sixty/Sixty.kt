@@ -2,10 +2,8 @@
 
 package com.beust.sixty
 
+import java.io.File
 import java.util.*
-
-val DEBUG_ASM = false
-val DEBUG_MEMORY = false
 
 fun logMem(i: Int, value: Int, extra: String = "") {
     println("mem[${i.toHex()}] = ${(value.and(0xff)).toHex()} $extra")
@@ -95,6 +93,19 @@ class Memory(size: Int = 4096, vararg bytes: Int) {
             setByte(i + ii, b)
             ii++
         }
+    }
+
+    fun load(file: String, address: Int) {
+//        File(file).readBytes().map { it.toInt() }.toIntArray().copyInto(content, address)
+        File(file).readBytes().forEachIndexed { index, v ->
+            if (index + address < 0xffff) {
+                content[index + address] = v.toInt()
+            }
+        }
+    }
+
+    fun wordAt(word: Int): Int {
+        return byte(word + 1).shl(8).or(byte(word))
     }
 }
 
@@ -245,6 +256,7 @@ data class Cpu(var A: Int = 0, var X: Int = 0, var Y: Int = 0, var PC: Int = 0,
             0x20 -> Jsr(computer)
             0x4c -> Jmp(computer)
             0x60 -> Rts(computer)
+            0x6c -> JmpIndirect(computer)
             0x69 -> AdcImm(computer)
             0x85 -> StaZp(computer)
             0x90 -> Bcc(computer)
@@ -259,7 +271,7 @@ data class Cpu(var A: Int = 0, var X: Int = 0, var Y: Int = 0, var PC: Int = 0,
             0xe6 -> IncZp(computer)
             0xe8 -> Inx(computer)
             0xea -> Nop(computer)
-            else -> TODO("NOT IMPLEMENTED: ${op.toHex()}")
+            else -> TODO("NOT IMPLEMENTED: ${PC.toHex()}: ${op.toHex()}")
         }
 
         return result
@@ -358,6 +370,18 @@ class AdcImm(c: Computer): InstructionBase(c) {
         cpu.A = result
     }
     override fun toString(): String = " ADC #${operand.toHex()}"
+}
+
+/** 0x6c, JMP ($0036) */
+class JmpIndirect(c: Computer): InstructionBase(c) {
+    override val size = 3
+    override val timing = 5
+    override fun run() {
+        val target = memory.wordAt(word)
+        cpu.PC = target -  size
+    }
+
+    override fun toString(): String = "JMP ($${word.toHex()})"
 }
 
 /** 0x85, STA ($10) */

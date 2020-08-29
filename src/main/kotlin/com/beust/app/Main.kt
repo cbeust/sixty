@@ -13,6 +13,7 @@ import javafx.scene.input.KeyCode
 import javafx.scene.input.KeyEvent
 import javafx.scene.layout.AnchorPane
 import javafx.stage.Stage
+import java.lang.System.load
 import java.nio.file.Paths
 import kotlin.system.exitProcess
 
@@ -70,7 +71,11 @@ class Main : Application() {
 
         val textScreen = TextScreen(canvas)
         val graphicsScreen = HiResScreen(canvas)
-        val memory = Memory(size = 65536)
+        val memory = Memory(65536, 0xa9, 0x41, 0x4c, 0xed, 0xfd).apply {
+            load("d:\\pd\\Apple Disks\\apple2eu.rom", 0xc000)
+            setByte(0x36, 0xbd)
+            setByte(0x37, 0x9e)
+        }
 
         val listener = object: MemoryListener {
             override fun onRead(location: Int, value: Int) {
@@ -98,7 +103,6 @@ class Main : Application() {
 
     private fun loadPic(memory: Memory) {
         val bytes = Paths.get("d:", "PD", "Apple disks", "fishgame.pic").toFile().readBytes()
-        memory.setByte(0, 0)
         (4..bytes.size - 1).forEach {
             memory.setByte(0x2000 + it - 4, bytes[it].toInt())
         }

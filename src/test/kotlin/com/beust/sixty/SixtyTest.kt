@@ -200,4 +200,12 @@ class SixtyTest {
         assertMemory(c.memory, 0x200, 0x3ff, 0x28)
         assertMemory(c.memory, 0x400, 0x500, 0)
     }
+
+    fun jmpIndirect() {
+        with(computer(0xa9, 0, 0x6c, 5, 0, 7, 0, 0xa9, 0x42, 0)) {
+            assertRegister(cpu.A, 0)
+            run()
+            assertRegister(cpu.A, 0x42)
+        }
+    }
 }
