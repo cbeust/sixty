@@ -39,16 +39,16 @@ class BitPattern(private val byte0: Int, private val byte1: Int) {
             val result = when(bits) {
                 0 -> Color.BLACK
                 3 -> Color.WHITE
-                2 -> if (group == 0) Color.GREEN else Color.ORANGE
-                else -> if (group == 0) Color.MAGENTA else Color.BLUE
+                2 -> /* if (x%2==0) Color.BLACK else */ if (group == 0) Color.GREEN else Color.ORANGE
+                else -> /* if (x%2==1) Color.BLACK else */ if (group == 0) Color.MAGENTA else Color.BLUE
             }
             return result // if (result == Color.ORANGE) result else Color.BLACK
         }
     }
 
     fun colors(x: Int) : List<Color> =
-        listOf(color(p0, aa, x), color(p0, bb, x), color(p0, cc, x), color(p0, dd, x),
-                color(p1, ee, x), color(p1, ff, x), color(p1, gg, x))
+        listOf(color(p0, aa, x), color(p0, bb, x+1), color(p0, cc, x+2), color(p0, dd, x+3),
+                color(p1, ee, x+4), color(p1, ff, x+5), color(p1, gg, x+6))
 
-    fun colorStrings(x: Int): String = colors(x).map { it -> it.s() }.joinToString(" ")
+    fun colorStrings(x: Int): String = colors(x).map { it.s() }.joinToString(" ")
 }

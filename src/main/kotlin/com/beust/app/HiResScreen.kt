@@ -88,19 +88,16 @@ class HiResScreen(private val canvas: Canvas) {
 //        }
 
         fun drawPixel(x: Int, y: Int, color: Color) {
-            if (color == Color.ORANGE) {
-                println("Drawing $${location.toHex()} $x,$y with ${color.s()}")
-            }
             board.draw(x, y, color)
         }
 
         drawPixel(x + i++, y!!, BitPattern.color(bitPattern.p0, bitPattern.aa, x))
-        drawPixel(x + i++, y, BitPattern.color(bitPattern.p0, bitPattern.bb, x))
-        drawPixel(x + i++, y, BitPattern.color(bitPattern.p0, bitPattern.cc, x))
-        drawPixel(x + i++, y, BitPattern.color(if (even) bitPattern.p0 else bitPattern.p1, bitPattern.dd, x))
-        drawPixel(x + i++, y, BitPattern.color(bitPattern.p1, bitPattern.ee, x))
-        drawPixel(x + i++, y, BitPattern.color(bitPattern.p1, bitPattern.ff, x))
-        drawPixel(x + i++, y, BitPattern.color(bitPattern.p1, bitPattern.gg, x))
+        drawPixel(x + i++, y, BitPattern.color(bitPattern.p0, bitPattern.bb, x+1))
+        drawPixel(x + i++, y, BitPattern.color(bitPattern.p0, bitPattern.cc, x+2))
+        drawPixel(x + i++, y, BitPattern.color(if (even) bitPattern.p0 else bitPattern.p1, bitPattern.dd, x+3))
+        drawPixel(x + i++, y, BitPattern.color(bitPattern.p1, bitPattern.ee, x+4))
+        drawPixel(x + i++, y, BitPattern.color(bitPattern.p1, bitPattern.ff, x+5))
+        drawPixel(x + i++, y, BitPattern.color(bitPattern.p1, bitPattern.gg, x+6))
 
 //        println("")
     }
