@@ -50,15 +50,15 @@ class HiResScreen(private val canvas: Canvas) {
     fun drawMemoryLocation(memory: Memory, location: Int, value: Int) {
         val even = location % 2 == 0
         val bitPattern = if (even) {
-            val byte0 = memory.byte(location)
-            val byte1 = memory.byte(location + 1)
+            val byte0 = memory[location]
+            val byte1 = memory[location + 1]
             BitPattern(byte0, byte1)
         } else {
             // DD BB
             // 1101_1101  1011_1011
             // aa:1 bb:3 cc:1 dd:3 ee:1 ff:3 gg: 1
-            val byte0 = memory.byte(location - 1)
-            val byte1 = memory.byte(location)
+            val byte0 = memory[location - 1]
+            val byte1 = memory[location]
             BitPattern(byte0, byte1)
         }
 

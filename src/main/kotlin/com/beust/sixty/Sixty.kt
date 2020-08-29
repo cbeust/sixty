@@ -55,7 +55,7 @@ class Memory(val size: Int = 0x10000, vararg bytes: Int) {
         bytes.copyInto(content)
     }
 
-    fun byte(i: Int): Int {
+    operator fun get(i: Int): Int {
         val result = if (interceptor != null) {
             val response = interceptor!!.onRead(i)
             if (response.allow) response.value
@@ -68,7 +68,7 @@ class Memory(val size: Int = 0x10000, vararg bytes: Int) {
         return result.and(0xff)
     }
 
-    fun setByte(i: Int, value: Int) {
+    operator fun set(i: Int, value: Int) {
         if (interceptor != null) {
             val response = interceptor!!.onWrite(i, value)
             if (response.allow) {
@@ -91,7 +91,7 @@ class Memory(val size: Int = 0x10000, vararg bytes: Int) {
     fun init(i: Int, vararg bytes: Int) {
         var ii = i
         bytes.forEach { b ->
-            setByte(i + ii, b)
+            set(i + ii, b)
             ii++
         }
     }
@@ -106,7 +106,7 @@ class Memory(val size: Int = 0x10000, vararg bytes: Int) {
     }
 
     fun wordAt(word: Int): Int {
-        return byte(word + 1).shl(8).or(byte(word))
+        return get(word + 1).shl(8).or(get(word))
     }
 }
 
@@ -133,8 +133,8 @@ class Computer(val cpu: Cpu = Cpu(), val memory: Memory, memoryListener: MemoryL
         var n = 0
         var done = false
         while (! done) {
-            if ((memory.byte(cpu.PC) == 0x60 && cpu.SP.isEmpty()) ||
-                    memory.byte(cpu.PC) == 0) {
+            if ((memory[cpu.PC] == 0x60 && cpu.SP.isEmpty()) ||
+                    memory[cpu.PC] == 0) {
                 done = true
             } else {
                 val inst = cpu.nextInstruction(this)
@@ -157,11 +157,11 @@ class Computer(val cpu: Cpu = Cpu(), val memory: Memory, memoryListener: MemoryL
             var done = false
             var n = length
             while (! done) {
-                val p = memory.byte(pc)
+                val p = memory[pc]
                 val inst = cpu.nextInstruction(this, noThrows = true)
                 val bytes = StringBuffer(inst.opCode.h())
-                bytes.append(if (inst.size > 1) (" " + memory.byte(pc + 1).h()) else "   ")
-                bytes.append(if (inst.size == 3) (" " + memory.byte(pc + 2).h()) else "   ")
+                bytes.append(if (inst.size > 1) (" " + memory[pc + 1].h()) else "   ")
+                bytes.append(if (inst.size == 3) (" " + memory[pc + 2].h()) else "   ")
                 println(pc.h() + ": " + bytes.toString() + "  " + inst.toString())
                 cpu.PC += inst.size
                 pc += inst.size
@@ -263,7 +263,7 @@ data class Cpu(var A: Int = 0, var X: Int = 0, var Y: Int = 0, var PC: Int = 0,
         val SP: StackPointer = StackPointer(), val P: StatusFlags = StatusFlags()) : ICpu {
     override fun clone() = Cpu(A, X, Y, PC, SP, P)
     override fun nextInstruction(computer: Computer, noThrows: Boolean): Instruction {
-        val op = computer.memory.byte(PC) and 0xff
+        val op = computer.memory[PC] and 0xff
         val result = when(op) {
             0x00 -> Brk(computer)
             0x20 -> Jsr(computer)
@@ -299,8 +299,8 @@ abstract class InstructionBase(val computer: Computer): Instruction {
     val cpu by lazy { computer.cpu }
     val memory by lazy { computer.memory }
     val pc by lazy { cpu.PC}
-    val operand by lazy { memory.byte(pc + 1) }
-    val word by lazy { memory.byte(pc + 2).shl(8).or(memory.byte(pc + 1)) }
+    val operand by lazy { memory[pc + 1] }
+    val word by lazy { memory[pc + 2].shl(8).or(memory[pc + 1]) }
 }
 
 /** 0x00, BRK */
@@ -406,8 +406,8 @@ class StaZp(c: Computer): InstructionBase(c) {
     override val opCode = 0x85
     override val size = 2
     override val timing = 3
-    override fun run() { memory.setByte(operand.toInt(), cpu.A) }
-    override fun toString(): String = "STA $" + memory.byte(cpu.PC + 1).h()
+    override fun run() { memory[operand] = cpu.A }
+    override fun toString(): String = "STA $" + memory[cpu.PC + 1].h()
 }
 
 open class BranchBase(c: Computer, opCode: Int, val name: String, val condition: () -> Boolean): InstructionBase(c) {
@@ -436,8 +436,8 @@ class StaIndY(c: Computer): InstructionBase(c) {
     override val size = 2
     override val timing = 6
     override fun run() {
-        val target = memory.byte(operand.toInt() + 1).toInt().shl(8).or(memory.byte(operand.toInt()).toInt())
-        memory.setByte((target.toUInt() + cpu.Y.toUInt()).toInt(), cpu.A)
+        val target = memory[operand + 1].toInt().shl(8).or(memory[operand].toInt())
+        memory[(target.toUInt() + cpu.Y.toUInt()).toInt()] = cpu.A
     }
     override fun toString(): String = "STA ($${operand.toByte().h()}),Y"
 }
@@ -448,7 +448,7 @@ class LdaZp(c: Computer): InstructionBase(c) {
     override val size = 2
     override val timing = 3
     override fun run() {
-        cpu.A = memory.byte(operand)
+        cpu.A = memory[operand]
     }
     override fun toString(): String = "LDA $" + operand.h()
 }
@@ -498,7 +498,7 @@ class IncZp(c: Computer): IncBase(c, 0xe6) {
     override val size = 2
     override val timing = 4
     override fun run() {
-        memory.setByte(operand, calculate(memory.byte(operand)))
+        memory[operand] = calculate(memory[operand])
     }
     override fun toString(): String = "INC $${operand.h()}"
 }

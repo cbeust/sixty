@@ -98,7 +98,7 @@ class Main : Application() {
             loadPic(memory)
 //            memory.setByte(0x2000, 0x6e)
 //            memory.setByte(0x2001, 0)
-            memory.setByte(0, 0)
+            memory[0] = 0
             run()
         }
     }
@@ -106,14 +106,14 @@ class Main : Application() {
     private fun loadPic(memory: Memory) {
         val bytes = Paths.get("d:", "PD", "Apple disks", "fishgame.pic").toFile().readBytes()
         (4..bytes.size - 1).forEach {
-            memory.setByte(0x2000 + it - 4, bytes[it].toInt())
+            memory[0x2000 + it - 4] = bytes[it].toInt()
         }
     }
 
     private fun fillWithNumbers(memory: Memory) {
         (0..40).forEach { x ->
             (0..24).forEach { y ->
-                memory.setByte(0x400 + (y * 40) + x, (x % 10) + '0'.toInt())
+                memory[0x400 + (y * 40) + x] = (x % 10) + '0'.toInt()
             }
         }
     }

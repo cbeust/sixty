@@ -72,22 +72,22 @@ class SixtyTest {
         // lda #$23
         val expected = 0x23
         with(computer(0xa9, expected, 0x85, 0x8, 0)) {
-            assertThat(memory.byte(0x8)).isNotEqualTo(expected)
+            assertThat(memory[0x8]).isNotEqualTo(expected)
             run()
-            assertThat(memory.byte(0x8)).isEqualTo(expected)
+            assertThat(memory[0x8]).isEqualTo(expected)
         }
     }
 
     @Test(enabled = false)
     fun Computer.assertMemory(index: Int, value: Int) {
-        assertThat(memory.byte(index).toInt()).isEqualTo(value)
+        assertThat(memory[index].toInt()).isEqualTo(value)
     }
 
     fun StaIndY() {
         // memory(4) points to address 8, then we add Y(2) to it to produce 10. Store $42 in memory(10)
         // STA ($4), Y
         with(computer(0x91, 4, 0, 0, 8, 0, 0, 0, 0, 0, 0, 0, 0, 0)) {
-            assertThat(memory.byte(10)).isNotEqualTo(0x42)
+            assertThat(memory[10]).isNotEqualTo(0x42)
             cpu.A = 0x42
             cpu.Y = 2
             cpu.nextInstruction(this).run()
@@ -166,8 +166,8 @@ class SixtyTest {
 
     private fun assertMemory(memory: Memory, start: Int, end: Int, expected: Int) {
         (start..end).forEach {
-            assertThat(memory.byte(it))
-                    .withFailMessage("Expected index $it to be $expected but was ${memory.byte(it)}")
+            assertThat(memory[it])
+                    .withFailMessage("Expected index $it to be $expected but was ${memory[it]}")
                     .isEqualTo(expected)
         }
     }
