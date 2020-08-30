@@ -556,5 +556,12 @@ abstract class BaseTest {
             run()
         }
     }
+
+    // Missing tests:
+    // BIT_ABS
+    // AND_ABS, AND_IMM
+    // LSR_A
+    // ORA_ZP
+    // ROL_ZP
 }
 

@@ -91,7 +91,7 @@ data class Cpu(var A: Int = 0, var X: Int = 0, var Y: Int = 0, var PC: Int = 0,
         val result = when(op) {
             0x00 -> Brk(computer)
 //            0x01 -> OraIndirectX(computer)
-//            0x05 -> OraZp(computer)
+            ORA_ZP -> OraZp(computer)
 //            0x06 -> AslZp(computer)
             0x08 -> Php(computer)
 //            0x09 -> OraImm(computer)
@@ -110,12 +110,12 @@ data class Cpu(var A: Int = 0, var X: Int = 0, var Y: Int = 0, var PC: Int = 0,
 //            0x21 -> AndIndirectX(computer)
 //            0x24 -> BitZp(computer)
 //            0x25 -> AndZp(computer)
-//            0x26 -> RolZp(computer)
+            ROL_ZP -> RolZp(computer)
             0x28 -> Plp(computer)
-//            0x29 -> And(computer)
+            AND_IMM -> And(computer)
 //            0x2a -> Rol(computer)
-//            0x2c -> BitAbsolute(computer)
-//            0x2d -> AndAbsolute(computer)
+            BIT_ABS -> BitAbsolute(computer)
+            AND_ABS -> AndAbsolute(computer)
 //            0x2e -> RolAbsolute(computer)
             0x30 -> Bmi(computer)
 //            0x31 -> AndIndirectY(computer)
@@ -130,7 +130,7 @@ data class Cpu(var A: Int = 0, var X: Int = 0, var Y: Int = 0, var PC: Int = 0,
 //            0x45 -> EorZp(computer)
 //            0x46 -> LsrZp(computer)
             0x49 -> EorImm(computer)
-//            0x4a -> Lsr(computer)
+            LSR_A -> LsrA(computer)
             0x4c -> Jmp(computer)
             0x48 -> Pha(computer)
 //            0x4d -> EorAbsolute(computer)
@@ -268,6 +268,19 @@ class Brk(c: Computer): InstructionBase(c) {
     override fun toString(): String = "BRK"
 }
 
+/** 0x5, ORA #$12 */
+class OraZp(c: Computer): InstructionBase(c) {
+    override val opCode = ORA_ZP
+    override val size = 2
+    override val timing = 3
+    override fun run() {
+        val result = cpu.A.or(operand)
+        cpu.P.setNZFlags(result)
+        cpu.A = result
+    }
+    override fun toString(): String = "ORA $${operand.h()}"
+}
+
 /** 0x8, PHP */
 class Php(c: Computer): StackInstruction(c, 0x8, "PHP") {
     override val timing = 3
@@ -321,12 +334,64 @@ class Jsr(c: Computer): InstructionBase(c) {
     override fun toString(): String = "JSR $${word.hh()}"
 }
 
+/** 0x26, ROL $12 */
+class RolZp(c: Computer): InstructionBase(c) {
+    override val opCode = ROL_ZP
+    override val size = 2
+    override val timing = 5
+    override fun run() {
+        val bit7 = if (cpu.A.and(1.shl(7)) != 0) 1 else 0
+        val result = cpu.A.shl(1).or(cpu.P.C.int())
+        cpu.P.setNZFlags(result)
+        cpu.P.C = bit7.toBoolean()
+        cpu.A = result
+    }
+    override fun toString(): String = "ROL $${operand.h()}"
+}
+
 /** 0x28, PLP */
 class Plp(c: Computer): StackInstruction(c, 0x8, "PHP") {
     override val timing = 4
     override fun run() {
         cpu.P.fromByte(cpu.SP.popByte())
     }
+}
+
+/** 0x29, AND #$34 */
+class And(c: Computer): InstructionBase(c) {
+    override val opCode = AND_IMM
+    override val size = 2
+    override val timing = 2
+    override fun run() {
+        cpu.A = cpu.A.and(operand)
+        cpu.P.setNZFlags(cpu.A)
+    }
+    override fun toString(): String = "AND #$${operand.h()}"
+}
+
+/** 0x2c, BIT $1234 */
+class BitAbsolute(c: Computer): InstructionBase(c) {
+    override val opCode = BIT_ABS
+    override val size = 3
+    override val timing = 4
+    override fun run() {
+        val value = cpu.A.and(memory[word])
+        cpu.P.setNZFlags(value)
+        cpu.P.V = if (value.and(1.shl(6)) != 0) true else false
+    }
+    override fun toString(): String = "BIT $${word.hh()}"
+}
+
+/** 0x2d, AND $1234 */
+class AndAbsolute(c: Computer): InstructionBase(c) {
+    override val opCode = AND_ABS
+    override val size = 3
+    override val timing = 4
+    override fun run() {
+        cpu.A = cpu.A.and(memory[word])
+        cpu.P.setNZFlags(cpu.A)
+    }
+    override fun toString(): String = "AND $${word.hh()}"
 }
 
 /** 0x30, BMI */
@@ -366,6 +431,19 @@ class EorImm(c: Computer): InstructionBase(c) {
     override fun toString(): String = "EOR #$${operand.h()}"
 }
 
+/** 0x4a, LSR */
+class LsrA(c: Computer): InstructionBase(c) {
+    override val opCode = LSR_A
+    override val size = 1
+    override val timing = 2
+    override fun run() {
+        cpu.P.C = cpu.A.and(1.shl(7)).toBoolean()
+        val result = cpu.A.shr(1)
+        cpu.P.setNZFlags(result)
+        cpu.A = result
+    }
+    override fun toString(): String = "LSR"
+}
 
 /** 0x48, PHA */
 class Pha(c: Computer): StackInstruction(c, 0x48, "PHA") {

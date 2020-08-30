@@ -18,6 +18,9 @@ const val AND_ABS_Y = 0x39
 const val AND_IND_X = 0x21
 const val AND_IND_Y = 0x31
 
+const val BIT_ZP = 0x24
+const val BIT_ABS = 0x2c
+
 const val BPL = 0x10
 const val BMI = 0x30
 const val BVC = 0x50
@@ -44,6 +47,8 @@ const val CMP_ABS_Y = 0xd9
 const val CMP_IND_X = 0xc1
 const val CMP_IND_Y = 0xd1
 
+const val JSR = 0x20
+
 const val LDY_IMM = 0xa0
 const val LDY_ZP = 0xa4
 const val LDY_ZP_X = 0xb4
@@ -56,6 +61,27 @@ const val STY_ABS = 0x8c
 
 const val LDA_IMM = 0xa9
 const val LDA_ZP = 0xa5
+
+const val LSR_A = 0x4a
+const val LSR_ZP = 0x46
+const val LSR_ZP_X = 0x56
+const val LSR_ABS = 0x4e
+const val LSR_ABS_X = 0x5e
+
+const val ORA_IMM = 0x09
+const val ORA_ZP = 0x05
+const val ORA_ZP_X = 0x15
+const val ORA_ABS = 0x0d
+const val ORA_ABS_X = 0x1d
+const val ORA_ABS_Y = 0x19
+const val ORA_IND_X = 0x01
+const val ORA_IND_Y = 0x11
+
+const val ROL_A = 0x2a
+const val ROL_ZP = 0x26
+const val ROL_XP_Z = 0x36
+const val ROL_ABS = 0x2e
+const val ROL_ABS_X = 0x3e
 
 const val STA_ZP = 0x85
 const val STA_ZP_X = 0x95
@@ -78,6 +104,15 @@ const val SBC_ABX_X = 0xfd
 const val SBC_ABS_Y = 0xf9
 const val SBC_IND_X = 0xe1
 const val SBC_IND_Y = 0xf1
+
+const val TAX = 0xaa
+const val TXA = 0x8a
+const val DEX = 0xca
+const val INX = 0xe8
+const val TAY = 0xa8
+const val TYA = 0x98
+const val DEY = 0x88
+const val INY = 0xc8
 
 const val RTS = 0x60
 

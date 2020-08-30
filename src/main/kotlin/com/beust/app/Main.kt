@@ -73,7 +73,20 @@ class Main : Application() {
             load("d:\\pd\\Apple Disks\\apple2eu.rom", 0xc000)
             load("d:\\pd\\Apple Disks\\dos", 0x9600)
             load("d:\\pd\\Apple Disks\\a000.dmp", 0)
-            this.init(pc, 0xa9, 0x41, 0x20, 0xed, 0xfd)
+            // jsr $fded
+//            this.init(pc, 0xa9, 0x41, 0x20, 0xed, 0xfd)
+            // Draw a line
+            this.init(pc, JSR, 0xe2, 0xf3,
+                    LDX_IMM, 3,
+                    JSR, 0xf0, 0xf6, // HCOLOR (set color to white)
+                    LDA_IMM, 0,
+                    TAY,
+                    TAX,
+                    JSR, 0x57, 0xf4,  // HPLOT
+                    LDA_IMM, 0x17,
+                    LDX_IMM, 1,
+                    JSR, 0x3a, 0xf5  // HLINE TO 279,0
+            )
             this[0x36] = 0xbd
             this[0x37] = 0x9e
         }
@@ -86,6 +99,7 @@ class Main : Application() {
                 if (location >= 0x400 && location < 0x7ff) {
                     textScreen.drawMemoryLocation(location, value)
                 } else if (location >= 0x2000 && location <= 0x3fff) {
+                    if (value != 0) println("Graphics: [$" + location.hh() + "]=$" + value.h())
                     graphicsScreen.drawMemoryLocation(memory, location, value)
                 }
             }
@@ -96,13 +110,13 @@ class Main : Application() {
             memory.listener = listener
 //            fillScreen(memory)
 //            fillWithNumbers(memory)
-            loadPic(memory)
+//            loadPic(memory)
             if (false) {
                 memory[0] = 0
             }
             cpu.PC = pc
 //            DEBUG_ASM = true
-            DEBUG_MEMORY = true
+//            DEBUG_MEMORY = true
             run()
         }
     }
