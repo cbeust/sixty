@@ -259,6 +259,9 @@ abstract class InstructionBase(val computer: Computer): Instruction {
     val pc by lazy { cpu.PC}
     val operand by lazy { memory[pc + 1] }
     val word by lazy { memory[pc + 2].shl(8).or(memory[pc + 1]) }
+
+    protected fun indirectX(address: Int): Int = memory[address + cpu.X]
+    protected fun indirectY(address: Int): Int = memory[address] + cpu.Y
 }
 
 /** 0x00, BRK */
@@ -482,16 +485,17 @@ class Pha(c: Computer): StackInstruction(c, 0x48, "PHA") {
 /** 0x50, BVC */
 class Bvc(computer: Computer): BranchBase(computer, 0x50, "BVC", { ! computer.cpu.P.V })
 
+
 /** 0x51, EOR ($12),Y */
 class EorIndirectY(c: Computer): InstructionBase(c) {
     override val opCode = EOR_IND_Y
     override val size = 2
     override var timing = 5  // variable timing
     override fun run() {
-        val old = cpu.A
-        val new = cpu.A.xor(memory[operand]) + cpu.Y
+        val targetAddress = indirectY(operand)
+        val new = cpu.A.xor(memory[targetAddress])
         cpu.P.setNZFlags(new)
-        timing += pageCrossed(memory[operand], memory[operand] + cpu.Y)
+        timing += pageCrossed(cpu.PC, targetAddress)
         cpu.A = new
     }
     override fun toString(): String = "EOR ($${operand.h()}), Y"
@@ -598,7 +602,10 @@ class StaIndirectX(c: Computer): InstructionBase(c) {
     override val opCode = STA_IND_X
     override val size = 2
     override val timing = 6
-    override fun run() { memory[operand + cpu.X] = cpu.A }
+    override fun run() {
+        val targetAddress = indirectX(operand)
+        memory[targetAddress] = cpu.A
+    }
     override fun toString(): String = "STA ($${operand.h()},X)"
 }
 
@@ -608,10 +615,10 @@ class LdaIndirectY(c: Computer): InstructionBase(c) {
     override val size = 2
     override var timing = 5  // variable timing
     override fun run() {
-        val old = cpu.A
-        val new = memory[operand] + cpu.Y
+        val targetAddress = indirectY(operand)
+        val new = memory[targetAddress]
         cpu.P.setNZFlags(new)
-        timing += pageCrossed(memory[operand], memory[operand] + cpu.Y)
+        timing += pageCrossed(cpu.PC, targetAddress)
         cpu.A = new
     }
     override fun toString(): String = "LDA $${word.hh()}"
@@ -706,8 +713,8 @@ class StaIndirectY(c: Computer): InstructionBase(c) {
     override val size = 2
     override val timing = 6
     override fun run() {
-        val target = memory[operand + 1].shl(8).or(memory[operand])
-        memory[target + cpu.Y] = cpu.A
+        val targetAddress = indirectY(operand)
+        memory[targetAddress] = cpu.A
     }
     override fun toString(): String = "STA ($${operand.toByte().h()}),Y"
 }
