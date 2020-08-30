@@ -430,5 +430,6 @@ abstract class BaseTest {
     // LDAzp, LDXzp, LDYzp
     // STXzp, STYzp
     // SBCzp
+    // BCS, BVC, BEQ
 }
 

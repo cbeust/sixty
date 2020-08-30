@@ -135,7 +135,7 @@ data class Cpu(var A: Int = 0, var X: Int = 0, var Y: Int = 0, var PC: Int = 0,
             0x48 -> Pha(computer)
 //            0x4d -> EorAbsolute(computer)
 //            0x4e -> LsrAbsolute(computer)
-//            0x50 -> Bvc(computer)
+            0x50 -> Bvc(computer)
 //            0x51 -> EorIndirectY(computer)
 //            0x55 -> EorZpX(computer)
 //            0x65 -> LsrZpX(computer)
@@ -191,7 +191,7 @@ data class Cpu(var A: Int = 0, var X: Int = 0, var Y: Int = 0, var PC: Int = 0,
 //            0xac -> LdyAbsolute(computer)
             0xad -> LdaAbsolute(computer)
 //            0xae -> LdxAbsolute(computer)
-//            0xb0 -> Bcs(computer)
+            0xb0 -> Bcs(computer)
 //            0xb1 -> LdaIndirectY(computer)
 //            0xb4 -> LdyZpX(computer)
 //            0xb5 -> LdaZpX(computer)
@@ -232,7 +232,7 @@ data class Cpu(var A: Int = 0, var X: Int = 0, var Y: Int = 0, var PC: Int = 0,
 //            0xec -> CpxAbsolute(computer)
 //            0xed -> SbcAbsolute(computer)
 //            0xee -> IncAbsolute(computer)
-//            0xf0 -> Beq(computer)
+            0xf0 -> Beq(computer)
 //            0xf1 -> SbcIndirectY(computer)
 //            0xf5 -> SbcZpX(computer)
 //            0xf7 -> IncZpX(computer)
@@ -361,6 +361,9 @@ class Pha(c: Computer): StackInstruction(c, 0x48, "PHA") {
         cpu.SP.pushByte(cpu.A.toByte())
     }
 }
+
+/** 0x50, BVC */
+class Bvc(computer: Computer): BranchBase(computer, 0x50, "BVC", { ! computer.cpu.P.V })
 
 /** 0x58, CLI */
 class Cli(c: Computer): FlagInstruction(c, 0x58, "CLI") {
@@ -636,6 +639,8 @@ class LdaAbsolute(c: Computer): InstructionBase(c) {
     override fun toString(): String = "LDA $${word.hh()}"
 }
 
+/** 0xb0, BCS */
+class Bcs(computer: Computer): BranchBase(computer, 0xb0, "BCS", { computer.cpu.P.C })
 
 /** 0xba, TSX */
 class Tsx(c: Computer): StackInstruction(c, 0xba, "TSX") {
@@ -735,6 +740,9 @@ class Nop(c: Computer): InstructionBase(c) {
     override fun run() { }
     override fun toString(): String = "NOP"
 }
+
+/** 0xf0, BEQ */
+class Beq(computer: Computer): BranchBase(computer, 0xf0, "BEQ", { computer.cpu.P.Z })
 
 /** 0xf8, SED */
 class Sed(c: Computer): FlagInstruction(c, 0xf8, "SED") {
