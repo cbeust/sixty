@@ -129,7 +129,7 @@ data class Cpu(var A: Int = 0, var X: Int = 0, var Y: Int = 0, var PC: Int = 0,
 //            0x41 -> EorIndirectX(computer)
 //            0x45 -> EorZp(computer)
 //            0x46 -> LsrZp(computer)
-//            0x49 -> EorImm(computer)
+            0x49 -> EorImm(computer)
 //            0x4a -> Lsr(computer)
             0x4c -> Jmp(computer)
             0x48 -> Pha(computer)
@@ -284,7 +284,7 @@ class Asl(c: Computer): InstructionBase(c) {
     override fun run() {
         cpu.P.C = if (cpu.A.and(0x80) != 0) true else false
         val newValue = cpu.A.shl(1).and(0xff)
-        cpu.P.setArithmeticFlags(newValue)
+        cpu.P.setNZFlags(newValue)
         cpu.A = newValue
     }
     override fun toString(): String = "ASL"
@@ -318,7 +318,6 @@ class Jsr(c: Computer): InstructionBase(c) {
         cpu.SP.pushWord(pc + size - 1)
         cpu.PC = word - size
     }
-
     override fun toString(): String = "JSR $${word.hh()}"
 }
 
@@ -353,6 +352,20 @@ abstract class CmpImmBase(c: Computer, val name: String): InstructionBase(c) {
 class Sec(c: Computer): FlagInstruction(c, 0x38, "SEC") {
     override fun run() { cpu.P.C = true }
 }
+
+/** 0x49, EOR #$12 */
+class EorImm(c: Computer): InstructionBase(c) {
+    override val opCode = 0x49
+    override val size = 2
+    override val timing = 2
+    override fun run() {
+        val result = cpu.A.xor(operand)
+        cpu.P.setNZFlags(result)
+        cpu.A = result
+    }
+    override fun toString(): String = "EOR #$${operand.h()}"
+}
+
 
 /** 0x48, PHA */
 class Pha(c: Computer): StackInstruction(c, 0x48, "PHA") {
@@ -408,7 +421,7 @@ abstract class AddBase(c: Computer): InstructionBase(c) {
         cpu.P.C = result.and(0x100) == 1
         cpu.P.V = cpu.P.C.xor((carry6.and(0x80) != 0))
         result = result and 0xff
-        cpu.P.setArithmeticFlags(result)
+        cpu.P.setNZFlags(result)
         return result
     }
 }
@@ -459,7 +472,7 @@ class StxZp(c: Computer): ZpBase(c, 0x86, "STX") {
 class Dey(c: Computer): RegisterInstruction(c, 0x88, "DEY") {
     override fun run() {
         cpu.Y--
-        cpu.P.setArithmeticFlags(cpu.Y)
+        cpu.P.setNZFlags(cpu.Y)
     }
 }
 
@@ -494,7 +507,7 @@ class StxAbsolute(c: Computer): InstructionBase(c) {
 class Txa(c: Computer): RegisterInstruction(c, 0x8a, "TXA") {
     override fun run() {
         cpu.A = cpu.X
-        cpu.P.setArithmeticFlags(cpu.A)
+        cpu.P.setNZFlags(cpu.A)
     }
 }
 
@@ -546,7 +559,7 @@ class StaZpX(c: Computer): InstructionBase(c) {
 class Tya(c: Computer): RegisterInstruction(c, 0x98, "TYA") {
     override fun run() {
         cpu.A = cpu.Y
-        cpu.P.setArithmeticFlags(cpu.A)
+        cpu.P.setNZFlags(cpu.A)
     }
 }
 
@@ -595,7 +608,7 @@ class LdxZp(c: Computer): ZpBase(c, 0xa6, "LDX") {
 class Tay(c: Computer): RegisterInstruction(c, 0xa8, "TAY") {
     override fun run() {
         cpu.Y = cpu.A
-        cpu.P.setArithmeticFlags(cpu.Y)
+        cpu.P.setNZFlags(cpu.Y)
     }
 }
 
@@ -624,7 +637,7 @@ class LdaImm(c: Computer): LdImmBase(c, 0xa9, "LDA") {
 class Tax(c: Computer): RegisterInstruction(c, 0xaa, "TAX") {
     override fun run() {
         cpu.X = cpu.A
-        cpu.P.setArithmeticFlags(cpu.X)
+        cpu.P.setNZFlags(cpu.X)
     }
 }
 
@@ -663,7 +676,7 @@ class LdaAbsoluteX(c: Computer): InstructionBase(c) {
 abstract class IncBase(c: Computer, override val opCode: Int): InstructionBase(c) {
     protected fun calculate(oldValue: Int): Int {
         val result = (oldValue + 1).and(0xff)
-        cpu.P.setArithmeticFlags(result)
+        cpu.P.setNZFlags(result)
         return result
     }
 }
@@ -672,7 +685,7 @@ abstract class IncBase(c: Computer, override val opCode: Int): InstructionBase(c
 class Iny(c: Computer): RegisterInstruction(c, 0xc8, "INY") {
     override fun run() {
         cpu.Y = (cpu.Y + 1).and(0xff)
-        cpu.P.setArithmeticFlags(cpu.Y)
+        cpu.P.setNZFlags(cpu.Y)
     }
 }
 
@@ -686,7 +699,7 @@ abstract class RegisterInstruction(c: Computer, override val opCode: Int, val na
 class Dex(c: Computer): RegisterInstruction(c, 0xca, "DEX") {
     override fun run() {
         cpu.X--
-        cpu.P.setArithmeticFlags(cpu.X)
+        cpu.P.setNZFlags(cpu.X)
     }
 }
 
@@ -728,7 +741,7 @@ class IncZp(c: Computer): IncBase(c, 0xe6) {
 class Inx(c: Computer): RegisterInstruction(c, 0xe8, "INX") {
     override fun run() {
         cpu.X = (cpu.X + 1).and(0xff)
-        cpu.P.setArithmeticFlags(cpu.X)
+        cpu.P.setNZFlags(cpu.X)
     }
 }
 

@@ -425,6 +425,23 @@ abstract class BaseTest {
         }
     }
 
+    fun eor() {
+        with(computer(0xa9, 0xaa, 0x49, 0xff)) {  // LDA #$aa, EOR #$ff
+            run()
+            assertRegister(cpu.A, 0x55)
+        }
+        with(computer(0xa9, 0xaa, 0x49, 0xaa)) {  // LDA #$aa, EOR #$aa
+            run()
+            assertRegister(cpu.A, 0x0)
+            assertFlag("Z", cpu.P.Z, 1)
+        }
+        with(computer(0xa9, 0x7f, 0x49, 0x80)) {  // LDA #$7f, EOR #$80
+            run()
+            assertRegister(cpu.A, 0xff)
+            assertFlag("N", cpu.P.N, 1)
+        }
+    }
+
     // Missing tests:
     // CLC, SEC, CLI, SEI, CLD, SED
     // LDAzp, LDXzp, LDYzp

@@ -55,7 +55,7 @@ class StatusFlags {
 
     override fun toString() = "{N=${N.int()} V=${V.int()} D=${D.int()} I=${I.int()} Z=${Z.int()} C=${C.int()}"
 
-    fun setArithmeticFlags(reg: Int) {
+    fun setNZFlags(reg: Int) {
         Z = reg == 0
         N = reg.and(0x80) != 0
     }
