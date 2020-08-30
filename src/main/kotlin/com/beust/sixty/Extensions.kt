@@ -37,4 +37,4 @@ fun Color.s() = when(this) {
 }
 
 fun Boolean.int(): Int = if (this) 1 else 0
-fun Int.toBoolean(): Boolean = if (this == 0) false else true
+fun Int.toBoolean(): Boolean = if (this == 0) false else if (this == 1) true else TODO("Illegal boolean: $this")

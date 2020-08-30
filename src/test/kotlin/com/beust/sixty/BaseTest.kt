@@ -563,5 +563,6 @@ abstract class BaseTest {
     // LSR_A
     // ORA_ZP
     // ROL_ZP
+    // ROR_ZP
 }
 

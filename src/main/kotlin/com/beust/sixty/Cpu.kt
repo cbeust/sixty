@@ -146,6 +146,7 @@ data class Cpu(var A: Int = 0, var X: Int = 0, var Y: Int = 0, var PC: Int = 0,
             0x60 -> Rts(computer)
 //            0x61 -> AdcIndirectX(computer)
 //            0x65 -> AdcZp(computer)
+            ROR_ZP -> RorZp(computer)
             0x68 -> Pla(computer)
             0x69 -> AdcImm(computer)
             0x6c -> JmpIndirect(computer)
@@ -483,6 +484,22 @@ class Rts(c: Computer): InstructionBase(c) {
     }
     override fun toString(): String = "RTS"
 }
+
+/** 0x66, ROR $12 */
+class RorZp(c: Computer): InstructionBase(c) {
+    override val opCode = ROR_ZP
+    override val size = 2
+    override val timing = 5
+    override fun run() {
+        val bit0 = cpu.A.and(0x1)
+        val result = cpu.A.shr(1).or(cpu.P.C.int().shl(7))
+        cpu.P.setNZFlags(result)
+        cpu.P.C = bit0.toBoolean()
+        cpu.A = result
+    }
+    override fun toString(): String = "ROR $${operand.h()}"
+}
+
 
 /** 0x68, PLA */
 class Pla(c: Computer): StackInstruction(c, 0x68, "PLA") {
