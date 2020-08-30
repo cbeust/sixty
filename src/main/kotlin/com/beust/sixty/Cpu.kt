@@ -224,7 +224,7 @@ data class Cpu(var A: Int = 0, var X: Int = 0, var Y: Int = 0, var PC: Int = 0,
 //            0xe0 -> CpxImm(computer)
 //            0xe1 -> SbcIndirectX(computer)
 //            0xe4 -> CpxZp(computer)
-//            0xe5 -> SbcZp(computer)
+            0xe5 -> SbcZp(computer)
             0xe6 -> IncZp(computer)
             0xe8 -> Inx(computer)
 //            0xe9 -> SbcImmediate(computer)
@@ -291,7 +291,7 @@ class Asl(c: Computer): InstructionBase(c) {
 }
 
 /** 0x10, BPL */
-class Bpl(computer: Computer): BranchBase(computer, 0x10, "BPL", { ! computer.cpu.P.N })
+class Bpl(computer: Computer): BranchBase(computer, 0x10, "BPL", { !computer.cpu.P.N })
 
 abstract class FlagInstruction(c: Computer, override val opCode: Int, val name: String): InstructionBase(c) {
     override val size = 1
@@ -398,21 +398,24 @@ class Pla(c: Computer): StackInstruction(c, 0x68, "PLA") {
     }
 }
 
-/** 0x69, ADC #$12 */
-class AdcImm(c: Computer): InstructionBase(c) {
-    override val opCode = 0x69
-    override val size = 2
-    override val timing = 2
-    override fun run() {
-        val value = cpu.A
+abstract class AddBase(c: Computer): InstructionBase(c) {
+    fun adc(value: Int, operand: Int): Int {
         var result: Int = operand + value + cpu.P.C.int()
         val carry6: Int = operand.and(0x7f) + value.and(0x7f) + cpu.P.C.int()
         cpu.P.C = result.and(0x100) == 1
         cpu.P.V = cpu.P.C.xor((carry6.and(0x80) != 0))
         result = result and 0xff
         cpu.P.setArithmeticFlags(result)
-        cpu.A = result
+        return result
     }
+}
+
+/** 0x69, ADC #$12 */
+class AdcImm(c: Computer): AddBase(c) {
+    override val opCode = 0x69
+    override val size = 2
+    override val timing = 2
+    override fun run() { cpu.A = adc(cpu.A, operand) }
     override fun toString(): String = "ADC #${operand.h()}"
 }
 
@@ -511,7 +514,7 @@ open class BranchBase(c: Computer, override val opCode: Int, val name: String, v
 }
 
 /** 0x90, BCC */
-class Bcc(computer: Computer): BranchBase(computer, 0x90, "BCC", { ! computer.cpu.P.C })
+class Bcc(computer: Computer): BranchBase(computer, 0x90, "BCC", { !computer.cpu.P.C })
 
 /** 0x91, STA ($12),Y */
 class StaIndirectY(c: Computer): InstructionBase(c) {
@@ -683,11 +686,27 @@ class Dex(c: Computer): RegisterInstruction(c, 0xca, "DEX") {
 }
 
 /** 0xd0, BNE */
-class Bne(computer: Computer): BranchBase(computer, 0xd0, "BNE", { ! computer.cpu.P.Z })
+class Bne(computer: Computer): BranchBase(computer, 0xd0, "BNE", { !computer.cpu.P.Z })
 
 /** 0xd8, CLD */
 class Cld(c: Computer): FlagInstruction(c, 0xd8, "CLD") {
     override fun run() { cpu.P.D = false }
+}
+
+/** 0xe5, SBC $10 */
+class SbcZp(c: Computer): AddBase(c) {
+    override val opCode = 0xe5
+    override val size = 2
+    override val timing = 3
+    override fun run() {
+        if (cpu.P.D) {
+            TODO("Decimal mode not implemented")
+        } else {
+            // Call ADC with the one complement of the operand
+            cpu.A = adc(cpu.A, operand.inv())
+        }
+    }
+    override fun toString(): String = "SBC $${operand.h()}"
 }
 
 /** 0xe6, INC $10 */

@@ -428,5 +428,7 @@ abstract class BaseTest {
     // Missing tests:
     // CLC, SEC, CLI, SEI, CLD, SED
     // LDAzp, LDXzp, LDYzp
+    // STXzp, STYzp
+    // SBCzp
 }
 
