@@ -10,7 +10,9 @@ class Apple2StackPointer(override var S: Int = 0xff, private val memory: Memory)
         memory[address + S--] = a.toInt()
     }
 
-    override fun popByte(): Byte = memory[address + S++].toByte()
+    override fun popByte(): Byte {
+        return memory[address + ++S].toByte()
+    }
 
     override fun pushWord(a: Int) {
         memory[address + S--] = a.and(0xff)

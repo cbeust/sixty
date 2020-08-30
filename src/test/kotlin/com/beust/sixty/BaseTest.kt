@@ -366,5 +366,21 @@ abstract class BaseTest {
             assertFlag("C", cpu.P.C, 1)
         }
     }
+
+    fun pha() {
+        with(computer(0xa9, 0x42, 0x48)) {
+            assertThat(cpu.SP.isEmpty())
+            run()
+            assertThat(cpu.SP.peekByte()).isEqualTo(0x42)
+        }
+    }
+
+    fun pla() {
+        with(computer(0xa9, 0x42, 0x48, 0xa9, 0, 0x68)) {
+            assertThat(cpu.SP.isEmpty())
+            run()
+            assertRegister(cpu.A, 0x42)
+        }
+    }
 }
 

@@ -52,6 +52,18 @@ interface IStackPointer {
     fun pushWord(a: Int)
     fun popWord(): Int
     fun isEmpty(): Boolean
+
+    fun peekByte(): Byte {
+        val result = popByte()
+        pushByte(result)
+        return result
+    }
+
+    fun peekWord(): Int {
+        val result = popWord()
+        pushWord(result)
+        return result
+    }
 }
 
 class InMemoryStackPointer : IStackPointer {
@@ -120,7 +132,7 @@ data class Cpu(var A: Int = 0, var X: Int = 0, var Y: Int = 0, var PC: Int = 0,
 //            0x49 -> EorImm(computer)
 //            0x4a -> Lsr(computer)
             0x4c -> Jmp(computer)
-//            0xf8 -> Pha(computer)
+            0x48 -> Pha(computer)
 //            0x4d -> EorAbsolute(computer)
 //            0x4e -> LsrAbsolute(computer)
 //            0x50 -> Bvc(computer)
@@ -134,7 +146,7 @@ data class Cpu(var A: Int = 0, var X: Int = 0, var Y: Int = 0, var PC: Int = 0,
             0x60 -> Rts(computer)
 //            0x61 -> AdcIndirectX(computer)
 //            0x65 -> AdcZp(computer)
-//            0x68 -> Pla(computer)
+            0x68 -> Pla(computer)
             0x69 -> AdcImm(computer)
             0x6c -> JmpIndirect(computer)
 //            0x65 -> AdcAbsolute(computer)
@@ -285,6 +297,19 @@ class Jmp(c: Computer): InstructionBase(c) {
     override fun toString(): String = "JMP $${word.hh()}"
 }
 
+abstract class StackInstruction(c: Computer, override val opCode: Int, val name: String): InstructionBase(c) {
+    override val size = 1
+    override fun toString(): String = name
+}
+
+/** 0x48, PHA */
+class Pha(c: Computer): StackInstruction(c, 0x48, "PHA") {
+    override val timing = 3
+    override fun run() {
+        cpu.SP.pushByte(cpu.A.toByte())
+    }
+}
+
 /** 0x20, JSR $1234 */
 class Jsr(c: Computer): InstructionBase(c) {
     override val opCode = 0x20
@@ -338,6 +363,14 @@ class Rts(c: Computer): InstructionBase(c) {
         computer.cpu.PC = cpu.SP.popWord()
     }
     override fun toString(): String = "RTS"
+}
+
+/** 0x68, PLA */
+class Pla(c: Computer): StackInstruction(c, 0x68, "PLA") {
+    override val timing = 4
+    override fun run() {
+        cpu.A = cpu.SP.popByte().toInt()
+    }
 }
 
 /** 0x69, ADC #$12 */
@@ -568,9 +601,7 @@ class Iny(c: Computer): RegisterInstruction(c, 0xc8, "INY") {
     }
 }
 
-abstract open class RegisterInstruction(c: Computer, override val opCode: Int, val name: String)
-    : InstructionBase(c)
-{
+abstract class RegisterInstruction(c: Computer, override val opCode: Int, val name: String) : InstructionBase(c) {
     override val size = 1
     override val timing = 2
     override fun toString(): String = name
