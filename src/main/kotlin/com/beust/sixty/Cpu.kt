@@ -109,7 +109,7 @@ data class Cpu(var A: Int = 0, var X: Int = 0, var Y: Int = 0, var PC: Int = 0,
             0x20 -> Jsr(computer)
 //            0x21 -> AndIndirectX(computer)
 //            0x24 -> BitZp(computer)
-//            0x25 -> AndZp(computer)
+            AND_ZP -> AndZp(computer)
             ROL_ZP -> RolZp(computer)
             0x28 -> Plp(computer)
             AND_IMM -> And(computer)
@@ -145,7 +145,7 @@ data class Cpu(var A: Int = 0, var X: Int = 0, var Y: Int = 0, var PC: Int = 0,
 //            0x5e -> LsrAbsoluteX(computer)
             0x60 -> Rts(computer)
 //            0x61 -> AdcIndirectX(computer)
-//            0x65 -> AdcZp(computer)
+            ADC_ZP -> AdcZp(computer)
             ROR_ZP -> RorZp(computer)
             0x68 -> Pla(computer)
             0x69 -> AdcImm(computer)
@@ -162,7 +162,7 @@ data class Cpu(var A: Int = 0, var X: Int = 0, var Y: Int = 0, var PC: Int = 0,
             0x78 -> Sei(computer)
 //            0x79 -> AdcAbsoluteY(computer)
 //            0x74 -> RorAbsoluteX(computer)
-//            0x81 -> StaIndirectX(computer)
+            LDA_IND_Y -> LdaIndirectY(computer)
             0x84 -> StyZp(computer)
             0x85 -> StaZp(computer)
             STX_ZP -> StxZp(computer)
@@ -335,6 +335,18 @@ class Jsr(c: Computer): InstructionBase(c) {
     override fun toString(): String = "JSR $${word.hh()}"
 }
 
+/** 0x25, AND $34 */
+class AndZp(c: Computer): InstructionBase(c) {
+    override val opCode = AND_ZP
+    override val size = 2
+    override val timing = 3
+    override fun run() {
+        cpu.A = cpu.A.and(memory[operand])
+        cpu.P.setNZFlags(cpu.A)
+    }
+    override fun toString(): String = "AND $${operand.h()}"
+}
+
 /** 0x26, ROL $12 */
 class RolZp(c: Computer): InstructionBase(c) {
     override val opCode = ROL_ZP
@@ -438,7 +450,7 @@ class LsrA(c: Computer): InstructionBase(c) {
     override val size = 1
     override val timing = 2
     override fun run() {
-        cpu.P.C = cpu.A.and(1.shl(7)).toBoolean()
+        cpu.P.C = cpu.A.and(1.shl(7)).shr(7).toBoolean()
         val result = cpu.A.shr(1)
         cpu.P.setNZFlags(result)
         cpu.A = result
@@ -500,6 +512,15 @@ class Rts(c: Computer): InstructionBase(c) {
     override fun toString(): String = "RTS"
 }
 
+/** 0x65, ADC $12 */
+class AdcZp(c: Computer): AddBase(c) {
+    override val opCode = ADC_ZP
+    override val size = 2
+    override val timing = 3
+    override fun run() { cpu.A = adc(cpu.A, memory[operand]) }
+    override fun toString(): String = "ADC ${operand.h()}"
+}
+
 /** 0x66, ROR $12 */
 class RorZp(c: Computer): InstructionBase(c) {
     override val opCode = ROR_ZP
@@ -558,6 +579,22 @@ class JmpIndirect(c: Computer): InstructionBase(c) {
 class Sei(c: Computer): FlagInstruction(c, 0x78, "SEI") {
     override fun run() { cpu.P.I = true }
 }
+
+/** 0xb1, LDA $1234 */
+class LdaIndirectY(c: Computer): InstructionBase(c) {
+    override val opCode = LDA_IND_Y
+    override val size = 2
+    override var timing = 5  // variable timing
+    override fun run() {
+        val old = cpu.A
+        val new = memory[operand] + cpu.Y
+        cpu.P.setNZFlags(new)
+        timing += pageCrossed(memory[operand], memory[operand] + cpu.Y)
+        cpu.A = new
+    }
+    override fun toString(): String = "LDA $${word.hh()}"
+}
+
 
 /** 0x84, STY $10 */
 class StyZp(c: Computer): ZpBase(c, 0x84, "STY") {

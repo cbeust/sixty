@@ -58,6 +58,16 @@ const val EOR_IND_Y = 0x51
 
 const val JSR = 0x20
 
+const val LDA_IMM = 0xa9
+const val LDA_ZP = 0xa5
+const val LDA_ZP_X = 0xb5
+const val LDA_ABS = 0xad
+const val LDA_ABS_X = 0xbd
+const val LDA_ABS_Y = 0xb9
+const val LDA_IND_X = 0xa1
+const val LDA_IND_Y = 0xb1
+
+
 const val LDY_IMM = 0xa0
 const val LDY_ZP = 0xa4
 const val LDY_ZP_X = 0xb4
@@ -68,8 +78,6 @@ const val STY_ZP = 0x84
 const val STY_ZP_X = 0x94
 const val STY_ABS = 0x8c
 
-const val LDA_IMM = 0xa9
-const val LDA_ZP = 0xa5
 
 const val LSR_A = 0x4a
 const val LSR_ZP = 0x46
