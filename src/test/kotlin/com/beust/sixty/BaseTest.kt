@@ -442,8 +442,46 @@ abstract class BaseTest {
         }
     }
 
+    fun carryFlag() {
+        with(computer(0x38)) { // SEC
+            assertFlag("C", cpu.P.C, 0)
+            run()
+            assertFlag("C", cpu.P.C, 1)
+        }
+        with(computer(0x38, 0x18)) { // SEC, CLS
+            assertFlag("C", cpu.P.C, 0)
+            run()
+            assertFlag("C", cpu.P.C, 0)
+        }
+    }
+
+    fun interruptFlag() {
+        with(computer(0x78)) { // SEI
+            assertFlag("I", cpu.P.I, 0)
+            run()
+            assertFlag("I", cpu.P.I, 1)
+        }
+        with(computer(0x78, 0x58)) { // SEI, CLI
+            assertFlag("I", cpu.P.I, 0)
+            run()
+            assertFlag("I", cpu.P.I, 0)
+        }
+    }
+
+    fun decimalFlag() {
+        with(computer(0xf8)) { // SED
+            assertFlag("D", cpu.P.D, 0)
+            run()
+            assertFlag("D", cpu.P.D, 1)
+        }
+        with(computer(0xf8, 0xd8)) { // SED, CLD
+            assertFlag("D", cpu.P.D, 0)
+            run()
+            assertFlag("D", cpu.P.D, 0)
+        }
+    }
+
     // Missing tests:
-    // CLC, SEC, CLI, SEI, CLD, SED
     // LDAzp, LDXzp, LDYzp
     // STXzp, STYzp
     // SBCzp
