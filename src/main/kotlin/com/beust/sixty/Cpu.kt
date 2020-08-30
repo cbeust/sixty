@@ -103,7 +103,7 @@ data class Cpu(var A: Int = 0, var X: Int = 0, var Y: Int = 0, var PC: Int = 0,
 //            0x15 -> OraZpX(computer)
 //            0x1e -> AslAbsoluteX(computer)
 //            0x16 -> AslZpX(computer)
-//            0x18 -> Clc(computer)
+            0x18 -> Clc(computer)
 //            0x19 -> OraAbsoluteY(computer)
 //            0x1d -> OraAbsoluteX(computer)
             0x20 -> Jsr(computer)
@@ -122,7 +122,7 @@ data class Cpu(var A: Int = 0, var X: Int = 0, var Y: Int = 0, var PC: Int = 0,
 //            0x3d -> AndAbsX(computer)
 //            0x35 -> AndZpX(computer)
 //            0x36 -> RolZpX(computer)
-//            0x38 -> Clc(computer)
+            0x38 -> Sec(computer)
 //            0x39 -> AndAboluteY(computer)
 //            0x34 -> RolAbsoluteX(computer)
 //            0x40 -> Rti(computer)
@@ -139,7 +139,7 @@ data class Cpu(var A: Int = 0, var X: Int = 0, var Y: Int = 0, var PC: Int = 0,
 //            0x51 -> EorIndirectY(computer)
 //            0x55 -> EorZpX(computer)
 //            0x65 -> LsrZpX(computer)
-//            0x58 -> Cli(computer)
+            0x58 -> Cli(computer)
 //            0x59 -> EorAbsY(computer)
 //            0x5d -> EorAbsX(computer)
 //            0x5e -> LsrAbsoluteX(computer)
@@ -158,7 +158,7 @@ data class Cpu(var A: Int = 0, var X: Int = 0, var Y: Int = 0, var PC: Int = 0,
 //            0x??75 -> AdcZpX(computer)
 //            0x??75 -> AdcAbsoluteX(computer)
 //            0x76 -> RorZpX(computer)
-//            0x78 -> Sei(computer)
+            0x78 -> Sei(computer)
 //            0x79 -> AdcAbsoluteY(computer)
 //            0x74 -> RorAbsoluteX(computer)
 //            0x81 -> StaIndirectX(computer)
@@ -217,7 +217,7 @@ data class Cpu(var A: Int = 0, var X: Int = 0, var Y: Int = 0, var PC: Int = 0,
 //            0xd1 -> CmpIndirectY(computer)
 //            0xd5 -> CmpZpX(computer)
 //            0xd6 -> DecZpX(computer)
-//            0xd8 -> Cld(computer)
+            0xd8 -> Cld(computer)
 //            0xd9 -> CmpAbsY(computer)
 //            0xdd -> CmpAbsX(computer)
 //            0xde -> DecAbsX(computer)
@@ -236,7 +236,7 @@ data class Cpu(var A: Int = 0, var X: Int = 0, var Y: Int = 0, var PC: Int = 0,
 //            0xf1 -> SbcIndirectY(computer)
 //            0xf5 -> SbcZpX(computer)
 //            0xf7 -> IncZpX(computer)
-//            0xf8 -> Sed(computer)
+            0xf8 -> Sed(computer)
 //            0xf9 -> SbcAbsoluteY(computer)
 //            0xfd -> SbcAbsoluteX(computer)
 //            0xfe -> IncAbsoluteX(computer)
@@ -293,6 +293,17 @@ class Asl(c: Computer): InstructionBase(c) {
 /** 0x10, BPL */
 class Bpl(computer: Computer): BranchBase(computer, 0x10, "BPL", { ! computer.cpu.P.N })
 
+abstract class FlagInstruction(c: Computer, override val opCode: Int, val name: String): InstructionBase(c) {
+    override val size = 1
+    override val timing = 2
+    override fun toString(): String = name
+}
+
+/** 0x18, CLC */
+class Clc(c: Computer): FlagInstruction(c, 0x18, "CLC") {
+    override fun run() { cpu.P.C = false }
+}
+
 abstract class StackInstruction(c: Computer, override val opCode: Int, val name: String): InstructionBase(c) {
     override val size = 1
     override fun toString(): String = name
@@ -338,12 +349,22 @@ abstract class CmpImmBase(c: Computer, val name: String): InstructionBase(c) {
     override fun toString(): String = "$name #$${operand.h()}"
 }
 
+/** 0x38, SEC */
+class Sec(c: Computer): FlagInstruction(c, 0x38, "SEC") {
+    override fun run() { cpu.P.C = true }
+}
+
 /** 0x48, PHA */
 class Pha(c: Computer): StackInstruction(c, 0x48, "PHA") {
     override val timing = 3
     override fun run() {
         cpu.SP.pushByte(cpu.A.toByte())
     }
+}
+
+/** 0x58, CLI */
+class Cli(c: Computer): FlagInstruction(c, 0x58, "CLI") {
+    override fun run() { cpu.P.I = false }
 }
 
 /** 0x4c, JMP $1234 */
@@ -402,6 +423,11 @@ class JmpIndirect(c: Computer): InstructionBase(c) {
     override val timing = 5
     override fun run() { cpu.PC = memory.wordAt(word) -  size }
     override fun toString(): String = "JMP ($${word.hh()})"
+}
+
+/** 0x78, SEI */
+class Sei(c: Computer): FlagInstruction(c, 0x78, "SEI") {
+    override fun run() { cpu.P.I = true }
 }
 
 /** 0x85, STA ($10) */
@@ -639,6 +665,11 @@ class Dex(c: Computer): RegisterInstruction(c, 0xca, "DEX") {
 /** 0xd0, BNE */
 class Bne(computer: Computer): BranchBase(computer, 0xd0, "BNE", { ! computer.cpu.P.Z })
 
+/** 0xd8, CLD */
+class Cld(c: Computer): FlagInstruction(c, 0xd8, "CLD") {
+    override fun run() { cpu.P.D = false }
+}
+
 /** 0xe6, INC $10 */
 class IncZp(c: Computer): IncBase(c, 0xe6) {
     override val size = 2
@@ -664,6 +695,11 @@ class Nop(c: Computer): InstructionBase(c) {
     override val timing = 2
     override fun run() { }
     override fun toString(): String = "NOP"
+}
+
+/** 0xf8, SED */
+class Sed(c: Computer): FlagInstruction(c, 0xf8, "SED") {
+    override fun run() { cpu.P.D = true }
 }
 
 /** Unknown */
