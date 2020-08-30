@@ -76,7 +76,6 @@ class Main : Application() {
             this.init(pc, 0xa9, 0x41, 0x20, 0xed, 0xfd)
             this[0x36] = 0xbd
             this[0x37] = 0x9e
-            DEBUG_MEMORY = true
         }
 
         val listener = object: MemoryListener {
@@ -102,6 +101,8 @@ class Main : Application() {
                 memory[0] = 0
             }
             cpu.PC = pc
+//            DEBUG_ASM = true
+            DEBUG_MEMORY = true
             run()
         }
     }

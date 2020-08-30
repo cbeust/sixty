@@ -155,7 +155,7 @@ abstract class BaseTest {
     }
 
     fun bcc() {
-        with(computer(0xa9, 0, 0x90, 1, 0x60, 0xa9, 1, 0x60)) {
+        with(computer(LDA_IMM, 0, 0x90, 1, 0x60, 0xa9, 1, 0x60)) {
             assertRegister(cpu.A, 0)
             run()
             assertRegister(cpu.A, 1)
@@ -530,7 +530,25 @@ abstract class BaseTest {
         }
     }
 
-    // Missing tests:
-    // BCS, BVC, BEQ
+    fun bcs() {
+        with(computer(CLC, BCS, 2, LDA_IMM, 1)) {
+            run()
+            assertRegister(cpu.A, 1)
+        }
+    }
+
+    fun bvc() {
+        with(computer(LDA_IMM, 0x7f, ADC_IMM, 0x7f, BVC, 2, LDA_IMM, 1)) {
+            run()
+            assertRegister(cpu.A, 1)
+        }
+    }
+
+    fun beq() {
+        with(computer(LDA_IMM, 0x32, CMP_IMM, 0x32, BEQ, 3, LDA_IMM, 2, RTS, LDA_IMM, 1)) {
+            run()
+            assertRegister(cpu.A, 1)
+        }
+    }
 }
 
