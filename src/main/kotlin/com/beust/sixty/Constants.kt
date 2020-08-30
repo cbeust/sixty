@@ -47,6 +47,15 @@ const val CMP_ABS_Y = 0xd9
 const val CMP_IND_X = 0xc1
 const val CMP_IND_Y = 0xd1
 
+const val EOR_IMM = 0x49
+const val EOR_ZP = 0x45
+const val EOR_ZP_X = 0x55
+const val EOR_ABS = 0x4d
+const val EOR_ABS_X = 0x5d
+const val EOR_ABS_Y = 0x59
+const val EOR_IND_X = 0x41
+const val EOR_IND_Y = 0x51
+
 const val JSR = 0x20
 
 const val LDY_IMM = 0xa0

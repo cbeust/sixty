@@ -136,7 +136,7 @@ data class Cpu(var A: Int = 0, var X: Int = 0, var Y: Int = 0, var PC: Int = 0,
 //            0x4d -> EorAbsolute(computer)
 //            0x4e -> LsrAbsolute(computer)
             0x50 -> Bvc(computer)
-//            0x51 -> EorIndirectY(computer)
+            EOR_IND_Y -> EorIndirectY(computer)
 //            0x55 -> EorZpX(computer)
 //            0x65 -> LsrZpX(computer)
             0x58 -> Cli(computer)
@@ -228,7 +228,7 @@ data class Cpu(var A: Int = 0, var X: Int = 0, var Y: Int = 0, var PC: Int = 0,
             0xe5 -> SbcZp(computer)
             0xe6 -> IncZp(computer)
             0xe8 -> Inx(computer)
-//            0xe9 -> SbcImmediate(computer)
+            SBC_IMM -> SbcImmediate(computer)
             0xea -> Nop(computer)
 //            0xec -> CpxAbsolute(computer)
 //            0xed -> SbcAbsolute(computer)
@@ -456,6 +456,21 @@ class Pha(c: Computer): StackInstruction(c, 0x48, "PHA") {
 
 /** 0x50, BVC */
 class Bvc(computer: Computer): BranchBase(computer, 0x50, "BVC", { ! computer.cpu.P.V })
+
+/** 0x51, EOR ($12),Y */
+class EorIndirectY(c: Computer): InstructionBase(c) {
+    override val opCode = EOR_IND_Y
+    override val size = 2
+    override var timing = 5  // variable timing
+    override fun run() {
+        val old = cpu.A
+        val new = cpu.A.xor(memory[operand]) + cpu.Y
+        cpu.P.setNZFlags(new)
+        timing += pageCrossed(memory[operand], memory[operand] + cpu.Y)
+        cpu.A = new
+    }
+    override fun toString(): String = "EOR ($${operand.h()}), Y"
+}
 
 /** 0x58, CLI */
 class Cli(c: Computer): FlagInstruction(c, 0x58, "CLI") {
@@ -838,6 +853,22 @@ class Inx(c: Computer): RegisterInstruction(c, 0xe8, "INX") {
         cpu.X = (cpu.X + 1).and(0xff)
         cpu.P.setNZFlags(cpu.X)
     }
+}
+
+/** 0xe9, SBC #$10 */
+class SbcImmediate(c: Computer): AddBase(c) {
+    override val opCode = SBC_IMM
+    override val size = 2
+    override val timing = 2
+    override fun run() {
+        if (cpu.P.D) {
+            TODO("Decimal mode not implemented")
+        } else {
+            // Call ADC with the one complement of the operand
+            cpu.A = adc(cpu.A, operand.inv())
+        }
+    }
+    override fun toString(): String = "SBC #$${operand.h()}"
 }
 
 /** 0xea, NOP */

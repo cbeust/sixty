@@ -564,5 +564,7 @@ abstract class BaseTest {
     // ORA_ZP
     // ROL_ZP
     // ROR_ZP
+    // SBC_IMM
+    // EOR_IND_Y
 }
 
