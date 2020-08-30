@@ -44,12 +44,9 @@ class Memory(val size: Int = 0x10000, vararg bytes: Int) {
         return content.slice(0..16).map { it.and(0xff).h()}.joinToString(" ")
     }
 
-    fun init(i: Int, vararg bytes: Int) {
-        var ii = i
-        bytes.forEach { b ->
-            set(i + ii, b)
-            ii++
-        }
+    fun init(address: Int, vararg bytes: Int) {
+        var ii = address
+        bytes.forEach { set(ii++, it) }
     }
 
     fun load(file: String, address: Int) {
