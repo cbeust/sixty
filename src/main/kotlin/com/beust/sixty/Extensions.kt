@@ -8,6 +8,7 @@ fun Int.hh(): String = String.format("%04x", this).toUpperCase()
 
 //fun Int.b() = Integer.toBinaryString(this)
 
+/** Int to binary */
 fun Int.b(): String {
     val result = arrayListOf<String>()
     var n = this.and(0xff)
@@ -21,6 +22,8 @@ fun Int.b(): String {
     }
     return result.joinToString("")
 }
+
+fun Byte.b() = toInt().b()
 
 fun Color.s() = when(this) {
     Color.BLACK -> "black"

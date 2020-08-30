@@ -26,7 +26,7 @@ class StatusFlags {
         D = b.and(0x8).shr(3).toBoolean()
         I = b.and(0x4).shr(2).toBoolean()
         Z = b.and(0x2).shr(1).toBoolean()
-        C = b.toBoolean()
+        C = b.and(1).toBoolean()
     }
 
     var N: Boolean // Negative

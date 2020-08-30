@@ -391,6 +391,39 @@ abstract class BaseTest {
         }
     }
 
-    // Need tests for PHP and PLP
+    fun php() {
+        with(computer(8)) {
+            with(cpu.P) {
+                N = true
+                V = false
+                D = true
+                I = false
+                Z = true
+                C = false
+                // Status is now 1000_1010 = 0x8a
+                assertThat(cpu.SP.isEmpty())
+                run()
+                val actual = cpu.SP.peekByte()
+                assertThat(actual).isEqualTo(0x8a.toByte())
+            }
+        }
+    }
+
+    fun plp() {
+        with(computer(0x28)) {
+            with(cpu.P) {
+                // Push 1000_1010 on the stack, then PLP
+                cpu.SP.pushByte(0x8a.toByte())
+                run()
+                assertFlag("N", cpu.P.N, 1)
+                assertFlag("V", cpu.P.V, 0)
+                assertFlag("D", cpu.P.D, 1)
+                assertFlag("I", cpu.P.I, 0)
+                assertFlag("Z", cpu.P.Z, 1)
+                assertFlag("C", cpu.P.C, 0)
+            }
+        }
+    }
+
 }
 

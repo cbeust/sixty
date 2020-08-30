@@ -270,7 +270,7 @@ class Brk(c: Computer): InstructionBase(c) {
 
 /** 0x8, PHP */
 class Php(c: Computer): StackInstruction(c, 0x8, "PHP") {
-    override val timing = 2
+    override val timing = 3
     override fun run() {
         cpu.SP.pushByte(cpu.P.toByte())
     }
@@ -313,12 +313,11 @@ class Jsr(c: Computer): InstructionBase(c) {
 
 /** 0x28, PLP */
 class Plp(c: Computer): StackInstruction(c, 0x8, "PHP") {
-    override val timing = 2
+    override val timing = 4
     override fun run() {
         cpu.P.fromByte(cpu.SP.popByte())
     }
 }
-
 
 /** 0x30, BMI */
 class Bmi(computer: Computer): BranchBase(computer, 0x30, "BMI", { computer.cpu.P.N })
