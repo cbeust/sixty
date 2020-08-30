@@ -293,29 +293,9 @@ class Asl(c: Computer): InstructionBase(c) {
 /** 0x10, BPL */
 class Bpl(computer: Computer): BranchBase(computer, 0x10, "BPL", { ! computer.cpu.P.N })
 
-/** 0x4c, JMP $1234 */
-class Jmp(c: Computer): InstructionBase(c) {
-    override val opCode = 0x4c
-    override val size = 3
-    override val timing = 3
-    override fun run() {
-        cpu.PC = word - size
-    }
-
-    override fun toString(): String = "JMP $${word.hh()}"
-}
-
 abstract class StackInstruction(c: Computer, override val opCode: Int, val name: String): InstructionBase(c) {
     override val size = 1
     override fun toString(): String = name
-}
-
-/** 0x48, PHA */
-class Pha(c: Computer): StackInstruction(c, 0x48, "PHA") {
-    override val timing = 3
-    override fun run() {
-        cpu.SP.pushByte(cpu.A.toByte())
-    }
 }
 
 /** 0x20, JSR $1234 */
@@ -359,16 +339,24 @@ abstract class CmpImmBase(c: Computer, val name: String): InstructionBase(c) {
     override fun toString(): String = "$name #$${operand.h()}"
 }
 
-/** 0xc9, CMP $#12 */
-class CmpImm(c: Computer): CmpImmBase(c, "CMP") {
-    override val opCode = 0xc9
-    override val register get() = computer.cpu.A
+/** 0x48, PHA */
+class Pha(c: Computer): StackInstruction(c, 0x48, "PHA") {
+    override val timing = 3
+    override fun run() {
+        cpu.SP.pushByte(cpu.A.toByte())
+    }
 }
 
-/** 0xc0, CPY $#12 */
-class CpyImm(c: Computer): CmpImmBase(c, "CPY") {
-    override val opCode = 0xc0
-    override val register get() = computer.cpu.Y
+/** 0x4c, JMP $1234 */
+class Jmp(c: Computer): InstructionBase(c) {
+    override val opCode = 0x4c
+    override val size = 3
+    override val timing = 3
+    override fun run() {
+        cpu.PC = word - size
+    }
+
+    override fun toString(): String = "JMP $${word.hh()}"
 }
 
 /** 0x60, RTS */
@@ -519,6 +507,18 @@ class Tya(c: Computer): RegisterInstruction(c, 0x98, "TYA") {
         cpu.A = cpu.Y
         cpu.P.setArithmeticFlags(cpu.A)
     }
+}
+
+/** 0xc0, CPY $#12 */
+class CpyImm(c: Computer): CmpImmBase(c, "CPY") {
+    override val opCode = 0xc0
+    override val register get() = computer.cpu.Y
+}
+
+/** 0xc9, CMP $#12 */
+class CmpImm(c: Computer): CmpImmBase(c, "CMP") {
+    override val opCode = 0xc9
+    override val register get() = computer.cpu.A
 }
 
 /** 0x9a, TXS */
