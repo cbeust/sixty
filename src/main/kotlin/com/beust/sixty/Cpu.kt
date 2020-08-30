@@ -46,7 +46,7 @@ interface Instruction {
 }
 
 interface IStackPointer {
-    val S: Int // The S register. Actually a byte
+    var S: Int // The S register. Actually a byte
     fun pushByte(a: Byte)
     fun popByte(): Byte
     fun pushWord(a: Int)
@@ -69,7 +69,7 @@ interface IStackPointer {
 class InMemoryStackPointer : IStackPointer {
     private val stack = Stack<Byte>()
 
-    override val S = stack.size
+    override var S = stack.size
     override fun pushByte(a: Byte) { stack.push(a) }
     override fun popByte() = stack.pop()
     override fun pushWord(a: Int) {
@@ -177,7 +177,7 @@ data class Cpu(var A: Int = 0, var X: Int = 0, var Y: Int = 0, var PC: Int = 0,
 //            0x96 -> StxZpY(computer)
             0x98 -> Tya(computer)
 //            0x99 -> StaAbsoluteY(computer)
-//            0x9a -> Txs(computer)
+            0x9a -> Txs(computer)
 //            0x9d -> StaAbsoluteX(computer)
             0xa0 -> LdyImm(computer)
 //            0xa1 -> LdaIndirectX(computer)
@@ -504,6 +504,14 @@ class Tya(c: Computer): RegisterInstruction(c, 0x98, "TYA") {
     }
 }
 
+/** 0x9a, TXS */
+class Txs(c: Computer): StackInstruction(c, 0x9a, "TXS") {
+    override val timing = 2
+    override fun run() {
+        cpu.SP.S = cpu.X
+    }
+}
+
 /** 0xa5, LDA $10 */
 class LdaZp(c: Computer): InstructionBase(c) {
     override val opCode = 0xa5
@@ -565,12 +573,9 @@ class LdaAbsolute(c: Computer): InstructionBase(c) {
 
 
 /** 0xba, TSX */
-class Tsx(c: Computer): InstructionBase(c) {
-    override val opCode = 0xba
-    override val size = 1
+class Tsx(c: Computer): StackInstruction(c, 0xba, "TSX") {
     override val timing = 2
     override fun run() { cpu.X = cpu.SP.S }
-    override fun toString(): String = "TSX"
 }
 
 /** 0xbd, LDA $1234,X */

@@ -382,5 +382,13 @@ abstract class BaseTest {
             assertRegister(cpu.A, 0x42)
         }
     }
+
+    fun txs() {
+        with(computer(0xa2, 0x42, 0x9a)) {
+            assertThat(cpu.SP.isEmpty())
+            run()
+            assertThat(cpu.SP.S).isEqualTo(0x42)
+        }
+    }
 }
 
