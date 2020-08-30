@@ -18,6 +18,14 @@ const val AND_ABS_Y = 0x39
 const val AND_IND_X = 0x21
 const val AND_IND_Y = 0x31
 
+const val CLC = 0x18
+const val SEC = 0x38
+const val CLI = 0x58
+const val SEI = 0x78
+const val CLV = 0xb8
+const val CLD = 0xd8
+const val SED = 0xf8
+
 const val LDY_IMM = 0xa0
 const val LDY_ZP = 0xa4
 const val LDY_ZP_X = 0xb4
@@ -34,6 +42,18 @@ const val LDA_ZP = 0xa5
 const val STA_ZP = 0x85
 
 const val STX_ZP = 0x86
+
 const val LDX_IMM = 0xa2
 const val LDX_ZP = 0xa6
+
+const val SBC_IMM = 0xe9
+const val SBC_ZP = 0xe5
+const val SBC_ZP_X = 0xf5
+const val SBC_ABS = 0xed
+const val SBC_ABX_X = 0xfd
+const val SBC_ABS_Y = 0xf9
+const val SBC_IND_X = 0xe1
+const val SBC_IND_Y = 0xf1
+
+
 

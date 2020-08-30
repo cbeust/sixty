@@ -512,8 +512,25 @@ abstract class BaseTest {
             assertRegister(cpu.Y, 0x42)
         }
     }
+
+    fun sbc() {
+        // memory[0x12] = 0x11
+        // load A with 0x33
+        // then subtract: a = 0x33 - 0x11 == 0x21
+        with(computer(CLC, LDA_IMM, 0x33, SBC_ZP, 0x12)) {
+            memory[0x12] = 0x11
+            run()
+            assertRegister(cpu.A, 0x21)
+        }
+
+        with(computer(SEC, LDA_IMM, 0x33, SBC_ZP, 0x12)) {
+            memory[0x12] = 0x11
+            run()
+            assertRegister(cpu.A, 0x22)
+        }
+    }
+
     // Missing tests:
-    // SBCzp
     // BCS, BVC, BEQ
 }
 

@@ -721,7 +721,7 @@ class SbcZp(c: Computer): AddBase(c) {
             TODO("Decimal mode not implemented")
         } else {
             // Call ADC with the one complement of the operand
-            cpu.A = adc(cpu.A, operand.inv())
+            cpu.A = adc(cpu.A, memory[operand].inv())
         }
     }
     override fun toString(): String = "SBC $${operand.h()}"
