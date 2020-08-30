@@ -182,9 +182,9 @@ data class Cpu(var A: Int = 0, var X: Int = 0, var Y: Int = 0, var PC: Int = 0,
             0xa0 -> LdyImm(computer)
 //            0xa1 -> LdaIndirectX(computer)
             0xa2 -> LdxImm(computer)
-//            0xa4 -> LdyZp(computer)
+            0xa4 -> LdyZp(computer)
             0xa5 -> LdaZp(computer)
-//            0xa6 -> LdxZp(computer)
+            0xa6 -> LdxZp(computer)
             0xa8 -> Tay(computer)
             0xa9 -> LdaImm(computer)
             0xaa -> Tax(computer)
@@ -554,15 +554,25 @@ class Txs(c: Computer): StackInstruction(c, 0x9a, "TXS") {
     }
 }
 
-/** 0xa5, LDA $10 */
-class LdaZp(c: Computer): InstructionBase(c) {
-    override val opCode = 0xa5
+abstract class LdZpBase(c: Computer, override val opCode: Int, val name: String): InstructionBase(c) {
     override val size = 2
     override val timing = 3
-    override fun run() {
-        cpu.A = memory[operand]
-    }
-    override fun toString(): String = "LDA $" + operand.h()
+    override fun toString(): String = "$name $" + operand.h()
+}
+
+/** 0xa4, LDY $10 */
+class LdyZp(c: Computer): LdZpBase(c, 0xa5, "LDY") {
+    override fun run() { cpu.Y = memory[operand] }
+}
+
+/** 0xa5, LDA $10 */
+class LdaZp(c: Computer): LdZpBase(c, 0xa5, "LDA") {
+    override fun run() { cpu.A = memory[operand] }
+}
+
+/** 0xa6, LDX $10 */
+class LdxZp(c: Computer): LdZpBase(c, 0xa6, "LDX") {
+    override fun run() { cpu.X = memory[operand] }
 }
 
 /** 0xa8, TAY */
