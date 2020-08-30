@@ -1,4 +1,4 @@
 package com.beust.sixty
 
-val DEBUG_ASM = false
-val DEBUG_MEMORY = false
+var DEBUG_ASM = true
+var DEBUG_MEMORY = false

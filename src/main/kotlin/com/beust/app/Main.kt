@@ -1,9 +1,6 @@
 package com.beust.app
 
-import com.beust.sixty.Computer
-import com.beust.sixty.Cpu
-import com.beust.sixty.Memory
-import com.beust.sixty.MemoryListener
+import com.beust.sixty.*
 import javafx.application.Application
 import javafx.application.Platform
 import javafx.event.EventHandler
@@ -71,11 +68,15 @@ class Main : Application() {
 
         val textScreen = TextScreen(canvas)
         val graphicsScreen = HiResScreen(canvas)
-        val memory = Memory(65536, 0xa9, 0x41, 0x4c, 0xed, 0xfd).apply {
+        val pc = 0x300
+        val memory = Memory(65536).apply {
             load("d:\\pd\\Apple Disks\\apple2eu.rom", 0xc000)
             load("d:\\pd\\Apple Disks\\dos", 0x9600)
+            load("d:\\pd\\Apple Disks\\a000.dmp", 0)
+            this.init(pc, 0xa9, 0x41, 0x20, 0xed, 0xfd)
             this[0x36] = 0xbd
             this[0x37] = 0x9e
+            DEBUG_MEMORY = true
         }
 
         val listener = object: MemoryListener {
@@ -100,6 +101,7 @@ class Main : Application() {
             if (false) {
                 memory[0] = 0
             }
+            cpu.PC = pc
             run()
         }
     }

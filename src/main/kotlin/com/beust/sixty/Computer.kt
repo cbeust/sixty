@@ -29,6 +29,9 @@ class Computer(val cpu: Cpu = Cpu(), val memory: Memory, memoryListener: MemoryL
             } else {
                 val inst = cpu.nextInstruction(this)
                 if (DEBUG_ASM) disassemble(cpu.PC, 1)
+                if (cpu.PC == 0x9edb) {
+                    println("Breakpoint")
+                }
                 inst.run()
                 cpu.PC += inst.size
                 n++
