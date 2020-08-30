@@ -481,9 +481,38 @@ abstract class BaseTest {
         }
     }
 
+    fun ldZp() {
+        // Lda ZP
+        with(computer(LDA_IMM, 0x42, // LDA #$42
+            STA_ZP, 0x12,           // STA $12
+            LDA_IMM, 0,    // LDA #0
+            LDA_ZP, 0x12  // LDA $12
+        )) {
+            run()
+            assertRegister(cpu.A, 0x42)
+        }
+
+        // Ldx ZP
+        with(computer(LDX_IMM, 0x42, // LDX #$42
+                STX_ZP, 0x12,           // STX $12
+                LDX_IMM, 0,    // LDX #0
+                LDX_ZP, 0x12  // LDA $12
+        )) {
+            run()
+            assertRegister(cpu.X, 0x42)
+        }
+
+        // Ldy ZP
+        with(computer(LDY_IMM, 0x42, // LDY #$42
+                STY_ZP, 0x12,           // STY $12
+                LDY_IMM, 0,    // LDY #0
+                LDY_ZP, 0x12  // LDY $12
+        )) {
+            run()
+            assertRegister(cpu.Y, 0x42)
+        }
+    }
     // Missing tests:
-    // LDAzp, LDXzp, LDYzp
-    // STXzp, STYzp
     // SBCzp
     // BCS, BVC, BEQ
 }
