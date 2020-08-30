@@ -567,5 +567,6 @@ abstract class BaseTest {
     // SBC_IMM
     // EOR_IND_Y
     // LDA_IND_Y
+    // STA_IND_X
 }
 

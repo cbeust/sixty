@@ -127,7 +127,7 @@ data class Cpu(var A: Int = 0, var X: Int = 0, var Y: Int = 0, var PC: Int = 0,
 //            0x34 -> RolAbsoluteX(computer)
 //            0x40 -> Rti(computer)
 //            0x41 -> EorIndirectX(computer)
-//            0x45 -> EorZp(computer)
+            EOR_ZP -> EorZp(computer)
 //            0x46 -> LsrZp(computer)
             0x49 -> EorImm(computer)
             LSR_A -> LsrA(computer)
@@ -162,6 +162,7 @@ data class Cpu(var A: Int = 0, var X: Int = 0, var Y: Int = 0, var PC: Int = 0,
             0x78 -> Sei(computer)
 //            0x79 -> AdcAbsoluteY(computer)
 //            0x74 -> RorAbsoluteX(computer)
+            STA_IND_X -> StaIndirectX(computer)
             LDA_IND_Y -> LdaIndirectY(computer)
             0x84 -> StyZp(computer)
             0x85 -> StaZp(computer)
@@ -431,6 +432,18 @@ class Sec(c: Computer): FlagInstruction(c, 0x38, "SEC") {
     override fun run() { cpu.P.C = true }
 }
 
+/** 0x45, EOR $12 */
+class EorZp(c: Computer): InstructionBase(c) {
+    override val opCode = EOR_ZP
+    override val size = 2
+    override val timing = 3
+    override fun run() {
+        cpu.A = cpu.A.xor(memory[operand])
+        cpu.P.setNZFlags(cpu.A)
+    }
+    override fun toString(): String = "EOR $${operand.h()}"
+}
+
 /** 0x49, EOR #$12 */
 class EorImm(c: Computer): InstructionBase(c) {
     override val opCode = 0x49
@@ -580,6 +593,15 @@ class Sei(c: Computer): FlagInstruction(c, 0x78, "SEI") {
     override fun run() { cpu.P.I = true }
 }
 
+/** 0x81, STA($82,X) */
+class StaIndirectX(c: Computer): InstructionBase(c) {
+    override val opCode = STA_IND_X
+    override val size = 2
+    override val timing = 6
+    override fun run() { memory[operand + cpu.X] = cpu.A }
+    override fun toString(): String = "STA ($${operand.h()},X)"
+}
+
 /** 0xb1, LDA $1234 */
 class LdaIndirectY(c: Computer): InstructionBase(c) {
     override val opCode = LDA_IND_Y
@@ -594,7 +616,6 @@ class LdaIndirectY(c: Computer): InstructionBase(c) {
     }
     override fun toString(): String = "LDA $${word.hh()}"
 }
-
 
 /** 0x84, STY $10 */
 class StyZp(c: Computer): ZpBase(c, 0x84, "STY") {
