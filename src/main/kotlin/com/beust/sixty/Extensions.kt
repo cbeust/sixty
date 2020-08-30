@@ -34,3 +34,4 @@ fun Color.s() = when(this) {
 }
 
 fun Boolean.int(): Int = if (this) 1 else 0
+fun Int.toBoolean(): Boolean = if (this == 0) false else true

@@ -93,7 +93,7 @@ data class Cpu(var A: Int = 0, var X: Int = 0, var Y: Int = 0, var PC: Int = 0,
 //            0x01 -> OraIndirectX(computer)
 //            0x05 -> OraZp(computer)
 //            0x06 -> AslZp(computer)
-//            0x08 -> Php(computer)
+            0x08 -> Php(computer)
 //            0x09 -> OraImm(computer)
             0x0a -> Asl(computer)
 //            0x0d -> OraAbsolute(computer)
@@ -111,7 +111,7 @@ data class Cpu(var A: Int = 0, var X: Int = 0, var Y: Int = 0, var PC: Int = 0,
 //            0x24 -> BitZp(computer)
 //            0x25 -> AndZp(computer)
 //            0x26 -> RolZp(computer)
-//            0x28 -> Plp(computer)
+            0x28 -> Plp(computer)
 //            0x29 -> And(computer)
 //            0x2a -> Rol(computer)
 //            0x2c -> BitAbsolute(computer)
@@ -268,6 +268,14 @@ class Brk(c: Computer): InstructionBase(c) {
     override fun toString(): String = "BRK"
 }
 
+/** 0x8, PHP */
+class Php(c: Computer): StackInstruction(c, 0x8, "PHP") {
+    override val timing = 2
+    override fun run() {
+        cpu.SP.pushByte(cpu.P.toByte())
+    }
+}
+
 /** 0x0a, ASL */
 class Asl(c: Computer): InstructionBase(c) {
     override val opCode = 0xa
@@ -322,6 +330,15 @@ class Jsr(c: Computer): InstructionBase(c) {
 
     override fun toString(): String = "JSR $${word.hh()}"
 }
+
+/** 0x28, PLP */
+class Plp(c: Computer): StackInstruction(c, 0x8, "PHP") {
+    override val timing = 2
+    override fun run() {
+        cpu.P.fromByte(cpu.SP.popByte())
+    }
+}
+
 
 /** 0x30, BMI */
 class Bmi(computer: Computer): BranchBase(computer, 0x30, "BMI", { computer.cpu.P.N })
