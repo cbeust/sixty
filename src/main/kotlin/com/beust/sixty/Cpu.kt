@@ -162,9 +162,9 @@ data class Cpu(var A: Int = 0, var X: Int = 0, var Y: Int = 0, var PC: Int = 0,
 //            0x79 -> AdcAbsoluteY(computer)
 //            0x74 -> RorAbsoluteX(computer)
 //            0x81 -> StaIndirectX(computer)
-//            0x84 -> StyZp(computer)
+            0x84 -> StyZp(computer)
             0x85 -> StaZp(computer)
-//            0x86 -> StxZp(computer)
+            0x86 -> StxZp(computer)
             0x88 -> Dey(computer)
             0x8c -> StyAbsolute(computer)
             0x8d -> StaAbsolute(computer)
@@ -430,6 +430,11 @@ class Sei(c: Computer): FlagInstruction(c, 0x78, "SEI") {
     override fun run() { cpu.P.I = true }
 }
 
+/** 0x84, STY $10 */
+class StyZp(c: Computer): ZpBase(c, 0x84, "STY") {
+    override fun run() { memory[operand] = cpu.Y }
+}
+
 /** 0x85, STA ($10) */
 class StaZp(c: Computer): InstructionBase(c) {
     override val opCode = 0x85
@@ -437,6 +442,11 @@ class StaZp(c: Computer): InstructionBase(c) {
     override val timing = 3
     override fun run() { memory[operand] = cpu.A }
     override fun toString(): String = "STA $" + memory[cpu.PC + 1].h()
+}
+
+/** 0x86, STX $10 */
+class StxZp(c: Computer): ZpBase(c, 0x86, "STX") {
+    override fun run() { memory[operand] = cpu.X }
 }
 
 /** 0x88, INX */
@@ -554,24 +564,24 @@ class Txs(c: Computer): StackInstruction(c, 0x9a, "TXS") {
     }
 }
 
-abstract class LdZpBase(c: Computer, override val opCode: Int, val name: String): InstructionBase(c) {
+abstract class ZpBase(c: Computer, override val opCode: Int, val name: String): InstructionBase(c) {
     override val size = 2
     override val timing = 3
     override fun toString(): String = "$name $" + operand.h()
 }
 
 /** 0xa4, LDY $10 */
-class LdyZp(c: Computer): LdZpBase(c, 0xa5, "LDY") {
+class LdyZp(c: Computer): ZpBase(c, 0xa5, "LDY") {
     override fun run() { cpu.Y = memory[operand] }
 }
 
 /** 0xa5, LDA $10 */
-class LdaZp(c: Computer): LdZpBase(c, 0xa5, "LDA") {
+class LdaZp(c: Computer): ZpBase(c, 0xa5, "LDA") {
     override fun run() { cpu.A = memory[operand] }
 }
 
 /** 0xa6, LDX $10 */
-class LdxZp(c: Computer): LdZpBase(c, 0xa6, "LDX") {
+class LdxZp(c: Computer): ZpBase(c, 0xa6, "LDX") {
     override fun run() { cpu.X = memory[operand] }
 }
 
