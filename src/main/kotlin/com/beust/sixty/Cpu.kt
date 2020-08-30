@@ -795,7 +795,10 @@ abstract class LdImmBase(c: Computer, override val opCode: Int, val name: String
 
 /** 0xa0, LDY #$10 */
 class LdyImm(c: Computer): LdImmBase(c, 0xa0, "LDY") {
-    override fun run() { cpu.Y = operand }
+    override fun run() {
+        cpu.Y = operand
+        cpu.P.setNZFlags(cpu.Y)
+    }
 }
 
 /** 0xa2, LDX #$10 */

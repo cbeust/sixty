@@ -91,6 +91,16 @@ class Main : Application() {
             this[0x37] = 0x9e
         }
 
+        val functionalTestMemory = Memory(65536).apply {
+            load("../6502/6502_65C02_functional_tests/bin_files/6502_functional_test.bin", 0)
+        }
+        val functionalTestCpu = Cpu(SP = InMemoryStackPointer())
+        with(Computer(memory = functionalTestMemory, cpu = functionalTestCpu)) {
+            disassemble(0x400, 20)
+            cpu.PC=0x400
+            run()
+        }
+
         val listener = object: MemoryListener {
             override fun onRead(location: Int, value: Int) {
             }
