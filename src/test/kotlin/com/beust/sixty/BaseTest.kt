@@ -550,5 +550,11 @@ abstract class BaseTest {
             assertRegister(cpu.A, 1)
         }
     }
+
+    fun test() {
+        with(computer(LDA_IMM, 0x41, STA_ABS, 0, 4)) {
+            run()
+        }
+    }
 }
 

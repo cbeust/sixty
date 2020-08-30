@@ -58,6 +58,12 @@ const val LDA_IMM = 0xa9
 const val LDA_ZP = 0xa5
 
 const val STA_ZP = 0x85
+const val STA_ZP_X = 0x95
+const val STA_ABS = 0x8d
+const val STA_ABS_X = 0x9d
+const val STA_ABS_Y = 0x99
+const val STA_IND_X = 0x81
+const val STA_IND_Y = 0x91
 
 const val STX_ZP = 0x86
 
