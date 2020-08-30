@@ -1,6 +1,7 @@
 local.properties
 build
 .idea
+.run
 *.iml
 .gradle
 .kobalt
