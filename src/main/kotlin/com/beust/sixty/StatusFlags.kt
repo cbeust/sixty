@@ -17,7 +17,8 @@ class StatusFlags {
                 .or(I.int().shl(2))
                 .or(Z.int().shl(1))
                 .or(C.int())
-        return result.and(0xff).toByte()
+        val r = result.and(0xff).toByte()
+        return r
     }
 
     fun fromByte(byte: Byte) {
@@ -64,7 +65,8 @@ class StatusFlags {
         get() = bit(0)
         set(v) = bit(0, v)
 
-    override fun toString() = "{$${toByte().h()} N=${N.int()} V=${V.int()} B=${B.int()} D=${D.int()} I=${I.int()} Z=${Z.int()} C=${C.int()}}"
+    override fun toString()= "{$${toByte().h()}" +
+            " N=${N.int()} V=${V.int()} B=${B.int()} D=${D.int()} I=${I.int()} Z=${Z.int()} C=${C.int()}}"
 
     fun setNZFlags(reg: Int) {
         Z = reg == 0
