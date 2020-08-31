@@ -165,7 +165,7 @@ data class Cpu(var A: Int = 0, var X: Int = 0, var Y: Int = 0, var PC: Int = 0,
 //            0xb9 -> LdaAbsoluteY(computer)
             0xba -> Tsx(computer)
 //            0xbc -> LdyAbsoluteX(computer)
-            0xbd -> LdaAbsoluteX(computer)
+            LDA_ABS_X -> LdaAbsoluteX(computer)
 //            0xbe -> LdxAbsoluteY(computer)
             0xc0 -> CpyImm(computer)
 //            0xc1 -> CmpIndirectX(computer)
@@ -870,7 +870,7 @@ class Tsx(c: Computer): StackInstruction(c, 0xba, "TSX") {
 
 /** 0xbd, LDA $1234,X */
 class LdaAbsoluteX(c: Computer): InstructionBase(c) {
-    override val opCode = 0xbd
+    override val opCode = LDA_ABS_X
     override val size = 3
     override var timing = 4 // variable
     override fun run() {
