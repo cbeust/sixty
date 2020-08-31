@@ -223,7 +223,7 @@ data class Cpu(var A: Int = 0, var X: Int = 0, var Y: Int = 0, var PC: Int = 0,
 //            0xd9 -> CmpAbsY(computer)
 //            0xdd -> CmpAbsX(computer)
 //            0xde -> DecAbsX(computer)
-//            0xe0 -> CpxImm(computer)
+            CPX_IMM -> CpxImm(computer)
 //            0xe1 -> SbcIndirectX(computer)
 //            0xe4 -> CpxZp(computer)
             0xe5 -> SbcZp(computer)
@@ -904,6 +904,12 @@ class Bne(computer: Computer): BranchBase(computer, 0xd0, "BNE", { !computer.cpu
 /** 0xd8, CLD */
 class Cld(c: Computer): FlagInstruction(c, 0xd8, "CLD") {
     override fun run() { cpu.P.D = false }
+}
+
+/** 0xe0, CPX #$12 */
+class CpxImm(c: Computer): CmpImmBase(c, "CPX") {
+    override val opCode = 0xe0
+    override val register get() = computer.cpu.X
 }
 
 /** 0xe5, SBC $10 */

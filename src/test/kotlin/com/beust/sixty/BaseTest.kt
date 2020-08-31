@@ -568,5 +568,6 @@ abstract class BaseTest {
     // EOR_IND_Y
     // LDA_IND_Y
     // STA_IND_X
+    // CPX
 }
 

@@ -30,6 +30,10 @@ const val BCS = 0xb0
 const val BNE = 0xd0
 const val BEQ = 0xf0
 
+const val CPX_IMM = 0xe0
+const val CPX_ZP = 0xe4
+const val CPX_ABS = 0xec
+
 const val CLC = 0x18
 const val SEC = 0x38
 const val CLI = 0x58
