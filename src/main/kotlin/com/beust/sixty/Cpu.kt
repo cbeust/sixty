@@ -154,7 +154,7 @@ data class Cpu(var A: Int = 0, var X: Int = 0, var Y: Int = 0, var PC: Int = 0,
 //            0x66 -> RorZp(computer)
 //            0x6a -> Ror(computer)
 //            0x6e -> RorAbsolute(computer)
-//            0x70 -> Bvs(computer)
+            BVS -> Bvs(computer)
 //            0x71 -> AdcIndirectY(computer)
 //            0x??75 -> AdcZpX(computer)
 //            0x??75 -> AdcAbsoluteX(computer)
@@ -598,6 +598,9 @@ class JmpIndirect(c: Computer): InstructionBase(c) {
     override fun run() { cpu.PC = memory.wordAt(word) -  size }
     override fun toString(): String = "JMP ($${word.hh()})"
 }
+
+/** 0x70, BVS */
+class Bvs(computer: Computer): BranchBase(computer, BVS, "BVS", { computer.cpu.P.V })
 
 /** 0x78, SEI */
 class Sei(c: Computer): FlagInstruction(c, 0x78, "SEI") {

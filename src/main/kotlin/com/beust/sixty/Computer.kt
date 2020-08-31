@@ -37,7 +37,7 @@ class Computer(val cpu: Cpu = Cpu(), val memory: Memory, memoryListener: MemoryL
                 cpu.PC += inst.size
                 n++
                 if (previousPc == cpu.PC) {
-                    // Current functional tests highest score: $614
+                    // Current functional tests highest score: $63d
                     println("Forever loop")
                 } else {
                     previousPc = cpu.PC
