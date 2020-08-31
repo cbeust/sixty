@@ -25,8 +25,7 @@ class Computer(val cpu: Cpu = Cpu(memory = Memory()), val memory: Memory,
         var done = false
         var previousPc = 0
         while (! done) {
-            if ((memory[cpu.PC] == 0x60 && cpu.SP.isEmpty()) ||
-                    memory[cpu.PC] == 0) {
+            if (memory[cpu.PC] == 0x60 && cpu.SP.isEmpty()) {
                 done = true
             } else {
                 val inst = cpu.nextInstruction(this)
@@ -39,7 +38,7 @@ class Computer(val cpu: Cpu = Cpu(memory = Memory()), val memory: Memory,
                 cpu.PC += inst.size
                 n++
                 if (previousPc == cpu.PC) {
-                    // Current functional tests highest score: $3781
+                    // Current functional tests highest score: $9d7
                     println(this)
                     println("Forever loop")
                 } else {

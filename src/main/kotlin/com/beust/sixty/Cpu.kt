@@ -46,7 +46,8 @@ interface Instruction {
 }
 
 data class Cpu(var A: Int = 0, var X: Int = 0, var Y: Int = 0, var PC: Int = 0,
-        val memory: Memory, val P: StatusFlags = StatusFlags()) : ICpu {
+        val memory: Memory, val P: StatusFlags = StatusFlags()) : ICpu
+{
     val SP: StackPointer
     init {
         SP = StackPointer(memory)
@@ -223,6 +224,20 @@ data class Cpu(var A: Int = 0, var X: Int = 0, var Y: Int = 0, var PC: Int = 0,
     override fun toString(): String {
         return "{Cpu A=${A.h()} X=${X.h()} Y=${Y.h()} PC=${PC.h()} P=$P SP=$SP}"
     }
+
+    companion object {
+        // NMI vector
+        const val NMI_VECTOR_L = 0xfffa
+        const val NMI_VECTOR_H = 0xfffb
+
+        // Reset vector
+        const val RST_VECTOR_L = 0xfffc
+        const val RST_VECTOR_H = 0xfffd
+
+        // IRQ vector
+        const val IRQ_VECTOR_L = 0xfffe
+        const val IRQ_VECTOR_H = 0xffff
+    }
 }
 
 abstract class InstructionBase(val computer: Computer): Instruction {
@@ -238,10 +253,20 @@ abstract class InstructionBase(val computer: Computer): Instruction {
 
 /** 0x00, BRK */
 class Brk(c: Computer): InstructionBase(c) {
+    fun handleInterrupt(brk: Boolean, vectorHigh: Int, vectorLow: Int) {
+        cpu.SP.pushWord(cpu.PC)
+        cpu.SP.pushByte(cpu.P.toByte())
+        cpu.P.I = true
+        cpu.PC = memory[vectorHigh].shl(8).or(memory[vectorLow])
+    }
+
     override val opCode = 0
     override val size = 1
     override val timing = 7
-    override fun run() { cpu.P.B = true }
+    override fun run() {
+        handleInterrupt(true, Cpu.IRQ_VECTOR_H, Cpu.IRQ_VECTOR_L)
+        cpu.P.B = true
+    }
     override fun toString(): String = "BRK"
 }
 
@@ -403,7 +428,7 @@ abstract class CmpImmBase(c: Computer, val name: String): InstructionBase(c) {
         cpu.P.N = (tmp and 0x80) != 0
     }
 
-    override fun toString(): String = "$name $argName"
+    override fun toString(): String = "$name #$$argName"
 }
 
 /** 0x38, SEC */
@@ -459,7 +484,7 @@ class Pha(c: Computer): StackInstruction(c, 0x48, "PHA") {
 }
 
 /** 0x50, BVC */
-class Bvc(computer: Computer): BranchBase(computer, 0x50, "BVC", { ! computer.cpu.P.V })
+class Bvc(computer: Computer): BranchBase(computer, 0x50, "BVC", { !computer.cpu.P.V })
 
 
 /** 0x51, EOR ($12),Y */
@@ -626,7 +651,7 @@ class StxZp(c: Computer): ZpBase(c, 0x86, "STX") {
 /** 0x88, INX */
 class Dey(c: Computer): RegisterInstruction(c, 0x88, "DEY") {
     override fun run() {
-        cpu.Y--
+        cpu.Y = (--cpu.Y).and(0xff)
         cpu.P.setNZFlags(cpu.Y)
     }
 }
@@ -718,7 +743,7 @@ class Tya(c: Computer): RegisterInstruction(c, 0x98, "TYA") {
     }
 }
 
-/** 0xc0, CPY $#12 */
+/** 0xc0, CPY #$12 */
 class CpyImm(c: Computer): CmpImmBase(c, "CPY") {
     override val opCode = 0xc0
     override val value = operand
@@ -731,7 +756,7 @@ class CmpImm(c: Computer): CmpImmBase(c, "CMP") {
     override val opCode = 0xc9
     override val value = operand
     override val register get() = computer.cpu.A
-    override val argName = "#$${operand.h()}"
+    override val argName = "${operand.h()}"
 }
 
 /** 0xcd, CMP $1234 */
@@ -885,7 +910,7 @@ abstract class RegisterInstruction(c: Computer, override val opCode: Int, val na
 /** 0xca, DEX */
 class Dex(c: Computer): RegisterInstruction(c, 0xca, "DEX") {
     override fun run() {
-        cpu.X--
+        cpu.X = (--cpu.X).and(0xff)
         cpu.P.setNZFlags(cpu.X)
     }
 }
@@ -903,7 +928,7 @@ class CpxImm(c: Computer): CmpImmBase(c, "CPX") {
     override val opCode = 0xe0
     override val value = operand
     override val register get() = computer.cpu.X
-    override val argName = "#$${operand.h()}"
+    override val argName = "${operand.h()}"
 }
 
 /** 0xe5, SBC $10 */

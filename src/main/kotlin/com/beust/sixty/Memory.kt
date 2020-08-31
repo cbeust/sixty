@@ -52,7 +52,7 @@ class Memory(val size: Int = 0x10000, vararg bytes: Int) {
     fun load(file: String, address: Int) {
 //        File(file).readBytes().map { it.toInt() }.toIntArray().copyInto(content, address)
         File(file).readBytes().forEachIndexed { index, v ->
-            if (index + address < 0xffff) {
+            if (index + address < 0x10000) {
                 content[index + address] = v.toInt()
             }
         }

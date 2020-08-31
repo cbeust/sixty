@@ -19,12 +19,13 @@ class StackPointer(private val memory: Memory) {
     }
 
     fun pushWord(a: Int) {
-        memory[address + S--] = a.and(0xff)
+        // High byte fist
         memory[address + S--] = a.and(0xff00).shr(8)
+        memory[address + S--] = a.and(0xff)
     }
 
     fun popWord(): Int {
-        val result = memory[address + ++S].shl(8).or(memory[address + ++S])
+        val result = memory[address + ++S].or(memory[address + ++S].shl(8))
         return result
     }
 
