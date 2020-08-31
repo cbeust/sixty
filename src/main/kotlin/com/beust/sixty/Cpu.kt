@@ -766,17 +766,26 @@ abstract class ZpBase(c: Computer, override val opCode: Int, val name: String): 
 
 /** 0xa4, LDY $10 */
 class LdyZp(c: Computer): ZpBase(c, 0xa5, "LDY") {
-    override fun run() { cpu.Y = memory[operand] }
+    override fun run() {
+        cpu.Y = memory[operand]
+        cpu.P.setNZFlags(cpu.Y)
+    }
 }
 
 /** 0xa5, LDA $10 */
 class LdaZp(c: Computer): ZpBase(c, 0xa5, "LDA") {
-    override fun run() { cpu.A = memory[operand] }
+    override fun run() {
+        cpu.A = memory[operand]
+        cpu.P.setNZFlags(cpu.A)
+    }
 }
 
 /** 0xa6, LDX $10 */
 class LdxZp(c: Computer): ZpBase(c, 0xa6, "LDX") {
-    override fun run() { cpu.X = memory[operand] }
+    override fun run() {
+        cpu.X = memory[operand]
+        cpu.P.setNZFlags(cpu.X)
+    }
 }
 
 /** 0xa8, TAY */
@@ -803,12 +812,18 @@ class LdyImm(c: Computer): LdImmBase(c, 0xa0, "LDY") {
 
 /** 0xa2, LDX #$10 */
 class LdxImm(c: Computer): LdImmBase(c, 0xa2, "LDX") {
-    override fun run() { cpu.X = operand }
+    override fun run() {
+        cpu.X = operand
+        cpu.P.setNZFlags(cpu.X)
+    }
 }
 
 /** 0xa9, LDA #$10 */
 class LdaImm(c: Computer): LdImmBase(c, 0xa9, "LDA") {
-    override fun run() { cpu.A = operand }
+    override fun run() {
+        cpu.A = operand
+        cpu.P.setNZFlags(cpu.A)
+    }
 }
 
 /** 0xaa, TAX */
@@ -826,6 +841,7 @@ class LdaAbsolute(c: Computer): InstructionBase(c) {
     override val timing = 4
     override fun run() {
         cpu.A = memory[word]
+        cpu.P.setNZFlags(cpu.A)
     }
     override fun toString(): String = "LDA $${word.hh()}"
 }
@@ -847,6 +863,7 @@ class LdaAbsoluteX(c: Computer): InstructionBase(c) {
     override fun run() {
         cpu.A = memory[word + cpu.X]
         timing += pageCrossed(word, word + cpu.X)
+        cpu.P.setNZFlags(cpu.A)
     }
     override fun toString(): String = "LDA $${word.hh()},X"
 }

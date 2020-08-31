@@ -92,12 +92,12 @@ class Main : Application() {
         }
 
         val functionalTestMemory = Memory(65536).apply {
-            load("../6502/6502_65C02_functional_tests/bin_files/6502_functional_test.bin", 0)
+            load("bin_files/6502_functional_test.bin", 0)
         }
         val functionalTestCpu = Cpu(SP = InMemoryStackPointer())
         with(Computer(memory = functionalTestMemory, cpu = functionalTestCpu)) {
             disassemble(0x400, 20)
-            cpu.PC=0x400
+            cpu.PC = 0x400
             run()
         }
 

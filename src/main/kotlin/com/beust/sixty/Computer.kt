@@ -22,6 +22,7 @@ class Computer(val cpu: Cpu = Cpu(), val memory: Memory, memoryListener: MemoryL
     fun run() {
         var n = 0
         var done = false
+        var previousPc = 0
         while (! done) {
             if ((memory[cpu.PC] == 0x60 && cpu.SP.isEmpty()) ||
                     memory[cpu.PC] == 0) {
@@ -35,6 +36,11 @@ class Computer(val cpu: Cpu = Cpu(), val memory: Memory, memoryListener: MemoryL
                 inst.run()
                 cpu.PC += inst.size
                 n++
+                if (previousPc == cpu.PC) {
+                    println("Forever loop")
+                } else {
+                    previousPc = cpu.PC
+                }
             }
         }
     }
