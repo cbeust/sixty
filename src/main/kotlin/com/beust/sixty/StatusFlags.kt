@@ -11,20 +11,21 @@ class StatusFlags {
     fun toByte(): Byte {
         val result = N.int().shl(7)
                 .or(V.int().shl(6))
-                .or(1.shl(5))
-                .or(1.shl(4))
-//                .or(B.int().shl(4))
+                .or(reserved.int().shl(5))
+                .or(B.int().shl(4))
                 .or(D.int().shl(3))
                 .or(I.int().shl(2))
                 .or(Z.int().shl(1))
                 .or(C.int())
-        return result.toByte()
+        return result.and(0xff).toByte()
     }
 
     fun fromByte(byte: Byte) {
         val b = byte.toInt()
         N = b.and(0x80).shr(7).toBoolean()
         V = b.and(0x40).shr(6).toBoolean()
+        reserved = b.and(0x20).shr(5).toBoolean()
+        B = b.and(0x10).shr(4).toBoolean()
         D = b.and(0x8).shr(3).toBoolean()
         I = b.and(0x4).shr(2).toBoolean()
         Z = b.and(0x2).shr(1).toBoolean()
@@ -38,6 +39,14 @@ class StatusFlags {
     var V: Boolean // Overflow
         get() = bit(6)
         set(v) = bit(6, v)
+
+    var reserved: Boolean // Overflow
+        get() = bit(5)
+        set(v) = bit(5, v)
+
+    var B: Boolean // Overflow
+        get() = bit(4)
+        set(v) = bit(4, v)
 
     var D: Boolean // Decimal
         get() = bit(3)
@@ -55,7 +64,7 @@ class StatusFlags {
         get() = bit(0)
         set(v) = bit(0, v)
 
-    override fun toString() = "{N=${N.int()} V=${V.int()} D=${D.int()} I=${I.int()} Z=${Z.int()} C=${C.int()}"
+    override fun toString() = "{$${toByte().h()} N=${N.int()} V=${V.int()} D=${D.int()} I=${I.int()} Z=${Z.int()} C=${C.int()}}"
 
     fun setNZFlags(reg: Int) {
         Z = reg == 0

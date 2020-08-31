@@ -30,16 +30,16 @@ class Computer(val cpu: Cpu = Cpu(memory = Memory()), val memory: Memory,
                 done = true
             } else {
                 val inst = cpu.nextInstruction(this)
-                if (DEBUG_ASM) disassemble(cpu.PC, inst, print = true)
-                if (cpu.PC == 0x635) {
+                if (cpu.PC == 0x800) {
                     println(this)
                     println("Breakpoint")
                 }
                 inst.run()
+                if (DEBUG_ASM) disassemble(cpu, inst, print = true)
                 cpu.PC += inst.size
                 n++
                 if (previousPc == cpu.PC) {
-                    // Current functional tests highest score: $808
+                    // Current functional tests highest score: $3781
                     println(this)
                     println("Forever loop")
                 } else {
@@ -63,7 +63,7 @@ class Computer(val cpu: Cpu = Cpu(memory = Memory()), val memory: Memory,
             while (! done) {
                 val p = memory[pc]
                 val inst = cpu.nextInstruction(this, noThrows = true)
-                result.add(disassemble(pc, inst, print))
+                result.add(disassemble(cpu, inst, print))
                 cpu.PC += inst.size
                 pc += inst.size
                 if (--n <= 0) done = true
@@ -72,11 +72,13 @@ class Computer(val cpu: Cpu = Cpu(memory = Memory()), val memory: Memory,
         return result
     }
 
-    private fun disassemble(pc: Int, inst: Instruction, print: Boolean): String {
+    private fun disassemble(cpu: Cpu, inst: Instruction, print: Boolean): String {
+        val pc = cpu.PC
         val bytes = StringBuffer(inst.opCode.h())
         bytes.append(if (inst.size > 1) (" " + memory[pc + 1].h()) else "   ")
         bytes.append(if (inst.size == 3) (" " + memory[pc + 2].h()) else "   ")
-        val result = (pc.h() + ": " + bytes.toString() + "  " + inst.toString())
+        val cpuString = String.format("%8s ${cpu}", " ")
+        val result = (pc.h() + ": " + bytes.toString() + "  " + inst.toString()) + " " + cpuString
         if (print) println(result)
         return result
     }

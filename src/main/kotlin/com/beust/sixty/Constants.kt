@@ -120,6 +120,13 @@ const val STA_IND_Y = 0x91
 
 const val STX_ZP = 0x86
 
+const val TXS = 0x9a
+const val TSX = 0xba
+const val PHA = 0x48
+const val PLA = 0x68
+const val PHP = 0x08
+const val PLP = 0x28
+
 const val LDX_IMM = 0xa2
 const val LDX_ZP = 0xa6
 

@@ -45,30 +45,9 @@ interface Instruction {
     }
 }
 
-interface IStackPointer {
-    var S: Int // The S register. Actually a byte
-    fun pushByte(a: Byte)
-    fun popByte(): Byte
-    fun pushWord(a: Int)
-    fun popWord(): Int
-    fun isEmpty(): Boolean
-
-    fun peekByte(): Byte {
-        val result = popByte()
-        pushByte(result)
-        return result
-    }
-
-    fun peekWord(): Int {
-        val result = popWord()
-        pushWord(result)
-        return result
-    }
-}
-
 data class Cpu(var A: Int = 0, var X: Int = 0, var Y: Int = 0, var PC: Int = 0,
         val memory: Memory, val P: StatusFlags = StatusFlags()) : ICpu {
-    val SP: IStackPointer
+    val SP: StackPointer
     init {
         SP = StackPointer(memory)
     }
@@ -262,7 +241,7 @@ class Brk(c: Computer): InstructionBase(c) {
     override val opCode = 0
     override val size = 1
     override val timing = 7
-    override fun run() {}
+    override fun run() { cpu.P.B = true }
     override fun toString(): String = "BRK"
 }
 
@@ -280,9 +259,11 @@ class OraZp(c: Computer): InstructionBase(c) {
 }
 
 /** 0x8, PHP */
-class Php(c: Computer): StackInstruction(c, 0x8, "PHP") {
+class Php(c: Computer): StackInstruction(c, PHP, "PHP") {
     override val timing = 3
     override fun run() {
+        cpu.P.B = true
+        cpu.P.reserved = true
         cpu.SP.pushByte(cpu.P.toByte())
     }
 }
@@ -360,7 +341,7 @@ class RolZp(c: Computer): InstructionBase(c) {
 }
 
 /** 0x28, PLP */
-class Plp(c: Computer): StackInstruction(c, 0x8, "PHP") {
+class Plp(c: Computer): StackInstruction(c, PLP, "PLP") {
     override val timing = 4
     override fun run() {
         cpu.P.fromByte(cpu.SP.popByte())
@@ -554,6 +535,7 @@ class Pla(c: Computer): StackInstruction(c, 0x68, "PLA") {
     override val timing = 4
     override fun run() {
         cpu.A = cpu.SP.popByte().toInt().and(0xff)
+        cpu.P.setNZFlags(cpu.A)
     }
 }
 

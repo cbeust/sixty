@@ -66,8 +66,6 @@ fun apple2Computer(): Computer {
             memory[0] = 0
         }
         cpu.PC = pc
-            DEBUG_ASM = true
-            DEBUG_MEMORY = true
 //                run()
     }
 
