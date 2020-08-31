@@ -11,6 +11,8 @@ class StatusFlags {
     fun toByte(): Byte {
         val result = N.int().shl(7)
                 .or(V.int().shl(6))
+                .or(1.shl(5))
+                .or(1.shl(4))
 //                .or(B.int().shl(4))
                 .or(D.int().shl(3))
                 .or(I.int().shl(2))

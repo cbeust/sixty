@@ -56,7 +56,7 @@ fun apple2Computer(): Computer {
 
     }
 
-    val appleCpu = Cpu(SP = Apple2StackPointer(memory = memory))
+    val appleCpu = Cpu(memory = memory)
     val result = Computer(memory = memory, cpu = appleCpu).apply {
         memory.listener = listener
 //            fillScreen(memory)

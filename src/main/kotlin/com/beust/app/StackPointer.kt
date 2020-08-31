@@ -4,7 +4,8 @@ import com.beust.sixty.IStackPointer
 import com.beust.sixty.Memory
 import com.beust.sixty.h
 
-class Apple2StackPointer(override var S: Int = 0xff, private val memory: Memory) : IStackPointer {
+class StackPointer(private val memory: Memory) : IStackPointer {
+    override var S: Int = 0xff
     private val address = 0x100
 
     override fun pushByte(a: Byte) {
@@ -29,8 +30,9 @@ class Apple2StackPointer(override var S: Int = 0xff, private val memory: Memory)
 
     override fun toString(): String {
         val result = StringBuffer("{Stack pointer: ${S.h()} stack:[")
-        (S .. 0xff).forEach {
-            result.append(memory[address + it].h())
+        (0xff downTo S + 1).forEach {
+            val ad = address + it
+            result.append("$${ad.h()}: " + memory[ad].h())
             result.append(" ")
         }
         result.append("]}")

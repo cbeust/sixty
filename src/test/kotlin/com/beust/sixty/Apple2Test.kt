@@ -1,11 +1,11 @@
 package com.beust.sixty
 
-import com.beust.app.Apple2StackPointer
+import com.beust.app.StackPointer
 
 class Apple2Test: BaseTest() {
     override fun computer(vararg bytes: Int): Computer {
         val memory = Memory(bytes = *bytes)
-        val stackPointer = Apple2StackPointer(memory = memory)
+        val stackPointer = StackPointer(memory = memory)
         val listener = object: MemoryListener {
             override fun onRead(location: Int, value: Int) {
             }

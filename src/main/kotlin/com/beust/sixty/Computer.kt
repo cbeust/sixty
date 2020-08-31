@@ -12,7 +12,8 @@ interface MemoryListener {
     fun onWrite(location: Int, value: Int)
 }
 
-class Computer(val cpu: Cpu = Cpu(), val memory: Memory, memoryListener: MemoryListener? = null,
+class Computer(val cpu: Cpu = Cpu(memory = Memory()), val memory: Memory,
+        memoryListener: MemoryListener? = null,
         memoryInterceptor: MemoryInterceptor? = null) {
     init {
         memory.listener = memoryListener
@@ -29,15 +30,17 @@ class Computer(val cpu: Cpu = Cpu(), val memory: Memory, memoryListener: MemoryL
                 done = true
             } else {
                 val inst = cpu.nextInstruction(this)
-                if (DEBUG_ASM) disassemble(cpu.PC, 1)
-                if (cpu.PC == 0x60c) {
+                if (DEBUG_ASM) disassemble(cpu.PC, inst, print = true)
+                if (cpu.PC == 0x635) {
+                    println(this)
                     println("Breakpoint")
                 }
                 inst.run()
                 cpu.PC += inst.size
                 n++
                 if (previousPc == cpu.PC) {
-                    // Current functional tests highest score: $63d
+                    // Current functional tests highest score: $808
+                    println(this)
                     println("Forever loop")
                 } else {
                     previousPc = cpu.PC
@@ -60,18 +63,21 @@ class Computer(val cpu: Cpu = Cpu(), val memory: Memory, memoryListener: MemoryL
             while (! done) {
                 val p = memory[pc]
                 val inst = cpu.nextInstruction(this, noThrows = true)
-                val bytes = StringBuffer(inst.opCode.h())
-                bytes.append(if (inst.size > 1) (" " + memory[pc + 1].h()) else "   ")
-                bytes.append(if (inst.size == 3) (" " + memory[pc + 2].h()) else "   ")
-                (pc.h() + ": " + bytes.toString() + "  " + inst.toString()).let {
-                    result.add(it)
-                    if (print) println(it)
-                }
+                result.add(disassemble(pc, inst, print))
                 cpu.PC += inst.size
                 pc += inst.size
                 if (--n <= 0) done = true
             }
         }
+        return result
+    }
+
+    private fun disassemble(pc: Int, inst: Instruction, print: Boolean): String {
+        val bytes = StringBuffer(inst.opCode.h())
+        bytes.append(if (inst.size > 1) (" " + memory[pc + 1].h()) else "   ")
+        bytes.append(if (inst.size == 3) (" " + memory[pc + 2].h()) else "   ")
+        val result = (pc.h() + ": " + bytes.toString() + "  " + inst.toString())
+        if (print) println(result)
         return result
     }
 

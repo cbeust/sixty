@@ -61,4 +61,16 @@ class Memory(val size: Int = 0x10000, vararg bytes: Int) {
     fun wordAt(word: Int): Int {
         return get(word + 1).shl(8).or(get(word))
     }
+
+    fun clone(): Memory {
+        return Memory().apply {
+            init(0, *content)  // careful, aliasing content here
+        }
+//        return Memory(content)
+//        val newContent = IntArray(size)
+//        content.copyInto(newContent, 0, size)
+//        return Memory().apply {
+//            init(0, *content)
+//        }
+    }
 }

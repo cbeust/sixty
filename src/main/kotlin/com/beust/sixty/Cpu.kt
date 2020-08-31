@@ -2,7 +2,7 @@
 
 package com.beust.sixty
 
-import java.util.*
+import com.beust.app.StackPointer
 
 fun logMem(i: Int, value: Int, extra: String = "") {
     println("mem[${i.hh()}] = ${(value.and(0xff)).h()} $extra")
@@ -66,26 +66,13 @@ interface IStackPointer {
     }
 }
 
-class InMemoryStackPointer : IStackPointer {
-    private val stack = Stack<Byte>()
-
-    override var S = stack.size
-    override fun pushByte(a: Byte) { stack.push(a) }
-    override fun popByte() = stack.pop()
-    override fun pushWord(a: Int) {
-        pushByte(a.toByte())
-        pushByte(a.shr(8).toByte())
-    }
-    override fun popWord(): Int = popByte().toInt().shl(8).or(popByte().toInt())
-    override fun isEmpty() = stack.isEmpty()
-    override fun toString(): String {
-        return stack.map { it.h()}.joinToString(" ")
-    }
-}
-
 data class Cpu(var A: Int = 0, var X: Int = 0, var Y: Int = 0, var PC: Int = 0,
-        val SP: IStackPointer = InMemoryStackPointer(), val P: StatusFlags = StatusFlags()) : ICpu {
-    override fun clone() = Cpu(A, X, Y, PC, SP, P)
+        val memory: Memory, val P: StatusFlags = StatusFlags()) : ICpu {
+    val SP: IStackPointer
+    init {
+        SP = StackPointer(memory)
+    }
+    override fun clone() = Cpu(A, X, Y, PC, memory.clone(), P)
     override fun nextInstruction(computer: Computer, noThrows: Boolean): Instruction {
         val op = computer.memory[PC] and 0xff
         val result = when(op) {
@@ -778,9 +765,7 @@ class CmpAbsolute(c: Computer): CmpImmBase(c, "CMP") {
 /** 0x9a, TXS */
 class Txs(c: Computer): StackInstruction(c, 0x9a, "TXS") {
     override val timing = 2
-    override fun run() {
-        cpu.SP.S = cpu.X
-    }
+    override fun run() { cpu.SP.S = cpu.X }
 }
 
 abstract class ZpBase(c: Computer, override val opCode: Int, val name: String): InstructionBase(c) {
