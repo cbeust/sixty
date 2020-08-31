@@ -211,7 +211,7 @@ data class Cpu(var A: Int = 0, var X: Int = 0, var Y: Int = 0, var PC: Int = 0,
 //            0xc6 -> DecZp(computer)
             0xc8 -> Iny(computer)
             0xc9 -> CmpImm(computer)
-//            0xcd -> CmpAbsolute(computer)
+            CMP_ABS -> CmpAbsolute(computer)
             0xca -> Dex(computer)
 //            0xcc -> CpyAbsolute(computer)
 //            0xce -> DecAbsolute(computer)
@@ -242,7 +242,13 @@ data class Cpu(var A: Int = 0, var X: Int = 0, var Y: Int = 0, var PC: Int = 0,
 //            0xf9 -> SbcAbsoluteY(computer)
 //            0xfd -> SbcAbsoluteX(computer)
 //            0xfe -> IncAbsoluteX(computer)
-            else -> if (noThrows) Unknown(computer, op) else TODO("NOT IMPLEMENTED: ${PC.h()}: ${op.h()}")
+            else -> {
+                if (noThrows) {
+                    Unknown(computer, op)
+                } else {
+                    TODO("NOT IMPLEMENTED: ${PC.h()}: ${op.h()}")
+                }
+            }
         }
 
         return result
@@ -419,10 +425,11 @@ abstract class CmpImmBase(c: Computer, val name: String): InstructionBase(c) {
     override val timing = 2
 
     abstract val register: Int
+    abstract val value: Int
 
     override fun run() {
-        val tmp: Int = (register - operand) and 0xff
-        cpu.P.C = register >= operand
+        val tmp: Int = (register - value) and 0xff
+        cpu.P.C = register >= value
         cpu.P.Z = tmp == 0
         cpu.P.N = (tmp and 0x80) != 0
     }
@@ -741,13 +748,24 @@ class Tya(c: Computer): RegisterInstruction(c, 0x98, "TYA") {
 /** 0xc0, CPY $#12 */
 class CpyImm(c: Computer): CmpImmBase(c, "CPY") {
     override val opCode = 0xc0
+    override val value = operand
     override val register get() = computer.cpu.Y
 }
 
 /** 0xc9, CMP $#12 */
 class CmpImm(c: Computer): CmpImmBase(c, "CMP") {
     override val opCode = 0xc9
+    override val value = operand
     override val register get() = computer.cpu.A
+}
+
+/** 0xcd, CMP $1234 */
+class CmpAbsolute(c: Computer): CmpImmBase(c, "CMP") {
+    override val opCode = CMP_ABS
+    override val size = 3
+    override val timing = 4
+    override val register get() = cpu.A
+    override val value get() = memory[word]
 }
 
 /** 0x9a, TXS */
@@ -909,6 +927,7 @@ class Cld(c: Computer): FlagInstruction(c, 0xd8, "CLD") {
 /** 0xe0, CPX #$12 */
 class CpxImm(c: Computer): CmpImmBase(c, "CPX") {
     override val opCode = 0xe0
+    override val value = operand
     override val register get() = computer.cpu.X
 }
 
