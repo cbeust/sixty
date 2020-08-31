@@ -19,7 +19,14 @@ fun assertNotRegister(register: Int, expected: Int) {
 
 @Test
 abstract class BaseTest {
-    abstract fun computer(vararg bytes: Int): Computer
+    abstract fun createComputer(vararg bytes: Int): Computer
+
+    fun computer(vararg bytes: Int): Computer {
+        with(createComputer(*bytes)) {
+            memory.listener = DebugMemoryListener
+            return this
+        }
+    }
 
     fun inxy() {
         // inx * 2, iny * 2

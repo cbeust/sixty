@@ -28,13 +28,9 @@ class Memory(val size: Int = 0x10000, vararg bytes: Int) {
         if (interceptor != null) {
             val response = interceptor!!.onWrite(i, value)
             if (response.allow) {
-                if (DEBUG_MEMORY) logMem(i, value, "(allowed)")
                 content[i] = value
-            } else {
-                if (DEBUG_MEMORY) logMem(i, value, "(denied)")
             }
         } else {
-            if (DEBUG_MEMORY) logMem(i, value)
             content[i] = value
         }
         listener?.onWrite(i, value)

@@ -8,6 +8,7 @@ interface MemoryInterceptor {
 }
 
 interface MemoryListener {
+    var lastMemDebug: String?
     fun onRead(location: Int, value: Int)
     fun onWrite(location: Int, value: Int)
 }
@@ -35,10 +36,14 @@ class Computer(val cpu: Cpu = Cpu(memory = Memory()), val memory: Memory,
                 }
                 inst.run()
                 if (DEBUG_ASM) disassemble(cpu, inst, print = true)
+                memory.listener?.lastMemDebug?.let {
+                    println("  $it")
+                    memory.listener?.lastMemDebug = null
+                }
                 cpu.PC += inst.size
                 n++
                 if (previousPc == cpu.PC) {
-                    // Current functional tests highest score: $9d7
+                    // Current functional tests highest score: $37c7
                     println(this)
                     println("Forever loop")
                 } else {
@@ -77,7 +82,9 @@ class Computer(val cpu: Cpu = Cpu(memory = Memory()), val memory: Memory,
         bytes.append(if (inst.size > 1) (" " + memory[pc + 1].h()) else "   ")
         bytes.append(if (inst.size == 3) (" " + memory[pc + 2].h()) else "   ")
         val cpuString = String.format("%8s ${cpu}", " ")
-        val result = (pc.h() + ": " + bytes.toString() + "  " + inst.toString()) + " " + cpuString
+
+        val result = String.format("%-5s %-10s %-12s %s", pc.hh() + ":", bytes.toString(), inst.toString(), cpuString)
+
         if (print) println(result)
         return result
     }

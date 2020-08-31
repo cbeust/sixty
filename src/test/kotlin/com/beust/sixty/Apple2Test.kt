@@ -3,7 +3,7 @@ package com.beust.sixty
 import com.beust.app.StackPointer
 
 class Apple2Test: BaseTest() {
-    override fun computer(vararg bytes: Int): Computer {
+    override fun createComputer(vararg bytes: Int): Computer {
         val memory = Memory(bytes = *bytes)
         val stackPointer = StackPointer(memory = memory)
         val listener = object: MemoryListener {
@@ -19,8 +19,7 @@ class Apple2Test: BaseTest() {
             }
 
         }
-        return Computer(Cpu(SP = stackPointer), memory, listener).apply {
-        }
+        return Computer(memory = memory)
     }
 
     fun tsx() {

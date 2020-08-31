@@ -4,10 +4,6 @@ package com.beust.sixty
 
 import com.beust.app.StackPointer
 
-fun logMem(i: Int, value: Int, extra: String = "") {
-    println("mem[${i.hh()}] = ${(value.and(0xff)).h()} $extra")
-}
-
 /**
  * Specs used:
  * https://en.wikipedia.org/wiki/MOS_Technology_6502

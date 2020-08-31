@@ -32,7 +32,7 @@ class StackPointer(private val memory: Memory) {
     fun isEmpty(): Boolean = S == 0xff
 
     override fun toString(): String {
-        val result = StringBuffer("{Stack pointer: ${S.h()} stack:[")
+        val result = StringBuffer("{$${S.h()} stack:[")
         (0xff downTo S + 1).forEach {
             val ad = address + it
             result.append("$${ad.h()}:$" + memory[ad].h())
