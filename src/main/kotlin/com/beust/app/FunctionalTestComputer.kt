@@ -12,6 +12,9 @@ fun functionalTestComputer(): Computer {
     val functionalTestCpu = Cpu(SP = Apple2StackPointer(memory = functionalTestMemory))
     val result = Computer(memory = functionalTestMemory, cpu = functionalTestCpu).apply {
 //        disassemble(0x400, 20)
+//        (0x100..0x1ff).forEach {
+//            memory[it] = 0xff
+//        }
         cpu.PC = 0x400
     }
     return result

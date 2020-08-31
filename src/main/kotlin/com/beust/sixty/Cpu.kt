@@ -426,6 +426,7 @@ abstract class CmpImmBase(c: Computer, val name: String): InstructionBase(c) {
 
     abstract val register: Int
     abstract val value: Int
+    abstract val argName: String
 
     override fun run() {
         val tmp: Int = (register - value) and 0xff
@@ -434,7 +435,7 @@ abstract class CmpImmBase(c: Computer, val name: String): InstructionBase(c) {
         cpu.P.N = (tmp and 0x80) != 0
     }
 
-    override fun toString(): String = "$name #$${operand.h()}"
+    override fun toString(): String = "$name $argName"
 }
 
 /** 0x38, SEC */
@@ -565,7 +566,7 @@ class RorZp(c: Computer): InstructionBase(c) {
 class Pla(c: Computer): StackInstruction(c, 0x68, "PLA") {
     override val timing = 4
     override fun run() {
-        cpu.A = cpu.SP.popByte().toInt()
+        cpu.A = cpu.SP.popByte().toInt().and(0xff)
     }
 }
 
@@ -753,6 +754,7 @@ class CpyImm(c: Computer): CmpImmBase(c, "CPY") {
     override val opCode = 0xc0
     override val value = operand
     override val register get() = computer.cpu.Y
+    override val argName = "${operand.h()}"
 }
 
 /** 0xc9, CMP $#12 */
@@ -760,6 +762,7 @@ class CmpImm(c: Computer): CmpImmBase(c, "CMP") {
     override val opCode = 0xc9
     override val value = operand
     override val register get() = computer.cpu.A
+    override val argName = "#$${operand.h()}"
 }
 
 /** 0xcd, CMP $1234 */
@@ -769,6 +772,7 @@ class CmpAbsolute(c: Computer): CmpImmBase(c, "CMP") {
     override val timing = 4
     override val register get() = cpu.A
     override val value get() = memory[word]
+    override val argName = "$${word.h()}"
 }
 
 /** 0x9a, TXS */
@@ -932,6 +936,7 @@ class CpxImm(c: Computer): CmpImmBase(c, "CPX") {
     override val opCode = 0xe0
     override val value = operand
     override val register get() = computer.cpu.X
+    override val argName = "#$${operand.h()}"
 }
 
 /** 0xe5, SBC $10 */

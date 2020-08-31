@@ -2,6 +2,7 @@ package com.beust.app
 
 import com.beust.sixty.IStackPointer
 import com.beust.sixty.Memory
+import com.beust.sixty.h
 
 class Apple2StackPointer(override var S: Int = 0xff, private val memory: Memory) : IStackPointer {
     private val address = 0x100
@@ -26,5 +27,13 @@ class Apple2StackPointer(override var S: Int = 0xff, private val memory: Memory)
 
     override fun isEmpty(): Boolean = S == 0xff
 
-    override fun toString() = "{S=$S}"
+    override fun toString(): String {
+        val result = StringBuffer("{Stack pointer: ${S.h()} stack:[")
+        (S .. 0xff).forEach {
+            result.append(memory[address + it].h())
+            result.append(" ")
+        }
+        result.append("]}")
+        return result.toString()
+    }
 }
