@@ -134,23 +134,14 @@ data class Cpu(var A: Int = 0, var X: Int = 0, var Y: Int = 0, var PC: Int = 0xf
             CMP_ABS_X -> CmpAbsoluteX(computer)
 //            0xde -> DecAbsX(computer)
             CPX_IMM -> CpxImm(computer)
-//            0xe1 -> SbcIndirectX(computer)
             CPX_ZP -> CpxZp(computer)
-            SBC_ZP -> SbcZp(computer)
             INX -> Inx(computer)
-            SBC_IMM -> SbcImmediate(computer)
             NOP -> Nop(computer)
             CPX_ABS -> CpxAbsolute(computer)
-//            0xed -> SbcAbsolute(computer)
 //            0xee -> IncAbsolute(computer)
             BEQ -> Beq(computer)
-//            0xf1 -> SbcIndirectY(computer)
-//            0xf5 -> SbcZpX(computer)
 //            0xf7 -> IncZpX(computer)
             SED -> Sed(computer)
-//            0xf9 -> SbcAbsoluteY(computer)
-//            0xfd -> SbcAbsoluteX(computer)
-//            0xfe -> IncAbsoluteX(computer)
 
             DEC_ZP -> DecZp(computer)
             DEC_ZP_X -> DecZpX(computer)
@@ -197,6 +188,15 @@ data class Cpu(var A: Int = 0, var X: Int = 0, var Y: Int = 0, var PC: Int = 0xf
             ORA_IND_Y -> OraIndY(computer)
             ORA_ABS_X-> OraAbsoluteX(computer)
             ORA_ABS_Y -> OraAbsoluteY(computer)
+
+            SBC_IMM -> SbcImmediate(computer)
+            SBC_ZP -> SbcZp(computer)
+            SBC_ZP_X -> SbcZpX(computer)
+            SBC_ABS -> SbcAbsolute(computer)
+            SBC_ABS_X -> SbcAbsoluteX(computer)
+            SBC_ABS_Y -> SbcAbsoluteY(computer)
+            SBC_IND_X -> SbcIndX(computer)
+            SBC_IND_Y -> SbcIndY(computer)
 
             BIT_ZP -> BitZp(computer)
             BIT_ABS -> BitAbsolute(computer)
@@ -1099,44 +1099,12 @@ class CpxZp(c: Computer): InstructionBase(c) {
     override fun toString() = "CPX $${operand.h()}"
 }
 
-/** 0xe5, SBC $10 */
-class SbcZp(c: Computer): AddBase(c) {
-    override val opCode = 0xe5
-    override val size = 2
-    override val timing = 3
-    override fun run() {
-        if (cpu.P.D) {
-            TODO("Decimal mode not implemented")
-        } else {
-            // Call ADC with the one complement of the operand
-            cpu.A = adc(cpu.A, memory[operand].inv())
-        }
-    }
-    override fun toString(): String = "SBC $${operand.h()}"
-}
-
 /** 0xe8, INX */
 class Inx(c: Computer): RegisterInstruction(c, 0xe8, "INX") {
     override fun run() {
         cpu.X = (cpu.X + 1).and(0xff)
         cpu.P.setNZFlags(cpu.X)
     }
-}
-
-/** 0xe9, SBC #$10 */
-class SbcImmediate(c: Computer): AddBase(c) {
-    override val opCode = SBC_IMM
-    override val size = 2
-    override val timing = 2
-    override fun run() {
-        if (cpu.P.D) {
-            TODO("Decimal mode not implemented")
-        } else {
-            // Call ADC with the one complement of the operand
-            cpu.A = adc(cpu.A, operand.inv())
-        }
-    }
-    override fun toString(): String = "SBC #$${operand.h()}"
 }
 
 /** 0xea, NOP */
