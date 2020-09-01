@@ -71,7 +71,7 @@ data class Cpu(var A: Int = 0, var X: Int = 0, var Y: Int = 0, var PC: Int = 0xf
             JMP -> Jmp(computer)
             PHA -> Pha(computer)
 //            0x4d -> EorAbsolute(computer)
-//            0x4e -> LsrAbsolute(computer)
+            LSR_ABS -> LsrAbsolute(computer)
             BVC -> Bvc(computer)
             EOR_IND_Y -> EorIndirectY(computer)
 //            0x55 -> EorZpX(computer)
@@ -499,6 +499,12 @@ class EorZp(c: Computer): InstructionBase(c) {
 class LsrZp(c: Computer): LsrBase(c, LSR_ZP, 2, 6) {
     override var value by ZpVal()
     override val name = " $${operand.h()}"
+}
+
+/** 0x4e, LSR $1234 */
+class LsrAbsolute(c: Computer): LsrBase(c, LSR_ABS, 3, 7) {
+    override var value by AbsoluteVal()
+    override val name = " $${word.hh()}"
 }
 
 /** 0x49, EOR #$12 */
