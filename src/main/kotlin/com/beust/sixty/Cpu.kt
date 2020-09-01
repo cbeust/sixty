@@ -53,7 +53,7 @@ data class Cpu(var A: Int = 0, var X: Int = 0, var Y: Int = 0, var PC: Int = 0xf
             ROL -> Rol(computer)
             BIT_ABS -> BitAbsolute(computer)
             AND_ABS -> AndAbsolute(computer)
-//            0x2e -> RolAbsolute(computer)
+            ROL_ABS -> RolAbsolute(computer)
             BMI -> Bmi(computer)
 //            0x31 -> AndIndirectY(computer)
 //            0x3d -> AndAbsX(computer)
@@ -344,28 +344,6 @@ class AndZp(c: Computer): InstructionBase(c) {
     override fun toString(): String = "AND $${operand.h()}"
 }
 
-abstract class RolBase(c: Computer, override val opCode: Int, override val size: Int, override val timing: Int)
-    : InstructionBase(c)
-{
-    abstract var value: Int
-    abstract val name: String
-
-    override fun run() {
-        val bit7 = if (value.and(1.shl(7)) != 0) 1 else 0
-        val result = value.shl(1).or(cpu.P.C.int())
-        cpu.P.setNZFlags(result)
-        cpu.P.C = bit7.toBoolean()
-        value = result
-    }
-    override fun toString(): String = "ROL${name}"
-}
-
-/** 0x26, ROL $12 */
-class RolZp(c: Computer): RolBase(c, ROL_ZP, 2, 5) {
-    override var value by ZpVal()
-    override val name = " $${operand}"
-}
-
 /** 0x28, PLP */
 class Plp(c: Computer): StackInstruction(c, PLP, "PLP") {
     override val timing = 4
@@ -384,12 +362,6 @@ class And(c: Computer): InstructionBase(c) {
         cpu.P.setNZFlags(cpu.A)
     }
     override fun toString(): String = "AND #$${operand.h()}"
-}
-
-/** 0x2A, ROL */
-class Rol(c: Computer): RolBase(c, ROL, 1, 2) {
-    override var value by RegisterAVal()
-    override val name = ""
 }
 
 /** 0x2c, BIT $1234 */
