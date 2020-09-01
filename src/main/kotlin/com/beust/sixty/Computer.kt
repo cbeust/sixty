@@ -32,7 +32,10 @@ class Computer(val cpu: Cpu = Cpu(memory = Memory()), val memory: Memory,
                 done = true
             } else {
                 val inst = cpu.nextInstruction(this)
-                        ?: TODO("Instruction not implemented: " + cpu.memory[cpu.PC].h() + " cycles: $cycles")
+                if (inst == null) {
+                    val s = cpu.PC.hh()
+                    TODO("$s: " + cpu.memory[cpu.PC].h() + " cycles: $cycles")
+                }
                 if (cpu.PC == 0x9cf) {
                     println(this)
                     println("Breakpoint")
@@ -44,7 +47,7 @@ class Computer(val cpu: Cpu = Cpu(memory = Memory()), val memory: Memory,
                 if (cpu.PC == previousPC) cpu.PC += inst.size
 
                 if (previousPc == cpu.PC) {
-                    // Current functional tests highest score: 40996
+                    // Current functional tests highest score: 41793
                     println(this)
                     println("Forever loop after $cycles cycles")
                     println("")

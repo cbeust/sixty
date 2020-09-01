@@ -57,7 +57,7 @@ data class Cpu(var A: Int = 0, var X: Int = 0, var Y: Int = 0, var PC: Int = 0xf
             ORA_ZP -> OraZp(computer)
 //            0x06 -> AslZp(computer)
             0x08 -> Php(computer)
-//            0x09 -> OraImm(computer)
+            ORA_IMM -> OraImm(computer)
             0x0a -> Asl(computer)
 //            0x0d -> OraAbsolute(computer)
 //            0x0e -> AslAbsolute(computer)
@@ -161,7 +161,7 @@ data class Cpu(var A: Int = 0, var X: Int = 0, var Y: Int = 0, var PC: Int = 0xf
 //            0xb4 -> LdyZpX(computer)
 //            0xb5 -> LdaZpX(computer)
 //            0xb6 -> LdxZpY(computer)
-//            0xb8 -> Clv(computer)
+            CLV -> Clv(computer)
 //            0xb9 -> LdaAbsoluteY(computer)
             0xba -> Tsx(computer)
 //            0xbc -> LdyAbsoluteX(computer)
@@ -289,6 +289,19 @@ class Php(c: Computer): StackInstruction(c, PHP, "PHP") {
         cpu.P.reserved = true
         cpu.SP.pushByte(cpu.P.toByte())
     }
+}
+
+/** 0x98, ORA #$12 */
+class OraImm(c: Computer): InstructionBase(c) {
+    override val opCode = ORA_IMM
+    override val size = 2
+    override val timing = 2
+    override fun run() {
+        val result = cpu.A.or(operand)
+        cpu.P.setNZFlags(result)
+        cpu.A = result
+    }
+    override fun toString(): String = "ORA #$${operand.h()}"
 }
 
 /** 0x0a, ASL */
@@ -875,6 +888,11 @@ class LdaAbsolute(c: Computer): InstructionBase(c) {
 
 /** 0xb0, BCS */
 class Bcs(computer: Computer): BranchBase(computer, 0xb0, "BCS", { computer.cpu.P.C })
+
+/** 0xb8, CLV */
+class Clv(c: Computer): FlagInstruction(c, CLV, "CLV") {
+    override fun run() { cpu.P.V = false }
+}
 
 /** 0xba, TSX */
 class Tsx(c: Computer): StackInstruction(c, 0xba, "TSX") {
