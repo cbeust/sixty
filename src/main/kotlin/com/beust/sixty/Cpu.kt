@@ -183,7 +183,7 @@ data class Cpu(var A: Int = 0, var X: Int = 0, var Y: Int = 0, var PC: Int = 0xf
 //            0xd5 -> CmpZpX(computer)
 //            0xd6 -> DecZpX(computer)
             0xd8 -> Cld(computer)
-//            0xd9 -> CmpAbsY(computer)
+            0xd9 -> CmpAbsoluteY(computer)
 //            0xdd -> CmpAbsX(computer)
 //            0xde -> DecAbsX(computer)
             CPX_IMM -> CpxImm(computer)
@@ -424,7 +424,8 @@ class AndAbsolute(c: Computer): InstructionBase(c) {
 /** 0x30, BMI */
 class Bmi(computer: Computer): BranchBase(computer, 0x30, "BMI", { computer.cpu.P.N })
 
-abstract class CmpImmBase(c: Computer, val name: String): InstructionBase(c) {
+abstract class CmpImmBase(c: Computer, private val name: String, private val immediate: String = "#",
+        private val suffix: String = ""): InstructionBase(c) {
     override val size = 2
     override val timing = 2
 
@@ -439,7 +440,7 @@ abstract class CmpImmBase(c: Computer, val name: String): InstructionBase(c) {
         cpu.P.N = (tmp and 0x80) != 0
     }
 
-    override fun toString(): String = "$name #$$argName"
+    override fun toString(): String = "$name ${immediate}$$argName"
 }
 
 /** 0x38, SEC */
@@ -973,6 +974,22 @@ class Bne(computer: Computer): BranchBase(computer, 0xd0, "BNE", { !computer.cpu
 class Cld(c: Computer): FlagInstruction(c, 0xd8, "CLD") {
     override fun run() { cpu.P.D = false }
 }
+
+/** 0xd9, CMP $1234,Y */
+class CmpAbsoluteY(c: Computer): InstructionBase(c) {
+    override val opCode = CMP_ABS_Y
+    override val size = 3
+    override var timing = 4 // variable
+    override fun run() {
+        val value: Int = memory[word + cpu.Y].and(0xff)
+        cpu.P.C = cpu.A >= value
+        cpu.P.Z = value == 0
+        cpu.P.N = (value and 0x80) != 0
+        timing += pageCrossed(cpu.PC, word + cpu.Y)
+    }
+    override fun toString(): String = "CMP $${word.hh()},Y"
+}
+
 
 /** 0xe0, CPX #$12 */
 class CpxImm(c: Computer): CmpImmBase(c, "CPX") {
