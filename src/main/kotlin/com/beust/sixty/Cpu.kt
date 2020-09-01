@@ -60,7 +60,7 @@ data class Cpu(var A: Int = 0, var X: Int = 0, var Y: Int = 0, var PC: Int = 0xf
             ORA_IMM -> OraImm(computer)
             ASL -> Asl(computer)
 //            0x0d -> OraAbsolute(computer)
-//            0x0e -> AslAbsolute(computer)
+            ASL_ABS -> AslAbsolute(computer)
             BPL -> Bpl(computer)
 //            0x11 -> OraIndirectY(computer)
 //            0x15 -> OraZpX(computer)
@@ -286,7 +286,7 @@ class OraZp(c: Computer): InstructionBase(c) {
 class AslZp(c: Computer): AslBase(c, ASL_ZP, 2, 5) {
     override var value: Int
         get() = memory[operand]
-        set(f) { memory[operand] = value }
+        set(f) { memory[operand] = f }
     override val name = " $${operand.h()}"
 }
 
@@ -332,8 +332,16 @@ abstract class AslBase(c: Computer, override val opCode: Int, override val size:
 class Asl(c: Computer): AslBase(c, ASL, 1, 2) {
     override var value: Int
         get() = cpu.A
-        set(f) { cpu.A = value }
+        set(f) { cpu.A = f }
     override val name = ""
+}
+
+/** 0x0e, ASL $1234 */
+class AslAbsolute(c: Computer): AslBase(c, ASL_ABS, 3, 6) {
+    override var value: Int
+        get() = memory[word]
+        set(f) { memory[word] = f }
+    override val name = " $${word.hh()}"
 }
 
 /** 0x10, BPL */
