@@ -76,6 +76,9 @@ const val EOR_IND_X = 0x41
 const val EOR_IND_Y = 0x51
 
 const val INC_ZP = 0xe6
+const val INC_ZP_X = 0xf6
+const val INC_ABS = 0xee
+const val INC_ABS_X = 0xfe
 
 const val JMP = 0x4c
 const val JMP_IND = 0x6c

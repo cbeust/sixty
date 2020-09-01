@@ -170,7 +170,6 @@ data class Cpu(var A: Int = 0, var X: Int = 0, var Y: Int = 0, var PC: Int = 0xf
 //            0xe1 -> SbcIndirectX(computer)
             CPX_ZP -> CpxZp(computer)
             SBC_ZP -> SbcZp(computer)
-            INC_ZP -> IncZp(computer)
             INX -> Inx(computer)
             SBC_IMM -> SbcImmediate(computer)
             NOP -> Nop(computer)
@@ -190,6 +189,11 @@ data class Cpu(var A: Int = 0, var X: Int = 0, var Y: Int = 0, var PC: Int = 0xf
             DEC_ZP_X -> DecZpX(computer)
             DEC_ABS -> DecAbsolute(computer)
             DEC_ABS_X -> DecAbsoluteX(computer)
+
+            INC_ZP -> IncZp(computer)
+            INC_ZP_X -> IncZpX(computer)
+            INC_ABS -> IncAbsolute(computer)
+            INC_ABS_X -> IncAbsoluteX(computer)
 
             else -> {
                 if (noThrows) {
@@ -1049,14 +1053,6 @@ class LdxAbsoluteY(c: Computer): InstructionBase(c) {
     override fun toString(): String = "LDX $${word.hh()},Y"
 }
 
-abstract class IncBase(c: Computer, override val opCode: Int): InstructionBase(c) {
-    protected fun calculate(oldValue: Int): Int {
-        val result = (oldValue + 1).and(0xff)
-        cpu.P.setNZFlags(result)
-        return result
-    }
-}
-
 /** 0xc8, INY */
 class Iny(c: Computer): RegisterInstruction(c, 0xc8, "INY") {
     override fun run() {
@@ -1197,16 +1193,6 @@ class SbcZp(c: Computer): AddBase(c) {
         }
     }
     override fun toString(): String = "SBC $${operand.h()}"
-}
-
-/** 0xe6, INC $10 */
-class IncZp(c: Computer): IncBase(c, 0xe6) {
-    override val size = 2
-    override val timing = 4
-    override fun run() {
-        memory[operand] = calculate(memory[operand])
-    }
-    override fun toString(): String = "INC $${operand.h()}"
 }
 
 /** 0xe8, INX */
