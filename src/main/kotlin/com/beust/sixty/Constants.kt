@@ -122,6 +122,8 @@ const val STA_IND_X = 0x81
 const val STA_IND_Y = 0x91
 
 const val STX_ZP = 0x86
+const val STX_ZP_Y = 0x96
+const val STX_ABS = 0x83
 
 const val TXS = 0x9a
 const val TSX = 0xba
