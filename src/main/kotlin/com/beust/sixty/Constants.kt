@@ -132,6 +132,9 @@ const val PLP = 0x28
 
 const val LDX_IMM = 0xa2
 const val LDX_ZP = 0xa6
+const val LDX_ZP_Y = 0xb6
+const val LDX_ABS = 0xae
+const val LDX_ABS_Y = 0xbe
 
 const val SBC_IMM = 0xe9
 const val SBC_ZP = 0xe5

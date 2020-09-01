@@ -166,7 +166,7 @@ data class Cpu(var A: Int = 0, var X: Int = 0, var Y: Int = 0, var PC: Int = 0xf
             0xba -> Tsx(computer)
 //            0xbc -> LdyAbsoluteX(computer)
             LDA_ABS_X -> LdaAbsoluteX(computer)
-//            0xbe -> LdxAbsoluteY(computer)
+            LDX_ABS_Y -> LdxAbsoluteY(computer)
             0xc0 -> CpyImm(computer)
 //            0xc1 -> CmpIndirectX(computer)
 //            0xc4 -> CpyZp(computer)
@@ -223,12 +223,12 @@ data class Cpu(var A: Int = 0, var X: Int = 0, var Y: Int = 0, var PC: Int = 0xf
 
     companion object {
         // NMI vector
-        const val NMI_VECTOR_L = 0xfffa
-        const val NMI_VECTOR_H = 0xfffb
-
-        // Reset vector
-        const val RST_VECTOR_L = 0xfffc
-        const val RST_VECTOR_H = 0xfffd
+//        const val NMI_VECTOR_L = 0xfffa
+//        const val NMI_VECTOR_H = 0xfffb
+//
+//        // Reset vector
+//        const val RST_VECTOR_L = 0xfffc
+//        const val RST_VECTOR_H = 0xfffd
 
         // IRQ vector
         const val IRQ_VECTOR_L = 0xfffe
@@ -249,7 +249,7 @@ abstract class InstructionBase(val computer: Computer): Instruction {
 
 /** 0x00, BRK */
 class Brk(c: Computer): InstructionBase(c) {
-    fun handleInterrupt(brk: Boolean, vectorHigh: Int, vectorLow: Int) {
+    private fun handleInterrupt(brk: Boolean, vectorHigh: Int, vectorLow: Int) {
         cpu.SP.pushWord(cpu.PC + 1)
         cpu.SP.pushByte(cpu.P.toByte())
         cpu.P.I = true
@@ -424,8 +424,9 @@ class AndAbsolute(c: Computer): InstructionBase(c) {
 /** 0x30, BMI */
 class Bmi(computer: Computer): BranchBase(computer, 0x30, "BMI", { computer.cpu.P.N })
 
-abstract class CmpImmBase(c: Computer, private val name: String, private val immediate: String = "#",
-        private val suffix: String = ""): InstructionBase(c) {
+abstract class CmpImmBase(c: Computer, private val name: String, private val immediate: String = "#")
+    : InstructionBase(c)
+{
     override val size = 2
     override val timing = 2
 
@@ -783,7 +784,7 @@ class CpyImm(c: Computer): CmpImmBase(c, "CPY") {
     override val opCode = 0xc0
     override val value = operand
     override val register get() = computer.cpu.Y
-    override val argName = "${operand.h()}"
+    override val argName = operand.h()
 }
 
 /** 0xc9, CMP $#12 */
@@ -791,7 +792,7 @@ class CmpImm(c: Computer): CmpImmBase(c, "CMP") {
     override val opCode = 0xc9
     override val value = operand
     override val register get() = computer.cpu.A
-    override val argName = "${operand.h()}"
+    override val argName = operand.h()
 }
 
 /** 0xcd, CMP $1234 */
@@ -935,6 +936,19 @@ class LdaAbsoluteX(c: Computer): InstructionBase(c) {
         cpu.P.setNZFlags(cpu.A)
     }
     override fun toString(): String = "LDA $${word.hh()},X"
+}
+
+/** 0xbe, LDX $1234,Y */
+class LdxAbsoluteY(c: Computer): InstructionBase(c) {
+    override val opCode = LDX_ABS_Y
+    override val size = 3
+    override var timing = 4 // variable
+    override fun run() {
+        cpu.X = memory[word + cpu.Y]
+        timing += pageCrossed(word, word + cpu.Y)
+        cpu.P.setNZFlags(cpu.X)
+    }
+    override fun toString(): String = "LDX $${word.hh()},Y"
 }
 
 abstract class IncBase(c: Computer, override val opCode: Int): InstructionBase(c) {
