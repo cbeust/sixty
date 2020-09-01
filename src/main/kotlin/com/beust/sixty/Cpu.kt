@@ -75,6 +75,7 @@ data class Cpu(var A: Int = 0, var X: Int = 0, var Y: Int = 0, var PC: Int = 0xf
             BVC -> Bvc(computer)
             EOR_IND_Y -> EorIndirectY(computer)
 //            0x55 -> EorZpX(computer)
+            LSR_ZP_X -> LsrZpX(computer)
 //            0x65 -> LsrZpX(computer)
             CLI -> Cli(computer)
 //            0x59 -> EorAbsY(computer)
@@ -444,18 +445,6 @@ class EorZp(c: Computer): InstructionBase(c) {
     override fun toString(): String = "EOR $${operand.h()}"
 }
 
-/** 0x46, LSR $12 */
-class LsrZp(c: Computer): LsrBase(c, LSR_ZP, 2, 6) {
-    override var value by ZpVal()
-    override val name = " $${operand.h()}"
-}
-
-/** 0x4e, LSR $1234 */
-class LsrAbsolute(c: Computer): LsrBase(c, LSR_ABS, 3, 7) {
-    override var value by AbsoluteVal()
-    override val name = " $${word.hh()}"
-}
-
 /** 0x49, EOR #$12 */
 class EorImm(c: Computer): InstructionBase(c) {
     override val opCode = 0x49
@@ -467,27 +456,6 @@ class EorImm(c: Computer): InstructionBase(c) {
         cpu.A = result
     }
     override fun toString(): String = "EOR #$${operand.h()}"
-}
-
-abstract class LsrBase(c: Computer, override val opCode: Int, override val size: Int, override val timing: Int)
-    : InstructionBase(c)
-{
-    abstract var value: Int
-    abstract val name: String
-
-    override fun run() {
-        cpu.P.C = value.and(1.shl(7)).shr(7).toBoolean()
-        val result = value.shr(1)
-        cpu.P.setNZFlags(result)
-        value = result
-    }
-    override fun toString(): String = "LSR${name}"
-}
-
-/** 0x4a, LSR */
-class Lsr(c: Computer): LsrBase(c, LSR, 1, 2) {
-    override var value by RegisterAVal()
-    override val name = ""
 }
 
 /** 0x48, PHA */
