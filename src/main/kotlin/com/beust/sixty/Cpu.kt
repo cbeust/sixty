@@ -220,22 +220,22 @@ abstract class InstructionBase(val computer: Computer): Instruction {
     val operand by lazy { memory[pc + 1] }
     val word by lazy { memory[pc + 2].shl(8).or(memory[pc + 1]) }
 
-    inner class AbsoluteVal {
+    inner class ValAbsolute {
         operator fun getValue(thisRef: Any?, property: KProperty<*>) = memory[word]
         operator fun setValue(thisRef: Any?, property: KProperty<*>, value: Int) { memory[word] = value }
     }
 
-    inner class ZpVal {
+    inner class ValZp {
         operator fun getValue(thisRef: Any?, property: KProperty<*>) = memory[operand]
         operator fun setValue(thisRef: Any?, property: KProperty<*>, value: Int) { memory[operand] = value }
     }
 
-    inner class ZpXVal {
+    inner class ValZpX {
         operator fun getValue(thisRef: Any?, property: KProperty<*>) = memory[operand + cpu.X]
         operator fun setValue(thisRef: Any?, property: KProperty<*>, value: Int) { memory[operand + cpu.X] = value }
     }
 
-    inner class RegisterAVal {
+    inner class ValRegisterA {
         operator fun getValue(thisRef: Any?, property: KProperty<*>) = cpu.A
         operator fun setValue(thisRef: Any?, property: KProperty<*>, value: Int) { cpu.A = value }
     }

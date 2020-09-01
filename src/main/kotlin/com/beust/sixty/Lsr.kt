@@ -17,7 +17,7 @@ abstract class LsrBase(c: Computer, override val opCode: Int, override val size:
 
 /** 0x46, LSR $12 */
 class LsrZp(c: Computer): LsrBase(c, LSR_ZP, 2, 6) {
-    override var value by ZpVal()
+    override var value by ValZp()
     override val name = nameZp()
 }
 
@@ -29,13 +29,13 @@ class Lsr(c: Computer): LsrBase(c, LSR, 1, 2) {
 
 /** 0x4e, LSR $1234 */
 class LsrAbsolute(c: Computer): LsrBase(c, LSR_ABS, 3, 7) {
-    override var value by AbsoluteVal()
+    override var value by ValAbsolute()
     override val name = nameAbs()
 }
 
 /** 0x56, LSR $12,X */
 class LsrZpX(c: Computer): LsrBase(c, LSR_ZP_X, 2, 6) {
-    override var value by ZpXVal()
+    override var value by ValZpX()
     override val name = nameZpX()
 }
 

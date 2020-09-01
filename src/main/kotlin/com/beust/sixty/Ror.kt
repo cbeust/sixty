@@ -18,7 +18,7 @@ abstract class RorBase(c: Computer, override val opCode: Int, override val size:
 
 /** 0x66, ROR $12 */
 class RorZp(c: Computer): RorBase(c, ROR_ZP, 2, 5) {
-    override var value by ZpVal()
+    override var value by ValZp()
     override val name = nameZp()
 }
 
@@ -30,6 +30,6 @@ class Ror(c: Computer): RorBase(c, ROR, 1, 2) {
 
 /** 0x6e, ROR $1234 */
 class RorAbsolute(c: Computer): RorBase(c, ROR_ABS, 3, 6) {
-    override var value by AbsoluteVal()
+    override var value by ValAbsolute()
     override val name = nameAbs()
 }
