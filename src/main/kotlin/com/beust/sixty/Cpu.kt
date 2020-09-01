@@ -160,7 +160,7 @@ data class Cpu(var A: Int = 0, var X: Int = 0, var Y: Int = 0, var PC: Int = 0xf
 //            0xb1 -> LdaIndirectY(computer)
 //            0xb4 -> LdyZpX(computer)
 //            0xb5 -> LdaZpX(computer)
-//            0xb6 -> LdxZpY(computer)
+            LDA_ZP_Y -> LdaZpY(computer)
             CLV -> Clv(computer)
 //            0xb9 -> LdaAbsoluteY(computer)
             0xba -> Tsx(computer)
@@ -798,10 +798,11 @@ class Txs(c: Computer): StackInstruction(c, 0x9a, "TXS") {
     override fun run() { cpu.SP.S = cpu.X }
 }
 
-abstract class ZpBase(c: Computer, override val opCode: Int, val name: String): InstructionBase(c) {
+abstract class ZpBase(c: Computer, override val opCode: Int, private val name: String,
+        private val suffix: String = "") : InstructionBase(c) {
     override val size = 2
     override val timing = 3
-    override fun toString(): String = "$name $" + operand.h()
+    override fun toString(): String = "$name $" + operand.h() + suffix
 }
 
 /** 0xa4, LDY $10 */
@@ -888,6 +889,14 @@ class LdaAbsolute(c: Computer): InstructionBase(c) {
 
 /** 0xb0, BCS */
 class Bcs(computer: Computer): BranchBase(computer, 0xb0, "BCS", { computer.cpu.P.C })
+
+/** 0xb6, LDA $12,Y */
+class LdaZpY(c: Computer): ZpBase(c, 0xa5, "LDA", ",Y") {
+    override fun run() {
+        cpu.A = memory[operand + cpu.Y]
+        cpu.P.setNZFlags(cpu.A)
+    }
+}
 
 /** 0xb8, CLV */
 class Clv(c: Computer): FlagInstruction(c, CLV, "CLV") {

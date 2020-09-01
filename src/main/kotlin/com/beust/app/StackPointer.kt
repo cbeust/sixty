@@ -2,6 +2,7 @@ package com.beust.app
 
 import com.beust.sixty.Memory
 import com.beust.sixty.h
+import kotlin.math.max
 
 /**
  * Implements the 6502 stack: in memory 0x100-0x1ff, starting at 0xff and decreasing.
@@ -33,7 +34,7 @@ class StackPointer(private val memory: Memory) {
 
     override fun toString(): String {
         val result = StringBuffer("{$${S.h()} stack:[")
-        (0xff downTo S + 1).forEach {
+        (0xff downTo max(S + 1, 0xf0)).forEach {
             val ad = address + it
             result.append("$${ad.h()}:$" + memory[ad].h())
             result.append(" ")
