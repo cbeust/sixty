@@ -57,24 +57,16 @@ data class Cpu(var A: Int = 0, var X: Int = 0, var Y: Int = 0, var PC: Int = 0xf
             ROL_ABS_X -> RolAbsoluteX(computer)
             ROL_ZP_X -> RolZpX(computer)
             RTI -> Rti(computer)
-//            0x41 -> EorIndirectX(computer)
-            EOR_ZP -> EorZp(computer)
             LSR_ZP -> LsrZp(computer)
-            EOR_IMM -> EorImm(computer)
             LSR -> Lsr(computer)
             JMP -> Jmp(computer)
             PHA -> Pha(computer)
-//            0x4d -> EorAbsolute(computer)
             LSR_ABS -> LsrAbsolute(computer)
             BVC -> Bvc(computer)
-            EOR_IND_Y -> EorIndirectY(computer)
-//            0x55 -> EorZpX(computer)
             LSR_ABS_X -> LsrAbsoluteX(computer)
             LSR_ZP_X -> LsrZpX(computer)
 //            0x65 -> LsrZpX(computer)
             CLI -> Cli(computer)
-//            0x59 -> EorAbsY(computer)
-//            0x5d -> EorAbsX(computer)
 //            0x5e -> LsrAbsoluteX(computer)
             RTS -> Rts(computer)
 //            0x61 -> AdcIndirectX(computer)
@@ -194,6 +186,15 @@ data class Cpu(var A: Int = 0, var X: Int = 0, var Y: Int = 0, var PC: Int = 0xf
             AND_ABS_Y -> AndAbsoluteY(computer)
             AND_IND_X -> AndIndX(computer)
             AND_IND_Y -> AndIndY(computer)
+
+            EOR_IMM -> EorImmediate(computer)
+            EOR_ZP -> EorZp(computer)
+            EOR_ZP_X -> EorZpX(computer)
+            EOR_ABS -> EorAbsolute(computer)
+            EOR_IND_X -> EorIndX(computer)
+            EOR_IND_Y -> EorIndY(computer)
+            EOR_ABS_X -> EorAbsoluteX(computer)
+            EOR_ABS_Y -> EorAbsoluteY(computer)
 
             BIT_ZP -> BitZp(computer)
             BIT_ABS -> BitAbsolute(computer)
@@ -447,57 +448,14 @@ class Rti(c: Computer): InstructionBase(c) {
     override fun toString(): String = "RTI"
 }
 
-/** 0x45, EOR $12 */
-class EorZp(c: Computer): InstructionBase(c) {
-    override val opCode = EOR_ZP
-    override val size = 2
-    override val timing = 3
-    override fun run() {
-        cpu.A = cpu.A.xor(memory[operand])
-        cpu.P.setNZFlags(cpu.A)
-    }
-    override fun toString(): String = "EOR $${operand.h()}"
-}
-
-/** 0x49, EOR #$12 */
-class EorImm(c: Computer): InstructionBase(c) {
-    override val opCode = 0x49
-    override val size = 2
-    override val timing = 2
-    override fun run() {
-        val result = cpu.A.xor(operand)
-        cpu.P.setNZFlags(result)
-        cpu.A = result
-    }
-    override fun toString(): String = "EOR #$${operand.h()}"
-}
-
 /** 0x48, PHA */
 class Pha(c: Computer): StackInstruction(c, 0x48, "PHA") {
     override val timing = 3
-    override fun run() {
-        cpu.SP.pushByte(cpu.A.toByte())
-    }
+    override fun run() = cpu.SP.pushByte(cpu.A.toByte())
 }
 
 /** 0x50, BVC */
 class Bvc(computer: Computer): BranchBase(computer, 0x50, "BVC", { !computer.cpu.P.V })
-
-
-/** 0x51, EOR ($12),Y */
-class EorIndirectY(c: Computer): InstructionBase(c) {
-    override val opCode = EOR_IND_Y
-    override val size = 2
-    override var timing = 5  // variable timing
-    override fun run() {
-        val targetAddress = indirectY(operand)
-        val new = cpu.A.xor(memory[targetAddress])
-        cpu.P.setNZFlags(new)
-        timing += pageCrossed(cpu.PC, targetAddress)
-        cpu.A = new
-    }
-    override fun toString(): String = "EOR ($${operand.h()}), Y"
-}
 
 /** 0x58, CLI */
 class Cli(c: Computer): FlagInstruction(c, 0x58, "CLI") {
