@@ -195,7 +195,7 @@ data class Cpu(var A: Int = 0, var X: Int = 0, var Y: Int = 0, var PC: Int = 0xf
             INX -> Inx(computer)
             SBC_IMM -> SbcImmediate(computer)
             NOP -> Nop(computer)
-//            0xec -> CpxAbsolute(computer)
+            CPX_ABS -> CpxAbsolute(computer)
 //            0xed -> SbcAbsolute(computer)
 //            0xee -> IncAbsolute(computer)
             BEQ -> Beq(computer)
@@ -1211,6 +1211,20 @@ class Nop(c: Computer): InstructionBase(c) {
     override val timing = 2
     override fun run() { }
     override fun toString(): String = "NOP"
+}
+
+/** 0xec, CPX $1234 */
+class CpxAbsolute(c: Computer): InstructionBase(c) {
+    override val opCode = CPX_ABS
+    override val size = 3
+    override val timing = 4
+    override fun run() {
+        val tmp: Int = (cpu.X - memory[word]) and 0xff
+        cpu.P.C = cpu.X >= memory[word]
+        cpu.P.Z = tmp == 0
+        cpu.P.N = (tmp and 0x80) != 0
+    }
+    override fun toString() = "CPX $${word.h()}"
 }
 
 /** 0xf0, BEQ */
