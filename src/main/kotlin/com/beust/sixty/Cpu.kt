@@ -143,7 +143,7 @@ data class Cpu(var A: Int = 0, var X: Int = 0, var Y: Int = 0, var PC: Int = 0xf
             0x98 -> Tya(computer)
             0x99 -> StaAbsoluteY(computer)
             0x9a -> Txs(computer)
-//            0x9d -> StaAbsoluteX(computer)
+            STA_ABS_X -> StaAbsoluteX(computer)
             0xa0 -> LdyImm(computer)
 //            0xa1 -> LdaIndirectX(computer)
             0xa2 -> LdxImm(computer)
@@ -866,6 +866,15 @@ abstract class LdImmBase(c: Computer, override val opCode: Int, val name: String
     override val size = 2
     override val timing = 2
     override fun toString(): String = "$name #$" + operand.h()
+}
+
+/** 0x9d, STA $1234,X */
+class StaAbsoluteX(c: Computer): InstructionBase(c) {
+    override val opCode = STA_ABS_X
+    override val size = 3
+    override val timing = 5
+    override fun run() { memory[word + cpu.X] = cpu.A }
+    override fun toString(): String = "STA $${word.hh()},X"
 }
 
 /** 0xa0, LDY #$10 */
