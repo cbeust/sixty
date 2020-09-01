@@ -77,6 +77,7 @@ data class Cpu(var A: Int = 0, var X: Int = 0, var Y: Int = 0, var PC: Int = 0xf
             BVC -> Bvc(computer)
             EOR_IND_Y -> EorIndirectY(computer)
 //            0x55 -> EorZpX(computer)
+            LSR_ABS_X -> LsrAbsoluteX(computer)
             LSR_ZP_X -> LsrZpX(computer)
 //            0x65 -> LsrZpX(computer)
             CLI -> Cli(computer)
