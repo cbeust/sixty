@@ -180,7 +180,7 @@ data class Cpu(var A: Int = 0, var X: Int = 0, var Y: Int = 0, var PC: Int = 0xf
             CPY_ABS -> CpyAbsolute(computer)
 //            0xce -> DecAbsolute(computer)
             BNE -> Bne(computer)
-//            0xd1 -> CmpIndirectY(computer)
+            CMP_IND_Y -> CmpIndY(computer)
             CMP_ZP_X-> CmpZpX(computer)
 //            0xd6 -> DecZpX(computer)
             CLD -> Cld(computer)
@@ -1116,6 +1116,22 @@ class CpyAbsolute(c: Computer): InstructionBase(c) {
 
 /** 0xd0, BNE */
 class Bne(computer: Computer): BranchBase(computer, 0xd0, "BNE", { !computer.cpu.P.Z })
+
+/** 0xd1, CMP $(12),Y */
+class CmpIndY(c: Computer): InstructionBase(c) {
+    override val opCode = CMP_IND_Y
+    override val size = 2
+    override var timing = 5 // variable
+    override fun run() {
+        val value = memory[memory[operand] + cpu.Y]
+        val tmp: Int = (cpu.A - value) and 0xff
+        cpu.P.C = cpu.A >= value
+        cpu.P.Z = tmp == 0
+        cpu.P.N = (tmp and 0x80) != 0
+        timing += pageCrossed(cpu.PC, word + value)
+    }
+    override fun toString() = "CMP $(${operand.h()}),Y"
+}
 
 /** 0xd5, CMP $12,Y */
 class CmpZpX(c: Computer): InstructionBase(c) {
