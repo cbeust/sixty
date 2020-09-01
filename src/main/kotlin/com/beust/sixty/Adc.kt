@@ -8,7 +8,21 @@ abstract class AdcBase(c: Computer, override val opCode: Int, override val size:
 
     override fun run() {
         if (cpu.P.D) {
-            TODO("Decimal mode not supported")
+            var l: Int
+            var h: Int
+            var result: Int
+            l = (cpu.A and 0x0f) + (operand and 0x0f) + cpu.P.C.int()
+            if (l and 0xff > 9) l += 6
+            h = (cpu.A shr 4) + (operand shr 4) + if (l > 15) 1 else 0
+            if (h and 0xff > 9) h += 6
+            result = l and 0x0f or (h shl 4)
+            result = result and 0xff
+            cpu.P.C = h > 15
+            cpu.P.Z = result == 0
+            cpu.P.V = false // BCD never sets overflow flag
+            cpu.P.N = result and 0x80 != 0 // N Flag is valid on CMOS 6502/65816
+
+            cpu.A = result
         } else {
             add(value)
         }
