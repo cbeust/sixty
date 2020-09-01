@@ -10,7 +10,7 @@ import com.beust.app.StackPointer
  * http://www.6502.org/tutorials/6502opcodes.html
  */
 interface ICpu {
-    fun nextInstruction(computer: Computer, noThrows: Boolean = false): Instruction
+    fun nextInstruction(computer: Computer, noThrows: Boolean = false): Instruction?
     fun clone(): Cpu
 }
 
@@ -49,7 +49,7 @@ data class Cpu(var A: Int = 0, var X: Int = 0, var Y: Int = 0, var PC: Int = 0xf
         SP = StackPointer(memory)
     }
     override fun clone() = Cpu(A, X, Y, PC, memory.clone(), P)
-    override fun nextInstruction(computer: Computer, noThrows: Boolean): Instruction {
+    override fun nextInstruction(computer: Computer, noThrows: Boolean): InstructionBase? {
         val op = computer.memory[PC] and 0xff
         val result = when(op) {
             0x00 -> Brk(computer)
@@ -209,7 +209,7 @@ data class Cpu(var A: Int = 0, var X: Int = 0, var Y: Int = 0, var PC: Int = 0xf
                 if (noThrows) {
                     Unknown(computer, op)
                 } else {
-                    TODO("NOT IMPLEMENTED: ${PC.h()}: ${op.h()}")
+                    null
                 }
             }
         }
@@ -710,7 +710,7 @@ open class BranchBase(c: Computer, override val opCode: Int, val name: String, v
     override fun run() {
         if (condition()) {
             val old = cpu.PC
-            cpu.PC += operand.toByte()
+            cpu.PC += operand.toByte() + size
             timing++
             timing += pageCrossed(old, cpu.PC)
         }  // needs to be signed here
@@ -1022,6 +1022,6 @@ class Unknown(c: Computer, override val opCode: Int): InstructionBase(c) {
 fun main() {
     val memory = Memory(0xa9, 0x23)
     val computer = Computer(memory = memory)
-    computer.cpu.nextInstruction(computer).run()
+    computer.cpu.nextInstruction(computer)!!.run()
 //    println(computer.cpu)
 }

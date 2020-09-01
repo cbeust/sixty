@@ -32,16 +32,19 @@ class Computer(val cpu: Cpu = Cpu(memory = Memory()), val memory: Memory,
                 done = true
             } else {
                 val inst = cpu.nextInstruction(this)
+                        ?: TODO("Instruction not implemented: " + cpu.memory[cpu.PC].h() + " cycles: $cycles")
                 if (cpu.PC == 0x9cf) {
                     println(this)
                     println("Breakpoint")
                 }
                 if (DEBUG_ASM) disassemble(cpu, inst, print = true)
-                cpu.PC += inst.size
+                val previousPC = cpu.PC
                 inst.run()
+                // If the instruction modified the PC (e.g. JSR, JMP, BRK, RTS, RTI), don't change it
+                if (cpu.PC == previousPC) cpu.PC += inst.size
 
                 if (previousPc == cpu.PC) {
-                    // Current functional tests highest score: 40960
+                    // Current functional tests highest score: 40996
                     println(this)
                     println("Forever loop after $cycles cycles")
                     println("")
@@ -70,7 +73,7 @@ class Computer(val cpu: Cpu = Cpu(memory = Memory()), val memory: Memory,
             var n = length
             while (! done) {
                 val p = memory[pc]
-                val inst = cpu.nextInstruction(this, noThrows = true)
+                val inst = cpu.nextInstruction(this, noThrows = true)!!
                 result.add(disassemble(cpu, inst, print))
                 cpu.PC += inst.size
                 pc += inst.size
