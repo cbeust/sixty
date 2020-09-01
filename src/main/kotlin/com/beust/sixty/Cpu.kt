@@ -1137,7 +1137,7 @@ class CmpIndY(c: Computer): InstructionBase(c) {
     override val size = 2
     override var timing = 5 // variable
     override fun run() {
-        val value = memory[memory[operand] + cpu.Y]
+        val value = memory[indirectY(operand)]
         val tmp: Int = (cpu.A - value) and 0xff
         cpu.P.C = cpu.A >= value
         cpu.P.Z = tmp == 0
