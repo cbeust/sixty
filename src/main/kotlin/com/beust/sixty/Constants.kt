@@ -80,6 +80,12 @@ const val LDA_ABS_Y = 0xb9
 const val LDA_IND_X = 0xa1
 const val LDA_IND_Y = 0xb1
 
+const val LDX_IMM = 0xa2
+const val LDX_ZP = 0xa6
+const val LDX_ZP_Y = 0xb6
+const val LDX_ABS = 0xae
+const val LDX_ABS_Y = 0xbe
+
 const val LDY_IMM = 0xa0
 const val LDY_ZP = 0xa4
 const val LDY_ZP_X = 0xb4
@@ -139,12 +145,6 @@ const val PHA = 0x48
 const val PLA = 0x68
 const val PHP = 0x08
 const val PLP = 0x28
-
-const val LDX_IMM = 0xa2
-const val LDX_ZP = 0xa6
-const val LDX_ZP_Y = 0xb6
-const val LDX_ABS = 0xae
-const val LDX_ABS_Y = 0xbe
 
 const val SBC_IMM = 0xe9
 const val SBC_ZP = 0xe5
