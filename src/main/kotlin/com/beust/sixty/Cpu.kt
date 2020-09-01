@@ -171,7 +171,7 @@ data class Cpu(var A: Int = 0, var X: Int = 0, var Y: Int = 0, var PC: Int = 0xf
             CPY_IMM -> CpyImm(computer)
 //            0xc1 -> CmpIndirectX(computer)
 //            0xc4 -> CpyZp(computer)
-//            0xc5 -> CmpZp(computer)
+            CMP_ZP -> CmpZp(computer)
 //            0xc6 -> DecZp(computer)
             INY -> Iny(computer)
             CMP_IMM -> CmpImm(computer)
@@ -802,6 +802,22 @@ class CpyImm(c: Computer): CmpImmBase(c, "CPY") {
     override val value = operand
     override val register get() = computer.cpu.Y
     override val argName = operand.h()
+}
+
+/** 0xc5, CMP $12 */
+class CmpZp(c: Computer): InstructionBase(c) {
+    override val opCode = CMP_ZP
+    override val size = 2
+    override val timing = 3
+
+    override fun run() {
+        val value = memory[operand]
+        val tmp: Int = (cpu.A - value) and 0xff
+        cpu.P.C = cpu.A >= value
+        cpu.P.Z = tmp == 0
+        cpu.P.N = (tmp and 0x80) != 0
+    }
+    override fun toString() = "CMP $${operand}"
 }
 
 /** 0xc9, CMP $#12 */
