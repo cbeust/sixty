@@ -189,7 +189,7 @@ data class Cpu(var A: Int = 0, var X: Int = 0, var Y: Int = 0, var PC: Int = 0xf
 //            0xde -> DecAbsX(computer)
             CPX_IMM -> CpxImm(computer)
 //            0xe1 -> SbcIndirectX(computer)
-//            0xe4 -> CpxZp(computer)
+            CPX_ZP -> CpxZp(computer)
             SBC_ZP -> SbcZp(computer)
             INC_ZP -> IncZp(computer)
             INX -> Inx(computer)
@@ -1138,6 +1138,20 @@ class CpxImm(c: Computer): CmpImmBase(c, "CPX") {
     override val value = operand
     override val register get() = computer.cpu.X
     override val argName = "${operand.h()}"
+}
+
+/** 0xe4, CPX $12 */
+class CpxZp(c: Computer): InstructionBase(c) {
+    override val opCode = CPX_ZP
+    override val size = 2
+    override val timing = 3
+    override fun run() {
+        val tmp: Int = (cpu.X - memory[operand]) and 0xff
+        cpu.P.C = cpu.X >= memory[operand]
+        cpu.P.Z = tmp == 0
+        cpu.P.N = (tmp and 0x80) != 0
+    }
+    override fun toString() = "CPX $${operand.h()}"
 }
 
 /** 0xe5, SBC $10 */
