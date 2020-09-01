@@ -39,7 +39,7 @@ data class Cpu(var A: Int = 0, var X: Int = 0, var Y: Int = 0, var PC: Int = 0xf
 //            0x11 -> OraIndirectY(computer)
 //            0x15 -> OraZpX(computer)
 //            0x1e -> AslAbsoluteX(computer)
-//            0x16 -> AslZpX(computer)
+            ASL_ZP_X -> AslZpX(computer)
             CLC -> Clc(computer)
 //            0x19 -> OraAbsoluteY(computer)
 //            0x1d -> OraAbsoluteX(computer)
@@ -221,22 +221,25 @@ abstract class InstructionBase(val computer: Computer): Instruction {
     inner class AbsoluteVal {
         operator fun getValue(thisRef: Any?, property: KProperty<*>) = memory[word]
         operator fun setValue(thisRef: Any?, property: KProperty<*>, value: Int) { memory[word] = value }
-        override fun toString() = "$${word.hh()}"
     }
 
     inner class ZpVal {
         operator fun getValue(thisRef: Any?, property: KProperty<*>) = memory[operand]
         operator fun setValue(thisRef: Any?, property: KProperty<*>, value: Int) { memory[operand] = value }
-        override fun toString() = "$${operand.h()}"
+    }
+
+    inner class ZpXVal {
+        operator fun getValue(thisRef: Any?, property: KProperty<*>) = memory[operand + cpu.X]
+        operator fun setValue(thisRef: Any?, property: KProperty<*>, value: Int) { memory[operand + cpu.X] = value }
     }
 
     inner class RegisterAVal {
         operator fun getValue(thisRef: Any?, property: KProperty<*>) = cpu.A
         operator fun setValue(thisRef: Any?, property: KProperty<*>, value: Int) { cpu.A = value }
-        override fun toString() = ""
     }
 
     protected fun nameZp() = " $${operand.h()}"
+    protected fun nameZpX() = nameZp() + ",X"
     protected fun nameAbs() = " $${word.hh()}"
     protected fun nameA() = ""
 

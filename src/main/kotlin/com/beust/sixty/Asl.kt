@@ -33,3 +33,8 @@ class AslZp(c: Computer): AslBase(c, ASL_ZP, 2, 5) {
     override val name = nameZp()
 }
 
+/** 0x16, ASL $12,X */
+class AslZpX(c: Computer): AslBase(c, ASL_ZP_X, 2, 6) {
+    override var value by ZpXVal()
+    override val name = nameZpX()
+}
