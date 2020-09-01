@@ -159,7 +159,7 @@ data class Cpu(var A: Int = 0, var X: Int = 0, var Y: Int = 0, var PC: Int = 0xf
             BCS -> Bcs(computer)
 //            0xb1 -> LdaIndirectY(computer)
             LDY_ZP_X -> LdyZpX(computer)
-//            0xb5 -> LdaZpX(computer)
+            LDA_ZP_X -> LdaZpX(computer)
             LDX_ZP_Y -> LdxZpY(computer)
             LDA_ABS_Y -> LdaAbsoluteY(computer)
             CLV -> Clv(computer)
@@ -929,11 +929,19 @@ class LdaAbsolute(c: Computer): InstructionBase(c) {
 /** 0xb0, BCS */
 class Bcs(computer: Computer): BranchBase(computer, 0xb0, "BCS", { computer.cpu.P.C })
 
-/** 0xb4, LDY $12,YX*/
+/** 0xb4, LDY $12,X */
 class LdyZpX(c: Computer): ZpBase(c, LDY_ZP_X, "LDY", ",X") {
     override fun run() {
         cpu.Y = memory[operand + cpu.X]
         cpu.P.setNZFlags(cpu.Y)
+    }
+}
+
+/** 0xb5, LDA $12,X */
+class LdaZpX(c: Computer): ZpBase(c, LDA_ZP_X, "LDA", ",X") {
+    override fun run() {
+        cpu.A = memory[operand + cpu.X]
+        cpu.P.setNZFlags(cpu.A)
     }
 }
 
