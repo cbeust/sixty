@@ -185,6 +185,12 @@ data class Cpu(var A: Int = 0, var X: Int = 0, var Y: Int = 0, var PC: Int = 0xf
 //            0xf9 -> SbcAbsoluteY(computer)
 //            0xfd -> SbcAbsoluteX(computer)
 //            0xfe -> IncAbsoluteX(computer)
+
+            DEC_ZP -> DecZp(computer)
+            DEC_ZP_X -> DecZpX(computer)
+            DEC_ABS -> DecAbsolute(computer)
+            DEC_ABS_X -> DecAbsoluteX(computer)
+
             else -> {
                 if (noThrows) {
                     Unknown(computer, op)

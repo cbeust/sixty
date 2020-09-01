@@ -61,6 +61,11 @@ const val CPY_IMM = 0xc0
 const val CPY_ZP = 0xc4
 const val CPY_ABS = 0xcc
 
+const val DEC_ZP = 0xc6
+const val DEC_ZP_X = 0xd6
+const val DEC_ABS = 0xce
+const val DEC_ABS_X = 0xde
+
 const val EOR_IMM = 0x49
 const val EOR_ZP = 0x45
 const val EOR_ZP_X = 0x55
