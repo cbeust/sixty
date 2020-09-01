@@ -17,7 +17,7 @@ abstract class AslBase(c: Computer, override val opCode: Int, override val size:
 
 /** 0x0a, ASL */
 class Asl(c: Computer): AslBase(c, ASL, 1, 2) {
-    override var value by RegisterAVal()
+    override var value by ValRegisterA()
     override val name = nameA()
 }
 

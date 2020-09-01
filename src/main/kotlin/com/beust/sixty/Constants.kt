@@ -127,7 +127,7 @@ const val ROL_ABS_X = 0x3e
 
 const val ROR = 0x6a
 const val ROR_ZP = 0x66
-const val ROR_XP_Z = 0x76
+const val ROR_ZP_X = 0x76
 const val ROR_ABS = 0x6e
 const val ROR_ABS_X = 0x7e
 

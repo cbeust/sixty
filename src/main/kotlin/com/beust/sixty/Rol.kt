@@ -24,7 +24,7 @@ class RolZp(c: Computer): RolBase(c, ROL_ZP, 2, 5) {
 
 /** 0x2A, ROL */
 class Rol(c: Computer): RolBase(c, ROL, 1, 2) {
-    override var value by RegisterAVal()
+    override var value by ValRegisterA()
     override val name = nameA()
 }
 

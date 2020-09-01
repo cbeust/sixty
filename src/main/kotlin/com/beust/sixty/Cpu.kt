@@ -97,10 +97,10 @@ data class Cpu(var A: Int = 0, var X: Int = 0, var Y: Int = 0, var PC: Int = 0xf
 //            0x71 -> AdcIndirectY(computer)
 //            0x??75 -> AdcZpX(computer)
 //            0x??75 -> AdcAbsoluteX(computer)
-//            0x76 -> RorZpX(computer)
+            ROR_ZP_X -> RorZpX(computer)
             SEI -> Sei(computer)
 //            0x79 -> AdcAbsoluteY(computer)
-//            0x74 -> RorAbsoluteX(computer)
+            ROR_ABS_X -> RorAbsoluteX(computer)
             STA_IND_X -> StaIndirectX(computer)
             LDA_IND_Y -> LdaIndirectY(computer)
             STY_ZP -> StyZp(computer)
@@ -225,6 +225,11 @@ abstract class InstructionBase(val computer: Computer): Instruction {
         operator fun setValue(thisRef: Any?, property: KProperty<*>, value: Int) { memory[word] = value }
     }
 
+    inner class ValAbsoluteX {
+        operator fun getValue(thisRef: Any?, property: KProperty<*>) = memory[word + cpu.X]
+        operator fun setValue(thisRef: Any?, property: KProperty<*>, value: Int) { memory[word + cpu.X] = value }
+    }
+
     inner class ValZp {
         operator fun getValue(thisRef: Any?, property: KProperty<*>) = memory[operand]
         operator fun setValue(thisRef: Any?, property: KProperty<*>, value: Int) { memory[operand] = value }
@@ -243,6 +248,7 @@ abstract class InstructionBase(val computer: Computer): Instruction {
     protected fun nameZp() = " $${operand.h()}"
     protected fun nameZpX() = nameZp() + ",X"
     protected fun nameAbs() = " $${word.hh()}"
+    protected fun nameAbsX() = nameZp() + ",X"
     protected fun nameA() = ""
 
     protected fun indirectX(address: Int): Int = memory[address + cpu.X]

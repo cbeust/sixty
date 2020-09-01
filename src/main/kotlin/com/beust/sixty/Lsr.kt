@@ -23,7 +23,7 @@ class LsrZp(c: Computer): LsrBase(c, LSR_ZP, 2, 6) {
 
 /** 0x4a, LSR */
 class Lsr(c: Computer): LsrBase(c, LSR, 1, 2) {
-    override var value by RegisterAVal()
+    override var value by ValRegisterA()
     override val name = nameA()
 }
 
