@@ -13,19 +13,31 @@ interface MemoryListener {
     fun onWrite(location: Int, value: Int)
 }
 
+interface PcListener {
+    fun onPcChanged(newValue: Int)
+}
+
 class Computer(val cpu: Cpu = Cpu(memory = Memory()), val memory: Memory,
         memoryListener: MemoryListener? = null,
-        memoryInterceptor: MemoryInterceptor? = null) {
+        memoryInterceptor: MemoryInterceptor? = null,
+        var pcListener: PcListener? = null
+) {
     init {
         memory.listener = memoryListener
         memory.interceptor = memoryInterceptor
+    }
+
+    private var stop: Boolean = false
+
+    fun stop() {
+        stop = true
     }
 
     fun run() {
         var cycles = 0
         var done = false
         var previousPc = 0
-        while (! done) {
+        while (! done && ! stop) {
             cycles++
 
             if (memory[cpu.PC] == 0x60 && cpu.SP.isEmpty()) {
@@ -60,7 +72,9 @@ class Computer(val cpu: Cpu = Cpu(memory = Memory()), val memory: Memory,
                     memory.listener?.lastMemDebug = null
                 }
             }
+            pcListener?.onPcChanged(cpu.PC)
         }
+        println("Computer stopping after $cycles cycles")
     }
 
     fun clone(): Computer {

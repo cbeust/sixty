@@ -11,10 +11,12 @@ fun functionalTestComputer(): Computer {
     val functionalTestCpu = Cpu(memory = functionalTestMemory)
     val result = Computer(memory = functionalTestMemory, cpu = functionalTestCpu,
             memoryListener = DebugMemoryListener).apply {
-//        disassemble(0x400, 20)
-//        (0x100..0x1ff).forEach {
-//            memory[it] = 0xff
-//        }
+        pcListener = object: PcListener {
+            override fun onPcChanged(newValue: Int) {
+                if (newValue == 0x346c) stop()
+            }
+
+        }
         cpu.PC = 0x400
     }
     return result

@@ -11,20 +11,19 @@ import kotlin.reflect.KProperty
  * https://en.wikipedia.org/wiki/MOS_Technology_6502
  * http://www.6502.org/tutorials/6502opcodes.html
  */
-interface ICpu {
-    fun nextInstruction(computer: Computer, noThrows: Boolean = false): Instruction?
-    fun clone(): Cpu
-}
 
 data class Cpu(var A: Int = 0, var X: Int = 0, var Y: Int = 0, var PC: Int = 0xffff,
-        val memory: Memory, val P: StatusFlags = StatusFlags()) : ICpu
+        val memory: Memory, val P: StatusFlags = StatusFlags())
 {
     val SP: StackPointer
+
     init {
         SP = StackPointer(memory)
     }
-    override fun clone() = Cpu(A, X, Y, PC, memory.clone(), P)
-    override fun nextInstruction(computer: Computer, noThrows: Boolean): InstructionBase? {
+
+    fun clone() = Cpu(A, X, Y, PC, memory.clone(), P)
+
+    fun nextInstruction(computer: Computer, noThrows: Boolean = false): InstructionBase? {
         val op = computer.memory[PC] and 0xff
         val result = when(op) {
             0x00 -> Brk(computer)
