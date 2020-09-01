@@ -153,9 +153,9 @@ data class Cpu(var A: Int = 0, var X: Int = 0, var Y: Int = 0, var PC: Int = 0xf
             TAY -> Tay(computer)
             LDA_IMM -> LdaImm(computer)
             TAX -> Tax(computer)
-//            0xac -> LdyAbsolute(computer)
+            LDY_ABS -> LdyAbsolute(computer)
             LDA_ABS -> LdaAbsolute(computer)
-//            0xae -> LdxAbsolute(computer)
+            LDX_ABS -> LdXAbsolute(computer)
             BCS -> Bcs(computer)
 //            0xb1 -> LdaIndirectY(computer)
             LDY_ZP_X -> LdyZpX(computer)
@@ -915,15 +915,34 @@ class Tax(c: Computer): RegisterInstruction(c, 0xaa, "TAX") {
 }
 
 /** 0xad, LDA $1234 */
-class LdaAbsolute(c: Computer): InstructionBase(c) {
-    override val opCode = 0xad
+abstract class LdAbsoluteBase(c: Computer, override val opCode: Int, private val name: String): InstructionBase(c) {
     override val size = 3
     override val timing = 4
+    override fun toString(): String = "$name $${word.hh()}"
+}
+
+/** 0xac, LDY $1234 */
+class LdyAbsolute(c: Computer): LdAbsoluteBase(c, LDY_ABS, "LDY") {
+    override fun run() {
+        cpu.Y = memory[word]
+        cpu.P.setNZFlags(cpu.Y)
+    }
+}
+
+/** 0xad, LDA $1234 */
+class LdaAbsolute(c: Computer): LdAbsoluteBase(c, LDA_ABS, "LDA") {
     override fun run() {
         cpu.A = memory[word]
         cpu.P.setNZFlags(cpu.A)
     }
-    override fun toString(): String = "LDA $${word.hh()}"
+}
+
+/** 0xae, LDX $1234 */
+class LdXAbsolute(c: Computer): LdAbsoluteBase(c, LDX_ABS, "LDX") {
+    override fun run() {
+        cpu.X = memory[word]
+        cpu.P.setNZFlags(cpu.X)
+    }
 }
 
 /** 0xb0, BCS */
