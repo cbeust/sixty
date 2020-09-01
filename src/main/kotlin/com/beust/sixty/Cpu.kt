@@ -45,24 +45,15 @@ data class Cpu(var A: Int = 0, var X: Int = 0, var Y: Int = 0, var PC: Int = 0xf
 //            0x1d -> OraAbsoluteX(computer)
             ASL_ABS_X -> AslAbsoluteX(computer)
             JSR -> Jsr(computer)
-//            0x21 -> AndIndirectX(computer)
 //            0x24 -> BitZp(computer)
-            AND_ZP -> AndZp(computer)
             ROL_ZP -> RolZp(computer)
             PLP -> Plp(computer)
-            AND_IMM -> And(computer)
             ROL -> Rol(computer)
-            BIT_ABS -> BitAbsolute(computer)
-            AND_ABS -> AndAbsolute(computer)
             ROL_ABS -> RolAbsolute(computer)
             BMI -> Bmi(computer)
-//            0x31 -> AndIndirectY(computer)
-//            0x3d -> AndAbsX(computer)
 //            0x34 -> RolAbsoluteX(computer)
-//            0x35 -> AndZpX(computer)
 //            0x36 -> RolZpX(computer)
             SEC -> Sec(computer)
-//            0x39 -> AndAboluteY(computer)
             ROL_ABS_X -> RolAbsoluteX(computer)
             ROL_ZP_X -> RolZpX(computer)
             RTI -> Rti(computer)
@@ -195,6 +186,18 @@ data class Cpu(var A: Int = 0, var X: Int = 0, var Y: Int = 0, var PC: Int = 0xf
             INC_ABS -> IncAbsolute(computer)
             INC_ABS_X -> IncAbsoluteX(computer)
 
+            AND_IMM -> And(computer)
+            AND_ZP -> AndZp(computer)
+            AND_ZP_X -> AndZpX(computer)
+            AND_ABS -> AndAbsolute(computer)
+            AND_ABS_X -> AndAbsoluteX(computer)
+            AND_ABS_Y -> AndAbsoluteY(computer)
+            AND_IND_X -> AndIndX(computer)
+            AND_IND_Y -> AndIndY(computer)
+
+            BIT_ZP -> BitZp(computer)
+            BIT_ABS -> BitAbsolute(computer)
+
             else -> {
                 if (noThrows) {
                     Unknown(computer, op)
@@ -233,6 +236,11 @@ abstract class InstructionBase(val computer: Computer): Instruction {
     val operand by lazy { memory[pc + 1] }
     val word by lazy { memory[pc + 2].shl(8).or(memory[pc + 1]) }
 
+    inner class ValImmediate {
+        operator fun getValue(thisRef: Any?, property: KProperty<*>) = operand
+        operator fun setValue(thisRef: Any?, property: KProperty<*>, value: Int) { TODO("Should never happen") }
+    }
+
     inner class ValAbsolute {
         operator fun getValue(thisRef: Any?, property: KProperty<*>) = memory[word]
         operator fun setValue(thisRef: Any?, property: KProperty<*>, value: Int) { memory[word] = value }
@@ -241,6 +249,25 @@ abstract class InstructionBase(val computer: Computer): Instruction {
     inner class ValAbsoluteX {
         operator fun getValue(thisRef: Any?, property: KProperty<*>) = memory[word + cpu.X]
         operator fun setValue(thisRef: Any?, property: KProperty<*>, value: Int) { memory[word + cpu.X] = value }
+    }
+
+    inner class ValAbsoluteY {
+        operator fun getValue(thisRef: Any?, property: KProperty<*>) = memory[word + cpu.Y]
+        operator fun setValue(thisRef: Any?, property: KProperty<*>, value: Int) { memory[word + cpu.Y] = value }
+    }
+
+    inner class ValIndirectX {
+        operator fun getValue(thisRef: Any?, property: KProperty<*>) = memory[memory[operand + cpu.X]]
+        operator fun setValue(thisRef: Any?, property: KProperty<*>, value: Int) {
+            memory[memory[operand + cpu.X]] = value
+        }
+    }
+
+    inner class ValIndirectY{
+        operator fun getValue(thisRef: Any?, property: KProperty<*>) = memory[memory[operand] + cpu.Y]
+        operator fun setValue(thisRef: Any?, property: KProperty<*>, value: Int) {
+            memory[memory[operand] + cpu.Y] = value
+        }
     }
 
     inner class ValZp {
@@ -258,11 +285,15 @@ abstract class InstructionBase(val computer: Computer): Instruction {
         operator fun setValue(thisRef: Any?, property: KProperty<*>, value: Int) { cpu.A = value }
     }
 
+    protected fun nameImmediate() = " $${operand.h()}"
     protected fun nameZp() = " $${operand.h()}"
     protected fun nameZpX() = nameZp() + ",X"
     protected fun nameAbs() = " $${word.hh()}"
     protected fun nameAbsX() = nameAbs() + ",X"
+    protected fun nameAbsY() = nameAbs() + ",Y"
     protected fun nameA() = ""
+    protected fun nameIndirectX() = "($${operand.h()},X)"
+    protected fun nameIndirectY() = "($${operand.h()}),Y"
 
     protected fun indirectX(address: Int): Int = memory[address + cpu.X]
     protected fun indirectY(address: Int): Int = memory[address] + cpu.Y
@@ -356,18 +387,6 @@ class Jsr(c: Computer): InstructionBase(c) {
     override fun toString(): String = "JSR $${word.hh()}"
 }
 
-/** 0x25, AND $34 */
-class AndZp(c: Computer): InstructionBase(c) {
-    override val opCode = AND_ZP
-    override val size = 2
-    override val timing = 3
-    override fun run() {
-        cpu.A = cpu.A.and(memory[operand])
-        cpu.P.setNZFlags(cpu.A)
-    }
-    override fun toString(): String = "AND $${operand.h()}"
-}
-
 /** 0x28, PLP */
 class Plp(c: Computer): StackInstruction(c, PLP, "PLP") {
     override val timing = 4
@@ -386,31 +405,6 @@ class And(c: Computer): InstructionBase(c) {
         cpu.P.setNZFlags(cpu.A)
     }
     override fun toString(): String = "AND #$${operand.h()}"
-}
-
-/** 0x2c, BIT $1234 */
-class BitAbsolute(c: Computer): InstructionBase(c) {
-    override val opCode = BIT_ABS
-    override val size = 3
-    override val timing = 4
-    override fun run() {
-        val value = cpu.A.and(memory[word])
-        cpu.P.setNZFlags(value)
-        cpu.P.V = if (value.and(1.shl(6)) != 0) true else false
-    }
-    override fun toString(): String = "BIT $${word.hh()}"
-}
-
-/** 0x2d, AND $1234 */
-class AndAbsolute(c: Computer): InstructionBase(c) {
-    override val opCode = AND_ABS
-    override val size = 3
-    override val timing = 4
-    override fun run() {
-        cpu.A = cpu.A.and(memory[word])
-        cpu.P.setNZFlags(cpu.A)
-    }
-    override fun toString(): String = "AND $${word.hh()}"
 }
 
 /** 0x30, BMI */
