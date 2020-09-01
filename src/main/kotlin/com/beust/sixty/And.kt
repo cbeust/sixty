@@ -13,7 +13,7 @@ abstract class AndBase(c: Computer, override val opCode: Int, override val size:
 }
 
 /** 0x29, AND #$12 */
-class AndImmediate(c: Computer): AndBase(c, AND_ZP, 2, 2) {
+class AndImmediate(c: Computer): AndBase(c, AND_IMM, 2, 2) {
     override var value by ValImmediate()
     override val name = nameImmediate()
 }

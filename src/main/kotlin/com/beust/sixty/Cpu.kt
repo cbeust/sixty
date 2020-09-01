@@ -61,23 +61,15 @@ data class Cpu(var A: Int = 0, var X: Int = 0, var Y: Int = 0, var PC: Int = 0xf
             CLI -> Cli(computer)
 //            0x5e -> LsrAbsoluteX(computer)
             RTS -> Rts(computer)
-//            0x61 -> AdcIndirectX(computer)
-            ADC_ZP -> AdcZp(computer)
             ROR_ZP -> RorZp(computer)
             PLA -> Pla(computer)
-            ADC_IMM -> AdcImm(computer)
             JMP_IND -> JmpIndirect(computer)
-//            0x65 -> AdcAbsolute(computer)
 //            0x66 -> RorZp(computer)
             ROR -> Ror(computer)
             ROR_ABS -> RorAbsolute(computer)
             BVS -> Bvs(computer)
-//            0x71 -> AdcIndirectY(computer)
-//            0x??75 -> AdcZpX(computer)
-//            0x??75 -> AdcAbsoluteX(computer)
             ROR_ZP_X -> RorZpX(computer)
             SEI -> Sei(computer)
-//            0x79 -> AdcAbsoluteY(computer)
             ROR_ABS_X -> RorAbsoluteX(computer)
             STA_IND_X -> StaIndirectX(computer)
             LDA_IND_Y -> LdaIndirectY(computer)
@@ -170,7 +162,7 @@ data class Cpu(var A: Int = 0, var X: Int = 0, var Y: Int = 0, var PC: Int = 0xf
             INC_ABS -> IncAbsolute(computer)
             INC_ABS_X -> IncAbsoluteX(computer)
 
-            AND_IMM -> And(computer)
+            AND_IMM -> AndImmediate(computer)
             AND_ZP -> AndZp(computer)
             AND_ZP_X -> AndZpX(computer)
             AND_ABS -> AndAbsolute(computer)
@@ -178,6 +170,15 @@ data class Cpu(var A: Int = 0, var X: Int = 0, var Y: Int = 0, var PC: Int = 0xf
             AND_ABS_Y -> AndAbsoluteY(computer)
             AND_IND_X -> AndIndX(computer)
             AND_IND_Y -> AndIndY(computer)
+
+            ADC_IMM -> AdcImm(computer)
+            ADC_ZP -> AdcZp(computer)
+            ADC_ZP_X -> AdcZpX(computer)
+            ADC_ABS -> AdcAbsolute(computer)
+            ADC_ABS_X -> AdcAbsoluteX(computer)
+            ADC_ABS_Y-> AdcAbsoluteY(computer)
+            ADC_IND_X -> AdcIndX(computer)
+            ADC_IND_Y -> AdcIndY(computer)
 
             EOR_IMM -> EorImmediate(computer)
             EOR_ZP -> EorZp(computer)
@@ -384,18 +385,6 @@ class Plp(c: Computer): StackInstruction(c, PLP, "PLP") {
     }
 }
 
-/** 0x29, AND #$34 */
-class And(c: Computer): InstructionBase(c) {
-    override val opCode = AND_IMM
-    override val size = 2
-    override val timing = 2
-    override fun run() {
-        cpu.A = cpu.A.and(operand)
-        cpu.P.setNZFlags(cpu.A)
-    }
-    override fun toString(): String = "AND #$${operand.h()}"
-}
-
 /** 0x30, BMI */
 class Bmi(computer: Computer): BranchBase(computer, 0x30, "BMI", { computer.cpu.P.N })
 
@@ -471,15 +460,6 @@ class Rts(c: Computer): InstructionBase(c) {
         computer.cpu.PC = cpu.SP.popWord() + 1
     }
     override fun toString(): String = "RTS"
-}
-
-/** 0x65, ADC $12 */
-class AdcZp(c: Computer): AddBase(c) {
-    override val opCode = ADC_ZP
-    override val size = 2
-    override val timing = 3
-    override fun run() { cpu.A = adc(cpu.A, memory[operand]) }
-    override fun toString(): String = "ADC ${operand.h()}"
 }
 
 /** 0x68, PLA */
