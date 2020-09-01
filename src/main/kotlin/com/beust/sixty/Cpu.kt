@@ -62,6 +62,7 @@ data class Cpu(var A: Int = 0, var X: Int = 0, var Y: Int = 0, var PC: Int = 0xf
             SEC -> Sec(computer)
 //            0x39 -> AndAboluteY(computer)
 //            0x34 -> RolAbsoluteX(computer)
+            ROL_ZP_X -> RolZpX(computer)
             RTI -> Rti(computer)
 //            0x41 -> EorIndirectX(computer)
             EOR_ZP -> EorZp(computer)

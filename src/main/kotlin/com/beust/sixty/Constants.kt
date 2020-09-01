@@ -121,7 +121,7 @@ const val NOP = 0xea
 
 const val ROL = 0x2a
 const val ROL_ZP = 0x26
-const val ROL_XP_Z = 0x36
+const val ROL_ZP_X = 0x36
 const val ROL_ABS = 0x2e
 const val ROL_ABS_X = 0x3e
 
