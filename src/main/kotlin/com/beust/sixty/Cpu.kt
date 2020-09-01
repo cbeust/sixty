@@ -27,22 +27,14 @@ data class Cpu(var A: Int = 0, var X: Int = 0, var Y: Int = 0, var PC: Int = 0xf
         val op = computer.memory[PC] and 0xff
         val result = when(op) {
             0x00 -> Brk(computer)
-//            ORA_IND_Y -> OraIndirectX(computer)
-            ORA_ZP -> OraZp(computer)
             ASL_ZP -> AslZp(computer)
             PHP -> Php(computer)
-            ORA_IMM -> OraImm(computer)
             ASL -> Asl(computer)
-//            0x0d -> OraAbsolute(computer)
             ASL_ABS -> AslAbsolute(computer)
             BPL -> Bpl(computer)
-//            0x11 -> OraIndirectY(computer)
-//            0x15 -> OraZpX(computer)
 //            0x1e -> AslAbsoluteX(computer)
             ASL_ZP_X -> AslZpX(computer)
             CLC -> Clc(computer)
-//            0x19 -> OraAbsoluteY(computer)
-//            0x1d -> OraAbsoluteX(computer)
             ASL_ABS_X -> AslAbsoluteX(computer)
             JSR -> Jsr(computer)
 //            0x24 -> BitZp(computer)
@@ -196,6 +188,15 @@ data class Cpu(var A: Int = 0, var X: Int = 0, var Y: Int = 0, var PC: Int = 0xf
             EOR_ABS_X -> EorAbsoluteX(computer)
             EOR_ABS_Y -> EorAbsoluteY(computer)
 
+            ORA_IMM -> OraImm(computer)
+            ORA_ZP -> OraZp(computer)
+            ORA_ZP_X -> OraZpX(computer)
+            ORA_ABS -> OraAbsolute(computer)
+            ORA_IND_X -> OraIndX(computer)
+            ORA_IND_Y -> OraIndY(computer)
+            ORA_ABS_X-> OraAbsoluteX(computer)
+            ORA_ABS_Y -> OraAbsoluteY(computer)
+
             BIT_ZP -> BitZp(computer)
             BIT_ABS -> BitAbsolute(computer)
 
@@ -319,19 +320,6 @@ class Brk(c: Computer): InstructionBase(c) {
         cpu.P.reserved = true
     }
     override fun toString(): String = "BRK"
-}
-
-/** 0x5, ORA #$12 */
-class OraZp(c: Computer): InstructionBase(c) {
-    override val opCode = ORA_ZP
-    override val size = 2
-    override val timing = 3
-    override fun run() {
-        val result = cpu.A.or(operand)
-        cpu.P.setNZFlags(result)
-        cpu.A = result
-    }
-    override fun toString(): String = "ORA $${operand.h()}"
 }
 
 /** 0x8, PHP */
