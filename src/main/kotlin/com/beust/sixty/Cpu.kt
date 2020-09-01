@@ -137,7 +137,7 @@ data class Cpu(var A: Int = 0, var X: Int = 0, var Y: Int = 0, var PC: Int = 0xf
             TXA -> Txa(computer)
             BCC -> Bcc(computer)
             STA_IND_Y -> StaIndirectY(computer)
-//            0x94 -> StyZpX(computer)
+            STY_ZP_X-> StyZpX(computer)
             STA_ZP_X -> StaZpX(computer)
             STX_ZP_Y -> StxZpY(computer)
             TYA -> Tya(computer)
@@ -750,15 +750,20 @@ class StaIndirectY(c: Computer): InstructionBase(c) {
     override fun toString(): String = "STA ($${operand.toByte().h()}),Y"
 }
 
-/** 0x95, STA $12,X */
-class StaZpX(c: Computer): InstructionBase(c) {
-    override val opCode = 0x95
+abstract class StyZpInd(c: Computer, override val opCode: Int, private val name: String): InstructionBase(c) {
     override val size = 2
     override val timing = 4
-    override fun run() {
-        memory[operand + cpu.X] = cpu.A
-    }
-    override fun toString(): String = "STA $${operand.h()},X"
+    override fun toString(): String = "$name $${operand.h()},X"
+}
+
+/** 0x94, STY $12,X */
+class StyZpX(c: Computer): StyZpInd(c, STY_ZP_X, "STY") {
+    override fun run() { memory[operand + cpu.X] = cpu.Y }
+}
+
+/** 0x95, STA $12,X */
+class StaZpX(c: Computer): StyZpInd(c, STA_ZP_X, "STA") {
+    override fun run() { memory[operand + cpu.X] = cpu.A }
 }
 
 /** 0x96, STX $12,Y */
