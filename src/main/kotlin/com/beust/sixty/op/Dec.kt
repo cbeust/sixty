@@ -1,4 +1,6 @@
-package com.beust.sixty
+package com.beust.sixty.op
+
+import com.beust.sixty.*
 
 abstract class DecBase(c: Computer, override val opCode: Int, override val size: Int, override val timing: Int)
     : InstructionBase(c)

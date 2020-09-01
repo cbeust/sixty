@@ -1,4 +1,9 @@
-package com.beust.sixty
+package com.beust.sixty.op
+
+import com.beust.sixty.BIT_ABS
+import com.beust.sixty.BIT_ZP
+import com.beust.sixty.Computer
+import com.beust.sixty.InstructionBase
 
 abstract class BitBase(c: Computer, override val opCode: Int, override val size: Int, override val timing: Int)
     : InstructionBase(c)

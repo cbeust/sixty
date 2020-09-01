@@ -1,4 +1,8 @@
-package com.beust.sixty
+package com.beust.sixty.op
+
+import com.beust.sixty.Computer
+import com.beust.sixty.InstructionBase
+import com.beust.sixty.int
 
 abstract class AdcSbcBase(c: Computer, override val opCode: Int, override val size: Int, override val timing: Int)
     : InstructionBase(c)
