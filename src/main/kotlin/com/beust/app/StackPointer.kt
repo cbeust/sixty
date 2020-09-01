@@ -34,7 +34,7 @@ class StackPointer(private val memory: Memory) {
 
     override fun toString(): String {
         val result = StringBuffer("{$${S.h()} stack:[")
-        (0xff downTo max(S + 1, 0xf0)).forEach {
+        (0xff downTo max(S + 1, 0xf8)).forEach {
             val ad = address + it
             result.append("$${ad.h()}:$" + memory[ad].h())
             result.append(" ")
