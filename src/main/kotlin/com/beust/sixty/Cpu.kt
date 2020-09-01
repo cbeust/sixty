@@ -43,6 +43,7 @@ data class Cpu(var A: Int = 0, var X: Int = 0, var Y: Int = 0, var PC: Int = 0xf
             CLC -> Clc(computer)
 //            0x19 -> OraAbsoluteY(computer)
 //            0x1d -> OraAbsoluteX(computer)
+            ASL_ABS_X -> AslAbsoluteX(computer)
             JSR -> Jsr(computer)
 //            0x21 -> AndIndirectX(computer)
 //            0x24 -> BitZp(computer)
@@ -248,7 +249,7 @@ abstract class InstructionBase(val computer: Computer): Instruction {
     protected fun nameZp() = " $${operand.h()}"
     protected fun nameZpX() = nameZp() + ",X"
     protected fun nameAbs() = " $${word.hh()}"
-    protected fun nameAbsX() = nameZp() + ",X"
+    protected fun nameAbsX() = nameAbs() + ",X"
     protected fun nameA() = ""
 
     protected fun indirectX(address: Int): Int = memory[address + cpu.X]

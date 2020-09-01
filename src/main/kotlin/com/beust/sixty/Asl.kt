@@ -21,12 +21,6 @@ class Asl(c: Computer): AslBase(c, ASL, 1, 2) {
     override val name = nameA()
 }
 
-/** 0x0e, ASL $1234 */
-class AslAbsolute(c: Computer): AslBase(c, ASL_ABS, 3, 6) {
-    override var value by ValAbsolute()
-    override val name = nameAbs()
-}
-
 /** 0x06, ASL $12 */
 class AslZp(c: Computer): AslBase(c, ASL_ZP, 2, 5) {
     override var value by ValZp()
@@ -37,4 +31,16 @@ class AslZp(c: Computer): AslBase(c, ASL_ZP, 2, 5) {
 class AslZpX(c: Computer): AslBase(c, ASL_ZP_X, 2, 6) {
     override var value by ValZpX()
     override val name = nameZpX()
+}
+
+/** 0x0e, ASL $1234 */
+class AslAbsolute(c: Computer): AslBase(c, ASL_ABS, 3, 6) {
+    override var value by ValAbsolute()
+    override val name = nameAbs()
+}
+
+/** 0x1e, ASL $1234 */
+class AslAbsoluteX(c: Computer): AslBase(c, ASL_ABS_X, 3, 7) {
+    override var value by ValAbsoluteX()
+    override val name = nameAbsX()
 }
