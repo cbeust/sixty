@@ -18,7 +18,11 @@ const val AND_ABS_Y = 0x39
 const val AND_IND_X = 0x21
 const val AND_IND_Y = 0x31
 
-const val ASL = 0x0a
+const val ASL = 0xa
+const val ASL_ZP = 0x06
+const val ASL_ZP_X = 0x16
+const val ASL_ABS = 0xe
+const val ASL_ABS_X = 0x1e
 
 const val BIT_ZP = 0x24
 const val BIT_ABS = 0x2c

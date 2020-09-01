@@ -55,7 +55,7 @@ data class Cpu(var A: Int = 0, var X: Int = 0, var Y: Int = 0, var PC: Int = 0xf
             0x00 -> Brk(computer)
 //            ORA_IND_Y -> OraIndirectX(computer)
             ORA_ZP -> OraZp(computer)
-//            0x06 -> AslZp(computer)
+            ASL_ZP -> AslZp(computer)
             PHP -> Php(computer)
             ORA_IMM -> OraImm(computer)
             ASL -> Asl(computer)
@@ -282,6 +282,14 @@ class OraZp(c: Computer): InstructionBase(c) {
     override fun toString(): String = "ORA $${operand.h()}"
 }
 
+/** 0x06, ASL $12 */
+class AslZp(c: Computer): AslBase(c, ASL_ZP, 2, 5) {
+    override var value: Int
+        get() = memory[operand]
+        set(f) { memory[operand] = value }
+    override val name = " $${operand.h()}"
+}
+
 /** 0x8, PHP */
 class Php(c: Computer): StackInstruction(c, PHP, "PHP") {
     override val timing = 3
@@ -305,18 +313,27 @@ class OraImm(c: Computer): InstructionBase(c) {
     override fun toString(): String = "ORA #$${operand.h()}"
 }
 
-/** 0x0a, ASL */
-class Asl(c: Computer): InstructionBase(c) {
-    override val opCode = 0xa
-    override val size = 1
-    override val timing = 2
+abstract class AslBase(c: Computer, override val opCode: Int, override val size: Int, override val timing: Int)
+    : InstructionBase(c)
+{
+    abstract var value: Int
+    abstract val name: String
+
     override fun run() {
-        cpu.P.C = if (cpu.A.and(0x80) != 0) true else false
-        val newValue = cpu.A.shl(1).and(0xff)
+        cpu.P.C = if (value.and(0x80) != 0) true else false
+        val newValue = value.shl(1).and(0xff)
         cpu.P.setNZFlags(newValue)
-        cpu.A = newValue
+        value = newValue
     }
-    override fun toString(): String = "ASL"
+    override fun toString(): String = "ASL${name}"
+}
+
+/** 0x0a, ASL */
+class Asl(c: Computer): AslBase(c, ASL, 1, 2) {
+    override var value: Int
+        get() = cpu.A
+        set(f) { cpu.A = value }
+    override val name = ""
 }
 
 /** 0x10, BPL */
