@@ -34,7 +34,7 @@ class Computer(val cpu: Cpu = Cpu(memory = Memory()), val memory: Memory,
                 val inst = cpu.nextInstruction(this)
                 if (inst == null) {
                     val s = cpu.PC.hh()
-                    TODO("$s: " + cpu.memory[cpu.PC].h() + " cycles: $cycles")
+                    TODO("$s: $" + cpu.memory[cpu.PC].h() + ", cycles: $cycles")
                 }
                 if (cpu.PC == 0x9cf) {
                     println(this)
@@ -47,7 +47,7 @@ class Computer(val cpu: Cpu = Cpu(memory = Memory()), val memory: Memory,
                 if (cpu.PC == previousPC) cpu.PC += inst.size
 
                 if (previousPc == cpu.PC) {
-                    // Current functional tests highest score: 42152
+                    // Current functional tests highest score: 42265
                     println(this)
                     println("Forever loop after $cycles cycles")
                     println("")

@@ -161,7 +161,7 @@ data class Cpu(var A: Int = 0, var X: Int = 0, var Y: Int = 0, var PC: Int = 0xf
 //            0xb4 -> LdyZpX(computer)
 //            0xb5 -> LdaZpX(computer)
             LDX_ZP_Y -> LdxZpY(computer)
-            LDA_ZP_Y -> LdaZpY(computer)
+            LDA_ABS_Y -> LdaAbsoluteY(computer)
             CLV -> Clv(computer)
 //            0xb9 -> LdaAbsoluteY(computer)
             0xba -> Tsx(computer)
@@ -924,9 +924,12 @@ class LdxZpY(c: Computer): ZpBase(c, LDX_ZP_Y, "LDX", ",Y") {
 }
 
 /** 0xb9, LDA $12,Y */
-class LdaZpY(c: Computer): ZpBase(c, LDA_ZP_Y, "LDA", ",Y") {
+class LdaAbsoluteY(c: Computer): ZpBase(c, LDA_ABS_Y, "LDA", ",Y") {
+    override val size = 3
+    override var timing = 4 // variable
     override fun run() {
-        cpu.A = memory[operand + cpu.Y]
+        cpu.A = memory[word + cpu.Y]
+        timing += pageCrossed(word, word + cpu.Y)
         cpu.P.setNZFlags(cpu.A)
     }
 }
