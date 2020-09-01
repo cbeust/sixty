@@ -221,17 +221,24 @@ abstract class InstructionBase(val computer: Computer): Instruction {
     inner class AbsoluteVal {
         operator fun getValue(thisRef: Any?, property: KProperty<*>) = memory[word]
         operator fun setValue(thisRef: Any?, property: KProperty<*>, value: Int) { memory[word] = value }
+        override fun toString() = "$${word.hh()}"
     }
 
     inner class ZpVal {
         operator fun getValue(thisRef: Any?, property: KProperty<*>) = memory[operand]
         operator fun setValue(thisRef: Any?, property: KProperty<*>, value: Int) { memory[operand] = value }
+        override fun toString() = "$${operand.h()}"
     }
 
     inner class RegisterAVal {
         operator fun getValue(thisRef: Any?, property: KProperty<*>) = cpu.A
         operator fun setValue(thisRef: Any?, property: KProperty<*>, value: Int) { cpu.A = value }
+        override fun toString() = ""
     }
+
+    protected fun nameZp() = " $${operand.h()}"
+    protected fun nameAbs() = " $${word.hh()}"
+    protected fun nameA() = ""
 
     protected fun indirectX(address: Int): Int = memory[address + cpu.X]
     protected fun indirectY(address: Int): Int = memory[address] + cpu.Y
@@ -274,7 +281,7 @@ class OraZp(c: Computer): InstructionBase(c) {
 /** 0x06, ASL $12 */
 class AslZp(c: Computer): AslBase(c, ASL_ZP, 2, 5) {
     override var value by ZpVal()
-    override val name = " $${operand.h()}"
+    override val name = nameZp()
 }
 
 /** 0x8, PHP */
@@ -318,13 +325,13 @@ abstract class AslBase(c: Computer, override val opCode: Int, override val size:
 /** 0x0a, ASL */
 class Asl(c: Computer): AslBase(c, ASL, 1, 2) {
     override var value by RegisterAVal()
-    override val name = ""
+    override val name = nameA()
 }
 
 /** 0x0e, ASL $1234 */
 class AslAbsolute(c: Computer): AslBase(c, ASL_ABS, 3, 6) {
     override var value by AbsoluteVal()
-    override val name = " $${word.hh()}"
+    override val name = nameAbs()
 }
 
 /** 0x10, BPL */
