@@ -185,7 +185,7 @@ data class Cpu(var A: Int = 0, var X: Int = 0, var Y: Int = 0, var PC: Int = 0xf
 //            0xd6 -> DecZpX(computer)
             CLD -> Cld(computer)
             CMP_ABS_Y -> CmpAbsoluteY(computer)
-//            0xdd -> CmpAbsX(computer)
+            CMP_ABS_X -> CmpAbsoluteX(computer)
 //            0xde -> DecAbsX(computer)
             CPX_IMM -> CpxImm(computer)
 //            0xe1 -> SbcIndirectX(computer)
@@ -1029,21 +1029,33 @@ class Cld(c: Computer): FlagInstruction(c, 0xd8, "CLD") {
     override fun run() { cpu.P.D = false }
 }
 
-/** 0xd9, CMP $1234,Y */
-class CmpAbsoluteY(c: Computer): InstructionBase(c) {
-    override val opCode = CMP_ABS_Y
+abstract class CmpAbsoluteInd(c: Computer, override val opCode: Int, private val index: String)
+    : InstructionBase(c)
+{
     override val size = 3
     override var timing = 4 // variable
+
+    abstract fun indValue(): Int
+
     override fun run() {
-        val value: Int = memory[word + cpu.Y].and(0xff)
+        val value: Int = memory[word + indValue()].and(0xff)
         cpu.P.C = cpu.A >= value
         cpu.P.Z = value == 0
         cpu.P.N = (value and 0x80) != 0
-        timing += pageCrossed(cpu.PC, word + cpu.Y)
+        timing += pageCrossed(cpu.PC, word + indValue())
     }
-    override fun toString(): String = "CMP $${word.hh()},Y"
+    override fun toString(): String = "CMP $${word.hh()},$index"
 }
 
+/** 0xd9, CMP $1234,Y */
+class CmpAbsoluteY(c: Computer): CmpAbsoluteInd(c, CMP_ABS_Y, "Y") {
+    override fun indValue() = cpu.Y
+}
+
+/** 0xdd, CMP $1234,X */
+class CmpAbsoluteX(c: Computer): CmpAbsoluteInd(c, CMP_ABS_X, "X") {
+    override fun indValue() = cpu.X
+}
 
 /** 0xe0, CPX #$12 */
 class CpxImm(c: Computer): CmpImmBase(c, "CPX") {
