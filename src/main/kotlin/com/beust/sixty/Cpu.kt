@@ -115,7 +115,7 @@ data class Cpu(var A: Int = 0, var X: Int = 0, var Y: Int = 0, var PC: Int = 0xf
             JMP_IND -> JmpIndirect(computer)
 //            0x65 -> AdcAbsolute(computer)
 //            0x66 -> RorZp(computer)
-//            0x6a -> Ror(computer)
+            ROR -> Ror(computer)
 //            0x6e -> RorAbsolute(computer)
             BVS -> Bvs(computer)
 //            0x71 -> AdcIndirectY(computer)
@@ -362,7 +362,6 @@ class AndZp(c: Computer): InstructionBase(c) {
     override fun toString(): String = "AND $${operand.h()}"
 }
 
-/** 0x26, ROL $12 */
 abstract class RolBase(c: Computer, override val opCode: Int, override val size: Int, override val timing: Int)
     : InstructionBase(c)
 {
@@ -583,21 +582,30 @@ class AdcZp(c: Computer): AddBase(c) {
     override fun toString(): String = "ADC ${operand.h()}"
 }
 
-/** 0x66, ROR $12 */
-class RorZp(c: Computer): InstructionBase(c) {
-    override val opCode = ROR_ZP
-    override val size = 2
-    override val timing = 5
+abstract class RorBase(c: Computer, override val opCode: Int, override val size: Int, override val timing: Int)
+    : InstructionBase(c)
+{
+    abstract var value: Int
+    abstract val name: String
+
     override fun run() {
-        val bit0 = cpu.A.and(0x1)
-        val result = cpu.A.shr(1).or(cpu.P.C.int().shl(7))
+        val bit0 = value.and(0x1)
+        val result = value.shr(1).or(cpu.P.C.int().shl(7))
         cpu.P.setNZFlags(result)
         cpu.P.C = bit0.toBoolean()
-        cpu.A = result
+        value = result
     }
-    override fun toString(): String = "ROR $${operand.h()}"
+    override fun toString(): String = "ROR${name}"
 }
 
+/** 0x66, ROR $12 */
+class RorZp(c: Computer): RorBase(c, ROR_ZP, 2, 5) {
+    override var value: Int
+        get() = memory[operand]
+        set(f) { memory[operand] = f }
+
+    override val name = "$${operand}"
+}
 
 /** 0x68, PLA */
 class Pla(c: Computer): StackInstruction(c, 0x68, "PLA") {
@@ -627,6 +635,15 @@ class AdcImm(c: Computer): AddBase(c) {
     override val timing = 2
     override fun run() { cpu.A = adc(cpu.A, operand) }
     override fun toString(): String = "ADC #${operand.h()}"
+}
+
+/** 0x6a, ROR */
+class Ror(c: Computer): RorBase(c, ROR, 1, 2) {
+    override var value: Int
+        get() = cpu.A
+        set(f) { cpu.A = f }
+
+    override val name = ""
 }
 
 /** 0x6c, JMP ($0036) */
