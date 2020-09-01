@@ -165,7 +165,7 @@ data class Cpu(var A: Int = 0, var X: Int = 0, var Y: Int = 0, var PC: Int = 0xf
             CLV -> Clv(computer)
 //            0xb9 -> LdaAbsoluteY(computer)
             TSX -> Tsx(computer)
-//            0xbc -> LdyAbsoluteX(computer)
+            LDY_ABS_X -> LdyAbsoluteX(computer)
             LDA_ABS_X -> LdaAbsoluteX(computer)
             LDX_ABS_Y -> LdxAbsoluteY(computer)
             CPY_IMM -> CpyImm(computer)
@@ -963,6 +963,19 @@ class Tsx(c: Computer): StackInstruction(c, 0xba, "TSX") {
         cpu.X = cpu.SP.S
         cpu.P.setNZFlags(cpu.X)
     }
+}
+
+/** 0xbc, LDY $1234,X */
+class LdyAbsoluteX(c: Computer): InstructionBase(c) {
+    override val opCode = LDY_ABS_X
+    override val size = 3
+    override var timing = 4 // variable
+    override fun run() {
+        cpu.Y = memory[word + cpu.X]
+        timing += pageCrossed(word, word + cpu.X)
+        cpu.P.setNZFlags(cpu.A)
+    }
+    override fun toString(): String = "LDY $${word.hh()},X"
 }
 
 /** 0xbd, LDA $1234,X */
