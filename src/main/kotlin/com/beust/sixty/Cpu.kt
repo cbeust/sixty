@@ -145,7 +145,7 @@ data class Cpu(var A: Int = 0, var X: Int = 0, var Y: Int = 0, var PC: Int = 0xf
             TXS -> Txs(computer)
             STA_ABS_X -> StaAbsoluteX(computer)
             LDY_IMM -> LdyImm(computer)
-//            0xa1 -> LdaIndirectX(computer)
+            LDA_IND_X -> LdaIndirectX(computer)
             LDX_IMM -> LdxImm(computer)
             LDY_ZP -> LdyZp(computer)
             LDA_ZP -> LdaZp(computer)
@@ -920,6 +920,20 @@ class LdyImm(c: Computer): LdImmBase(c, 0xa0, "LDY") {
         cpu.Y = operand
         cpu.P.setNZFlags(cpu.Y)
     }
+}
+
+/** 0xa1, LDA ($12,X) */
+class LdaIndirectX(c: Computer): InstructionBase(c) {
+    override val opCode = LDA_IND_X
+    override val size = 2
+    override var timing = 6
+    override fun run() {
+        val targetAddress = indirectX(operand)
+        val new = memory[targetAddress]
+        cpu.P.setNZFlags(new)
+        cpu.A = new
+    }
+    override fun toString(): String = "LDA ($${operand.h()},X}"
 }
 
 /** 0xa2, LDX #$10 */
