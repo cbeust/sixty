@@ -88,7 +88,7 @@ data class Cpu(var A: Int = 0, var X: Int = 0, var Y: Int = 0, var PC: Int = 0xf
             0x38 -> Sec(computer)
 //            0x39 -> AndAboluteY(computer)
 //            0x34 -> RolAbsoluteX(computer)
-//            0x40 -> Rti(computer)
+            RTI -> Rti(computer)
 //            0x41 -> EorIndirectX(computer)
             EOR_ZP -> EorZp(computer)
 //            0x46 -> LsrZp(computer)
@@ -432,6 +432,18 @@ abstract class CmpImmBase(c: Computer, val name: String): InstructionBase(c) {
 /** 0x38, SEC */
 class Sec(c: Computer): FlagInstruction(c, 0x38, "SEC") {
     override fun run() { cpu.P.C = true }
+}
+
+/** 0x40, RTI */
+class Rti(c: Computer): InstructionBase(c) {
+    override val opCode = RTI
+    override val size = 1
+    override val timing = 6
+    override fun run() {
+        cpu.P.fromByte(cpu.SP.popByte())
+        cpu.PC = cpu.SP.popWord()
+    }
+    override fun toString(): String = "RTI"
 }
 
 /** 0x45, EOR $12 */

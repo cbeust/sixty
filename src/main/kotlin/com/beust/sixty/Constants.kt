@@ -110,6 +110,8 @@ const val ROR_XP_Z = 0x76
 const val ROR_ABS = 0x6e
 const val ROR_ABS_X = 0x7e
 
+const val RTI = 0x40
+
 const val STA_ZP = 0x85
 const val STA_ZP_X = 0x95
 const val STA_ABS = 0x8d
