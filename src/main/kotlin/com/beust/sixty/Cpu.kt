@@ -181,7 +181,7 @@ data class Cpu(var A: Int = 0, var X: Int = 0, var Y: Int = 0, var PC: Int = 0xf
 //            0xce -> DecAbsolute(computer)
             BNE -> Bne(computer)
 //            0xd1 -> CmpIndirectY(computer)
-//            0xd5 -> CmpZpX(computer)
+            CMP_ZP_X-> CmpZpX(computer)
 //            0xd6 -> DecZpX(computer)
             CLD -> Cld(computer)
             CMP_ABS_Y -> CmpAbsoluteY(computer)
@@ -1041,6 +1041,20 @@ class Dex(c: Computer): RegisterInstruction(c, 0xca, "DEX") {
 
 /** 0xd0, BNE */
 class Bne(computer: Computer): BranchBase(computer, 0xd0, "BNE", { !computer.cpu.P.Z })
+
+/** 0xd5, CMP $12,Y */
+class CmpZpX(c: Computer): InstructionBase(c) {
+    override val opCode = CMP_ZP_X
+    override val size = 2
+    override val timing = 4
+    override fun run() {
+        val tmp: Int = (cpu.A - memory[operand]) and 0xff
+        cpu.P.C = cpu.A >= memory[operand]
+        cpu.P.Z = tmp == 0
+        cpu.P.N = (tmp and 0x80) != 0
+    }
+    override fun toString() = "CMP $${operand.h()},Y"
+}
 
 /** 0xd8, CLD */
 class Cld(c: Computer): FlagInstruction(c, 0xd8, "CLD") {
