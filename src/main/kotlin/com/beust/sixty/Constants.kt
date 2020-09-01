@@ -115,13 +115,13 @@ const val ORA_IND_Y = 0x11
 
 const val NOP = 0xea
 
-const val ROL_A = 0x2a
+const val ROL = 0x2a
 const val ROL_ZP = 0x26
 const val ROL_XP_Z = 0x36
 const val ROL_ABS = 0x2e
 const val ROL_ABS_X = 0x3e
 
-const val ROR_A = 0x6a
+const val ROR = 0x6a
 const val ROR_ZP = 0x66
 const val ROR_XP_Z = 0x76
 const val ROR_ABS = 0x6e
