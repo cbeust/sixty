@@ -41,7 +41,7 @@ interface Instruction {
     }
 }
 
-data class Cpu(var A: Int = 0, var X: Int = 0, var Y: Int = 0, var PC: Int = 0,
+data class Cpu(var A: Int = 0, var X: Int = 0, var Y: Int = 0, var PC: Int = 0xffff,
         val memory: Memory, val P: StatusFlags = StatusFlags()) : ICpu
 {
     val SP: StackPointer
@@ -218,7 +218,7 @@ data class Cpu(var A: Int = 0, var X: Int = 0, var Y: Int = 0, var PC: Int = 0,
     }
 
     override fun toString(): String {
-        return "{Cpu A=${A.h()} X=${X.h()} Y=${Y.h()} PC=${PC.h()} P=$P SP=$SP}"
+        return "A=${A.h()} X=${X.h()} Y=${Y.h()} S=${SP.S.h()} P=${P.toByte().h()} PC=\$${PC.h()} P=${P} SP=$SP"
     }
 
     companion object {
@@ -250,7 +250,7 @@ abstract class InstructionBase(val computer: Computer): Instruction {
 /** 0x00, BRK */
 class Brk(c: Computer): InstructionBase(c) {
     fun handleInterrupt(brk: Boolean, vectorHigh: Int, vectorLow: Int) {
-        cpu.SP.pushWord(cpu.PC)
+        cpu.SP.pushWord(cpu.PC + 1)
         cpu.SP.pushByte(cpu.P.toByte())
         cpu.P.I = true
         cpu.PC = memory[vectorHigh].shl(8).or(memory[vectorLow])
@@ -262,6 +262,8 @@ class Brk(c: Computer): InstructionBase(c) {
     override fun run() {
         handleInterrupt(true, Cpu.IRQ_VECTOR_H, Cpu.IRQ_VECTOR_L)
         cpu.P.B = true
+        cpu.P.I = false
+        cpu.P.reserved = true
     }
     override fun toString(): String = "BRK"
 }
@@ -329,7 +331,7 @@ class Jsr(c: Computer): InstructionBase(c) {
     override val timing = 6
     override fun run() {
         cpu.SP.pushWord(pc + size - 1)
-        cpu.PC = word - size
+        cpu.PC = word
     }
     override fun toString(): String = "JSR $${word.hh()}"
 }
@@ -509,7 +511,7 @@ class Jmp(c: Computer): InstructionBase(c) {
     override val size = 3
     override val timing = 3
     override fun run() {
-        cpu.PC = word - size
+        cpu.PC = word
     }
 
     override fun toString(): String = "JMP $${word.hh()}"
@@ -521,7 +523,7 @@ class Rts(c: Computer): InstructionBase(c) {
     override val size = 1
     override val timing = 6
     override fun run() {
-        computer.cpu.PC = cpu.SP.popWord()
+        computer.cpu.PC = cpu.SP.popWord() + 1
     }
     override fun toString(): String = "RTS"
 }
@@ -586,7 +588,7 @@ class JmpIndirect(c: Computer): InstructionBase(c) {
     override val opCode = 0x6c
     override val size = 3
     override val timing = 5
-    override fun run() { cpu.PC = memory.wordAt(word) -  size }
+    override fun run() { cpu.PC = memory.wordAt(word) }
     override fun toString(): String = "JMP ($${word.hh()})"
 }
 
@@ -865,7 +867,10 @@ class Bcs(computer: Computer): BranchBase(computer, 0xb0, "BCS", { computer.cpu.
 /** 0xba, TSX */
 class Tsx(c: Computer): StackInstruction(c, 0xba, "TSX") {
     override val timing = 2
-    override fun run() { cpu.X = cpu.SP.S }
+    override fun run() {
+        cpu.X = cpu.SP.S
+        cpu.P.setNZFlags(cpu.X)
+    }
 }
 
 /** 0xbd, LDA $1234,X */

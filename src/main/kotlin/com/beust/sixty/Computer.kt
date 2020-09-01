@@ -22,32 +22,36 @@ class Computer(val cpu: Cpu = Cpu(memory = Memory()), val memory: Memory,
     }
 
     fun run() {
-        var n = 0
+        var cycles = 0
         var done = false
         var previousPc = 0
         while (! done) {
+            cycles++
+
             if (memory[cpu.PC] == 0x60 && cpu.SP.isEmpty()) {
                 done = true
             } else {
                 val inst = cpu.nextInstruction(this)
-                if (cpu.PC == 0x800) {
+                if (cpu.PC == 0x9cf) {
                     println(this)
                     println("Breakpoint")
                 }
-                inst.run()
                 if (DEBUG_ASM) disassemble(cpu, inst, print = true)
+                cpu.PC += inst.size
+                inst.run()
+
+                if (previousPc == cpu.PC) {
+                    // Current functional tests highest score: 40954
+                    println(this)
+                    println("Forever loop after $cycles cycles")
+                    println("")
+                } else {
+                    previousPc = cpu.PC
+                }
+
                 memory.listener?.lastMemDebug?.let {
                     println("  $it")
                     memory.listener?.lastMemDebug = null
-                }
-                cpu.PC += inst.size
-                n++
-                if (previousPc == cpu.PC) {
-                    // Current functional tests highest score: $37c7
-                    println(this)
-                    println("Forever loop")
-                } else {
-                    previousPc = cpu.PC
                 }
             }
         }
