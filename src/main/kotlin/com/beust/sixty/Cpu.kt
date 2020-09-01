@@ -91,9 +91,9 @@ data class Cpu(var A: Int = 0, var X: Int = 0, var Y: Int = 0, var PC: Int = 0xf
             RTI -> Rti(computer)
 //            0x41 -> EorIndirectX(computer)
             EOR_ZP -> EorZp(computer)
-//            0x46 -> LsrZp(computer)
+            LSR_ZP -> LsrZp(computer)
             EOR_IMM -> EorImm(computer)
-            LSR_A -> LsrA(computer)
+            LSR -> Lsr(computer)
             JMP -> Jmp(computer)
             PHA -> Pha(computer)
 //            0x4d -> EorAbsolute(computer)
@@ -508,6 +508,14 @@ class EorZp(c: Computer): InstructionBase(c) {
     override fun toString(): String = "EOR $${operand.h()}"
 }
 
+/** 0x46, LSR $12 */
+class LsrZp(c: Computer): LsrBase(c, LSR_ZP, 2, 6) {
+    override var value: Int
+        get() = memory[operand]
+        set(f) { memory[operand] = f }
+    override val name = " $${operand.h()}"
+}
+
 /** 0x49, EOR #$12 */
 class EorImm(c: Computer): InstructionBase(c) {
     override val opCode = 0x49
@@ -521,18 +529,27 @@ class EorImm(c: Computer): InstructionBase(c) {
     override fun toString(): String = "EOR #$${operand.h()}"
 }
 
-/** 0x4a, LSR */
-class LsrA(c: Computer): InstructionBase(c) {
-    override val opCode = LSR_A
-    override val size = 1
-    override val timing = 2
+abstract class LsrBase(c: Computer, override val opCode: Int, override val size: Int, override val timing: Int)
+    : InstructionBase(c)
+{
+    abstract var value: Int
+    abstract val name: String
+
     override fun run() {
-        cpu.P.C = cpu.A.and(1.shl(7)).shr(7).toBoolean()
-        val result = cpu.A.shr(1)
+        cpu.P.C = value.and(1.shl(7)).shr(7).toBoolean()
+        val result = value.shr(1)
         cpu.P.setNZFlags(result)
-        cpu.A = result
+        value = result
     }
-    override fun toString(): String = "LSR"
+    override fun toString(): String = "LSR${name}"
+}
+
+/** 0x4a, LSR */
+class Lsr(c: Computer): LsrBase(c, LSR, 1, 2) {
+    override var value: Int
+        get() = cpu.A
+        set(f) { cpu.A = f }
+    override val name = ""
 }
 
 /** 0x48, PHA */

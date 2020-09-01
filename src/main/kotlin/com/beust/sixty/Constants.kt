@@ -102,7 +102,7 @@ const val STY_ZP = 0x84
 const val STY_ZP_X = 0x94
 const val STY_ABS = 0x8c
 
-const val LSR_A = 0x4a
+const val LSR = 0x4a
 const val LSR_ZP = 0x46
 const val LSR_ZP_X = 0x56
 const val LSR_ABS = 0x4e
