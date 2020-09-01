@@ -55,7 +55,7 @@ const val CMP_IND_Y = 0xd1
 
 const val CPY_IMM = 0xc0
 const val CPY_ZP = 0xc4
-const val CPU_ABS = 0xcc
+const val CPY_ABS = 0xcc
 
 const val EOR_IMM = 0x49
 const val EOR_ZP = 0x45

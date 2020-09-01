@@ -177,7 +177,7 @@ data class Cpu(var A: Int = 0, var X: Int = 0, var Y: Int = 0, var PC: Int = 0xf
             CMP_IMM -> CmpImm(computer)
             CMP_ABS -> CmpAbsolute(computer)
             DEX -> Dex(computer)
-//            0xcc -> CpyAbsolute(computer)
+            CPY_ABS -> CpyAbsolute(computer)
 //            0xce -> DecAbsolute(computer)
             BNE -> Bne(computer)
 //            0xd1 -> CmpIndirectY(computer)
@@ -1096,6 +1096,22 @@ class Dex(c: Computer): RegisterInstruction(c, 0xca, "DEX") {
         cpu.X = (--cpu.X).and(0xff)
         cpu.P.setNZFlags(cpu.X)
     }
+}
+
+/** 0xcc, CPY $1234 */
+class CpyAbsolute(c: Computer): InstructionBase(c) {
+    override val opCode = CPY_ABS
+    override val size = 3
+    override val timing = 4
+
+    override fun run() {
+        val value = memory[word]
+        val tmp: Int = (cpu.Y - value) and 0xff
+        cpu.P.C = cpu.Y >= value
+        cpu.P.Z = tmp == 0
+        cpu.P.N = (tmp and 0x80) != 0
+    }
+    override fun toString() = "CPY $${word.hh()}"
 }
 
 /** 0xd0, BNE */
