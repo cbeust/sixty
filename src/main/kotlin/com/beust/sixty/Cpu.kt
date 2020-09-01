@@ -169,7 +169,7 @@ data class Cpu(var A: Int = 0, var X: Int = 0, var Y: Int = 0, var PC: Int = 0xf
             LDA_ABS_X -> LdaAbsoluteX(computer)
             LDX_ABS_Y -> LdxAbsoluteY(computer)
             CPY_IMM -> CpyImm(computer)
-//            0xc1 -> CmpIndirectX(computer)
+            CMP_IND_X -> CmpIndirectX(computer)
             CPY_ZP -> CpyZp(computer)
             CMP_ZP -> CmpZp(computer)
 //            0xc6 -> DecZp(computer)
@@ -425,7 +425,7 @@ class AndAbsolute(c: Computer): InstructionBase(c) {
 /** 0x30, BMI */
 class Bmi(computer: Computer): BranchBase(computer, 0x30, "BMI", { computer.cpu.P.N })
 
-abstract class CmpImmBase(c: Computer, private val name: String, private val immediate: String = "#")
+abstract class CmpBase(c: Computer, private val name: String, private val immediate: String = "#")
     : InstructionBase(c)
 {
     override val size = 2
@@ -797,11 +797,21 @@ class StaAbsoluteY(c: Computer): InstructionBase(c) {
 }
 
 /** 0xc0, CPY #$12 */
-class CpyImm(c: Computer): CmpImmBase(c, "CPY") {
-    override val opCode = 0xc0
+class CpyImm(c: Computer): CmpBase(c, "CPY") {
+    override val opCode = CPY_IMM
     override val value = operand
     override val register get() = computer.cpu.Y
     override val argName = operand.h()
+}
+
+/** 0xc1 CMP ($12,X) */
+class CmpIndirectX(c: Computer) : CmpBase(c, "CMP", "") {
+    override val opCode = CMP_IND_X
+    override val size = 2
+    override val timing = 6
+    override val register = cpu.A
+    override val argName = "(${operand.h()},X)"
+    override val value = memory[indirectX(operand)]
 }
 
 /** 0xc4, CPY $12 */
@@ -837,7 +847,7 @@ class CmpZp(c: Computer): InstructionBase(c) {
 }
 
 /** 0xc9, CMP $#12 */
-class CmpImm(c: Computer): CmpImmBase(c, "CMP") {
+class CmpImm(c: Computer): CmpBase(c, "CMP") {
     override val opCode = 0xc9
     override val value = operand
     override val register get() = computer.cpu.A
@@ -845,7 +855,7 @@ class CmpImm(c: Computer): CmpImmBase(c, "CMP") {
 }
 
 /** 0xcd, CMP $1234 */
-class CmpAbsolute(c: Computer): CmpImmBase(c, "CMP") {
+class CmpAbsolute(c: Computer): CmpBase(c, "CMP") {
     override val opCode = CMP_ABS
     override val size = 3
     override val timing = 4
@@ -1195,7 +1205,7 @@ class CmpAbsoluteX(c: Computer): CmpAbsoluteInd(c, CMP_ABS_X, "X") {
 }
 
 /** 0xe0, CPX #$12 */
-class CpxImm(c: Computer): CmpImmBase(c, "CPX") {
+class CpxImm(c: Computer): CmpBase(c, "CPX") {
     override val opCode = 0xe0
     override val value = operand
     override val register get() = computer.cpu.X
