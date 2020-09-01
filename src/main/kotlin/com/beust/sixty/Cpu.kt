@@ -3,6 +3,7 @@
 package com.beust.sixty
 
 import com.beust.app.StackPointer
+import kotlin.reflect.KProperty
 
 /**
  * Specs used:
@@ -12,33 +13,6 @@ import com.beust.app.StackPointer
 interface ICpu {
     fun nextInstruction(computer: Computer, noThrows: Boolean = false): Instruction?
     fun clone(): Cpu
-}
-
-interface Instruction {
-    /**
-     * Opcode of this instruction
-     */
-    val opCode: Int
-
-    /**
-     * Number of bytes occupied by this op (1, 2, or 3).
-     */
-    val size: Int
-
-    /**
-     * This should be a property and not a constant since the value of the timing can change for certain ops when
-     * a page boundary is crossed.
-     */
-    val timing: Int
-
-    fun run()
-
-    /**
-     * @return 1 if a page bounday was crossed, 0 otherwise
-     */
-    fun pageCrossed(old: Int, new: Int): Int {
-        return if (old.and(0x80).xor(new.and(0x80)) != 0) 1 else 0
-    }
 }
 
 data class Cpu(var A: Int = 0, var X: Int = 0, var Y: Int = 0, var PC: Int = 0xffff,
@@ -244,6 +218,21 @@ abstract class InstructionBase(val computer: Computer): Instruction {
     val operand by lazy { memory[pc + 1] }
     val word by lazy { memory[pc + 2].shl(8).or(memory[pc + 1]) }
 
+    inner class AbsoluteVal {
+        operator fun getValue(thisRef: Any?, property: KProperty<*>) = memory[word]
+        operator fun setValue(thisRef: Any?, property: KProperty<*>, value: Int) { memory[word] = value }
+    }
+
+    inner class ZpVal {
+        operator fun getValue(thisRef: Any?, property: KProperty<*>) = memory[operand]
+        operator fun setValue(thisRef: Any?, property: KProperty<*>, value: Int) { memory[operand] = value }
+    }
+
+    inner class RegisterAVal {
+        operator fun getValue(thisRef: Any?, property: KProperty<*>) = cpu.A
+        operator fun setValue(thisRef: Any?, property: KProperty<*>, value: Int) { cpu.A = value }
+    }
+
     protected fun indirectX(address: Int): Int = memory[address + cpu.X]
     protected fun indirectY(address: Int): Int = memory[address] + cpu.Y
 }
@@ -284,9 +273,7 @@ class OraZp(c: Computer): InstructionBase(c) {
 
 /** 0x06, ASL $12 */
 class AslZp(c: Computer): AslBase(c, ASL_ZP, 2, 5) {
-    override var value: Int
-        get() = memory[operand]
-        set(f) { memory[operand] = f }
+    override var value by ZpVal()
     override val name = " $${operand.h()}"
 }
 
@@ -330,17 +317,13 @@ abstract class AslBase(c: Computer, override val opCode: Int, override val size:
 
 /** 0x0a, ASL */
 class Asl(c: Computer): AslBase(c, ASL, 1, 2) {
-    override var value: Int
-        get() = cpu.A
-        set(f) { cpu.A = f }
+    override var value by RegisterAVal()
     override val name = ""
 }
 
 /** 0x0e, ASL $1234 */
 class AslAbsolute(c: Computer): AslBase(c, ASL_ABS, 3, 6) {
-    override var value: Int
-        get() = memory[word]
-        set(f) { memory[word] = f }
+    override var value by AbsoluteVal()
     override val name = " $${word.hh()}"
 }
 
@@ -405,9 +388,7 @@ abstract class RolBase(c: Computer, override val opCode: Int, override val size:
 
 /** 0x26, ROL $12 */
 class RolZp(c: Computer): RolBase(c, ROL_ZP, 2, 5) {
-    override var value: Int
-        get() = memory[operand]
-        set(f) { memory[operand] = f}
+    override var value by ZpVal()
     override val name = " $${operand}"
 }
 
@@ -433,9 +414,7 @@ class And(c: Computer): InstructionBase(c) {
 
 /** 0x2A, ROL */
 class Rol(c: Computer): RolBase(c, ROL, 1, 2) {
-    override var value: Int
-        get() = cpu.A
-        set(f) { cpu.A = f }
+    override var value by RegisterAVal()
     override val name = ""
 }
 
@@ -518,9 +497,7 @@ class EorZp(c: Computer): InstructionBase(c) {
 
 /** 0x46, LSR $12 */
 class LsrZp(c: Computer): LsrBase(c, LSR_ZP, 2, 6) {
-    override var value: Int
-        get() = memory[operand]
-        set(f) { memory[operand] = f }
+    override var value by ZpVal()
     override val name = " $${operand.h()}"
 }
 
@@ -554,9 +531,7 @@ abstract class LsrBase(c: Computer, override val opCode: Int, override val size:
 
 /** 0x4a, LSR */
 class Lsr(c: Computer): LsrBase(c, LSR, 1, 2) {
-    override var value: Int
-        get() = cpu.A
-        set(f) { cpu.A = f }
+    override var value by RegisterAVal()
     override val name = ""
 }
 
@@ -642,10 +617,7 @@ abstract class RorBase(c: Computer, override val opCode: Int, override val size:
 
 /** 0x66, ROR $12 */
 class RorZp(c: Computer): RorBase(c, ROR_ZP, 2, 5) {
-    override var value: Int
-        get() = memory[operand]
-        set(f) { memory[operand] = f }
-
+    override var value by ZpVal()
     override val name = "$${operand}"
 }
 
@@ -681,10 +653,7 @@ class AdcImm(c: Computer): AddBase(c) {
 
 /** 0x6a, ROR */
 class Ror(c: Computer): RorBase(c, ROR, 1, 2) {
-    override var value: Int
-        get() = cpu.A
-        set(f) { cpu.A = f }
-
+    override var value by RegisterAVal()
     override val name = ""
 }
 
