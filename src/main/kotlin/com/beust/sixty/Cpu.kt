@@ -141,7 +141,7 @@ data class Cpu(var A: Int = 0, var X: Int = 0, var Y: Int = 0, var PC: Int = 0xf
             0x95 -> StaZpX(computer)
 //            0x96 -> StxZpY(computer)
             0x98 -> Tya(computer)
-//            0x99 -> StaAbsoluteY(computer)
+            0x99 -> StaAbsoluteY(computer)
             0x9a -> Txs(computer)
 //            0x9d -> StaAbsoluteX(computer)
             0xa0 -> LdyImm(computer)
@@ -764,6 +764,17 @@ class Tya(c: Computer): RegisterInstruction(c, 0x98, "TYA") {
         cpu.A = cpu.Y
         cpu.P.setNZFlags(cpu.A)
     }
+}
+
+/** 0x99, STA $1234,Y */
+class StaAbsoluteY(c: Computer): InstructionBase(c) {
+    override val opCode = STA_ABS_Y
+    override val size = 3
+    override val timing = 5
+    override fun run() {
+        memory[operand + cpu.Y] = cpu.A
+    }
+    override fun toString(): String = "STA $${operand.h()},X"
 }
 
 /** 0xc0, CPY #$12 */
