@@ -11,22 +11,33 @@ class StackPointer(private val memory: Memory) {
     var S: Int = 0xff
     private val address = 0x100
 
+    private fun inc() { S = (S + 1) and 0xff }
+    private fun dec() { S = (S - 1) and 0xff }
+
     fun pushByte(a: Byte) {
-        memory[address + S--] = a.toInt()
+        memory[address + S] = a.toInt()
+        dec()
     }
 
     fun popByte(): Byte {
-        return memory[address + ++S].toByte()
+        inc()
+        return memory[address + S].toByte()
     }
 
     fun pushWord(a: Int) {
         // High byte fist
-        memory[address + S--] = a.and(0xff00).shr(8)
-        memory[address + S--] = a.and(0xff)
+        memory[address + S] = a.and(0xff00).shr(8)
+        dec()
+        memory[address + S] = a.and(0xff)
+        dec()
     }
 
     fun popWord(): Int {
-        val result = memory[address + ++S].or(memory[address + ++S].shl(8))
+        inc()
+        val low = memory[address + S]
+        inc()
+        val high = memory[address + S]
+        val result = low.or(high.shl(8))
         return result
     }
 
