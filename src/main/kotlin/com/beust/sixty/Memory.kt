@@ -69,4 +69,15 @@ class Memory(val size: Int = 0x10000, vararg bytes: Int) {
 //            init(0, *content)
 //        }
     }
+
+    fun dump(address: Int, length: Int = 80) {
+        val lineLength = 8
+        repeat(length / lineLength) { line ->
+            val sb = StringBuffer(String.format("%04x", address + (line * lineLength)) + ": ")
+            repeat(8) { byte ->
+                sb.append(String.format("%02x ", this[address + line * lineLength + byte]))
+            }
+            println(sb.toString())
+        }
+    }
 }
