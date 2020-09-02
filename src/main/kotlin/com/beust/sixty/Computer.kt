@@ -53,9 +53,10 @@ class Computer(val cpu: Cpu = Cpu(memory = Memory()), val memory: Memory,
                     println("Breakpoint")
                 }
                 val previousPC = cpu.PC
+                val debugString = formatPc(cpu, inst) + formatInstruction(inst)
                 inst.run()
                 // If the instruction modified the PC (e.g. JSR, JMP, BRK, RTS, RTI), don't change it
-                if (DEBUG_ASM) disassemble(cpu, inst, print = true)
+                if (DEBUG_ASM) println(debugString + " " + cpu.toString())
                 if (! inst.changedPc) {
                     cpu.PC += inst.size
                 }
@@ -100,6 +101,18 @@ class Computer(val cpu: Cpu = Cpu(memory = Memory()), val memory: Memory,
             }
         }
         return result
+    }
+
+    private fun formatPc(cpu: Cpu, inst: Instruction): String {
+        val pc = cpu.PC
+        val bytes = StringBuffer(inst.opCode.h())
+        bytes.append(if (inst.size > 1) (" " + memory[pc + 1].h()) else "   ")
+        bytes.append(if (inst.size == 3) (" " + memory[pc + 2].h()) else "   ")
+        return String.format("%-5s: %-10s", pc.hh(), bytes.toString())
+    }
+
+    private fun formatInstruction(inst: Instruction): String {
+        return String.format("%-12s", inst.toString())
     }
 
     private fun disassemble(cpu: Cpu, inst: Instruction, print: Boolean): String {
