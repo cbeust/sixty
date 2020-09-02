@@ -146,7 +146,7 @@ data class Cpu(var A: Int = 0, var X: Int = 0, var Y: Int = 0, var PC: Int = 0xf
             LDA_ABS_X -> LdaAbsoluteX(computer)
             LDA_ABS_Y -> LdaAbsoluteY(computer)
             LDA_IND_X -> LdaIndX(computer)
-            LDA_IND_Y -> LdaIndX(computer)
+            LDA_IND_Y -> LdaIndY(computer)
 
             LDX_IMM -> LdxImm(computer)
             LDX_ZP -> LdxZp(computer)
@@ -258,16 +258,20 @@ abstract class InstructionBase(val computer: Computer): Instruction {
     }
 
     inner class ValIndirectX {
-        operator fun getValue(thisRef: Any?, property: KProperty<*>) = memory[memory[operand + cpu.X]]
+        private val address = memory[(operand + cpu.X) and 0xff].or(memory[(operand + cpu.X + 1) and 0xff].shl(8))
+
+        operator fun getValue(thisRef: Any?, property: KProperty<*>) = memory[address]
         operator fun setValue(thisRef: Any?, property: KProperty<*>, value: Int) {
-            memory[memory[operand + cpu.X]] = value
+            memory[address] = value
         }
     }
 
     inner class ValIndirectY{
-        operator fun getValue(thisRef: Any?, property: KProperty<*>) = memory[memory[operand] + cpu.Y]
+        private val address = memory[operand].or(memory[(operand + 1) and 0xff].shl(8))
+
+        operator fun getValue(thisRef: Any?, property: KProperty<*>) = memory[address + cpu.Y]
         operator fun setValue(thisRef: Any?, property: KProperty<*>, value: Int) {
-            memory[memory[operand] + cpu.Y] = value
+            memory[address + cpu.Y] = value
         }
     }
 
@@ -301,8 +305,8 @@ abstract class InstructionBase(val computer: Computer): Instruction {
     protected fun nameAbsX() = nameAbs() + ",X"
     protected fun nameAbsY() = nameAbs() + ",Y"
     protected fun nameA() = ""
-    protected fun nameIndirectX() = "($${operand.h()},X)"
-    protected fun nameIndirectY() = "($${operand.h()}),Y"
+    protected fun nameIndirectX() = " ($${operand.h()},X)"
+    protected fun nameIndirectY() = " ($${operand.h()}),Y"
 
     protected fun indirectX(address: Int): Int = memory[address + cpu.X]
     protected fun indirectY(address: Int): Int = memory[address] + cpu.Y
