@@ -26,7 +26,7 @@ data class Cpu(var A: Int = 0, var X: Int = 0, var Y: Int = 0, var PC: Int = 0xf
     fun nextInstruction(computer: Computer, noThrows: Boolean = false): InstructionBase? {
         val op = computer.memory[PC] and 0xff
         val result = when(op) {
-            0x00 -> Brk(computer)
+            BRK -> Brk(computer)
             PHP -> Php(computer)
             CLC -> Clc(computer)
             JSR -> Jsr(computer)

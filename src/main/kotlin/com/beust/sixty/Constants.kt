@@ -1,5 +1,7 @@
 package com.beust.sixty
 
+const val BRK = 0x00
+
 const val ADC_IMM = 0x69
 const val ADC_ZP = 0x65
 const val ADC_ZP_X = 0x75
