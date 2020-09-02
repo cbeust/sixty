@@ -9,10 +9,8 @@ abstract class RolBase(c: Computer, override val opCode: Int, override val size:
     abstract val name: String
 
     override fun run() {
-        val bit7 = if (value.and(1.shl(7)) != 0) 1 else 0
-        val result = value.shl(1).or(cpu.P.C.int())
-        cpu.P.setNZFlags(result)
-        cpu.P.C = bit7.toBoolean()
+        val result = (value.shl(1).or(cpu.P.C.int())) and 0xff
+        cpu.P.C = value.and(0x80) != 0
         value = result
     }
     override fun toString(): String = "ROL${name}"
