@@ -48,7 +48,7 @@ class Computer(val cpu: Cpu = Cpu(memory = Memory()), val memory: Memory,
                     val s = cpu.PC.hh()
                     TODO("$s: $" + cpu.memory[cpu.PC].h() + ", cycles: $cycles")
                 }
-                if (cpu.PC == 0x346c) {
+                if (cpu.PC == 0x43b) {
                     println(this)
                     println("Breakpoint")
                 }
@@ -56,7 +56,9 @@ class Computer(val cpu: Cpu = Cpu(memory = Memory()), val memory: Memory,
                 val previousPC = cpu.PC
                 inst.run()
                 // If the instruction modified the PC (e.g. JSR, JMP, BRK, RTS, RTI), don't change it
-                if (cpu.PC == previousPC) cpu.PC += inst.size
+                if (! inst.changedPc) {
+                    cpu.PC += inst.size
+                }
 
                 if (previousPc == cpu.PC) {
                     // Current functional tests highest score: 26764028

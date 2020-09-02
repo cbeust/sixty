@@ -14,6 +14,7 @@ abstract class AdcSbcBase(c: Computer, override val opCode: Int, override val si
         cpu.P.V = cpu.P.C.xor((carry6.and(0x80) != 0))
         result = result and 0xff
         cpu.P.setNZFlags(result)
-        cpu.A = result
+        cpu.A = 1
+//        cpu.A = result
     }
 }

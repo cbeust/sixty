@@ -224,6 +224,8 @@ abstract class InstructionBase(val computer: Computer): Instruction {
     val operand by lazy { memory[pc + 1] }
     val word by lazy { memory[pc + 2].shl(8).or(memory[pc + 1]) }
 
+    var changedPc: Boolean = false
+
     inner class ValImmediate {
         operator fun getValue(thisRef: Any?, property: KProperty<*>) = operand
         operator fun setValue(thisRef: Any?, property: KProperty<*>, value: Int) { TODO("Should never happen") }
@@ -300,6 +302,7 @@ class Brk(c: Computer): InstructionBase(c) {
     override val size = 1
     override val timing = 7
     override fun run() {
+        changedPc = true
         handleInterrupt(true, Cpu.IRQ_VECTOR_H, Cpu.IRQ_VECTOR_L)
         cpu.P.B = true
         cpu.P.I = false
@@ -331,9 +334,6 @@ class OraImm(c: Computer): InstructionBase(c) {
     override fun toString(): String = "ORA #$${operand.h()}"
 }
 
-/** 0x10, BPL */
-class Bpl(computer: Computer): BranchBase(computer, 0x10, "BPL", { !computer.cpu.P.N })
-
 abstract class FlagInstruction(c: Computer, override val opCode: Int, val name: String): InstructionBase(c) {
     override val size = 1
     override val timing = 2
@@ -356,6 +356,7 @@ class Jsr(c: Computer): InstructionBase(c) {
     override val size = 3
     override val timing = 6
     override fun run() {
+        changedPc = true
         cpu.SP.pushWord(pc + size - 1)
         cpu.PC = word
     }
@@ -369,9 +370,6 @@ class Plp(c: Computer): StackInstruction(c, PLP, "PLP") {
         cpu.P.fromByte(cpu.SP.popByte())
     }
 }
-
-/** 0x30, BMI */
-class Bmi(computer: Computer): BranchBase(computer, 0x30, "BMI", { computer.cpu.P.N })
 
 abstract class CmpBase(c: Computer, private val name: String, private val immediate: String = "#")
     : InstructionBase(c)
@@ -404,6 +402,7 @@ class Rti(c: Computer): InstructionBase(c) {
     override val size = 1
     override val timing = 6
     override fun run() {
+        changedPc = true
         cpu.P.fromByte(cpu.SP.popByte())
         cpu.PC = cpu.SP.popWord()
     }
@@ -416,9 +415,6 @@ class Pha(c: Computer): StackInstruction(c, 0x48, "PHA") {
     override fun run() = cpu.SP.pushByte(cpu.A.toByte())
 }
 
-/** 0x50, BVC */
-class Bvc(computer: Computer): BranchBase(computer, 0x50, "BVC", { !computer.cpu.P.V })
-
 /** 0x58, CLI */
 class Cli(c: Computer): FlagInstruction(c, 0x58, "CLI") {
     override fun run() { cpu.P.I = false }
@@ -430,6 +426,7 @@ class Jmp(c: Computer): InstructionBase(c) {
     override val size = 3
     override val timing = 3
     override fun run() {
+        changedPc = true
         cpu.PC = word
     }
 
@@ -442,6 +439,7 @@ class Rts(c: Computer): InstructionBase(c) {
     override val size = 1
     override val timing = 6
     override fun run() {
+        changedPc = true
         computer.cpu.PC = cpu.SP.popWord() + 1
     }
     override fun toString(): String = "RTS"
@@ -482,12 +480,12 @@ class JmpIndirect(c: Computer): InstructionBase(c) {
     override val opCode = 0x6c
     override val size = 3
     override val timing = 5
-    override fun run() { cpu.PC = memory.wordAt(word) }
+    override fun run() {
+        changedPc = true
+        cpu.PC = memory.wordAt(word)
+    }
     override fun toString(): String = "JMP ($${word.hh()})"
 }
-
-/** 0x70, BVS */
-class Bvs(computer: Computer): BranchBase(computer, BVS, "BVS", { computer.cpu.P.V })
 
 /** 0x78, SEI */
 class Sei(c: Computer): FlagInstruction(c, 0x78, "SEI") {
@@ -582,27 +580,6 @@ class Txa(c: Computer): RegisterInstruction(c, 0x8a, "TXA") {
         cpu.P.setNZFlags(cpu.A)
     }
 }
-
-open class BranchBase(c: Computer, override val opCode: Int, val name: String, val condition: () -> Boolean)
-    : InstructionBase(c)
-{
-    override val size = 2
-    /** TODO(Varied timing if the branch is taken/not taken and if it crosses a page) */
-    override var timing = 2
-    override fun run() {
-        if (condition()) {
-            val old = cpu.PC
-            cpu.PC += operand.toByte() + size
-            timing++
-            timing += pageCrossed(old, cpu.PC)
-        }  // needs to be signed here
-    }
-    override fun toString(): String
-            = "$name $${(cpu.PC + size + operand.toByte()).h()}"
-}
-
-/** 0x90, BCC */
-class Bcc(computer: Computer): BranchBase(computer, 0x90, "BCC", { !computer.cpu.P.C })
 
 /** 0x91, STA ($12),Y */
 class StaIndirectY(c: Computer): InstructionBase(c) {
@@ -867,9 +844,6 @@ class LdXAbsolute(c: Computer): LdAbsoluteBase(c, LDX_ABS, "LDX") {
     }
 }
 
-/** 0xb0, BCS */
-class Bcs(computer: Computer): BranchBase(computer, 0xb0, "BCS", { computer.cpu.P.C })
-
 /** 0xb4, LDY $12,X */
 class LdyZpX(c: Computer): ZpBase(c, LDY_ZP_X, "LDY", ",X") {
     override fun run() {
@@ -996,9 +970,6 @@ class CpyAbsolute(c: Computer): InstructionBase(c) {
     override fun toString() = "CPY $${word.hh()}"
 }
 
-/** 0xd0, BNE */
-class Bne(computer: Computer): BranchBase(computer, 0xd0, "BNE", { !computer.cpu.P.Z })
-
 /** 0xd1, CMP $(12),Y */
 class CmpIndY(c: Computer): InstructionBase(c) {
     override val opCode = CMP_IND_Y
@@ -1114,9 +1085,6 @@ class CpxAbsolute(c: Computer): InstructionBase(c) {
     }
     override fun toString() = "CPX $${word.h()}"
 }
-
-/** 0xf0, BEQ */
-class Beq(computer: Computer): BranchBase(computer, 0xf0, "BEQ", { computer.cpu.P.Z })
 
 /** 0xf8, SED */
 class Sed(c: Computer): FlagInstruction(c, 0xf8, "SED") {
