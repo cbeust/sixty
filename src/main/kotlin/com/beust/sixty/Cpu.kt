@@ -620,7 +620,7 @@ class Txs(c: Computer): StackInstruction(c, 0x9a, "TXS") {
 
 abstract class ZpBase(c: Computer, override val opCode: Int, private val name: String,
         private val suffix: String = "") : InstructionBase(c) {
-    override val size = 2
+    override val size = 3
     override val timing = 3
     override fun toString(): String = "$name $" + operand.h() + suffix
 }
