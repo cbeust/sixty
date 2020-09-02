@@ -1,9 +1,6 @@
 package com.beust.sixty.op
 
-import com.beust.sixty.BIT_ABS
-import com.beust.sixty.BIT_ZP
-import com.beust.sixty.Computer
-import com.beust.sixty.InstructionBase
+import com.beust.sixty.*
 
 abstract class BitBase(c: Computer, override val opCode: Int, override val size: Int, override val timing: Int)
     : InstructionBase(c)
@@ -12,9 +9,9 @@ abstract class BitBase(c: Computer, override val opCode: Int, override val size:
     abstract val name: String
 
     override fun run() {
-        val value = cpu.A.and(value)
-        cpu.P.setNZFlags(value)
-        cpu.P.V = if (value.and(1.shl(6)) != 0) true else false
+        cpu.P.Z = (cpu.A and value) == 0
+        cpu.P.N = (value and 0x80) != 0
+        cpu.P.V = (value and 0x40) != 0
     }
     override fun toString(): String = "BIT${name}"
 }

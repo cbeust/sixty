@@ -48,7 +48,7 @@ class Computer(val cpu: Cpu = Cpu(memory = Memory()), val memory: Memory,
                     val s = cpu.PC.hh()
                     TODO("$s: $" + cpu.memory[cpu.PC].h() + ", cycles: $cycles")
                 }
-                if (cpu.PC == 0x16ed) {
+                if (cpu.PC == 0x1b89) {
                     println(this)
                     println("Breakpoint")
                 }
