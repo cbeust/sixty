@@ -9,7 +9,7 @@ abstract class LsrBase(c: Computer, override val opCode: Int, override val size:
     abstract val name: String
 
     override fun run() {
-        cpu.P.C = value.and(1.shl(7)).shr(7).toBoolean()
+        cpu.P.C = value.and(1) != 0
         val result = value.shr(1)
         cpu.P.setNZFlags(result)
         value = result
