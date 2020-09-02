@@ -27,20 +27,13 @@ data class Cpu(var A: Int = 0, var X: Int = 0, var Y: Int = 0, var PC: Int = 0xf
         val op = computer.memory[PC] and 0xff
         val result = when(op) {
             0x00 -> Brk(computer)
-            ASL_ZP -> AslZp(computer)
             PHP -> Php(computer)
-            ASL -> Asl(computer)
-            ASL_ABS -> AslAbsolute(computer)
-            BPL -> Bpl(computer)
-            ASL_ZP_X -> AslZpX(computer)
             CLC -> Clc(computer)
-            ASL_ABS_X -> AslAbsoluteX(computer)
             JSR -> Jsr(computer)
             ROL_ZP -> RolZp(computer)
             PLP -> Plp(computer)
             ROL -> Rol(computer)
             ROL_ABS -> RolAbsolute(computer)
-            BMI -> Bmi(computer)
             SEC -> Sec(computer)
             ROL_ABS_X -> RolAbsoluteX(computer)
             ROL_ZP_X -> RolZpX(computer)
@@ -50,7 +43,6 @@ data class Cpu(var A: Int = 0, var X: Int = 0, var Y: Int = 0, var PC: Int = 0xf
             JMP -> Jmp(computer)
             PHA -> Pha(computer)
             LSR_ABS -> LsrAbsolute(computer)
-            BVC -> Bvc(computer)
             LSR_ABS_X -> LsrAbsoluteX(computer)
             LSR_ZP_X -> LsrZpX(computer)
             CLI -> Cli(computer)
@@ -60,7 +52,6 @@ data class Cpu(var A: Int = 0, var X: Int = 0, var Y: Int = 0, var PC: Int = 0xf
             JMP_IND -> JmpIndirect(computer)
             ROR -> Ror(computer)
             ROR_ABS -> RorAbsolute(computer)
-            BVS -> Bvs(computer)
             ROR_ZP_X -> RorZpX(computer)
             SEI -> Sei(computer)
             ROR_ABS_X -> RorAbsoluteX(computer)
@@ -74,7 +65,6 @@ data class Cpu(var A: Int = 0, var X: Int = 0, var Y: Int = 0, var PC: Int = 0xf
             STA_ABS -> StaAbsolute(computer)
             STX_ABS -> StxAbsolute(computer)
             TXA -> Txa(computer)
-            BCC -> Bcc(computer)
             STA_IND_Y -> StaIndirectY(computer)
             STY_ZP_X-> StyZpX(computer)
             STA_ZP_X -> StaZpX(computer)
@@ -95,7 +85,6 @@ data class Cpu(var A: Int = 0, var X: Int = 0, var Y: Int = 0, var PC: Int = 0xf
             LDY_ABS -> LdyAbsolute(computer)
             LDA_ABS -> LdaAbsolute(computer)
             LDX_ABS -> LdXAbsolute(computer)
-            BCS -> Bcs(computer)
             LDY_ZP_X -> LdyZpX(computer)
             LDA_ZP_X -> LdaZpX(computer)
             LDX_ZP_Y -> LdxZpY(computer)
@@ -105,28 +94,44 @@ data class Cpu(var A: Int = 0, var X: Int = 0, var Y: Int = 0, var PC: Int = 0xf
             LDY_ABS_X -> LdyAbsoluteX(computer)
             LDA_ABS_X -> LdaAbsoluteX(computer)
             LDX_ABS_Y -> LdxAbsoluteY(computer)
-            CPY_IMM -> CpyImm(computer)
-            CMP_IND_X -> CmpIndirectX(computer)
-            CPY_ZP -> CpyZp(computer)
-            CMP_ZP -> CmpZp(computer)
             INY -> Iny(computer)
-            CMP_IMM -> CmpImm(computer)
-            CMP_ABS -> CmpAbsolute(computer)
             DEX -> Dex(computer)
-            CPY_ABS -> CpyAbsolute(computer)
-            BNE -> Bne(computer)
-            CMP_IND_Y -> CmpIndY(computer)
-            CMP_ZP_X-> CmpZpX(computer)
             CLD -> Cld(computer)
-            CMP_ABS_Y -> CmpAbsoluteY(computer)
-            CMP_ABS_X -> CmpAbsoluteX(computer)
-            CPX_IMM -> CpxImm(computer)
-            CPX_ZP -> CpxZp(computer)
             INX -> Inx(computer)
             NOP -> Nop(computer)
-            CPX_ABS -> CpxAbsolute(computer)
-            BEQ -> Beq(computer)
             SED -> Sed(computer)
+
+            ASL -> Asl(computer)
+            ASL_ZP -> AslZp(computer)
+            ASL_ZP_X -> AslZpX(computer)
+            ASL_ABS -> AslAbsolute(computer)
+            ASL_ABS_X -> AslAbsoluteX(computer)
+
+            BPL -> Bpl(computer)
+            BMI -> Bmi(computer)
+            BVC -> Bvc(computer)
+            BVS -> Bvs(computer)
+            BCC -> Bcc(computer)
+            BCS -> Bcs(computer)
+            BNE -> Bne(computer)
+            BEQ -> Beq(computer)
+
+            CMP_IMM -> CmpImmediate(computer)
+            CMP_ZP -> CmpZp(computer)
+            CMP_ZP_X-> CmpZpX(computer)
+            CMP_ABS -> CmpAbsolute(computer)
+            CMP_ABS_X -> CmpAbsoluteX(computer)
+            CMP_ABS_Y -> CmpAbsoluteY(computer)
+            CMP_IND_X -> CmpIndX(computer)
+            CMP_IND_Y -> CmpIndY(computer)
+
+            CPX_IMM -> CpxImm(computer)
+            CPX_ZP -> CpxZp(computer)
+            CPX_ABS -> CpxAbsolute(computer)
+
+            CPY_IMM -> CpyImm(computer)
+            CPY_ZP -> CpyZp(computer)
+            CPY_ABS -> CpyAbsolute(computer)
 
             DEC_ZP -> DecZp(computer)
             DEC_ZP_X -> DecZpX(computer)
@@ -356,26 +361,6 @@ class Plp(c: Computer): StackInstruction(c, PLP, "PLP") {
     override fun run() {
         cpu.P.fromByte(cpu.SP.popByte())
     }
-}
-
-abstract class CmpBase(c: Computer, private val name: String, private val immediate: String = "#")
-    : InstructionBase(c)
-{
-    override val size = 2
-    override val timing = 2
-
-    abstract val register: Int
-    abstract val value: Int
-    abstract val argName: String
-
-    override fun run() {
-        val tmp: Int = (register - value) and 0xff
-        cpu.P.C = register >= value
-        cpu.P.Z = tmp == 0
-        cpu.P.N = (tmp and 0x80) != 0
-    }
-
-    override fun toString(): String = "$name ${immediate}$$argName"
 }
 
 /** 0x38, SEC */
@@ -626,74 +611,6 @@ class StaAbsoluteY(c: Computer): InstructionBase(c) {
     override fun toString(): String = "STA $${operand.h()},X"
 }
 
-/** 0xc0, CPY #$12 */
-class CpyImm(c: Computer): CmpBase(c, "CPY") {
-    override val opCode = CPY_IMM
-    override val value = operand
-    override val register get() = computer.cpu.Y
-    override val argName = operand.h()
-}
-
-/** 0xc1 CMP ($12,X) */
-class CmpIndirectX(c: Computer) : CmpBase(c, "CMP", "") {
-    override val opCode = CMP_IND_X
-    override val size = 2
-    override val timing = 6
-    override val register = cpu.A
-    override val argName = "(${operand.h()},X)"
-    override val value = memory[indirectX(operand)]
-}
-
-/** 0xc4, CPY $12 */
-class CpyZp(c: Computer): InstructionBase(c) {
-    override val opCode = CPY_ZP
-    override val size = 2
-    override val timing = 3
-
-    override fun run() {
-        val value = memory[operand]
-        val tmp: Int = (cpu.Y - value) and 0xff
-        cpu.P.C = cpu.Y >= value
-        cpu.P.Z = tmp == 0
-        cpu.P.N = (tmp and 0x80) != 0
-    }
-    override fun toString() = "CPY $${operand}"
-}
-
-/** 0xc5, CMP $12 */
-class CmpZp(c: Computer): InstructionBase(c) {
-    override val opCode = CMP_ZP
-    override val size = 2
-    override val timing = 3
-
-    override fun run() {
-        val value = memory[operand]
-        val tmp: Int = (cpu.A - value) and 0xff
-        cpu.P.C = cpu.A >= value
-        cpu.P.Z = tmp == 0
-        cpu.P.N = (tmp and 0x80) != 0
-    }
-    override fun toString() = "CMP $${operand}"
-}
-
-/** 0xc9, CMP $#12 */
-class CmpImm(c: Computer): CmpBase(c, "CMP") {
-    override val opCode = 0xc9
-    override val value = operand
-    override val register get() = computer.cpu.A
-    override val argName = operand.h()
-}
-
-/** 0xcd, CMP $1234 */
-class CmpAbsolute(c: Computer): CmpBase(c, "CMP") {
-    override val opCode = CMP_ABS
-    override val size = 3
-    override val timing = 4
-    override val register get() = cpu.A
-    override val value get() = memory[word]
-    override val argName = "$${word.h()}"
-}
-
 /** 0x9a, TXS */
 class Txs(c: Computer): StackInstruction(c, 0x9a, "TXS") {
     override val timing = 2
@@ -875,7 +792,7 @@ class Clv(c: Computer): FlagInstruction(c, CLV, "CLV") {
 class Tsx(c: Computer): StackInstruction(c, 0xba, "TSX") {
     override val timing = 2
     override fun run() {
-        cpu.X = cpu.SP.S
+        cpu.X = cpu.SP.S.and(0xff)
         cpu.P.setNZFlags(cpu.X)
     }
 }
@@ -941,105 +858,9 @@ class Dex(c: Computer): RegisterInstruction(c, 0xca, "DEX") {
     }
 }
 
-/** 0xcc, CPY $1234 */
-class CpyAbsolute(c: Computer): InstructionBase(c) {
-    override val opCode = CPY_ABS
-    override val size = 3
-    override val timing = 4
-
-    override fun run() {
-        val value = memory[word]
-        val tmp: Int = (cpu.Y - value) and 0xff
-        cpu.P.C = cpu.Y >= value
-        cpu.P.Z = tmp == 0
-        cpu.P.N = (tmp and 0x80) != 0
-    }
-    override fun toString() = "CPY $${word.hh()}"
-}
-
-/** 0xd1, CMP $(12),Y */
-class CmpIndY(c: Computer): InstructionBase(c) {
-    override val opCode = CMP_IND_Y
-    override val size = 2
-    override var timing = 5 // variable
-    override fun run() {
-        val value = memory[indirectY(operand)]
-        val tmp: Int = (cpu.A - value) and 0xff
-        cpu.P.C = cpu.A >= value
-        cpu.P.Z = tmp == 0
-        cpu.P.N = (tmp and 0x80) != 0
-        timing += pageCrossed(cpu.PC, word + value)
-    }
-    override fun toString() = "CMP $(${operand.h()}),Y"
-}
-
-/** 0xd5, CMP $12,Y */
-class CmpZpX(c: Computer): InstructionBase(c) {
-    override val opCode = CMP_ZP_X
-    override val size = 2
-    override val timing = 4
-    override fun run() {
-        val tmp: Int = (cpu.A - memory[operand]) and 0xff
-        cpu.P.C = cpu.A >= memory[operand]
-        cpu.P.Z = tmp == 0
-        cpu.P.N = (tmp and 0x80) != 0
-    }
-    override fun toString() = "CMP $${operand.h()},Y"
-}
-
 /** 0xd8, CLD */
 class Cld(c: Computer): FlagInstruction(c, 0xd8, "CLD") {
     override fun run() { cpu.P.D = false }
-}
-
-abstract class CmpAbsoluteInd(c: Computer, override val opCode: Int, private val index: String)
-    : InstructionBase(c)
-{
-    override val size = 3
-    override var timing = 4 // variable
-
-    abstract fun indValue(): Int
-
-    override fun run() {
-        val value: Int = memory[word + indValue()].and(0xff)
-        cpu.P.C = cpu.A >= value
-        cpu.P.Z = value == 0
-        cpu.P.N = (value and 0x80) != 0
-        timing += pageCrossed(cpu.PC, word + indValue())
-    }
-    override fun toString(): String = "CMP $${word.hh()},$index"
-}
-
-/** 0xd9, CMP $1234,Y */
-class CmpAbsoluteY(c: Computer): CmpAbsoluteInd(c, CMP_ABS_Y, "Y") {
-    override fun indValue() = cpu.Y
-}
-
-/** 0xdd, CMP $1234,X */
-class CmpAbsoluteX(c: Computer): CmpAbsoluteInd(c, CMP_ABS_X, "X") {
-    override fun indValue() = cpu.X
-}
-
-/** 0xe0, CPX #$12 */
-class CpxImm(c: Computer): CmpBase(c, "CPX") {
-    override val opCode = 0xe0
-    override val value = operand
-    override val register get() = computer.cpu.X
-    override val argName = "${operand.h()}"
-}
-
-/** 0xe4, CPX $12 */
-class CpxZp(c: Computer): InstructionBase(c) {
-    override val opCode = CPX_ZP
-    override val size = 2
-    override val timing = 3
-    override fun run() {
-        val tmp: Int = (cpu.X - memory[operand]) and 0xff
-        cpu.P.C = cpu.X >= memory[operand]
-        cpu.P.Z = tmp == 0
-        cpu.P.N = (tmp and 0x80) != 0
-    }
-    override fun toString() = "CPX $${operand.h()}"
 }
 
 /** 0xe8, INX */
@@ -1057,20 +878,6 @@ class Nop(c: Computer): InstructionBase(c) {
     override val timing = 2
     override fun run() { }
     override fun toString(): String = "NOP"
-}
-
-/** 0xec, CPX $1234 */
-class CpxAbsolute(c: Computer): InstructionBase(c) {
-    override val opCode = CPX_ABS
-    override val size = 3
-    override val timing = 4
-    override fun run() {
-        val tmp: Int = (cpu.X - memory[word]) and 0xff
-        cpu.P.C = cpu.X >= memory[word]
-        cpu.P.Z = tmp == 0
-        cpu.P.N = (tmp and 0x80) != 0
-    }
-    override fun toString() = "CPX $${word.h()}"
 }
 
 /** 0xf8, SED */
