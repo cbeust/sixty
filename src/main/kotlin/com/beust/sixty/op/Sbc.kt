@@ -25,7 +25,7 @@ abstract class SbcBase(c: Computer, override val opCode: Int, override val size:
             cpu.A = result and 0xff
         } else {
             // Call ADC with the one complement of the operand
-            add(value.inv())
+            add((value.inv().and(0xff)))
         }
     }
     override fun toString(): String = "SBC${name}"
