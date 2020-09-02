@@ -12,6 +12,7 @@ abstract class RolBase(c: Computer, override val opCode: Int, override val size:
         val result = (value.shl(1).or(cpu.P.C.int())) and 0xff
         cpu.P.C = value.and(0x80) != 0
         value = result
+        cpu.P.setNZFlags(value)
     }
     override fun toString(): String = "ROL${name}"
 }
