@@ -292,7 +292,7 @@ abstract class InstructionBase(val computer: Computer): Instruction {
 /** 0x00, BRK */
 class Brk(c: Computer): InstructionBase(c) {
     private fun handleInterrupt(brk: Boolean, vectorHigh: Int, vectorLow: Int) {
-        cpu.SP.pushWord(cpu.PC + 1)
+        cpu.SP.pushWord(cpu.PC + 2)
         cpu.SP.pushByte(cpu.P.toByte())
         cpu.P.I = true
         cpu.PC = memory[vectorHigh].shl(8).or(memory[vectorLow])
