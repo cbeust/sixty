@@ -108,10 +108,6 @@ const val LDY_ZP_X = 0xb4
 const val LDY_ABS = 0xac
 const val LDY_ABS_X = 0xbc
 
-const val STY_ZP = 0x84
-const val STY_ZP_X = 0x94
-const val STY_ABS = 0x8c
-
 const val LSR = 0x4a
 const val LSR_ZP = 0x46
 const val LSR_ZP_X = 0x56
@@ -150,6 +146,10 @@ const val STA_ABS_X = 0x9d
 const val STA_ABS_Y = 0x99
 const val STA_IND_X = 0x81
 const val STA_IND_Y = 0x91
+
+const val STY_ZP = 0x84
+const val STY_ZP_X = 0x94
+const val STY_ABS = 0x8c
 
 const val STX_ZP = 0x86
 const val STX_ZP_Y = 0x96

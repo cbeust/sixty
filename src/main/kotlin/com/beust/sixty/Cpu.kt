@@ -55,23 +55,10 @@ data class Cpu(var A: Int = 0, var X: Int = 0, var Y: Int = 0, var PC: Int = 0xf
             ROR_ZP_X -> RorZpX(computer)
             SEI -> Sei(computer)
             ROR_ABS_X -> RorAbsoluteX(computer)
-            STA_IND_X -> StaIndirectX(computer)
-            STY_ZP -> StyZp(computer)
-            STA_ZP -> StaZp(computer)
-            STX_ZP -> StxZp(computer)
             DEY -> Dey(computer)
-            STY_ABS -> StyAbsolute(computer)
-            STA_ABS -> StaAbsolute(computer)
-            STX_ABS -> StxAbsolute(computer)
             TXA -> Txa(computer)
-            STA_IND_Y -> StaIndirectY(computer)
-            STY_ZP_X-> StyZpX(computer)
-            STA_ZP_X -> StaZpX(computer)
-            STX_ZP_Y -> StxZpY(computer)
             TYA -> Tya(computer)
-            STA_ABS_Y -> StaAbsoluteY(computer)
             TXS -> Txs(computer)
-            STA_ABS_X -> StaAbsoluteX(computer)
             TAY -> Tay(computer)
             TAX -> Tax(computer)
             CLV -> Clv(computer)
@@ -191,6 +178,22 @@ data class Cpu(var A: Int = 0, var X: Int = 0, var Y: Int = 0, var PC: Int = 0xf
             SBC_IND_X -> SbcIndX(computer)
             SBC_IND_Y -> SbcIndY(computer)
 
+            STA_ZP -> StaZp(computer)
+            STA_ZP_X -> StaZpX(computer)
+            STA_ABS -> StaAbsolute(computer)
+            STA_ABS_X -> StaAbsoluteX(computer)
+            STA_ABS_Y -> StaAbsoluteY(computer)
+            STA_IND_X -> StaIndX(computer)
+            STA_IND_Y -> StaIndY(computer)
+
+            STX_ZP -> StxZp(computer)
+            STX_ZP_Y -> StxZpY(computer)
+            STX_ABS -> StxAbsolute(computer)
+
+            STY_ZP -> StyZp(computer)
+            STY_ZP_X-> StyZpX(computer)
+            STY_ABS -> StyAbsolute(computer)
+
             BIT_ZP -> BitZp(computer)
             BIT_ABS -> BitAbsolute(computer)
 
@@ -274,13 +277,15 @@ abstract class InstructionBase(val computer: Computer): Instruction {
     }
 
     inner class ValZpX {
-        operator fun getValue(thisRef: Any?, property: KProperty<*>) = memory[operand + cpu.X]
-        operator fun setValue(thisRef: Any?, property: KProperty<*>, value: Int) { memory[operand + cpu.X] = value }
+        operator fun getValue(thisRef: Any?, property: KProperty<*>) = memory[(operand + cpu.X) and 0xff]
+        operator fun setValue(thisRef: Any?, property: KProperty<*>, value: Int) {
+            memory[(operand + cpu.X) and 0xff] = value }
     }
 
     inner class ValZpY {
-        operator fun getValue(thisRef: Any?, property: KProperty<*>) = memory[operand + cpu.Y]
-        operator fun setValue(thisRef: Any?, property: KProperty<*>, value: Int) { memory[operand + cpu.Y] = value }
+        operator fun getValue(thisRef: Any?, property: KProperty<*>) = memory[(operand + cpu.Y) and 0xff]
+        operator fun setValue(thisRef: Any?, property: KProperty<*>, value: Int) {
+            memory[(operand + cpu.Y) and 0xff] = value }
     }
 
     inner class ValRegisterA {
@@ -473,70 +478,12 @@ class Sei(c: Computer): FlagInstruction(c, 0x78, "SEI") {
     override fun run() { cpu.P.I = true }
 }
 
-/** 0x81, STA($82,X) */
-class StaIndirectX(c: Computer): InstructionBase(c) {
-    override val opCode = STA_IND_X
-    override val size = 2
-    override val timing = 6
-    override fun run() {
-        val targetAddress = indirectX(operand)
-        memory[targetAddress] = cpu.A
-    }
-    override fun toString(): String = "STA ($${operand.h()},X)"
-}
-
-/** 0x84, STY $10 */
-class StyZp(c: Computer): ZpBase(c, 0x84, "STY") {
-    override fun run() { memory[operand] = cpu.Y }
-}
-
-/** 0x85, STA ($10) */
-class StaZp(c: Computer): InstructionBase(c) {
-    override val opCode = 0x85
-    override val size = 2
-    override val timing = 3
-    override fun run() { memory[operand] = cpu.A }
-    override fun toString(): String = "STA $" + memory[cpu.PC + 1].h()
-}
-
-/** 0x86, STX $10 */
-class StxZp(c: Computer): ZpBase(c, 0x86, "STX") {
-    override fun run() { memory[operand] = cpu.X }
-}
-
 /** 0x88, INX */
 class Dey(c: Computer): RegisterInstruction(c, 0x88, "DEY") {
     override fun run() {
         cpu.Y = (--cpu.Y).and(0xff)
         cpu.P.setNZFlags(cpu.Y)
     }
-}
-
-/** 0x8c, STY ($1234) */
-class StyAbsolute(c: Computer): InstructionBase(c) {
-    override val opCode = 0x8c
-    override val size = 3
-    override val timing = 4
-    override fun run() { memory[word] = cpu.Y }
-    override fun toString(): String = "STY $${word.hh()}"
-}
-
-/** 0x8d, STA ($1234) */
-class StaAbsolute(c: Computer): InstructionBase(c) {
-    override val opCode = 0x8d
-    override val size = 3
-    override val timing = 4
-    override fun run() { memory[word] = cpu.A }
-    override fun toString(): String = "STA $${word.hh()}"
-}
-
-/** 0x8e, STX ($1234) */
-class StxAbsolute(c: Computer): InstructionBase(c) {
-    override val opCode = 0x8e
-    override val size = 3
-    override val timing = 4
-    override fun run() { memory[word] = cpu.X }
-    override fun toString(): String = "STX $${word.hh()}"
 }
 
 /** 0x8a, TXA */
@@ -547,62 +494,12 @@ class Txa(c: Computer): RegisterInstruction(c, 0x8a, "TXA") {
     }
 }
 
-/** 0x91, STA ($12),Y */
-class StaIndirectY(c: Computer): InstructionBase(c) {
-    override val opCode = 0x91
-    override val size = 2
-    override val timing = 6
-    override fun run() {
-        val targetAddress = indirectY(operand)
-        memory[targetAddress] = cpu.A
-    }
-    override fun toString(): String = "STA ($${operand.toByte().h()}),Y"
-}
-
-abstract class StyZpInd(c: Computer, override val opCode: Int, private val name: String): InstructionBase(c) {
-    override val size = 2
-    override val timing = 4
-    override fun toString(): String = "$name $${operand.h()},X"
-}
-
-/** 0x94, STY $12,X */
-class StyZpX(c: Computer): StyZpInd(c, STY_ZP_X, "STY") {
-    override fun run() { memory[operand + cpu.X] = cpu.Y }
-}
-
-/** 0x95, STA $12,X */
-class StaZpX(c: Computer): StyZpInd(c, STA_ZP_X, "STA") {
-    override fun run() { memory[operand + cpu.X] = cpu.A }
-}
-
-/** 0x96, STX $12,Y */
-class StxZpY(c: Computer): InstructionBase(c) {
-    override val opCode = STX_ZP_Y
-    override val size = 2
-    override val timing = 4
-    override fun run() {
-        memory[operand + cpu.Y] = cpu.X
-    }
-    override fun toString(): String = "STX $${operand.h()},Y"
-}
-
 /** 0x98, TYA */
 class Tya(c: Computer): RegisterInstruction(c, 0x98, "TYA") {
     override fun run() {
         cpu.A = cpu.Y
         cpu.P.setNZFlags(cpu.A)
     }
-}
-
-/** 0x99, STA $1234,Y */
-class StaAbsoluteY(c: Computer): InstructionBase(c) {
-    override val opCode = STA_ABS_Y
-    override val size = 3
-    override val timing = 5
-    override fun run() {
-        memory[word + cpu.Y] = cpu.A
-    }
-    override fun toString(): String = "STA $${word.h()},X"
 }
 
 /** 0x9a, TXS */
@@ -624,15 +521,6 @@ class Tay(c: Computer): RegisterInstruction(c, 0xa8, "TAY") {
         cpu.Y = cpu.A
         cpu.P.setNZFlags(cpu.Y)
     }
-}
-
-/** 0x9d, STA $1234,X */
-class StaAbsoluteX(c: Computer): InstructionBase(c) {
-    override val opCode = STA_ABS_X
-    override val size = 3
-    override val timing = 5
-    override fun run() { memory[word + cpu.X] = cpu.A }
-    override fun toString(): String = "STA $${word.hh()},X"
 }
 
 /** 0xaa, TAX */
