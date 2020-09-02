@@ -52,10 +52,10 @@ class Computer(val cpu: Cpu = Cpu(memory = Memory()), val memory: Memory,
                     println(this)
                     println("Breakpoint")
                 }
-                if (DEBUG_ASM) disassemble(cpu, inst, print = true)
                 val previousPC = cpu.PC
                 inst.run()
                 // If the instruction modified the PC (e.g. JSR, JMP, BRK, RTS, RTI), don't change it
+                if (DEBUG_ASM) disassemble(cpu, inst, print = true)
                 if (! inst.changedPc) {
                     cpu.PC += inst.size
                 }
