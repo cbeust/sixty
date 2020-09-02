@@ -61,7 +61,7 @@ class Computer(val cpu: Cpu = Cpu(memory = Memory()), val memory: Memory,
                 }
 
                 if (previousPc == cpu.PC) {
-                    // Current functional tests highest score: 40946
+                    // Current functional tests highest score: 40937
                     println(this)
                     println("Forever loop after $cycles cycles")
                     println("")

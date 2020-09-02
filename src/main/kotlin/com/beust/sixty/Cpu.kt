@@ -165,7 +165,7 @@ data class Cpu(var A: Int = 0, var X: Int = 0, var Y: Int = 0, var PC: Int = 0xf
             EOR_ABS_X -> EorAbsoluteX(computer)
             EOR_ABS_Y -> EorAbsoluteY(computer)
 
-            ORA_IMM -> OraImm(computer)
+            ORA_IMM -> OraImmediate(computer)
             ORA_ZP -> OraZp(computer)
             ORA_ZP_X -> OraZpX(computer)
             ORA_ABS -> OraAbsolute(computer)
@@ -275,7 +275,7 @@ abstract class InstructionBase(val computer: Computer): Instruction {
         operator fun setValue(thisRef: Any?, property: KProperty<*>, value: Int) { cpu.A = value }
     }
 
-    protected fun nameImmediate() = " $${operand.h()}"
+    protected fun nameImmediate() = " #$${operand.h()}"
     protected fun nameZp() = " $${operand.h()}"
     protected fun nameZpX() = nameZp() + ",X"
     protected fun nameAbs() = " $${word.hh()}"
@@ -305,7 +305,7 @@ class Brk(c: Computer): InstructionBase(c) {
         changedPc = true
         handleInterrupt(true, Cpu.IRQ_VECTOR_H, Cpu.IRQ_VECTOR_L)
         cpu.P.B = true
-        cpu.P.I = false
+//        cpu.P.I = false
         cpu.P.reserved = true
     }
     override fun toString(): String = "BRK"
@@ -319,19 +319,6 @@ class Php(c: Computer): StackInstruction(c, PHP, "PHP") {
         cpu.P.reserved = true
         cpu.SP.pushByte(cpu.P.toByte())
     }
-}
-
-/** 0x98, ORA #$12 */
-class OraImm(c: Computer): InstructionBase(c) {
-    override val opCode = ORA_IMM
-    override val size = 2
-    override val timing = 2
-    override fun run() {
-        val result = cpu.A.or(operand)
-        cpu.P.setNZFlags(result)
-        cpu.A = result
-    }
-    override fun toString(): String = "ORA #$${operand.h()}"
 }
 
 abstract class FlagInstruction(c: Computer, override val opCode: Int, val name: String): InstructionBase(c) {
