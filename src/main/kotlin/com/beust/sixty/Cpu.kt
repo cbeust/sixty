@@ -278,6 +278,11 @@ abstract class InstructionBase(val computer: Computer): Instruction {
         operator fun setValue(thisRef: Any?, property: KProperty<*>, value: Int) { memory[operand + cpu.X] = value }
     }
 
+    inner class ValZpY {
+        operator fun getValue(thisRef: Any?, property: KProperty<*>) = memory[operand + cpu.Y]
+        operator fun setValue(thisRef: Any?, property: KProperty<*>, value: Int) { memory[operand + cpu.Y] = value }
+    }
+
     inner class ValRegisterA {
         operator fun getValue(thisRef: Any?, property: KProperty<*>) = cpu.A
         operator fun setValue(thisRef: Any?, property: KProperty<*>, value: Int) { cpu.A = value }
@@ -286,6 +291,7 @@ abstract class InstructionBase(val computer: Computer): Instruction {
     protected fun nameImmediate() = " #$${operand.h()}"
     protected fun nameZp() = " $${operand.h()}"
     protected fun nameZpX() = nameZp() + ",X"
+    protected fun nameZpY() = nameZp() + ",Y"
     protected fun nameAbs() = " $${word.hh()}"
     protected fun nameAbsX() = nameAbs() + ",X"
     protected fun nameAbsY() = nameAbs() + ",Y"
@@ -594,9 +600,9 @@ class StaAbsoluteY(c: Computer): InstructionBase(c) {
     override val size = 3
     override val timing = 5
     override fun run() {
-        memory[operand + cpu.Y] = cpu.A
+        memory[word + cpu.Y] = cpu.A
     }
-    override fun toString(): String = "STA $${operand.h()},X"
+    override fun toString(): String = "STA $${word.h()},X"
 }
 
 /** 0x9a, TXS */

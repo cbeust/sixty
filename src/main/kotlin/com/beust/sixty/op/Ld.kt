@@ -113,8 +113,8 @@ class LdxZp(c: Computer): LdxBase(c, LDX_ZP, 2, 3) {
 
 /** LDX $12,Y */
 class LdxZpY(c: Computer): LdxBase(c, LDX_ZP_Y, 2, 4) {
-    override var value by ValZp()
-    override val name = nameZp()
+    override var value by ValZpY()
+    override val name = nameZpY()
 }
 
 /** LDX $1234 */
@@ -125,8 +125,8 @@ class LdxAbsolute(c: Computer): LdxBase(c, LDX_ABS, 3, 4) {
 
 /** LDX $1234,Y */
 class LdxAbsoluteY(c: Computer): LdxBase(c, LDX_ABS_Y, 3, 4) {
-    override var value by ValAbsolute()
-    override val name = nameAbs()
+    override var value by ValAbsoluteY()
+    override val name = nameAbsY()
 }
 
 abstract class LdyBase(c: Computer, override val opCode: Int, override val size: Int, override val timing: Int)
@@ -150,10 +150,10 @@ class LdyZp(c: Computer): LdyBase(c, LDY_ZP, 2, 3) {
     override val name = nameZp()
 }
 
-/** LDY $12,Y */
+/** LDY $12,X */
 class LdyZpX(c: Computer): LdyBase(c, LDY_ZP_X, 2, 4) {
-    override var value by ValZp()
-    override val name = nameZp()
+    override var value by ValZpX()
+    override val name = nameZpX()
 }
 
 /** LDY $1234 */
@@ -162,8 +162,8 @@ class LdyAbsolute(c: Computer): LdyBase(c, LDY_ABS, 3, 4) {
     override val name = nameAbs()
 }
 
-/** LDY $1234,Y */
+/** LDY $1234,X */
 class LdyAbsoluteX(c: Computer): LdyBase(c, LDY_ABS_X, 3, 4) {
-    override var value by ValAbsolute()
-    override val name = nameAbs()
+    override var value by ValAbsoluteX()
+    override val name = nameAbsX()
 }
