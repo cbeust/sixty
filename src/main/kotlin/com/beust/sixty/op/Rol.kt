@@ -31,7 +31,7 @@ class RolZp(c: Computer): RolBase(c, ROL_ZP, 2, 5) {
 
 /** 0x36, ROL $12,X */
 class RolZpX(c: Computer): RolBase(c, ROL_ZP_X, 2, 6) {
-    override var value by ValZp()
+    override var value by ValZpX()
     override val name = nameZpX()
 }
 
