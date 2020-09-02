@@ -9,7 +9,7 @@ abstract class OraBase(c: Computer, override val opCode: Int, override val size:
     abstract val name: String
     override fun run() {
         cpu.A = cpu.A.or(value)
-        cpu.P.setNZFlags(value)
+        cpu.P.setNZFlags(cpu.A)
     }
     override fun toString(): String = "ORA${name}"
 }
