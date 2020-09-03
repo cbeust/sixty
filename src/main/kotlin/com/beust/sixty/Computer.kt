@@ -56,7 +56,7 @@ class Computer(val cpu: Cpu = Cpu(memory = Memory()), val memory: Memory,
                 val debugString = formatPc(cpu, inst) + formatInstruction(inst)
                 inst.run()
                 // If the instruction modified the PC (e.g. JSR, JMP, BRK, RTS, RTI), don't change it
-                if (DEBUG_ASM && cycles > 26764000) println("$cycles - " + debugString + " " + cpu.toString())
+                if (DEBUG_ASM) println("$cycles - " + debugString + " " + cpu.toString())
                 if (! inst.changedPc) {
                     cpu.PC += inst.size
                 }
