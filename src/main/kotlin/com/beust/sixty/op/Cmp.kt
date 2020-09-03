@@ -7,6 +7,7 @@ abstract class CompareBase(c: Computer, override val opCode: Int, override val s
     : InstructionBase(c)
 {
     abstract val value: Int
+    abstract val opName: String
     abstract val name: String
     abstract val register: Int
 
@@ -17,13 +18,14 @@ abstract class CompareBase(c: Computer, override val opCode: Int, override val s
         cpu.P.N = (tmp and 0x80) != 0
     }
 
-    override fun toString(): String = "CMP${name}"
+    override fun toString(): String = "$opName${name}"
 }
 
 abstract class CmpBase(c: Computer, override val opCode: Int, override val size: Int, override val timing: Int)
     : CompareBase(c, opCode, size, timing)
 {
     override val register = cpu.A
+    override val opName = "CMP"
 }
 
 /** CMP #$12 */
@@ -93,6 +95,7 @@ abstract class CpxBase(c: Computer, override val opCode: Int, override val size:
     : CompareBase(c, opCode, size, timing)
 {
     override val register = cpu.X
+    override val opName = "CPX"
 }
 
 /** CPX #$12 */
@@ -117,6 +120,7 @@ abstract class CpyBase(c: Computer, override val opCode: Int, override val size:
     : CompareBase(c, opCode, size, timing)
 {
     override val register = cpu.Y
+    override val opName = "CPY"
 }
 
 /** CPY #$12 */

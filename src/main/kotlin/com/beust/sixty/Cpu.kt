@@ -121,7 +121,7 @@ data class Cpu(var A: Int = 0, var X: Int = 0, var Y: Int = 0, var PC: Int = 0xf
             AND_IND_X -> AndIndX(computer)
             AND_IND_Y -> AndIndY(computer)
 
-            ADC_IMM -> AdcImm(computer)
+            ADC_IMM -> AdcImmediate(computer)
             ADC_ZP -> AdcZp(computer)
             ADC_ZP_X -> AdcZpX(computer)
             ADC_ABS -> AdcAbsolute(computer)
@@ -442,27 +442,6 @@ class Pla(c: Computer): StackInstruction(c, 0x68, "PLA") {
         cpu.A = cpu.SP.popByte().toInt().and(0xff)
         cpu.P.setNZFlags(cpu.A)
     }
-}
-
-abstract class AddBase(c: Computer): InstructionBase(c) {
-    fun adc(value: Int, operand: Int): Int {
-        var result: Int = operand + value + cpu.P.C.int()
-        val carry6: Int = operand.and(0x7f) + value.and(0x7f) + cpu.P.C.int()
-        cpu.P.C = result.and(0x100) == 1
-        cpu.P.V = cpu.P.C.xor((carry6.and(0x80) != 0))
-        result = result and 0xff
-        cpu.P.setNZFlags(result)
-        return result
-    }
-}
-
-/** 0x69, ADC #$12 */
-class AdcImm(c: Computer): AddBase(c) {
-    override val opCode = 0x69
-    override val size = 2
-    override val timing = 2
-    override fun run() { cpu.A = adc(cpu.A, operand) }
-    override fun toString(): String = "ADC #${operand.h()}"
 }
 
 /** 0x6c, JMP ($0036) */
