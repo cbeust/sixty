@@ -190,7 +190,7 @@ abstract class BaseTest {
     fun adcImm(a: Int, valueToAdd: Int, expected: Int, n: Int, v: Int, c: Int) {
         with(computer(0x69, valueToAdd)) {
             cpu.A = a
-            cpu.nextInstruction(this).run()
+            cpu.nextInstruction(this)!!.run()
             assertRegister(cpu.A, expected)
             assertFlag("N", cpu.P.N, n)
             assertFlag("V", cpu.P.V, v)

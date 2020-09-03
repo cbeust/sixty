@@ -24,6 +24,8 @@ class StackPointer(private val memory: Memory) {
         return memory[address + S].toByte()
     }
 
+    fun peekByte() = memory[address + S + 1]
+
     fun pushWord(a: Int) {
         // High byte fist
         memory[address + S] = a.and(0xff00).shr(8)
