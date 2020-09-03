@@ -55,11 +55,15 @@ class Computer(val cpu: Cpu = Cpu(memory = Memory()), val memory: Memory,
 //                    println(this)
 //                    println("breakpoint: " + memory[0xe].h())
 //                }
-                val previousPC = cpu.PC
-                val debugString = formatPc(cpu, inst) + formatInstruction(inst)
-                inst.run()
-                // If the instruction modified the PC (e.g. JSR, JMP, BRK, RTS, RTI), don't change it
-                if (DEBUG_ASM) println("$cycles - " + debugString + " " + cpu.toString())
+                previousPc = cpu.PC
+                if (DEBUG_ASM) {
+                    val debugString = formatPc(cpu, inst) + formatInstruction(inst)
+                    inst.run()
+                    // If the instruction modified the PC (e.g. JSR, JMP, BRK, RTS, RTI), don't change it
+                    println("$cycles - " + debugString + " " + cpu.toString())
+                } else {
+                    inst.run()
+                }
                 if (! inst.changedPc) {
                     cpu.PC += inst.size
                 }

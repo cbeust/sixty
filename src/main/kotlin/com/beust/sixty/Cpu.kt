@@ -245,25 +245,25 @@ abstract class OperandBase(computer: Computer): Operand {
 class OperandImmediate(c: Computer): OperandBase(c) {
     override fun get() = operand
     override fun set(v: Int) = TODO("Should never happen")
-    override val name = " #$${operand.h()}"
+    override val name get() = " #$${operand.h()}"
 }
 
 class OperandAbsolute(c: Computer): OperandBase(c) {
     override fun get() = memory[word]
     override fun set(v: Int) { memory[word] = v }
-    override val name = " $${word.h()}"
+    override val name get() = " $${word.h()}"
 }
 
 class OperandAbsoluteX(c: Computer): OperandBase(c) {
     override fun get() = memory[word + cpu.X]
     override fun set(v: Int) { memory[word + cpu.X] = v }
-    override val name = " $${word.h()},X"
+    override val name get() = " $${word.h()},X"
 }
 
 class OperandAbsoluteY(c: Computer): OperandBase(c) {
     override fun get() = memory[word + cpu.Y]
     override fun set(v: Int) { memory[word + cpu.Y] = v }
-    override val name = " $${word.h()},Y"
+    override val name get() = " $${word.h()},Y"
 }
 
 class OperandIndirectX(c: Computer): OperandBase(c) {
@@ -271,7 +271,7 @@ class OperandIndirectX(c: Computer): OperandBase(c) {
 
     override fun get() = memory[address]
     override fun set(v: Int) { memory[address] = v }
-    override val name = " ($${operand.h()},X)"
+    override val name get() = " ($${operand.h()},X)"
 }
 
 class OperandIndirectY(c: Computer): OperandBase(c) {
@@ -279,31 +279,31 @@ class OperandIndirectY(c: Computer): OperandBase(c) {
 
     override fun get() = memory[address + cpu.Y]
     override fun set(v: Int) { memory[address + cpu.Y] = v }
-    override val name = " ($${operand.h()}),Y"
+    override val name get() = " ($${operand.h()}),Y"
 }
 
 class OperandZp(c: Computer): OperandBase(c) {
     override fun get() = memory[operand]
     override fun set(v: Int) { memory[operand] = v }
-    override val name = " $${operand.h()}"
+    override val name get() = " $${operand.h()}"
 }
 
 class OperandZpX(c: Computer): OperandBase(c) {
     override fun get() = memory[(operand + cpu.X) and 0xff]
     override fun set(v: Int) { memory[(operand + cpu.X) and 0xff] = v }
-    override val name = " $${operand.h()},X"
+    override val name get() = " $${operand.h()},X"
 }
 
 class OperandZpY(c: Computer): OperandBase(c) {
     override fun get() = memory[(operand + cpu.Y) and 0xff]
     override fun set(v: Int) { memory[(operand + cpu.Y) and 0xff] = v }
-    override val name = " $${operand.h()},Y"
+    override val name get() = " $${operand.h()},Y"
 }
 
 class OperandRegisterA(c: Computer): OperandBase(c) {
     override fun get() = cpu.A
     override fun set(v: Int) { cpu.A = v }
-    override val name = ""
+    override val name get() = ""
 }
 
 
