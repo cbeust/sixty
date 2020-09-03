@@ -2,12 +2,10 @@ package com.beust.sixty.op
 
 import com.beust.sixty.*
 
-abstract class SbcBase(c: Computer, override val opCode: Int, override val size: Int, override val timing: Int)
+abstract class SbcBase(c: Computer, override val opCode: Int, override val size: Int, override val timing: Int,
+        val op: Operand)
     : AdcSbcBase(c, opCode, size, timing)
 {
-    abstract var value: Int
-    abstract val name: String
-
     override fun run() {
         if (cpu.P.D) {
             var l: Int
@@ -25,40 +23,26 @@ abstract class SbcBase(c: Computer, override val opCode: Int, override val size:
             cpu.A = result and 0xff
         } else {
             // Call ADC with the one complement of the operand
-            add((value.inv().and(0xff)))
+            add((op.get().inv().and(0xff)))
         }
     }
-    override fun toString(): String = "SBC${name}"
+    override fun toString(): String = "SBC${op.name}"
 }
 
 /** SBC #$12 */
-class SbcImmediate(c: Computer): SbcBase(c, SBC_IMM, 2, 2) {
-    override var value by ValImmediate()
-    override val name = nameImmediate()
-}
+class SbcImmediate(c: Computer): SbcBase(c, SBC_IMM, 2, 2, OperandImmediate(c))
 
 /** SBC $12 */
-class SbcZp(c: Computer): SbcBase(c, SBC_ZP, 2, 3) {
-    override var value by ValZp()
-    override val name = nameZp()
-}
+class SbcZp(c: Computer): SbcBase(c, SBC_ZP, 2, 3, OperandZp(c))
 
 /** SBC $12,X */
-class SbcZpX(c: Computer): SbcBase(c, SBC_ZP_X, 2, 4) {
-    override var value by ValZpX()
-    override val name = nameZpX()
-}
+class SbcZpX(c: Computer): SbcBase(c, SBC_ZP_X, 2, 4, OperandZpX(c))
 
 /** SBC $1234 */
-class SbcAbsolute(c: Computer): SbcBase(c, SBC_ABS, 3, 4) {
-    override var value by ValAbsolute()
-    override val name = nameAbs()
-}
+class SbcAbsolute(c: Computer): SbcBase(c, SBC_ABS, 3, 4, OperandAbsolute(c))
 
 /** SBC $1234,X */
-class SbcAbsoluteX(c: Computer): SbcBase(c, SBC_ABS_X, 3, 4) {
-    override var value by ValAbsoluteX()
-    override val name = nameAbsX()
+class SbcAbsoluteX(c: Computer): SbcBase(c, SBC_ABS_X, 3, 4, OperandAbsoluteX(c)) {
     override var timing = 4
     override fun run() {
         super.run()
@@ -67,9 +51,7 @@ class SbcAbsoluteX(c: Computer): SbcBase(c, SBC_ABS_X, 3, 4) {
 }
 
 /** SBC $1234,Y */
-class SbcAbsoluteY(c: Computer): SbcBase(c, SBC_ABS_Y, 3, 4) {
-    override var value by ValAbsoluteY()
-    override val name = nameAbsY()
+class SbcAbsoluteY(c: Computer): SbcBase(c, SBC_ABS_Y, 3, 4, OperandAbsoluteY(c)) {
     override var timing = 4
     override fun run() {
         super.run()
@@ -78,15 +60,10 @@ class SbcAbsoluteY(c: Computer): SbcBase(c, SBC_ABS_Y, 3, 4) {
 }
 
 /** 0x21, SBC ($12,X) */
-class SbcIndX(c: Computer): SbcBase(c, SBC_IND_X, 2, 6) {
-    override var value by ValIndirectX()
-    override val name = nameIndirectX()
-}
+class SbcIndX(c: Computer): SbcBase(c, SBC_IND_X, 2, 6, OperandIndirectX(c))
 
 /** 0x31, SBC ($12),Y */
-class SbcIndY(c: Computer): SbcBase(c, SBC_IND_Y, 2, 5) {
-    override var value by ValIndirectY()
-    override val name = nameIndirectY()
+class SbcIndY(c: Computer): SbcBase(c, SBC_IND_Y, 2, 5, OperandIndirectY(c)) {
     override var timing = 4
     override fun run() {
         super.run()

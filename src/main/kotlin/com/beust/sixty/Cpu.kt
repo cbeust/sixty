@@ -228,6 +228,85 @@ data class Cpu(var A: Int = 0, var X: Int = 0, var Y: Int = 0, var PC: Int = 0xf
     }
 }
 
+interface Operand {
+    fun get(): Int
+    fun set(v: Int)
+    val name: String
+}
+
+abstract class OperandBase(computer: Computer): Operand {
+    val cpu by lazy { computer.cpu }
+    val memory by lazy { computer.memory }
+    val pc by lazy { cpu.PC}
+    val operand by lazy { memory[pc + 1] }
+    val word by lazy { memory[pc + 2].shl(8).or(memory[pc + 1]) }
+}
+
+class OperandImmediate(c: Computer): OperandBase(c) {
+    override fun get() = operand
+    override fun set(v: Int) = TODO("Should never happen")
+    override val name = " #$${operand.h()}"
+}
+
+class OperandAbsolute(c: Computer): OperandBase(c) {
+    override fun get() = memory[word]
+    override fun set(v: Int) { memory[word] = v }
+    override val name = " $${word.h()}"
+}
+
+class OperandAbsoluteX(c: Computer): OperandBase(c) {
+    override fun get() = memory[word + cpu.X]
+    override fun set(v: Int) { memory[word + cpu.X] = v }
+    override val name = " $${word.h()},X"
+}
+
+class OperandAbsoluteY(c: Computer): OperandBase(c) {
+    override fun get() = memory[word + cpu.Y]
+    override fun set(v: Int) { memory[word + cpu.Y] = v }
+    override val name = " $${word.h()},Y"
+}
+
+class OperandIndirectX(c: Computer): OperandBase(c) {
+    private val address = memory[(operand + cpu.X) and 0xff].or(memory[(operand + cpu.X + 1) and 0xff].shl(8))
+
+    override fun get() = memory[address]
+    override fun set(v: Int) { memory[address] = v }
+    override val name = " ($${operand.h()},X)"
+}
+
+class OperandIndirectY(c: Computer): OperandBase(c) {
+    private val address = memory[operand].or(memory[(operand + 1) and 0xff].shl(8))
+
+    override fun get() = memory[address + cpu.Y]
+    override fun set(v: Int) { memory[address + cpu.Y] = v }
+    override val name = " ($${operand.h()}),Y"
+}
+
+class OperandZp(c: Computer): OperandBase(c) {
+    override fun get() = memory[operand]
+    override fun set(v: Int) { memory[operand] = v }
+    override val name = " $${operand.h()}"
+}
+
+class OperandZpX(c: Computer): OperandBase(c) {
+    override fun get() = memory[(operand + cpu.X) and 0xff]
+    override fun set(v: Int) { memory[(operand + cpu.X) and 0xff] = v }
+    override val name = " $${operand.h()},X"
+}
+
+class OperandZpY(c: Computer): OperandBase(c) {
+    override fun get() = memory[(operand + cpu.Y) and 0xff]
+    override fun set(v: Int) { memory[(operand + cpu.Y) and 0xff] = v }
+    override val name = " $${operand.h()},Y"
+}
+
+class OperandRegisterA(c: Computer): OperandBase(c) {
+    override fun get() = cpu.A
+    override fun set(v: Int) { cpu.A = v }
+    override val name = ""
+}
+
+
 abstract class InstructionBase(val computer: Computer): Instruction {
     val cpu by lazy { computer.cpu }
     val memory by lazy { computer.memory }
@@ -236,77 +315,6 @@ abstract class InstructionBase(val computer: Computer): Instruction {
     val word by lazy { memory[pc + 2].shl(8).or(memory[pc + 1]) }
 
     var changedPc: Boolean = false
-
-    inner class ValImmediate {
-        operator fun getValue(thisRef: Any?, property: KProperty<*>) = operand
-        operator fun setValue(thisRef: Any?, property: KProperty<*>, value: Int) { TODO("Should never happen") }
-    }
-
-    inner class ValAbsolute {
-        operator fun getValue(thisRef: Any?, property: KProperty<*>) = memory[word]
-        operator fun setValue(thisRef: Any?, property: KProperty<*>, value: Int) { memory[word] = value }
-    }
-
-    inner class ValAbsoluteX {
-        operator fun getValue(thisRef: Any?, property: KProperty<*>) = memory[word + cpu.X]
-        operator fun setValue(thisRef: Any?, property: KProperty<*>, value: Int) { memory[word + cpu.X] = value }
-    }
-
-    inner class ValAbsoluteY {
-        operator fun getValue(thisRef: Any?, property: KProperty<*>) = memory[word + cpu.Y]
-        operator fun setValue(thisRef: Any?, property: KProperty<*>, value: Int) { memory[word + cpu.Y] = value }
-    }
-
-    inner class ValIndirectX {
-        private val address = memory[(operand + cpu.X) and 0xff].or(memory[(operand + cpu.X + 1) and 0xff].shl(8))
-
-        operator fun getValue(thisRef: Any?, property: KProperty<*>) = memory[address]
-        operator fun setValue(thisRef: Any?, property: KProperty<*>, value: Int) {
-            memory[address] = value
-        }
-    }
-
-    inner class ValIndirectY{
-        private val address = memory[operand].or(memory[(operand + 1) and 0xff].shl(8))
-
-        operator fun getValue(thisRef: Any?, property: KProperty<*>) = memory[address + cpu.Y]
-        operator fun setValue(thisRef: Any?, property: KProperty<*>, value: Int) {
-            memory[address + cpu.Y] = value
-        }
-    }
-
-    inner class ValZp {
-        operator fun getValue(thisRef: Any?, property: KProperty<*>) = memory[operand]
-        operator fun setValue(thisRef: Any?, property: KProperty<*>, value: Int) { memory[operand] = value }
-    }
-
-    inner class ValZpX {
-        operator fun getValue(thisRef: Any?, property: KProperty<*>) = memory[(operand + cpu.X) and 0xff]
-        operator fun setValue(thisRef: Any?, property: KProperty<*>, value: Int) {
-            memory[(operand + cpu.X) and 0xff] = value }
-    }
-
-    inner class ValZpY {
-        operator fun getValue(thisRef: Any?, property: KProperty<*>) = memory[(operand + cpu.Y) and 0xff]
-        operator fun setValue(thisRef: Any?, property: KProperty<*>, value: Int) {
-            memory[(operand + cpu.Y) and 0xff] = value }
-    }
-
-    inner class ValRegisterA {
-        operator fun getValue(thisRef: Any?, property: KProperty<*>) = cpu.A
-        operator fun setValue(thisRef: Any?, property: KProperty<*>, value: Int) { cpu.A = value }
-    }
-
-    protected fun nameImmediate() = " #$${operand.h()}"
-    protected fun nameZp() = " $${operand.h()}"
-    protected fun nameZpX() = nameZp() + ",X"
-    protected fun nameZpY() = nameZp() + ",Y"
-    protected fun nameAbs() = " $${word.hh()}"
-    protected fun nameAbsX() = nameAbs() + ",X"
-    protected fun nameAbsY() = nameAbs() + ",Y"
-    protected fun nameA() = ""
-    protected fun nameIndirectX() = " ($${operand.h()},X)"
-    protected fun nameIndirectY() = " ($${operand.h()}),Y"
 
     protected fun indirectX(address: Int): Int = memory[address + cpu.X]
     protected fun indirectY(address: Int): Int = memory[address] + cpu.Y

@@ -1,5 +1,6 @@
 package com.beust.sixty
 
+import com.beust.sixty.op.CpyImm
 import org.assertj.core.api.Assertions.assertThat
 import org.testng.annotations.DataProvider
 import org.testng.annotations.Test
@@ -58,7 +59,7 @@ abstract class BaseTest {
         with(computer(0x20, 0x34, 0x12, 0xEA, 0xEA, 0xEA)) {
             assertThat(cpu.SP.isEmpty())
             cpu.nextInstruction(this).let { inst ->
-                inst.run()
+                inst!!.run()
                 assertThat(cpu.PC).isEqualTo(0x1234 - inst.size)
                 // Need to test SP
             }
@@ -70,7 +71,7 @@ abstract class BaseTest {
         val expected = 0x23
         with(computer(0xa9, expected)) {
             assertThat(cpu.A).isNotEqualTo(expected)
-            cpu.nextInstruction(this).run()
+            cpu.nextInstruction(this)!!.run()
             assertThat(cpu.A).isEqualTo(expected)
         }
     }
@@ -97,7 +98,7 @@ abstract class BaseTest {
             assertThat(memory[10]).isNotEqualTo(0x42)
             cpu.A = 0x42
             cpu.Y = 2
-            cpu.nextInstruction(this).run()
+            cpu.nextInstruction(this)!!.run()
             assertMemory(10, 0x42)
         }
     }
