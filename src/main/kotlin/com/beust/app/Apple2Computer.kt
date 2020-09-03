@@ -42,7 +42,7 @@ fun apple2Computer(): Computer {
     }
 
     val listener = object: MemoryListener {
-        override var lastMemDebug: String? = null
+        override var lastMemDebug = arrayListOf<String>()
 
         override fun onRead(location: Int, value: Int) {
         }

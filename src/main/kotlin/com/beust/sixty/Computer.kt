@@ -22,6 +22,8 @@ class Computer(val cpu: Cpu = Cpu(memory = Memory()), val memory: Memory,
         memoryInterceptor: MemoryInterceptor? = null,
         var pcListener: PcListener? = null
 ) {
+    private var startTime: Long = 0
+
     init {
         memory.listener = memoryListener
         memory.interceptor = memoryInterceptor
@@ -34,6 +36,7 @@ class Computer(val cpu: Cpu = Cpu(memory = Memory()), val memory: Memory,
     }
 
     fun run() {
+        startTime = System.currentTimeMillis()
         var cycles = 0
         var done = false
         var previousPc = 0
@@ -48,10 +51,10 @@ class Computer(val cpu: Cpu = Cpu(memory = Memory()), val memory: Memory,
                     val s = cpu.PC.hh()
                     TODO("$s: $" + cpu.memory[cpu.PC].h() + ", cycles: $cycles")
                 }
-                if (cpu.PC == 0x3484) {
-                    println(this)
-                    println("breakpoint: " + memory[0xe].h())
-                }
+//                if (cpu.PC == 0x3484) {
+//                    println(this)
+//                    println("breakpoint: " + memory[0xe].h())
+//                }
                 val previousPC = cpu.PC
                 val debugString = formatPc(cpu, inst) + formatInstruction(inst)
                 inst.run()
@@ -77,7 +80,8 @@ class Computer(val cpu: Cpu = Cpu(memory = Memory()), val memory: Memory,
             }
             pcListener?.onPcChanged(cpu.PC)
         }
-        println("Computer stopping after $cycles cycles")
+        val sec = (System.currentTimeMillis() - startTime) / 1000
+        println("Computer stopping after $cycles cycles, $sec seconds, ${cycles / sec} cycles/sec")
     }
 
     fun clone(): Computer {
