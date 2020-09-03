@@ -9,15 +9,21 @@ fun functionalTestComputer(): Computer {
         this[0x37c9] = BEQ
 
         // ADC tests all pass but take a while, skip them for now
-        this[0x335f] = BEQ
+//        this[0x335f] = BEQ
     }
     val functionalTestCpu = Cpu(memory = functionalTestMemory)
     val result = Computer(memory = functionalTestMemory, cpu = functionalTestCpu,
             memoryListener = DebugMemoryListener).apply {
         pcListener = object: PcListener {
             override fun onPcChanged(newValue: Int) {
+                if (newValue == 0x334e) {
+                    println("  Arithmetic test (hex): " + memory[0xe])
+                }
+                if (newValue == 0x3401) {
+                    println("  Arithmetic test (bcd): " + memory[0x10])
+                }
                 if (newValue == 0x346c || newValue == 0x3469) {
-                    println("All tests passed")
+                    println("\nAll tests passed")
                     stop()
                 }
             }
