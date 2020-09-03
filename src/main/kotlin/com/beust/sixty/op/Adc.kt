@@ -37,7 +37,7 @@ class AdcImmediate(c: Computer): AdcBase(c, ADC_IMM, 2, 2, OperandImmediate(c))
 class AdcZp(c: Computer): AdcBase(c, ADC_ZP, 2, 3, OperandZp(c))
 
 /** ADC $12,X */
-class AdcZpX(c: Computer): AdcBase(c, ADC_ZP_X, 2, 4, OperandZp(c))
+class AdcZpX(c: Computer): AdcBase(c, ADC_ZP_X, 2, 4, OperandZpX(c))
 
 /** ADC $1234 */
 class AdcAbsolute(c: Computer): AdcBase(c, ADC_ABS, 3, 4, OperandAbsolute(c))
