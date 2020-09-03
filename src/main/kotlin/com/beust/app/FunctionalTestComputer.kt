@@ -9,7 +9,8 @@ fun functionalTestComputer(): Computer {
         this[0x37c9] = BEQ
 
         // ADC tests all pass but take a while, skip them for now
-//        this[0x335f] = BEQ
+        this[0x335f] = BEQ // hex tests
+        this[0x3403] = BEQ // bcd tests
     }
     val functionalTestCpu = Cpu(memory = functionalTestMemory)
     val result = Computer(memory = functionalTestMemory, cpu = functionalTestCpu,
