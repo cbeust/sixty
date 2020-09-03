@@ -8,7 +8,7 @@ interface MemoryInterceptor {
 }
 
 interface MemoryListener {
-    var lastMemDebug: String?
+    val lastMemDebug: ArrayList<String>
     fun onRead(location: Int, value: Int)
     fun onWrite(location: Int, value: Int)
 }
@@ -70,10 +70,10 @@ class Computer(val cpu: Cpu = Cpu(memory = Memory()), val memory: Memory,
                     previousPc = cpu.PC
                 }
 
-                memory.listener?.lastMemDebug?.let {
+                memory.listener?.lastMemDebug?.forEach {
                     println("  $it")
-                    memory.listener?.lastMemDebug = null
                 }
+                memory.listener?.lastMemDebug?.clear()
             }
             pcListener?.onPcChanged(cpu.PC)
         }
