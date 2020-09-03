@@ -48,8 +48,8 @@ class Computer(val cpu: Cpu = Cpu(memory = Memory()), val memory: Memory,
                     val s = cpu.PC.hh()
                     TODO("$s: $" + cpu.memory[cpu.PC].h() + ", cycles: $cycles")
                 }
-                if (cpu.PC == 0x335f) {
-//                    println(this)
+                if (cpu.PC == 0x3472) {
+                    println(this)
                     println("breakpoint: " + memory[0xe].h())
                 }
                 val previousPC = cpu.PC
@@ -62,7 +62,7 @@ class Computer(val cpu: Cpu = Cpu(memory = Memory()), val memory: Memory,
                 }
 
                 if (previousPc == cpu.PC) {
-                    // Current functional tests highest score: 158260
+                    // Current functional tests highest score: 158489
                     println(this)
                     println("Forever loop after $cycles cycles")
                     println("")

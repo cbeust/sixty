@@ -13,9 +13,9 @@ abstract class AdcBase(c: Computer, override val opCode: Int, override val size:
             var l: Int
             var h: Int
             var result: Int
-            l = (cpu.A and 0x0f) + (operand and 0x0f) + cpu.P.C.int()
+            l = (cpu.A and 0x0f) + (value and 0x0f) + cpu.P.C.int()
             if (l and 0xff > 9) l += 6
-            h = (cpu.A shr 4) + (operand shr 4) + if (l > 15) 1 else 0
+            h = (cpu.A shr 4) + (value shr 4) + if (l > 15) 1 else 0
             if (h and 0xff > 9) h += 6
             result = l and 0x0f or (h shl 4)
             result = result and 0xff
