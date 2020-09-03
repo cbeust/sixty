@@ -48,15 +48,15 @@ class Computer(val cpu: Cpu = Cpu(memory = Memory()), val memory: Memory,
                     val s = cpu.PC.hh()
                     TODO("$s: $" + cpu.memory[cpu.PC].h() + ", cycles: $cycles")
                 }
-                if (cpu.PC == 0x2d2d) {
-                    println(this)
-                    println("Breakpoint")
+                if (cpu.PC == 0x335f) {
+//                    println(this)
+                    println("breakpoint: " + memory[0xe].h())
                 }
                 val previousPC = cpu.PC
                 val debugString = formatPc(cpu, inst) + formatInstruction(inst)
                 inst.run()
                 // If the instruction modified the PC (e.g. JSR, JMP, BRK, RTS, RTI), don't change it
-                if (DEBUG_ASM) println(debugString + " " + cpu.toString())
+                if (DEBUG_ASM && cycles > 26764000) println("$cycles - " + debugString + " " + cpu.toString())
                 if (! inst.changedPc) {
                     cpu.PC += inst.size
                 }
