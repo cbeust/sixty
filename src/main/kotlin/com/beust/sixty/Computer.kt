@@ -89,7 +89,8 @@ class Computer(val cpu: Cpu = Cpu(memory = Memory()), val memory: Memory,
             pcListener?.onPcChanged(cpu.PC)
         }
         val sec = (System.currentTimeMillis() - startTime) / 1000
-        println("Computer stopping after $cycles cycles, $sec seconds, ${cycles / sec} cycles/sec")
+        val mhz = String.format("%.2f", cycles / sec / 1_000_000.0)
+        println("Computer stopping after $cycles cycles, $sec seconds, $mhz MHz")
     }
 
     fun clone(): Computer {
