@@ -8,4 +8,5 @@ kobaltBuild
 kobalt/out
 lib/kotlin-*
 target/*
+out/*
 
