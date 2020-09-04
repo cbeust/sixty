@@ -41,12 +41,7 @@ fun apple2Computer(): Computer {
         this[0x37] = 0x9e
     }
 
-    val listener = object: MemoryListener {
-        override var lastMemDebug = arrayListOf<String>()
-
-        override fun onRead(location: Int, value: Int) {
-        }
-
+    val listener = object: MemoryListener() {
         override fun onWrite(location: Int, value: Int) {
             if (location >= 0x400 && location < 0x7ff) {
                 textScreen.drawMemoryLocation(location, value)
