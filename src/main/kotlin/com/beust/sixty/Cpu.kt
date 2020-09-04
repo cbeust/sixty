@@ -267,7 +267,7 @@ enum class Addressing {
 class OperandNone(c: Computer): OperandBase(c) {
     override fun get() = operand
     override fun set(v: Int) = TODO("Should never happen")
-    override val name get() = " #$${operand.h()}"
+    override val name get() = ""
 }
 
 class OperandImmediate(c: Computer): OperandBase(c) {

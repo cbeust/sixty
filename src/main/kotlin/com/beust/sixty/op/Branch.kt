@@ -21,7 +21,7 @@ abstract class BranchBase(override val name: String, override val opCode: Int)
     }
 
     override fun toString(c: Computer): String = with(c) {
-        "$name $${(cpu.PC + size + operand.toByte()).h()}"
+        "$name $${(cpu.PC).h()}"
     }
 }
 

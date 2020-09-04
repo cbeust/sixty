@@ -80,7 +80,7 @@ abstract class LdxBase(override val opCode: Int, override val size: Int, overrid
 class LdxImm: LdxBase(LDX_IMM, 2, 2, Addressing.IMMEDIATE)
 
 /** LDX $12 */
-class LdxZp: LdxBase(LDX_ZP, 2, 3, Addressing.ZP_X)
+class LdxZp: LdxBase(LDX_ZP, 2, 3, Addressing.ZP)
 
 /** LDX $12,Y */
 class LdxZpY: LdxBase(LDX_ZP_Y, 2, 4, Addressing.ZP_Y)

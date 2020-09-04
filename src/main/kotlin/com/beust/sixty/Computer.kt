@@ -22,9 +22,9 @@ class Computer(val cpu: Cpu = Cpu(memory = Memory()), val memory: Memory,
         memoryInterceptor: MemoryInterceptor? = null,
         var pcListener: PcListener? = null
 ) {
-    val pc by lazy { cpu.PC}
-    val operand by lazy { memory[pc + 1] }
-    val word by lazy { memory[pc + 2].shl(8).or(memory[pc + 1]) }
+    val pc get() = cpu.PC
+    val operand get() = memory[pc + 1]
+    val word get() = memory[pc + 2].shl(8).or(memory[pc + 1])
 
     private var startTime: Long = 0
 
@@ -55,10 +55,10 @@ class Computer(val cpu: Cpu = Cpu(memory = Memory()), val memory: Memory,
                     val s = cpu.PC.hh()
                     TODO("$s: $" + cpu.memory[cpu.PC].h() + ", cycles: $cycles")
                 }
-//                if (cpu.PC == 0x3484) {
-//                    println(this)
-//                    println("breakpoint: " + memory[0xe].h())
-//                }
+                if (cpu.PC == 0x5a0) {
+                    println(this)
+                    println("breakpoint: " + memory[0xe].h())
+                }
                 previousPc = cpu.PC
                 if (DEBUG_ASM) {
                     val debugString = formatPc(cpu, inst) + formatInstruction(inst)
@@ -124,7 +124,7 @@ class Computer(val cpu: Cpu = Cpu(memory = Memory()), val memory: Memory,
     }
 
     private fun formatInstruction(inst: Instruction): String {
-        return String.format("%-12s", inst.toString())
+        return String.format("%-12s", inst.toString(this))
     }
 
     private fun disassemble(cpu: Cpu, inst: Instruction, print: Boolean): String {

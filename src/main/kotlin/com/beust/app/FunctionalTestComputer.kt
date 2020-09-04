@@ -18,10 +18,10 @@ fun functionalTestComputer(): Computer {
         pcListener = object: PcListener {
             override fun onPcChanged(newValue: Int) {
                 if (newValue == 0x334e) {
-                    println("  Arithmetic test (hex): " + memory[0xe])
+                    print("\r  Arithmetic test (hex): " + memory[0xe])
                 }
                 if (newValue == 0x3401) {
-                    println("  Arithmetic test (bcd): " + memory[0x10])
+                    print("\r  Arithmetic test (bcd): " + memory[0xe])
                 }
                 if (newValue == 0x346c || newValue == 0x3469) {
                     println("\nAll tests passed")
