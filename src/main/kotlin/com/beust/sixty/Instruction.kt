@@ -1,7 +1,6 @@
 package com.beust.sixty
 
-interface
-Instruction {
+interface Instruction {
     /**
      * Opcode of this instruction
      */
@@ -21,6 +20,11 @@ Instruction {
     val addressing: Addressing
 
     val name: String
+
+    fun run(c: Computer) {
+        val (byte, word) = c.byteWord()
+        run(c, byte, word)
+    }
 
     fun run(c: Computer, byte: Int, word: Int)
     fun toString(c: Computer, byte: Int, word: Int): String

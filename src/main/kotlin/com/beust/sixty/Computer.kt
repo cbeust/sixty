@@ -17,14 +17,13 @@ interface PcListener {
     fun onPcChanged(newValue: Int)
 }
 
-class Computer(val cpu: Cpu = Cpu(memory = Memory()), val memory: Memory,
+class Computer(val cpu: Cpu = Cpu(memory = Memory()),
         memoryListener: MemoryListener? = null,
         memoryInterceptor: MemoryInterceptor? = null,
         var pcListener: PcListener? = null
 ) {
     val pc get() = cpu.PC
-//    val operand get() = memory[pc + 1]
-//    val word get() = memory[pc + 2].shl(8).or(memory[pc + 1])
+    val memory = cpu.memory
 
     private var startTime: Long = 0
 
@@ -37,6 +36,10 @@ class Computer(val cpu: Cpu = Cpu(memory = Memory()), val memory: Memory,
 
     fun stop() {
         stop = true
+    }
+
+    fun byteWord(memory: Memory = cpu.memory, address: Int = cpu.PC + 1): Pair<Int, Int> {
+        return memory[address] to memory[address].or(memory[address + 1].shl(8))
     }
 
     fun run() {
@@ -56,18 +59,15 @@ class Computer(val cpu: Cpu = Cpu(memory = Memory()), val memory: Memory,
 //                }
                 previousPc = cpu.PC
                 if (DEBUG_ASM) {
-                    val inst = cpu.nextInstruction(this)
-                    val byte = memory[cpu.PC + 1]
-                    val word = memory[cpu.PC + 1].or(memory[cpu.PC + 2].shl(8))
+                    val inst = cpu.nextInstruction()
+                    val (byte, word) = byteWord()
                     val debugString = formatPc(cpu, inst) + formatInstruction(inst, byte, word)
                     cpu.PC += inst.size
                     inst.run(this, byte, word)
-                    // If the instruction modified the PC (e.g. JSR, JMP, BRK, RTS, RTI), don't change it
                     println(debugString + " " + cpu.toString())
                 } else {
-                    val inst = cpu.nextInstruction(this)
-                    val byte = memory[cpu.PC + 1]
-                    val word = memory[cpu.PC + 1].or(memory[cpu.PC + 2].shl(8))
+                    val inst = cpu.nextInstruction()
+                    val (byte, word) = byteWord()
                     cpu.PC += inst.size
                     inst.run(this, byte, word)
                 }
@@ -93,27 +93,24 @@ class Computer(val cpu: Cpu = Cpu(memory = Memory()), val memory: Memory,
         println("Computer stopping after $cycles cycles, $sec seconds, $mhz MHz")
     }
 
-    fun clone(): Computer {
-        return Computer(cpu.clone(), Memory(memory.size, *memory.content))
-    }
-
-    fun disassemble(add: Int = cpu.PC, length: Int = 10, print: Boolean = true): List<String> {
+//    fun clone(): Computer {
+//        return Computer(cpu.clone(), Memory(memory.size, *memory.content))
+//    }
+//
+    fun disassemble(memory: Memory, a: Int, length: Int = 10, print: Boolean = true): List<String> {
         val result = arrayListOf<String>()
-        with (clone()) {
-            cpu.PC = add
-            var pc = cpu.PC
-            var done = false
-            var n = length
-            while (! done) {
-                val p = memory[pc]
-                val inst = cpu.nextInstruction(this, noThrows = true)!!
-                result.add(disassemble(cpu, inst, print))
-                cpu.PC += inst.size
-                pc += inst.size
-                if (--n <= 0) done = true
-            }
+        var address = a
+        var pc = cpu.PC
+        var done = false
+        var n = length
+        while (! done) {
+            val inst = cpu.nextInstruction(memory, address, noThrows = true)!!
+            result.add(disassemble(cpu, inst, print))
+            address += inst.size
+            pc += inst.size
+            if (--n <= 0) done = true
         }
-        return result
+    return result
     }
 
     private fun formatPc(cpu: Cpu, inst: Instruction): String {

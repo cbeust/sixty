@@ -59,7 +59,7 @@ fun apple2Computer(): Computer {
     }
 
     val appleCpu = Cpu(memory = memory)
-    val result = Computer(memory = memory, cpu = appleCpu).apply {
+    val result = Computer(cpu = appleCpu).apply {
         memory.listener = listener
 //            fillScreen(memory)
 //            fillWithNumbers(memory)

@@ -10,8 +10,9 @@ import com.beust.app.StackPointer
  * http://www.6502.org/tutorials/6502opcodes.html
  */
 
-data class Cpu(var A: Int = 0, var X: Int = 0, var Y: Int = 0, var PC: Int = 0xffff,
-        val memory: Memory, val P: StatusFlags = StatusFlags())
+data class Cpu(val memory: Memory,
+        var A: Int = 0, var X: Int = 0, var Y: Int = 0, var PC: Int = 0xffff,
+        val P: StatusFlags = StatusFlags())
 {
     val SP: StackPointer = StackPointer(memory)
     val OP_ARRAY = Array<Instruction?>(0x100) { _ -> null }
@@ -22,10 +23,8 @@ data class Cpu(var A: Int = 0, var X: Int = 0, var Y: Int = 0, var PC: Int = 0xf
         }
     }
 
-    fun clone() = Cpu(A, X, Y, PC, memory.clone(), P)
-
-    fun nextInstruction(computer: Computer, noThrows: Boolean = false): Instruction {
-        val op = computer.memory[PC] and 0xff
+    fun nextInstruction(mem: Memory = memory, address: Int = PC, noThrows: Boolean = false): Instruction {
+        val op = mem[address] and 0xff
         return OP_ARRAY[op] ?: Unknown(op)
     }
 

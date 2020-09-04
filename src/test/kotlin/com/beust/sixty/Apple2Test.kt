@@ -21,7 +21,7 @@ class Apple2Test: BaseTest() {
             }
 
         }
-        return Computer(memory = memory)
+        return Computer(Cpu(memory))
     }
 
     fun tsx() {
@@ -30,7 +30,6 @@ class Apple2Test: BaseTest() {
                 0xba,          // 0005: TSX
                 0xba)) {       //       TSX
             assertRegister(cpu.X, 0)
-            disassemble()
             run()
             assertRegister(cpu.SP.S, 0xfd)
             assertRegister(cpu.X, 0xfd)

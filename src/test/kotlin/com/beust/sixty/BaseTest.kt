@@ -58,8 +58,8 @@ abstract class BaseTest {
         // jsr $1234
         with(computer(0x20, 0x34, 0x12, 0xEA, 0xEA, 0xEA)) {
             assertThat(cpu.SP.isEmpty())
-            cpu.nextInstruction(this).let { inst ->
-                inst!!.run(this)
+            cpu.nextInstruction().let { inst ->
+                inst.run(this)
                 assertThat(cpu.PC).isEqualTo(0x1234 - inst.size)
                 // Need to test SP
             }
@@ -71,7 +71,7 @@ abstract class BaseTest {
         val expected = 0x23
         with(computer(0xa9, expected)) {
             assertThat(cpu.A).isNotEqualTo(expected)
-            cpu.nextInstruction(this)!!.run(this)
+            cpu.nextInstruction()!!.run(this)
             assertThat(cpu.A).isEqualTo(expected)
         }
     }
@@ -98,7 +98,7 @@ abstract class BaseTest {
             assertThat(memory[10]).isNotEqualTo(0x42)
             cpu.A = 0x42
             cpu.Y = 2
-            cpu.nextInstruction(this)!!.run(this)
+            cpu.nextInstruction()!!.run(this)
             assertMemory(10, 0x42)
         }
     }
@@ -190,7 +190,7 @@ abstract class BaseTest {
     fun adcImm(a: Int, valueToAdd: Int, expected: Int, n: Int, v: Int, c: Int) {
         with(computer(0x69, valueToAdd)) {
             cpu.A = a
-            cpu.nextInstruction(this)!!.run(this)
+            cpu.nextInstruction()!!.run(this)
             assertRegister(cpu.A, expected)
             assertFlag("N", cpu.P.N, n)
             assertFlag("V", cpu.P.V, v)

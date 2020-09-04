@@ -6,8 +6,7 @@ fun functionalTestComputer(): Computer {
     val functionalTestMemory = Memory(65536).apply {
         load("bin_files/6502_functional_test.bin", 0)
     }
-    val functionalTestCpu = Cpu(memory = functionalTestMemory)
-    val result = Computer(memory = functionalTestMemory, cpu = functionalTestCpu,
+    val result = Computer(cpu = Cpu(memory = functionalTestMemory),
             memoryListener = DebugMemoryListener).apply {
         pcListener = object: PcListener {
             override fun onPcChanged(newValue: Int) {
