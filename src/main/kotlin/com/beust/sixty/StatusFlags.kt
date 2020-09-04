@@ -65,8 +65,10 @@ class StatusFlags {
         get() = bit(0)
         set(v) = bit(0, v)
 
-    override fun toString()= "{$${toByte().h()}" +
-            " N=${N.int()} V=${V.int()} B=${B.int()} D=${D.int()} I=${I.int()} Z=${Z.int()} C=${C.int()}}"
+    private fun s(n: String, v: Boolean) = if (v) n else "-"
+
+    override fun toString()= "$${toByte().h()}" +
+            " {${s("N", N)}${s("V", V)}-- ${s("D", D)}${s("I", I)}${s("Z", Z)}${s("C", C)}}"
 
     fun setNZFlags(reg: Int) {
         Z = reg == 0
