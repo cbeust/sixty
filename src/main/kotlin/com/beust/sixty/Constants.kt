@@ -91,7 +91,6 @@ const val JSR = 0x20
 const val LDA_IMM = 0xa9
 const val LDA_ZP = 0xa5
 const val LDA_ZP_X = 0xb5
-const val LDA_ZP_Y = 0xb9
 const val LDA_ABS = 0xad
 const val LDA_ABS_X = 0xbd
 const val LDA_ABS_Y = 0xb9
