@@ -1,6 +1,7 @@
 package com.beust.sixty
 
-interface Instruction {
+interface
+Instruction {
     /**
      * Opcode of this instruction
      */
@@ -17,7 +18,12 @@ interface Instruction {
      */
     val timing: Int
 
-    fun run()
+    val addressing: Addressing
+
+    val name: String
+
+    fun run(c: Computer)
+    fun toString(c: Computer): String
 
     /**
      * @return 1 if a page bounday was crossed, 0 otherwise

@@ -22,6 +22,10 @@ class Computer(val cpu: Cpu = Cpu(memory = Memory()), val memory: Memory,
         memoryInterceptor: MemoryInterceptor? = null,
         var pcListener: PcListener? = null
 ) {
+    val pc by lazy { cpu.PC}
+    val operand by lazy { memory[pc + 1] }
+    val word by lazy { memory[pc + 2].shl(8).or(memory[pc + 1]) }
+
     private var startTime: Long = 0
 
     init {

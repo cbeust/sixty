@@ -14,15 +14,15 @@ abstract class DecBase(c: Computer, override val opCode: Int, override val size:
 }
 
 /** 0xc6, DEC $12 */
-class DecZp(c: Computer): DecBase(c, DEC_ZP, 2, 5, OperandZp(c))
+class DecZp: DecBase(c, DEC_ZP, 2, 5, OperandZp(c))
 
 /** 0xd6, Dec $12,X */
-class DecZpX(c: Computer): DecBase(c, DEC_ZP_X, 2, 6, OperandZpX(c))
+class DecZpX: DecBase(c, DEC_ZP_X, 2, 6, OperandZpX(c))
 
 /** 0xce, Dec $1234 */
-class DecAbsolute(c: Computer): DecBase(c, DEC_ABS, 3, 6, OperandAbsolute(c))
+class DecAbsolute: DecBase(c, DEC_ABS, 3, 6, OperandAbsolute(c))
 
 /** 0xde, Dec $1234,X */
-class DecAbsoluteX(c: Computer): DecBase(c, DEC_ABS_X, 3, 7, OperandAbsoluteX(c))
+class DecAbsoluteX: DecBase(c, DEC_ABS_X, 3, 7, OperandAbsoluteX(c))
 
 

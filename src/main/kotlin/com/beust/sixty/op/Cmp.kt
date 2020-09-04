@@ -2,104 +2,99 @@ package com.beust.sixty.op
 
 import com.beust.sixty.*
 
-abstract class CompareBase(c: Computer, override val opCode: Int, override val size: Int,
-        override val timing: Int, val op: Operand)
-    : InstructionBase(c)
+abstract class CompareBase(override val name: String, override val opCode: Int, override val size: Int,
+        override val timing: Int, override val addressing: Addressing)
+    : InstructionBase(name, opCode, size, timing, addressing)
 {
-    abstract val opName: String
-    abstract val register: Int
+    abstract fun register(c: Computer): Int
 
-    override fun run() {
+    override fun run(c: Computer, op: Operand) = with(c) {
+        val register = register(c)
         val tmp: Int = (register - op.get()) and 0xff
         cpu.P.C = register >= op.get()
         cpu.P.Z = tmp == 0
         cpu.P.N = (tmp and 0x80) != 0
     }
-
-    override fun toString(): String = "$opName${op.name}"
 }
 
-abstract class CmpBase(c: Computer, override val opCode: Int, override val size: Int, override val timing: Int,
-        op: Operand)
-    : CompareBase(c, opCode, size, timing, op)
+abstract class CmpBase(override val opCode: Int, override val size: Int,
+        override val timing: Int, addressing: Addressing)
+    : CompareBase("CMP", opCode, size, timing, addressing)
 {
-    override val register = cpu.A
-    override val opName = "CMP"
+    override fun register(c: Computer) = c.cpu.A
 }
 
 /** CMP #$12 */
-class CmpImmediate(c: Computer): CmpBase(c, CMP_IMM, 2, 2, OperandImmediate(c))
+class CmpImmediate: CmpBase(CMP_IMM, 2, 2, Addressing.IMMEDIATE)
 
 /** CMP $12 */
-class CmpZp(c: Computer): CmpBase(c, CMP_ZP, 2, 3, OperandZp(c))
+class CmpZp: CmpBase(CMP_ZP, 2, 3, Addressing.ZP)
 
 /** CMP $12,X */
-class CmpZpX(c: Computer): CmpBase(c, CMP_ZP_X, 2, 4, OperandZpX(c))
+class CmpZpX: CmpBase(CMP_ZP_X, 2, 4, Addressing.ZP_X)
 
 /** CMP $1234 */
-class CmpAbsolute(c: Computer): CmpBase(c, CMP_ABS, 3, 4, OperandAbsolute(c))
+class CmpAbsolute: CmpBase(CMP_ABS, 3, 4, Addressing.ABSOLUTE)
 
 /** CMP $1234,X */
-class CmpAbsoluteX(c: Computer): CmpBase(c, CMP_ABS_X, 3, 4, OperandAbsoluteX(c)) {
+class CmpAbsoluteX: CmpBase(CMP_ABS_X, 3, 4, Addressing.ABSOLUTE_X) {
     override var timing = 4
-    override fun run() {
-        super.run()
+    override fun run(c: Computer, op: Operand) = with(c) {
+        super.run(c, op)
         timing += pageCrossed(cpu.PC, word + cpu.X)
     }
 }
 
 /** CMP $1234,Y */
-class CmpAbsoluteY(c: Computer): CmpBase(c, CMP_ABS_Y, 3, 4, OperandAbsoluteY(c)) {
+class CmpAbsoluteY: CmpBase(CMP_ABS_Y, 3, 4, Addressing.ABSOLUTE_Y) {
     override var timing = 4
-    override fun run() {
-        super.run()
+    override fun run(c: Computer, op: Operand) = with(c) {
+        super.run(c, op)
         timing += pageCrossed(cpu.PC, word + cpu.Y)
     }
 }
 
 /** CMP ($12,X) */
-class CmpIndX(c: Computer): CmpBase(c, CMP_IND_X, 2, 6, OperandIndirectX(c))
+class CmpIndX: CmpBase(CMP_IND_X, 2, 6, Addressing.INDIRECT_X)
 
 /** CMP ($12),Y */
-class CmpIndY(c: Computer): CmpBase(c, CMP_IND_Y, 2, 5, OperandIndirectY(c)) {
-    override var timing = 4
-    override fun run() {
-        super.run()
+class CmpIndY: CmpBase(CMP_IND_Y, 2, 5, Addressing.INDIRECT_Y) {
+    override var timing = 5
+    override fun run(c: Computer, op: Operand) = with(c) {
+        super.run(c, op)
         timing += pageCrossed(cpu.PC, memory[word] + cpu.Y)
     }
 }
 
-abstract class CpxBase(c: Computer, override val opCode: Int, override val size: Int, override val timing: Int,
-        op: Operand)
-    : CompareBase(c, opCode, size, timing, op)
+abstract class CpxBase(override val opCode: Int, override val size: Int, override val timing: Int,
+        addressing: Addressing)
+    : CompareBase("CPX", opCode, size, timing, addressing)
 {
-    override val register = cpu.X
-    override val opName = "CPX"
+    override fun register(c: Computer) = c.cpu.X
 }
 
 /** CPX #$12 */
-class CpxImm(c: Computer): CpxBase(c, CPX_IMM, 2, 2, OperandImmediate(c))
+class CpxImm: CpxBase(CPX_IMM, 2, 2, Addressing.IMMEDIATE)
 
 /** CPX $12 */
-class CpxZp(c: Computer): CpxBase(c, CPX_ZP, 2, 3, OperandZp(c))
+class CpxZp: CpxBase(CPX_ZP, 2, 3, Addressing.ZP)
 
 /** CPX $1234 */
-class CpxAbsolute(c: Computer): CpxBase(c, CPX_ABS, 3, 4, OperandAbsolute(c))
+class CpxAbsolute: CpxBase(CPX_ABS, 3, 4, Addressing.ABSOLUTE)
 
-abstract class CpyBase(c: Computer, override val opCode: Int, override val size: Int, override val timing: Int,
-        op: Operand)
-    : CompareBase(c, opCode, size, timing, op)
+abstract class CpyBase(override val opCode: Int, override val size: Int, override val timing: Int,
+        addressing: Addressing)
+    : CompareBase("CPY", opCode, size, timing, addressing)
 {
-    override val register = cpu.Y
-    override val opName = "CPY"
+    override fun register(c: Computer) = c.cpu.Y
 }
 
 /** CPY #$12 */
-class CpyImm(c: Computer): CpyBase(c, CPY_IMM, 2, 2, OperandImmediate(c))
+class CpyImm: CpyBase(CPY_IMM, 2, 2, Addressing.IMMEDIATE)
 
 /** CPY $12 */
-class CpyZp(c: Computer): CpyBase(c, CPY_ZP, 2, 3, OperandZp(c))
+class CpyZp: CpyBase(CPY_ZP, 2, 3, Addressing.ZP)
 
 /** CPY $1234 */
-class CpyAbsolute(c: Computer): CpyBase(c, CPY_ABS, 3, 4, OperandAbsolute(c))
+class CpyAbsolute: CpyBase(CPY_ABS, 3, 4, Addressing.ABSOLUTE)
 

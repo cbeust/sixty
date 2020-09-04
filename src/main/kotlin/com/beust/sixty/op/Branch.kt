@@ -1,18 +1,17 @@
 package com.beust.sixty.op
 
-import com.beust.sixty.BVS
-import com.beust.sixty.Computer
-import com.beust.sixty.InstructionBase
-import com.beust.sixty.h
+import com.beust.sixty.*
 
-open class BranchBase(c: Computer, override val opCode: Int, val name: String, val condition: () -> Boolean)
-    : InstructionBase(c)
+abstract class BranchBase(override val name: String, override val opCode: Int)
+    : InstructionBase(name, opCode, 2, 2)
 {
-    override val size = 2
+    abstract fun condition(c: Computer): Boolean
+
     /** TODO(Varied timing if the branch is taken/not taken and if it crosses a page) */
     override var timing = 2
-    override fun run() {
-        if (condition()) {
+
+    override fun run(c: Computer, op: Operand) = with(c) {
+        if (condition(c)) {
             changedPc = true
             val old = cpu.PC
             cpu.PC += operand.toByte() + size
@@ -20,30 +19,48 @@ open class BranchBase(c: Computer, override val opCode: Int, val name: String, v
             timing += pageCrossed(old, cpu.PC)
         }  // needs to be signed here
     }
-    override fun toString(): String
-            = "$name $${(cpu.PC + size + operand.toByte()).h()}"
+
+    override fun toString(c: Computer): String = with(c) {
+        "$name $${(cpu.PC + size + operand.toByte()).h()}"
+    }
 }
 
 /** 0xd0, BNE, zero clear */
-class Bne(computer: Computer): BranchBase(computer, 0xd0, "BNE", { !computer.cpu.P.Z })
+class Bne: BranchBase("BNE", BNE) {
+    override fun condition(c: Computer) = !c.cpu.P.Z
+}
 
 /** 0xf0, BEQ, zero set */
-class Beq(computer: Computer): BranchBase(computer, 0xf0, "BEQ", { computer.cpu.P.Z })
+class Beq: BranchBase("BEQ", BEQ) {
+    override fun condition(c: Computer) = c.cpu.P.Z
+}
 
 /** 0x90, BCC */
-class Bcc(computer: Computer): BranchBase(computer, 0x90, "BCC", { !computer.cpu.P.C })
+class Bcc: BranchBase("BCC", BCC) {
+    override fun condition(c: Computer) = !c.cpu.P.C
+}
 
 /** 0xb0, BCS */
-class Bcs(computer: Computer): BranchBase(computer, 0xb0, "BCS", { computer.cpu.P.C })
+class Bcs: BranchBase("BCS", BCS) {
+    override fun condition(c: Computer) = c.cpu.P.C
+}
 
 /** 0x10, BPL */
-class Bpl(computer: Computer): BranchBase(computer, 0x10, "BPL", { !computer.cpu.P.N })
+class Bpl: BranchBase("BPL", BPL) {
+    override fun condition(c: Computer) = !c.cpu.P.N
+}
 
 /** 0x30, BMI */
-class Bmi(computer: Computer): BranchBase(computer, 0x30, "BMI", { computer.cpu.P.N })
+class Bmi: BranchBase("BMI", BMI) {
+    override fun condition(c: Computer) = c.cpu.P.N
+}
 
 /** 0x50, BVC */
-class Bvc(computer: Computer): BranchBase(computer, 0x50, "BVC", { !computer.cpu.P.V })
+class Bvc: BranchBase("BVC", BVC) {
+    override fun condition(c: Computer) = !c.cpu.P.V
+}
 
 /** 0x70, BVS */
-class Bvs(computer: Computer): BranchBase(computer, BVS, "BVS", { computer.cpu.P.V })
+class Bvs: BranchBase("BVS", BCS) {
+    override fun condition(c: Computer) = c.cpu.P.V
+}

@@ -2,11 +2,11 @@ package com.beust.sixty.op
 
 import com.beust.sixty.*
 
-abstract class AdcBase(c: Computer, override val opCode: Int, override val size: Int, override val timing: Int,
-        val op: Operand)
-    : AdcSbcBase(c, opCode, size, timing)
+abstract class AdcBase(override val opCode: Int, override val size: Int, override val timing: Int,
+        override val addressing: Addressing)
+    : AdcSbcBase("ADC", opCode, size, timing, addressing)
 {
-    override fun run() {
+    override fun run(c: Computer, op: Operand) = with(c) {
         if (cpu.P.D) {
             var l: Int
             var h: Int
@@ -24,50 +24,49 @@ abstract class AdcBase(c: Computer, override val opCode: Int, override val size:
 
             cpu.A = result
         } else {
-            add(op.get())
+            add(c, op.get())
         }
     }
-    override fun toString(): String = "ADC${op.name}"
 }
 
 /** ADC #$12 */
-class AdcImmediate(c: Computer): AdcBase(c, ADC_IMM, 2, 2, OperandImmediate(c))
+class AdcImmediate: AdcBase(ADC_IMM, 2, 2, Addressing.IMMEDIATE)
 
 /** ADC $12 */
-class AdcZp(c: Computer): AdcBase(c, ADC_ZP, 2, 3, OperandZp(c))
+class AdcZp: AdcBase(ADC_ZP, 2, 3, Addressing.ZP)
 
 /** ADC $12,X */
-class AdcZpX(c: Computer): AdcBase(c, ADC_ZP_X, 2, 4, OperandZpX(c))
+class AdcZpX: AdcBase(ADC_ZP_X, 2, 4, Addressing.ZP_X)
 
 /** ADC $1234 */
-class AdcAbsolute(c: Computer): AdcBase(c, ADC_ABS, 3, 4, OperandAbsolute(c))
+class AdcAbsolute: AdcBase(ADC_ABS, 3, 4, Addressing.ABSOLUTE)
 
 /** ADC $1234,X */
-class AdcAbsoluteX(c: Computer): AdcBase(c, ADC_ABS_X, 3, 4, OperandAbsoluteX(c)) {
+class AdcAbsoluteX: AdcBase(ADC_ABS_X, 3, 4, Addressing.ABSOLUTE_X) {
     override var timing = 4
-    override fun run() {
-        super.run()
+    override fun run(c: Computer, op: Operand) = with(c) {
+        super.run(c, op)
         timing += pageCrossed(cpu.PC, word + cpu.X)
     }
 }
 
 /** ADC $1234,Y */
-class AdcAbsoluteY(c: Computer): AdcBase(c, ADC_ABS_Y, 3, 4, OperandAbsoluteY(c)) {
+class AdcAbsoluteY: AdcBase(ADC_ABS_Y, 3, 4, Addressing.ABSOLUTE_Y) {
     override var timing = 4
-    override fun run() {
-        super.run()
+    override fun run(c: Computer, op: Operand) = with(c) {
+        super.run(c, op)
         timing += pageCrossed(cpu.PC, word + cpu.Y)
     }
 }
 
 /** 0x21, ADC ($12,X) */
-class AdcIndX(c: Computer): AdcBase(c, ADC_IND_X, 2, 6, OperandIndirectX(c))
+class AdcIndX: AdcBase(ADC_IND_X, 2, 6, Addressing.INDIRECT_X)
 
 /** 0x31, ADC ($12),Y */
-class AdcIndY(c: Computer): AdcBase(c, ADC_IND_Y, 2, 5, OperandIndirectY(c)) {
+class AdcIndY: AdcBase(ADC_IND_Y, 2, 5, Addressing.INDIRECT_Y) {
     override var timing = 4
-    override fun run() {
-        super.run()
+    override fun run(c: Computer, op: Operand) = with(c) {
+        super.run(c, op)
         timing += pageCrossed(cpu.PC, memory[word] + cpu.Y)
     }
 }
