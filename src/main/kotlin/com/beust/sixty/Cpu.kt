@@ -171,7 +171,7 @@ abstract class InstructionBase(override val name: String, override val opCode: I
 class Brk: InstructionBase("BRK", BRK, 1, 7) {
     private fun handleInterrupt(c: Computer, brk: Boolean, vectorHigh: Int, vectorLow: Int) {
         with(c) {
-            cpu.SP.pushWord(cpu.PC + 2)
+            cpu.SP.pushWord(cpu.PC + 1)
             cpu.SP.pushByte(cpu.P.toByte())
             cpu.P.I = true
             cpu.PC = memory[vectorHigh].shl(8).or(memory[vectorLow])

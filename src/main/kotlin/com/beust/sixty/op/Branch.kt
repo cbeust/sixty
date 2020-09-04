@@ -17,13 +17,10 @@ abstract class BranchBase(override val name: String, override val opCode: Int)
             timing++
             timing += pageCrossed(old, cpu.PC)
         }  // needs to be signed here
-        else {
-            println("Result of $name is false")
-        }
     }
 
     override fun toString(c: Computer, byte: Int, word: Int): String = with(c) {
-        val target = cpu.PC + byte.toByte() + size - 2
+        val target = cpu.PC + byte.toByte() + size
         "$name $${(target).h()}"
     }
 }
@@ -67,6 +64,6 @@ class Bvc: BranchBase("BVC", BVC) {
 }
 
 /** 0x70, BVS */
-class Bvs: BranchBase("BVS", BCS) {
+class Bvs: BranchBase("BVS", BVS) {
     override fun condition(c: Computer) = c.cpu.P.V
 }

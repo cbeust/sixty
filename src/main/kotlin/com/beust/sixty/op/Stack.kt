@@ -6,10 +6,10 @@ abstract class StackInstruction(override val name: String, override val opCode: 
         override val timing: Int): InstructionBase(name, opCode, 1, timing)
 
 /** 0x20, JSR $1234 */
-class Jsr: InstructionBase("JSR", JSR, 3, 6) {
+class Jsr: InstructionBase("JSR", JSR, 3, 6, Addressing.ABSOLUTE) {
     override fun run(c: Computer, op: Operand) {
         with(c) {
-            cpu.SP.pushWord(pc + size - 1)
+            cpu.SP.pushWord(pc - 1)
             cpu.PC = op.word
         }
     }
