@@ -11,7 +11,7 @@ import com.beust.app.StackPointer
  */
 
 data class Cpu(val memory: Memory,
-        var A: Int = 0, var X: Int = 0, var Y: Int = 0, var PC: Int = 0xffff,
+        var A: Int = 0, var X: Int = 0, var Y: Int = 0, var PC: Int = 0,
         val P: StatusFlags = StatusFlags())
 {
     val SP: StackPointer = StackPointer(memory)

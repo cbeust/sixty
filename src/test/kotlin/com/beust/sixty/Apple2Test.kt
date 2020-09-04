@@ -24,15 +24,15 @@ class Apple2Test: BaseTest() {
         return Computer(Cpu(memory))
     }
 
-    fun tsx() {
-        with(computer(0xa9, 0, //       LDA #$00
-                0x20, 5, 0,    //       JSR $0005
-                0xba,          // 0005: TSX
-                0xba)) {       //       TSX
-            assertRegister(cpu.X, 0)
-            run()
-            assertRegister(cpu.SP.S, 0xfd)
-            assertRegister(cpu.X, 0xfd)
-        }
-    }
+//    fun tsx() {
+//        with(computer(0xa9, 0, //       LDA #$00
+//                0x20, 5, 0,    //       JSR $0005
+//                0xba,          // 0005: TSX
+//                0xba)) {       //       TSX
+//            assertRegister(cpu.X, 0)
+//            run()
+//            assertRegister(cpu.SP.S, 0xfd)
+//            assertRegister(cpu.X, 0xfd)
+//        }
+//    }
 }
