@@ -50,7 +50,7 @@ class Computer(val cpu: Cpu = Cpu(memory = Memory()), val memory: Memory,
             if (memory[cpu.PC] == 0x60 && cpu.SP.isEmpty()) {
                 done = true
             } else {
-                if (cpu.PC == 0x5a0) {
+                if (cpu.PC == 0x614) {
                     println(this)
                     println("breakpoint: " + memory[0xe].h())
                 }
@@ -63,7 +63,7 @@ class Computer(val cpu: Cpu = Cpu(memory = Memory()), val memory: Memory,
                     cpu.PC += inst.size
                     inst.run(this, byte, word)
                     // If the instruction modified the PC (e.g. JSR, JMP, BRK, RTS, RTI), don't change it
-                    println("$cycles - " + debugString + " " + cpu.toString())
+                    println(debugString + " " + cpu.toString())
                 } else {
                     val inst = cpu.nextInstruction(this)
                     val byte = memory[cpu.PC + 1]
