@@ -413,12 +413,12 @@ abstract class BaseTest {
                 // Status is now 1000_1010 = 0x8a
                 assertThat(cpu.SP.isEmpty())
                 run()
-                assertFlag("N", cpu.P.N, 1)
-                assertFlag("V", cpu.P.V, 0)
-                assertFlag("D", cpu.P.D, 1)
-                assertFlag("I", cpu.P.I, 0)
-                assertFlag("Z", cpu.P.Z, 1)
-                assertFlag("C", cpu.P.C, 0)
+                assertFlag("N", N, 1)
+                assertFlag("V", V, 0)
+                assertFlag("D", D, 1)
+                assertFlag("I", I, 0)
+                assertFlag("Z", Z, 1)
+                assertFlag("C", C, 0)
             }
         }
     }
@@ -429,12 +429,12 @@ abstract class BaseTest {
                 // Push 1000_1010 on the stack, then PLP
                 cpu.SP.pushByte(0x8a.toByte())
                 run()
-                assertFlag("N", cpu.P.N, 1)
-                assertFlag("V", cpu.P.V, 0)
-                assertFlag("D", cpu.P.D, 1)
-                assertFlag("I", cpu.P.I, 0)
-                assertFlag("Z", cpu.P.Z, 1)
-                assertFlag("C", cpu.P.C, 0)
+                assertFlag("N", N, 1)
+                assertFlag("V", V, 0)
+                assertFlag("D", D, 1)
+                assertFlag("I", I, 0)
+                assertFlag("Z", Z, 1)
+                assertFlag("C", C, 0)
             }
         }
     }
