@@ -16,6 +16,12 @@ import kotlin.system.exitProcess
 
 fun main() {
 //    apple2Computer().run()
-    functionalTestComputer().run()
+    val result = functionalTestComputer().run()
+    with(result) {
+        val sec = durationMillis / 1000
+        val mhz = String.format("%.2f", cycles / sec / 1_000_000.0)
+        println("Computer stopping after $cycles cycles, $sec seconds, $mhz MHz")
+    }
+
 }
 

@@ -6,6 +6,7 @@ class Apple2Test: BaseTest() {
     override fun createComputer(vararg bytes: Int): Computer {
         val memory = Memory(bytes = *bytes)
         val stackPointer = StackPointer(memory = memory)
+
         val listener = object: MemoryListener {
             override var lastMemDebug = arrayListOf<String>()
 
@@ -21,7 +22,14 @@ class Apple2Test: BaseTest() {
             }
 
         }
-        return Computer(Cpu(memory))
+        return Computer(Cpu(memory)).apply {
+            pcListener = object: PcListener {
+                override fun onPcChanged(newValue: Int) {
+                    if (memory[newValue] == BRK) stop()
+                }
+
+            }
+        }
     }
 
 //    fun tsx() {

@@ -11,7 +11,9 @@ fun assertFlag(n: String, flag: Boolean, expected: Int) {
 }
 
 fun assertRegister(register: Int, expected: Int) {
-    assertThat(register).isEqualTo(expected)
+    assertThat(register)
+            .withFailMessage("Expected register to be $expected but was $register")
+            .isEqualTo(expected)
 }
 
 fun assertNotRegister(register: Int, expected: Int) {
@@ -23,7 +25,7 @@ abstract class BaseTest {
     abstract fun createComputer(vararg bytes: Int): Computer
 
     fun computer(vararg bytes: Int): Computer {
-        with(createComputer(*bytes, RTS)) {
+        with(createComputer(*bytes, BRK)) {
             memory.listener = DebugMemoryListener
             return this
         }
@@ -45,7 +47,8 @@ abstract class BaseTest {
                 0x20, 0x8, 0,   // jsr $8
                 0xa9, 0x12,     // lda #$12
                 0x60,
-                0xea, 0xea  // nop
+                0xea, 0xea,  // nop
+                RTS
         )) {
             assertNotRegister(cpu.A, 0x12)
             run()
@@ -59,7 +62,7 @@ abstract class BaseTest {
             assertThat(cpu.SP.isEmpty())
             cpu.nextInstruction().let { inst ->
                 inst.run(this)
-                assertThat(cpu.PC).isEqualTo(0x1234 - inst.size)
+                assertThat(cpu.PC).isEqualTo(0x1234)
                 // Need to test SP
             }
         }
@@ -374,63 +377,67 @@ abstract class BaseTest {
         }
     }
 
-//    fun pha() {
-//        with(computer(0xa9, 0x42, 0x48)) {
-//            assertThat(cpu.SP.isEmpty())
-//            run()
-//            assertThat(cpu.SP.peekByte()).isEqualTo(0x42)
-//        }
-//    }
-//
-//    fun pla() {
-//        with(computer(0xa9, 0x42, 0x48, 0xa9, 0, 0x68)) {
-//            assertThat(cpu.SP.isEmpty())
-//            run()
-//            assertRegister(cpu.A, 0x42)
-//        }
-//    }
-//
-//    fun txs() {
-//        with(computer(0xa2, 0x42, 0x9a)) {
-//            assertThat(cpu.SP.isEmpty())
-//            run()
-//            assertThat(cpu.SP.S).isEqualTo(0x42)
-//        }
-//    }
-//
-//    fun php() {
-//        with(computer(8)) {
-//            with(cpu.P) {
-//                N = true
-//                V = false
-//                D = true
-//                I = false
-//                Z = true
-//                C = false
-//                // Status is now 1000_1010 = 0x8a
-//                assertThat(cpu.SP.isEmpty())
-//                run()
-//                val actual = cpu.SP.peekByte()
-//                assertThat(actual).isEqualTo(0x8a.toByte())
-//            }
-//        }
-//    }
-//
-//    fun plp() {
-//        with(computer(0x28)) {
-//            with(cpu.P) {
-//                // Push 1000_1010 on the stack, then PLP
-//                cpu.SP.pushByte(0x8a.toByte())
-//                run()
-//                assertFlag("N", cpu.P.N, 1)
-//                assertFlag("V", cpu.P.V, 0)
-//                assertFlag("D", cpu.P.D, 1)
-//                assertFlag("I", cpu.P.I, 0)
-//                assertFlag("Z", cpu.P.Z, 1)
-//                assertFlag("C", cpu.P.C, 0)
-//            }
-//        }
-//    }
+    fun pha() {
+        with(computer(0xa9, 0x42, 0x48)) {
+            assertThat(cpu.SP.isEmpty())
+            run()
+            assertThat(cpu.SP.peekByte()).isEqualTo(0x42)
+        }
+    }
+
+    fun pla() {
+        with(computer(0xa9, 0x42, 0x48, 0xa9, 0, 0x68)) {
+            assertThat(cpu.SP.isEmpty())
+            run()
+            assertRegister(cpu.A, 0x42)
+        }
+    }
+
+    fun txs() {
+        with(computer(0xa2, 0x42, 0x9a)) {
+            assertThat(cpu.SP.isEmpty())
+            run()
+            assertThat(cpu.SP.S).isEqualTo(0x42)
+        }
+    }
+
+    fun php() {
+        with(computer(PHP)) {
+            with(cpu.P) {
+                N = true
+                V = false
+                D = true
+                I = false
+                Z = true
+                C = false
+                // Status is now 1000_1010 = 0x8a
+                assertThat(cpu.SP.isEmpty())
+                run()
+                assertFlag("N", cpu.P.N, 1)
+                assertFlag("V", cpu.P.V, 0)
+                assertFlag("D", cpu.P.D, 1)
+                assertFlag("I", cpu.P.I, 0)
+                assertFlag("Z", cpu.P.Z, 1)
+                assertFlag("C", cpu.P.C, 0)
+            }
+        }
+    }
+
+    fun plp() {
+        with(computer(PLP)) {
+            with(cpu.P) {
+                // Push 1000_1010 on the stack, then PLP
+                cpu.SP.pushByte(0x8a.toByte())
+                run()
+                assertFlag("N", cpu.P.N, 1)
+                assertFlag("V", cpu.P.V, 0)
+                assertFlag("D", cpu.P.D, 1)
+                assertFlag("I", cpu.P.I, 0)
+                assertFlag("Z", cpu.P.Z, 1)
+                assertFlag("C", cpu.P.C, 0)
+            }
+        }
+    }
 
     fun eor() {
         with(computer(0xa9, 0xaa, 0x49, 0xff)) {  // LDA #$aa, EOR #$ff
@@ -563,18 +570,5 @@ abstract class BaseTest {
             run()
         }
     }
-
-    // Missing tests:
-    // BIT_ABS
-    // AND_ABS, AND_IMM
-    // LSR_A
-    // ORA_ZP
-    // ROL_ZP
-    // ROR_ZP
-    // SBC_IMM
-    // EOR_IND_Y
-    // LDA_IND_Y
-    // STA_IND_X
-    // CPX
 }
 

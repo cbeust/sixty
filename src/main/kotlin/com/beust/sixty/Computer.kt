@@ -42,7 +42,7 @@ class Computer(val cpu: Cpu = Cpu(memory = Memory()),
         return memory[address] to memory[address].or(memory[address + 1].shl(8))
     }
 
-    fun run() {
+    fun run(): RunResult {
         startTime = System.currentTimeMillis()
         var cycles = 0
         var done = false
@@ -88,10 +88,10 @@ class Computer(val cpu: Cpu = Cpu(memory = Memory()),
             }
             pcListener?.onPcChanged(cpu.PC)
         }
-        val sec = (System.currentTimeMillis() - startTime) / 1000
-        val mhz = String.format("%.2f", cycles / sec / 1_000_000.0)
-        println("Computer stopping after $cycles cycles, $sec seconds, $mhz MHz")
+        return RunResult(System.currentTimeMillis() - startTime, cycles)
     }
+
+    class RunResult(val durationMillis: Long, val cycles: Int)
 
 //    fun clone(): Computer {
 //        return Computer(cpu.clone(), Memory(memory.size, *memory.content))
