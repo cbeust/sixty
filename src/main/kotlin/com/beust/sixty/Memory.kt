@@ -1,6 +1,7 @@
 package com.beust.sixty
 
 import java.io.File
+import java.io.InputStream
 
 class Memory(val size: Int = 0x10000, vararg bytes: Int) {
     var interceptor: MemoryInterceptor? = null
@@ -45,12 +46,17 @@ class Memory(val size: Int = 0x10000, vararg bytes: Int) {
         bytes.forEach { set(ii++, it) }
     }
 
-    fun load(file: String, address: Int) {
-//        File(file).readBytes().map { it.toInt() }.toIntArray().copyInto(content, address)
-        File(file).readBytes().forEachIndexed { index, v ->
+    fun load(ins: InputStream, address: Int = 0) {
+        ins.readBytes().forEachIndexed { index, v ->
             if (index + address < 0x10000) {
                 content[index + address] = v.toInt()
             }
+        }
+    }
+
+    fun load(file: String, address: Int = 0) {
+        File(file).inputStream().use { ins ->
+            load(ins, address)
         }
     }
 
