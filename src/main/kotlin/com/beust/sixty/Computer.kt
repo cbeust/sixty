@@ -50,10 +50,10 @@ class Computer(val cpu: Cpu = Cpu(memory = Memory()), val memory: Memory,
             if (memory[cpu.PC] == 0x60 && cpu.SP.isEmpty()) {
                 done = true
             } else {
-                if (cpu.PC == 0x614) {
-                    println(this)
-                    println("breakpoint: " + memory[0xe].h())
-                }
+//                if (cpu.PC == 0x614) {
+//                    println(this)
+//                    println("breakpoint: " + memory[0xe].h())
+//                }
                 previousPc = cpu.PC
                 if (DEBUG_ASM) {
                     val inst = cpu.nextInstruction(this)
