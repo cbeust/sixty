@@ -4,7 +4,7 @@ import com.beust.sixty.*
 
 abstract class RorBase(override val opCode: Int, override val size: Int, override val timing: Int,
         override val addressing: Addressing)
-    : InstructionBase("ROR", size, timing, addressing)
+    : InstructionBase("ROR", opCode, size, timing, addressing)
 {
     override fun run(c: Computer, op: Operand) = with(c) {
         val value = op.get()

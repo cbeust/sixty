@@ -259,9 +259,15 @@ enum class Addressing {
             INDIRECT_X -> OperandIndirectX(c)
             INDIRECT_Y -> OperandIndirectY(c)
             REGISTER_A -> OperandRegisterA(c)
-            NONE -> TODO("NONE ADDRESSING")
+            NONE -> OperandNone(c)
         }
     }
+}
+
+class OperandNone(c: Computer): OperandBase(c) {
+    override fun get() = operand
+    override fun set(v: Int) = TODO("Should never happen")
+    override val name get() = " #$${operand.h()}"
 }
 
 class OperandImmediate(c: Computer): OperandBase(c) {

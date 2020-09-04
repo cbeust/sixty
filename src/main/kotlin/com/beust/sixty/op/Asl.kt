@@ -4,7 +4,7 @@ import com.beust.sixty.*
 
 abstract class AslBase(override val opCode: Int, override val size: Int, override val timing: Int,
         override val addressing: Addressing)
-    : InstructionBase()
+    : InstructionBase("ASL", opCode, size, timing, addressing)
 {
     override fun run(c: Computer, op: Operand) {
         with(c) {
