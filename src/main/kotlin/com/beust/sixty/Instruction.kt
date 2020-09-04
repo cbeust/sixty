@@ -22,8 +22,8 @@ Instruction {
 
     val name: String
 
-    fun run(c: Computer)
-    fun toString(c: Computer): String
+    fun run(c: Computer, byte: Int, word: Int)
+    fun toString(c: Computer, byte: Int, word: Int): String
 
     /**
      * @return 1 if a page bounday was crossed, 0 otherwise

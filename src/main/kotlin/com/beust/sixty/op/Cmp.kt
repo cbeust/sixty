@@ -41,7 +41,7 @@ class CmpAbsoluteX: CmpBase(CMP_ABS_X, 3, 4, Addressing.ABSOLUTE_X) {
     override var timing = 4
     override fun run(c: Computer, op: Operand) = with(c) {
         super.run(c, op)
-        timing += pageCrossed(cpu.PC, word + cpu.X)
+        timing += pageCrossed(cpu.PC, op.word + cpu.X)
     }
 }
 
@@ -50,7 +50,7 @@ class CmpAbsoluteY: CmpBase(CMP_ABS_Y, 3, 4, Addressing.ABSOLUTE_Y) {
     override var timing = 4
     override fun run(c: Computer, op: Operand) = with(c) {
         super.run(c, op)
-        timing += pageCrossed(cpu.PC, word + cpu.Y)
+        timing += pageCrossed(cpu.PC, op.word + cpu.Y)
     }
 }
 
@@ -62,7 +62,7 @@ class CmpIndY: CmpBase(CMP_IND_Y, 2, 5, Addressing.INDIRECT_Y) {
     override var timing = 5
     override fun run(c: Computer, op: Operand) = with(c) {
         super.run(c, op)
-        timing += pageCrossed(cpu.PC, memory[word] + cpu.Y)
+        timing += pageCrossed(cpu.PC, memory[op.word] + cpu.Y)
     }
 }
 

@@ -23,8 +23,8 @@ class Computer(val cpu: Cpu = Cpu(memory = Memory()), val memory: Memory,
         var pcListener: PcListener? = null
 ) {
     val pc get() = cpu.PC
-    val operand get() = memory[pc + 1]
-    val word get() = memory[pc + 2].shl(8).or(memory[pc + 1])
+//    val operand get() = memory[pc + 1]
+//    val word get() = memory[pc + 2].shl(8).or(memory[pc + 1])
 
     private var startTime: Long = 0
 
@@ -50,26 +50,26 @@ class Computer(val cpu: Cpu = Cpu(memory = Memory()), val memory: Memory,
             if (memory[cpu.PC] == 0x60 && cpu.SP.isEmpty()) {
                 done = true
             } else {
-                val inst = cpu.nextInstruction(this)
-                if (inst == null) {
-                    val s = cpu.PC.hh()
-                    TODO("$s: $" + cpu.memory[cpu.PC].h() + ", cycles: $cycles")
-                }
                 if (cpu.PC == 0x5a0) {
                     println(this)
                     println("breakpoint: " + memory[0xe].h())
                 }
                 previousPc = cpu.PC
                 if (DEBUG_ASM) {
-                    val debugString = formatPc(cpu, inst) + formatInstruction(inst)
-                    inst.run(this)
+                    val inst = cpu.nextInstruction(this)
+                    val byte = memory[cpu.PC + 1]
+                    val word = memory[cpu.PC + 1].or(memory[cpu.PC + 2].shl(8))
+                    val debugString = formatPc(cpu, inst) + formatInstruction(inst, byte, word)
+                    cpu.PC += inst.size
+                    inst.run(this, byte, word)
                     // If the instruction modified the PC (e.g. JSR, JMP, BRK, RTS, RTI), don't change it
                     println("$cycles - " + debugString + " " + cpu.toString())
                 } else {
-                    inst.run(this)
-                }
-                if (! inst.changedPc) {
+                    val inst = cpu.nextInstruction(this)
+                    val byte = memory[cpu.PC + 1]
+                    val word = memory[cpu.PC + 1].or(memory[cpu.PC + 2].shl(8))
                     cpu.PC += inst.size
+                    inst.run(this, byte, word)
                 }
 
                 if (previousPc == cpu.PC) {
@@ -123,8 +123,8 @@ class Computer(val cpu: Cpu = Cpu(memory = Memory()), val memory: Memory,
         return String.format("%-5s: %-10s", pc.hh(), bytes.toString())
     }
 
-    private fun formatInstruction(inst: Instruction): String {
-        return String.format("%-12s", inst.toString(this))
+    private fun formatInstruction(inst: Instruction, byte: Int, word: Int): String {
+        return String.format("%-12s", inst.toString(this, byte, word))
     }
 
     private fun disassemble(cpu: Cpu, inst: Instruction, print: Boolean): String {

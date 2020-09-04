@@ -17,12 +17,12 @@ fun functionalTestComputer(): Computer {
             memoryListener = DebugMemoryListener).apply {
         pcListener = object: PcListener {
             override fun onPcChanged(newValue: Int) {
-                if (newValue == 0x334e) {
-                    print("\r  Arithmetic test (hex): " + memory[0xe])
-                }
-                if (newValue == 0x3401) {
-                    print("\r  Arithmetic test (bcd): " + memory[0xe])
-                }
+//                if (newValue == 0x334e) {
+//                    print("\r  Arithmetic test (hex): " + memory[0xe])
+//                }
+//                if (newValue == 0x3401) {
+//                    print("\r  Arithmetic test (bcd): " + memory[0xe])
+//                }
                 if (newValue == 0x346c || newValue == 0x3469) {
                     println("\nAll tests passed")
                     stop()

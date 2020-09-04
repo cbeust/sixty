@@ -9,9 +9,8 @@ abstract class StackInstruction(override val name: String, override val opCode: 
 class Jsr: InstructionBase("JSR", JSR, 3, 6) {
     override fun run(c: Computer, op: Operand) {
         with(c) {
-            changedPc = true
             cpu.SP.pushWord(pc + size - 1)
-            cpu.PC = word
+            cpu.PC = op.word
         }
     }
 }
@@ -53,7 +52,9 @@ class Pha: StackInstruction("PHA", PHA, 3) {
 
 /** 0x9a, TXS */
 class Txs: StackInstruction("TXS", TXS, 2) {
-    override fun run(c: Computer, op: Operand) { c.cpu.SP.S = c.cpu.X }
+    override fun run(c: Computer, op: Operand) {
+        c.cpu.SP.S = c.cpu.X
+    }
 }
 
 /** 0xba, TSX */

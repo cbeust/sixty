@@ -12,22 +12,28 @@ abstract class BranchBase(override val name: String, override val opCode: Int)
 
     override fun run(c: Computer, op: Operand) = with(c) {
         if (condition(c)) {
-            changedPc = true
             val old = cpu.PC
-            cpu.PC += operand.toByte() + size
+            cpu.PC += op.byte.toByte() + size - 2
             timing++
             timing += pageCrossed(old, cpu.PC)
         }  // needs to be signed here
+        else {
+            println("Result of $name is false")
+        }
     }
 
-    override fun toString(c: Computer): String = with(c) {
-        "$name $${(cpu.PC).h()}"
+    override fun toString(c: Computer, byte: Int, word: Int): String = with(c) {
+        val target = cpu.PC + byte.toByte() + size - 2
+        "$name $${(target).h()}"
     }
 }
 
 /** 0xd0, BNE, zero clear */
 class Bne: BranchBase("BNE", BNE) {
-    override fun condition(c: Computer) = !c.cpu.P.Z
+    override fun condition(c: Computer): Boolean {
+        val result = !c.cpu.P.Z
+        return result
+    }
 }
 
 /** 0xf0, BEQ, zero set */
