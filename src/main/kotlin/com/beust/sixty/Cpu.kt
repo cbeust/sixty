@@ -171,6 +171,7 @@ abstract class InstructionBase(override val name: String, override val opCode: I
 class Brk: InstructionBase("BRK", BRK, 1, 7) {
     private fun handleInterrupt(c: Computer, brk: Boolean, vectorHigh: Int, vectorLow: Int) {
         with(c) {
+            cpu.P.B = brk
             cpu.SP.pushWord(cpu.PC + 1)
             cpu.SP.pushByte(cpu.P.toByte())
             cpu.P.I = true
@@ -181,9 +182,7 @@ class Brk: InstructionBase("BRK", BRK, 1, 7) {
     override fun run(c: Computer, op: Operand) {
         with(c) {
             handleInterrupt(c, true, Cpu.IRQ_VECTOR_H, Cpu.IRQ_VECTOR_L)
-            cpu.P.B = true
-            //        cpu.P.I = false
-            cpu.P.reserved = true
+//            cpu.P.I = false
         }
     }
 }

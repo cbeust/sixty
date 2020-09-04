@@ -5,12 +5,6 @@ import com.beust.sixty.*
 fun functionalTestComputer(): Computer {
     val functionalTestMemory = Memory(65536).apply {
         load("bin_files/6502_functional_test.bin", 0)
-        // Need to figure out why this BRK test fails
-        this[0x37c9] = BEQ
-
-        // ADC tests all pass but take a while, skip them for now
-//        this[0x335f] = BEQ // hex tests
-//        this[0x3403] = BEQ // bcd tests
     }
     val functionalTestCpu = Cpu(memory = functionalTestMemory)
     val result = Computer(memory = functionalTestMemory, cpu = functionalTestCpu,
