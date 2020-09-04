@@ -2,21 +2,20 @@ package com.beust.sixty.op
 
 import com.beust.sixty.*
 
-abstract class BitBase(c: Computer, override val opCode: Int, override val size: Int, override val timing: Int,
-        val op: Operand)
-    : InstructionBase(c)
+abstract class BitBase(override val opCode: Int, override val size: Int, override val timing: Int,
+        val a: Addressing)
+    : InstructionBase("BIT", opCode, size, timing, a)
 {
-    override fun run() {
+    override fun run(c: Computer, op: Operand) = with(c) {
         cpu.P.Z = (cpu.A and op.get()) == 0
         cpu.P.N = (op.get() and 0x80) != 0
         cpu.P.V = (op.get() and 0x40) != 0
     }
-    override fun toString(): String = "BIT${op.name}"
 }
 
 /** 0x24, BIT $12 */
-class BitZp(c: Computer): BitBase(c, BIT_ZP, 2, 3, OperandZp(c))
+class BitZp: BitBase(BIT_ZP, 2, 3, Addressing.ZP)
 
 /** 0x2c, BIT $1234 */
-class BitAbsolute(c: Computer): BitBase(c, BIT_ABS, 3, 4, OperandAbsolute(c))
+class BitAbsolute: BitBase(BIT_ABS, 3, 4, Addressing.ABSOLUTE)
 

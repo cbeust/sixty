@@ -2,55 +2,53 @@ package com.beust.sixty.op
 
 import com.beust.sixty.*
 
-abstract class OraBase(c: Computer, override val opCode: Int, override val size: Int, override val timing: Int,
-        val op: Operand)
-    : InstructionBase(c)
-{
-    override fun run() {
+abstract class OraBase(override val opCode: Int, override val size: Int, override val timing: Int,
+        val a: Addressing)
+    : InstructionBase("ORA", opCode, size, timing, a) {
+    override fun run(c: Computer, op: Operand) = with(c) {
         cpu.A = cpu.A.or(op.get())
         cpu.P.setNZFlags(cpu.A)
     }
-    override fun toString(): String = "ORA${op.name}"
 }
 
 /** 0x09, ORA #$12 */
-class OraImmediate(c: Computer): OraBase(c, ORA_IMM, 2, 2, OperandImmediate(c))
+class OraImmediate: OraBase(ORA_IMM, 2, 2, Addressing.IMMEDIATE)
 
 /** 0x05, ORA $12 */
-class OraZp(c: Computer): OraBase(c, ORA_ZP, 2, 3, OperandZp(c))
+class OraZp: OraBase(ORA_ZP, 2, 3, Addressing.ZP)
 
 /** 0x15, ORA $12,X */
-class OraZpX(c: Computer): OraBase(c, ORA_ZP_X, 2, 4, OperandZpX(c))
+class OraZpX: OraBase(ORA_ZP_X, 2, 4, Addressing.ZP_X)
 
 /** 0x0d, ORA $1234 */
-class OraAbsolute(c: Computer): OraBase(c, ORA_ABS, 3, 4, OperandAbsolute(c))
+class OraAbsolute: OraBase(ORA_ABS, 3, 4, Addressing.ABSOLUTE)
 
 /** 0x1d, ORA $1234,X */
-class OraAbsoluteX(c: Computer): OraBase(c, ORA_ABS_X, 3, 4, OperandAbsoluteX(c)) {
+class OraAbsoluteX: OraBase(ORA_ABS_X, 3, 4, Addressing.ABSOLUTE_X) {
     override var timing = 4
-    override fun run() {
-        super.run()
+    override fun run(c: Computer, op: Operand) = with(c) {
+        super.run(c, op)
         timing += pageCrossed(cpu.PC, word + cpu.X)
     }
 }
 
 /** 0x19, ORA $1234,Y */
-class OraAbsoluteY(c: Computer): OraBase(c, ORA_ABS_Y, 3, 4, OperandAbsoluteY(c)) {
+class OraAbsoluteY: OraBase(ORA_ABS_Y, 3, 4, Addressing.ABSOLUTE_Y) {
     override var timing = 4
-    override fun run() {
-        super.run()
+    override fun run(c: Computer, op: Operand) = with(c) {
+        super.run(c, op)
         timing += pageCrossed(cpu.PC, word + cpu.Y)
     }
 }
 
 /** 0x01, ORA ($12,X) */
-class OraIndX(c: Computer): OraBase(c, ORA_IND_X, 2, 6, OperandIndirectX(c))
+class OraIndX: OraBase(ORA_IND_X, 2, 6, Addressing.INDIRECT_X)
 
 /** 0x11, ORA ($12),Y */
-class OraIndY(c: Computer): OraBase(c, ORA_IND_Y, 2, 5, OperandIndirectY(c)) {
+class OraIndY: OraBase(ORA_IND_Y, 2, 5, Addressing.INDIRECT_Y) {
     override var timing = 5
-    override fun run() {
-        super.run()
+    override fun run(c: Computer, op: Operand) = with(c) {
+        super.run(c, op)
         timing += pageCrossed(cpu.PC, memory[word] + cpu.Y)
     }
 }

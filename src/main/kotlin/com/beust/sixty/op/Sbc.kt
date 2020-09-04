@@ -2,11 +2,11 @@ package com.beust.sixty.op
 
 import com.beust.sixty.*
 
-abstract class SbcBase(c: Computer, override val opCode: Int, override val size: Int, override val timing: Int,
-        val op: Operand)
-    : AdcSbcBase(c, opCode, size, timing)
+abstract class SbcBase(override val opCode: Int, override val size: Int, override val timing: Int,
+        val a: Addressing)
+    : AdcSbcBase("SBC", opCode, size, timing, a)
 {
-    override fun run() {
+    override fun run(c: Computer, op: Operand) = with(c) {
         if (cpu.P.D) {
             var l = (cpu.A and 0x0f) - (op.get() and 0x0f) - if (cpu.P.C) 0 else 1
             if (l and 0x10 != 0) l -= 6
@@ -22,50 +22,49 @@ abstract class SbcBase(c: Computer, override val opCode: Int, override val size:
             cpu.A = result and 0xff
         } else {
             // Call ADC with the one complement of the operand
-            add((op.get().inv().and(0xff)))
+            add(c, (op.get().inv().and(0xff)))
         }
     }
-    override fun toString(): String = "SBC${op.name}"
 }
 
 /** SBC #$12 */
-class SbcImmediate(c: Computer): SbcBase(c, SBC_IMM, 2, 2, OperandImmediate(c))
+class SbcImmediate: SbcBase(SBC_IMM, 2, 2, Addressing.IMMEDIATE)
 
 /** SBC $12 */
-class SbcZp(c: Computer): SbcBase(c, SBC_ZP, 2, 3, OperandZp(c))
+class SbcZp: SbcBase(SBC_ZP, 2, 3, Addressing.ZP)
 
 /** SBC $12,X */
-class SbcZpX(c: Computer): SbcBase(c, SBC_ZP_X, 2, 4, OperandZpX(c))
+class SbcZpX: SbcBase(SBC_ZP_X, 2, 4, Addressing.ZP_X)
 
 /** SBC $1234 */
-class SbcAbsolute(c: Computer): SbcBase(c, SBC_ABS, 3, 4, OperandAbsolute(c))
+class SbcAbsolute: SbcBase(SBC_ABS, 3, 4, Addressing.ABSOLUTE)
 
 /** SBC $1234,X */
-class SbcAbsoluteX(c: Computer): SbcBase(c, SBC_ABS_X, 3, 4, OperandAbsoluteX(c)) {
+class SbcAbsoluteX: SbcBase(SBC_ABS_X, 3, 4, Addressing.ABSOLUTE_X) {
     override var timing = 4
-    override fun run() {
-        super.run()
+    override fun run(c: Computer, op: Operand) = with(c) {
+        super.run(c, op)
         timing += pageCrossed(cpu.PC, word + cpu.X)
     }
 }
 
 /** SBC $1234,Y */
-class SbcAbsoluteY(c: Computer): SbcBase(c, SBC_ABS_Y, 3, 4, OperandAbsoluteY(c)) {
+class SbcAbsoluteY: SbcBase(SBC_ABS_Y, 3, 4, Addressing.ABSOLUTE_Y) {
     override var timing = 4
-    override fun run() {
-        super.run()
+    override fun run(c: Computer, op: Operand) = with(c) {
+        super.run(c, op)
         timing += pageCrossed(cpu.PC, word + cpu.Y)
     }
 }
 
 /** 0x21, SBC ($12,X) */
-class SbcIndX(c: Computer): SbcBase(c, SBC_IND_X, 2, 6, OperandIndirectX(c))
+class SbcIndX: SbcBase(SBC_IND_X, 2, 6, Addressing.INDIRECT_X)
 
 /** 0x31, SBC ($12),Y */
-class SbcIndY(c: Computer): SbcBase(c, SBC_IND_Y, 2, 5, OperandIndirectY(c)) {
+class SbcIndY: SbcBase(SBC_IND_Y, 2, 5, Addressing.INDIRECT_Y) {
     override var timing = 4
-    override fun run() {
-        super.run()
+    override fun run(c: Computer, op: Operand) = with(c) {
+        super.run(c, op)
         timing += pageCrossed(cpu.PC, memory[word] + cpu.Y)
     }
 }
