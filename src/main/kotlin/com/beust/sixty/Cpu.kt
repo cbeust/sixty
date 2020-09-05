@@ -93,7 +93,7 @@ enum class Addressing {
             INDIRECT_Y -> " ($${byte.h()},Y)"
             REGISTER_A -> ""
             INDIRECT -> " ($${word.hh()})"
-            RELATIVE -> " $${(pc + byte + 2).hh()}"
+            RELATIVE -> " $${(pc + byte.toByte() + 2).hh()}"
             NONE -> ""
         }
     }
