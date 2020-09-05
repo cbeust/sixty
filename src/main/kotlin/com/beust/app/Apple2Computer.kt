@@ -16,39 +16,46 @@ import java.nio.file.Paths
 import kotlin.system.exitProcess
 
 fun apple2Computer(): Computer {
-    val textScreen = TextScreen(Apple2App.canvas)
-    val graphicsScreen = HiResScreen(Apple2App.canvas)
+//    val textScreen = TextScreen(Apple2App.canvas)
+//    val graphicsScreen = HiResScreen(Apple2App.canvas)
     val pc = 0x300
     val memory = Memory(65536).apply {
         load("d:\\pd\\Apple Disks\\apple2eu.rom", 0xc000)
         load("d:\\pd\\Apple Disks\\dos", 0x9600)
         load("d:\\pd\\Apple Disks\\a000.dmp", 0)
         // jsr $fded
-        //            this.init(pc, 0xa9, 0x41, 0x20, 0xed, 0xfd)
+        this.init(pc, 0xa9, 0x41, 0x20, 0xed, 0xfd, 0x60)
         // Draw a line
-        this.init(pc, JSR, 0xe2, 0xf3,
-                LDX_IMM, 3,
-                JSR, 0xf0, 0xf6, // HCOLOR (set color to white)
-                LDA_IMM, 0,
-                TAY,
-                TAX,
-                JSR, 0x57, 0xf4,  // HPLOT
-                LDA_IMM, 0x17,
-                LDX_IMM, 1,
-                JSR, 0x3a, 0xf5  // HLINE TO 279,0
-        )
+//        this.init(pc, JSR, 0xe2, 0xf3, // hgr
+//                LDX_IMM, 3,   // a2
+//                JSR, 0xf0, 0xf6, // HCOLOR (set color to white)
+//                LDA_IMM, 0,   // a9
+//                TAY,          // a8
+//                TAX,          // aa
+//                JSR, 0x57, 0xf4,  // HPLOT
+//                LDA_IMM, 0x17, // a9
+//                LDX_IMM, 1,    // a2
+//                JSR, 0x3a, 0xf5  // HLINE TO 279,0
+//        )
         this[0x36] = 0xbd
         this[0x37] = 0x9e
     }
 
     val listener = object: MemoryListener() {
+        fun logMem(i: Int, value: Int, extra: String = "") {
+            lastMemDebug.add("mem[${i.hh()}] = ${(value.and(0xff)).h()} $extra")
+        }
+
         override fun onWrite(location: Int, value: Int) {
             if (location >= 0x400 && location < 0x7ff) {
-                textScreen.drawMemoryLocation(location, value)
+                println("Drawing text: "+ value.and(0xff))
+//                textScreen.drawMemoryLocation(location, value)
             } else if (location >= 0x2000 && location <= 0x3fff) {
-                if (value != 0) println("Graphics: [$" + location.hh() + "]=$" + value.h())
-                graphicsScreen.drawMemoryLocation(memory, location, value)
+                if (value != 0) println("Graphics: [$" + location.hh() + "]=$" + value.and(0xff).h())
+//                graphicsScreen.drawMemoryLocation(memory, location, value)
             }
+
+            logMem(location, value)
         }
 
     }
@@ -66,16 +73,16 @@ fun apple2Computer(): Computer {
 //                run()
     }
 
-    Application.launch(Apple2App::class.java)
+//    Application.launch(Apple2App::class.java)
 
     return result
 }
 
 class Apple2App : Application() {
-    companion object {
-        private var _canvas: Canvas? = null
-        val canvas: Canvas by lazy { _canvas!! }
-    }
+//    companion object {
+//        private var _canvas: Canvas? = null
+//        val canvas: Canvas by lazy { _canvas }
+//    }
 
     override fun start(stage: Stage) {
         stage.title = "Main"
@@ -99,8 +106,8 @@ class Apple2App : Application() {
         }
 
 //        val canvas = root.lookup("#canvas") as Canvas
-        _canvas = Canvas(1000.0, 600.0)
-        root.children.add(_canvas)
+//        _canvas = Canvas(1000.0, 600.0)
+//        root.children.add(_canvas)
 
         stage.show()
 
