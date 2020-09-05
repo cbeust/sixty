@@ -4,7 +4,7 @@ import com.beust.sixty.*
 
 fun functionalTestComputer(): Computer {
     val functionalTestMemory = Memory(65536).apply {
-        load("bin_files/6502_functional_test.bin")
+        load("src/test/resources/6502_functional_test.bin")
     }
     val result = Computer(cpu = Cpu(memory = functionalTestMemory),
             memoryListener = DebugMemoryListener()).apply {
