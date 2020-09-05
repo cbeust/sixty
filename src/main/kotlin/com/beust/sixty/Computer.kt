@@ -53,6 +53,9 @@ class Computer(val cpu: Cpu = Cpu(memory = Memory()),
             if (memory[cpu.PC] == 0x60 && cpu.SP.isEmpty()) {
                 done = true
             } else {
+                if (cycles % 100 == 0) {
+                    println("BREAk")
+                }
 //                if (cpu.PC == 0x2edc) {
 //                    println(this)
 //                    println("breakpoint: " + memory[0xe].h())
@@ -97,20 +100,20 @@ class Computer(val cpu: Cpu = Cpu(memory = Memory()),
 //        return Computer(cpu.clone(), Memory(memory.size, *memory.content))
 //    }
 //
-    fun disassemble(address: Int = 0, length: Int = 10, print: Boolean = true, memory: Memory = cpu.memory)
-            : List<String> {
-        val result = arrayListOf<String>()
-        var pc = address
-        var done = false
-        var n = length
-        while (! done) {
-            val inst = cpu.nextInstruction(memory, pc, noThrows = true)!!
-            result.add(disassemble(pc, inst, print))
-            pc += inst.size
-            if (--n <= 0) done = true
-        }
-    return result
-    }
+//    fun disassemble(address: Int = 0, length: Int = 10, print: Boolean = true, memory: Memory = cpu.memory)
+//            : List<String> {
+//        val result = arrayListOf<String>()
+//        var pc = address
+//        var done = false
+//        var n = length
+//        while (! done) {
+//            val inst = cpu.nextInstruction(memory, pc, noThrows = true)!!
+//            result.add(disassemble(pc, inst, print))
+//            pc += inst.size
+//            if (--n <= 0) done = true
+//        }
+//    return result
+//    }
 
     private fun formatPc(cpu: Cpu, inst: Instruction): String {
         val pc = cpu.PC

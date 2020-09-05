@@ -18,13 +18,14 @@ import kotlin.system.exitProcess
 fun apple2Computer(): Computer {
 //    val textScreen = TextScreen(Apple2App.canvas)
 //    val graphicsScreen = HiResScreen(Apple2App.canvas)
-    val pc = 0x300
     val memory = Memory(65536).apply {
         load("d:\\pd\\Apple Disks\\apple2eu.rom", 0xc000)
         load("d:\\pd\\Apple Disks\\dos", 0x9600)
         load("d:\\pd\\Apple Disks\\a000.dmp", 0)
-        // jsr $fded
-        this.init(pc, 0xa9, 0x41, 0x20, 0xed, 0xfd, 0x60)
+        // JMP $C600
+//        this.init(pc, 0x4c, 0, 0xc6)
+//        // jsr $fded
+//        this.init(pc, 0xa9, 0x41, 0x20, 0xed, 0xfd, 0x60)
         // Draw a line
 //        this.init(pc, JSR, 0xe2, 0xf3, // hgr
 //                LDX_IMM, 3,   // a2
@@ -48,7 +49,8 @@ fun apple2Computer(): Computer {
 
         override fun onWrite(location: Int, value: Int) {
             if (location >= 0x400 && location < 0x7ff) {
-                println("Drawing text: "+ value.and(0xff))
+                println("Drawing text: "+ value.and(0xff).toChar())
+                println("")
 //                textScreen.drawMemoryLocation(location, value)
             } else if (location >= 0x2000 && location <= 0x3fff) {
                 if (value != 0) println("Graphics: [$" + location.hh() + "]=$" + value.and(0xff).h())
@@ -65,11 +67,12 @@ fun apple2Computer(): Computer {
         memory.listener = listener
 //            fillScreen(memory)
 //            fillWithNumbers(memory)
-            loadPic(memory)
+//            loadPic(memory)
         if (false) {
             memory[0] = 0
         }
-        cpu.PC = pc
+        val start = memory[0xfffc].or(memory[0xfffd].shl(8))
+        cpu.PC = start
 //                run()
     }
 
