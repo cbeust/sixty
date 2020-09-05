@@ -14,8 +14,8 @@ class Memory(val size: Int = 0x10000, vararg bytes: Int) {
 
     operator fun get(i: Int): Int {
         val result = if (interceptor != null) {
-            val response = interceptor!!.onRead(i)
-            if (response.allow) response.value
+            val response = interceptor!!.onRead(i, content[i])
+            if (response.override) response.value
             else content[i]
         } else {
             content[i]
@@ -28,7 +28,7 @@ class Memory(val size: Int = 0x10000, vararg bytes: Int) {
     operator fun set(i: Int, value: Int) {
         if (interceptor != null) {
             val response = interceptor!!.onWrite(i, value)
-            if (response.allow) {
+            if (response.override) {
                 content[i] = value
             }
         } else {
@@ -58,6 +58,10 @@ class Memory(val size: Int = 0x10000, vararg bytes: Int) {
         File(file).inputStream().use { ins ->
             load(ins, address)
         }
+    }
+
+    fun loadResource(name: String, address: Int) {
+        load(this::class.java.classLoader.getResource(name).openStream(), address)
     }
 
     fun wordAt(word: Int): Int {

@@ -15,13 +15,16 @@ import javafx.stage.Stage
 import java.nio.file.Paths
 import kotlin.system.exitProcess
 
-fun apple2Computer(): Computer {
+fun apple2Computer(debugMem: Boolean): Computer {
 //    val textScreen = TextScreen(Apple2App.canvas)
 //    val graphicsScreen = HiResScreen(Apple2App.canvas)
     val memory = Memory(65536).apply {
-        load("d:\\pd\\Apple Disks\\apple2eu.rom", 0xc000)
-        load("d:\\pd\\Apple Disks\\dos", 0x9600)
-        load("d:\\pd\\Apple Disks\\a000.dmp", 0)
+//        load("d:\\pd\\Apple Disks\\roms\\APPLE2E.ROM", 0xc000)
+//        load("d:\\pd\\Apple Disks\\roms\\C000.dump", 0xc000)
+        loadResource("Apple2e.rom", 0xc000)
+        loadResource("DISK2.ROM", 0xc600)
+//        load("d:\\pd\\Apple Disks\\dos", 0x9600)
+//        load("d:\\pd\\Apple Disks\\a000.dmp", 0)
         // JMP $C600
 //        this.init(pc, 0x4c, 0, 0xc6)
 //        // jsr $fded
@@ -38,11 +41,28 @@ fun apple2Computer(): Computer {
 //                LDX_IMM, 1,    // a2
 //                JSR, 0x3a, 0xf5  // HLINE TO 279,0
 //        )
-        this[0x36] = 0xbd
-        this[0x37] = 0x9e
+//        this[0x36] = 0xbd
+//        this[0x37] = 0x9e
     }
 
-    val listener = object: MemoryListener() {
+    val interceptor = object: MemoryInterceptor {
+        override fun onRead(location: Int, value: Int): MemoryInterceptor.Response {
+            if (location == 0xc0ec) {
+                println("Reading expecting a nibble")
+                return MemoryInterceptor.Response(true, 0xd5)
+            } else if (location >= 0xc080 && location <= 0xc0ff) {
+                return MemoryInterceptor.Response(true, 0xd5)
+            } else {
+                return MemoryInterceptor.Response(false, value)
+            }
+        }
+
+        override fun onWrite(location: Int, value: Int): MemoryInterceptor.Response {
+            return MemoryInterceptor.Response(true, value)
+        }
+
+    }
+    val listener = object: MemoryListener(debugMem) {
         fun logMem(i: Int, value: Int, extra: String = "") {
             lastMemDebug.add("mem[${i.hh()}] = ${(value.and(0xff)).h()} $extra")
         }
@@ -55,9 +75,13 @@ fun apple2Computer(): Computer {
             } else if (location >= 0x2000 && location <= 0x3fff) {
                 if (value != 0) println("Graphics: [$" + location.hh() + "]=$" + value.and(0xff).h())
 //                graphicsScreen.drawMemoryLocation(memory, location, value)
+            } else when(location) {
+                0xc054 -> {} // LOWSCR
+                0xc056 -> {} // LORES
+                else -> {}
             }
 
-            logMem(location, value)
+            if (debugMem) logMem(location, value)
         }
 
     }
@@ -65,6 +89,7 @@ fun apple2Computer(): Computer {
     val appleCpu = Cpu(memory = memory)
     val result = Computer(cpu = appleCpu).apply {
         memory.listener = listener
+        memory.interceptor = interceptor
 //            fillScreen(memory)
 //            fillWithNumbers(memory)
 //            loadPic(memory)
@@ -72,6 +97,7 @@ fun apple2Computer(): Computer {
             memory[0] = 0
         }
         val start = memory[0xfffc].or(memory[0xfffd].shl(8))
+//        disassemble(0, 20)
         cpu.PC = start
 //                run()
     }

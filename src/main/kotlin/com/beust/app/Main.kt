@@ -25,7 +25,8 @@ fun main() {
             c.run(debugAsm = false)
         }
         2 -> {
-            apple2Computer().run(true, true)
+            val debugMem = false
+            apple2Computer(debugMem).run()//true, true)
         }
         else -> {
             val result = functionalTestComputer().run()

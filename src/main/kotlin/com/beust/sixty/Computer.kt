@@ -1,14 +1,17 @@
 package com.beust.sixty
 
-interface MemoryInterceptor {
-    class Response(val allow: Boolean, val value: Int)
+open class BaseMemoryListener {
+    val lastMemDebug = arrayListOf<String>()
+}
 
-    fun onRead(location: Int): Response
+interface MemoryInterceptor {
+    class Response(val override: Boolean, val value: Int)
+
+    fun onRead(location: Int, value: Int): Response
     fun onWrite(location: Int, value: Int): Response
 }
 
-open class MemoryListener {
-    val lastMemDebug = arrayListOf<String>()
+open class MemoryListener(val debugMem: Boolean = false): BaseMemoryListener() {
     open fun onRead(location: Int, value: Int) {}
     open fun onWrite(location: Int, value: Int){}
 }
@@ -53,10 +56,10 @@ class Computer(val cpu: Cpu = Cpu(memory = Memory()),
             if (memory[cpu.PC] == 0x60 && cpu.SP.isEmpty()) {
                 done = true
             } else {
-//                if (cpu.PC == 0x2edc) {
-//                    println(this)
-//                    println("breakpoint: " + memory[0xe].h())
-//                }
+                if (cpu.PC == 0xc202) {
+                    println(this)
+                    println("breakpoint: " + memory[0xe].h())
+                }
                 previousPc = cpu.PC
                 if (debugAsm) {
                     val inst = cpu.nextInstruction()
