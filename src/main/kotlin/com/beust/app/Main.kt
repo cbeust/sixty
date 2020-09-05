@@ -15,16 +15,26 @@ import java.nio.file.Paths
 import kotlin.system.exitProcess
 
 fun main() {
-//    println("Running a 6502 program displaying HELLO")
-//    val c = TestComputer.createComputer()
-//    c.run(debugAsm = false)
-    apple2Computer().run(true, true)
-//    val result = functionalTestComputer().run()
-//    with(result) {
-//        val sec = durationMillis / 1000
-//        val mhz = String.format("%.2f", cycles / sec / 1_000_000.0)
-//        println("Computer stopping after $cycles cycles, $sec seconds, $mhz MHz")
-//    }
+    val choice = 2
 
+    when(choice) {
+        1 -> {
+            println("Running the following 6502 program which will display HELLO")
+            val c = TestComputer.createComputer()
+            c.disassemble(start = 0, length = 15)
+            c.run(debugAsm = false)
+        }
+        2 -> {
+            apple2Computer().run(true, true)
+        }
+        else -> {
+            val result = functionalTestComputer().run()
+            with(result) {
+                val sec = durationMillis / 1000
+                val mhz = String.format("%.2f", cycles / sec / 1_000_000.0)
+                println("Computer stopping after $cycles cycles, $sec seconds, $mhz MHz")
+            }
+        }
+    }
 }
 
