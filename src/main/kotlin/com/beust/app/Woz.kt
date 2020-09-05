@@ -3,9 +3,10 @@ package com.beust.app
 import com.beust.sixty.h
 import com.beust.sixty.hh
 import java.io.File
+import java.io.InputStream
 
 fun main() {
-    Woz().read(File("d:\\pd\\Apple Disks\\woz2\\DOS 3.3 System Master.woz"))
+    Woz().read(Woz::class.java.classLoader.getResource("woz2/DOS 3.3 System Master.woz").openStream())
 }
 
 class Woz {
@@ -125,8 +126,10 @@ class Woz {
         }
     }
 
-    fun read(file: File) {
-        val bytes = file.readBytes()
+    fun read(file: File) = read(file.inputStream())
+
+    fun read(ins: InputStream) {
+        val bytes = ins.readBytes()
         val stream = Stream(bytes)
         println("Header: " + readHeader(stream))
 
