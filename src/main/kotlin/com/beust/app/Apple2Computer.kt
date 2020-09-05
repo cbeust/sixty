@@ -47,14 +47,35 @@ fun apple2Computer(debugMem: Boolean): Computer {
 
     val interceptor = object: MemoryInterceptor {
         override fun onRead(location: Int, value: Int): MemoryInterceptor.Response {
-            if (location == 0xc0ec) {
-                println("Reading expecting a nibble")
-                return MemoryInterceptor.Response(true, 0xd5)
-            } else if (location >= 0xc080 && location <= 0xc0ff) {
-                return MemoryInterceptor.Response(true, 0xd5)
-            } else {
-                return MemoryInterceptor.Response(false, value)
+            val byte = when(location) {
+                0xc0e8 -> {
+                    println("Turning motor off")
+                    value
+                }
+                0xc0e9 -> {
+                    println("Turning motor on")
+                    value
+                }
+                0xc0ea -> {
+                    println("Turning on drive 1")
+                    value
+                }
+                0xc0eb -> {
+                    println("Turning on drive 2")
+                    value
+                }
+                0xc0ec -> {
+                    println("Reading byte")
+                    0xd5
+                }
+                else -> value
             }
+            return MemoryInterceptor.Response(true, byte)
+//            if (location >= 0xc080 && location <= 0xc0ff) {
+//                return MemoryInterceptor.Response(true, 0xd5)
+//            } else {
+//                return MemoryInterceptor.Response(false, value)
+//            }
         }
 
         override fun onWrite(location: Int, value: Int): MemoryInterceptor.Response {
