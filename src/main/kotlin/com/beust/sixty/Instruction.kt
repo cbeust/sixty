@@ -27,7 +27,16 @@ interface Instruction {
     }
 
     fun run(c: Computer, byte: Int, word: Int)
+
+    /**
+     * Dynamic toString(): uses the memory and register to display itselt.
+     */
     fun toString(c: Computer, byte: Int, word: Int): String
+
+    /**
+     * Static toString(): disassemble just based on the opcodes.
+     */
+    fun toString(pc: Int, byte: Int, word: Int): String
 
     /**
      * @return 1 if a page bounday was crossed, 0 otherwise

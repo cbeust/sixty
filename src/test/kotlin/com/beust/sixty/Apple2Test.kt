@@ -7,9 +7,7 @@ class Apple2Test: BaseTest() {
         val memory = Memory(bytes = *bytes)
         val stackPointer = StackPointer(memory = memory)
 
-        val listener = object: MemoryListener {
-            override var lastMemDebug = arrayListOf<String>()
-
+        val listener = object: MemoryListener() {
             override fun onRead(location: Int, value: Int) {
             }
 

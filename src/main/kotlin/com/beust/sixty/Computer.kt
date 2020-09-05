@@ -53,9 +53,6 @@ class Computer(val cpu: Cpu = Cpu(memory = Memory()),
             if (memory[cpu.PC] == 0x60 && cpu.SP.isEmpty()) {
                 done = true
             } else {
-                if (cycles % 100 == 0) {
-                    println("BREAk")
-                }
 //                if (cpu.PC == 0x2edc) {
 //                    println(this)
 //                    println("breakpoint: " + memory[0xe].h())
@@ -96,27 +93,9 @@ class Computer(val cpu: Cpu = Cpu(memory = Memory()),
 
     class RunResult(val durationMillis: Long, val cycles: Int)
 
-//    fun clone(): Computer {
-//        return Computer(cpu.clone(), Memory(memory.size, *memory.content))
-//    }
-//
-//    fun disassemble(address: Int = 0, length: Int = 10, print: Boolean = true, memory: Memory = cpu.memory)
-//            : List<String> {
-//        val result = arrayListOf<String>()
-//        var pc = address
-//        var done = false
-//        var n = length
-//        while (! done) {
-//            val inst = cpu.nextInstruction(memory, pc, noThrows = true)!!
-//            result.add(disassemble(pc, inst, print))
-//            pc += inst.size
-//            if (--n <= 0) done = true
-//        }
-//    return result
-//    }
+    private fun formatPc(cpu: Cpu, inst: Instruction) = formatPc(cpu.PC, inst)
 
-    private fun formatPc(cpu: Cpu, inst: Instruction): String {
-        val pc = cpu.PC
+    private fun formatPc(pc: Int, inst: Instruction): String {
         val bytes = StringBuffer(inst.opCode.h())
         bytes.append(if (inst.size > 1) (" " + memory[pc + 1].h()) else "   ")
         bytes.append(if (inst.size == 3) (" " + memory[pc + 2].h()) else "   ")
@@ -127,19 +106,16 @@ class Computer(val cpu: Cpu = Cpu(memory = Memory()),
         return String.format("%-12s", inst.toString(this, byte, word))
     }
 
-    private fun disassemble(address: Int, inst: Instruction, print: Boolean): String {
-        val pc = address
-        val bytes = StringBuffer(inst.opCode.h())
-        bytes.append(if (inst.size > 1) (" " + memory[pc + 1].h()) else "   ")
-        bytes.append(if (inst.size == 3) (" " + memory[pc + 2].h()) else "   ")
-        val cpuString = String.format("%8s ${cpu}", " ")
-
-        val (byte, word) = byteWord(memory, address + 1)
-        val result = String.format("%-5s %-10s %-12s %s", pc.hh() + ":", bytes.toString(),
-                inst.toString(this, byte, word), cpuString)
-
-        if (print) println(result)
-        return result
+    fun disassemble(start: Int, length: Int = 10) {
+        var pc = start
+        repeat(length) {
+            with(Cpu.nextInstruction(memory[pc])) {
+                val byte = memory[pc + 1]
+                val word = memory[pc + 1].or(memory[pc + 2].shl(8))
+                println(formatPc(pc, this) + toString(pc, byte, word))
+                pc += size
+            }
+        }
     }
 
     override fun toString(): String {

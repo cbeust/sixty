@@ -15,24 +15,18 @@ data class Cpu(val memory: Memory,
         val P: StatusFlags = StatusFlags())
 {
     val SP: StackPointer = StackPointer(memory)
-    val OP_ARRAY = Array<Instruction?>(0x100) { _ -> null }
 
-    init {
-        OPCODES.forEach {
-            OP_ARRAY[it.opCode] = it
-        }
-    }
-
-    fun nextInstruction(mem: Memory = memory, address: Int = PC, noThrows: Boolean = false): Instruction {
-        val op = mem[address] and 0xff
-        return OP_ARRAY[op] ?: Unknown(op)
-    }
+    fun nextInstruction(mem: Memory = memory, address: Int = PC, noThrows: Boolean = false): Instruction
+        = nextInstruction(mem[address] and 0xff, noThrows)
 
     override fun toString(): String {
         return "A=${A.h()} X=${X.h()} Y=${Y.h()} S=${SP.S.h()} P=${P.toByte().h()} PC=\$${PC.h()} P=${P} SP=$SP"
     }
 
     companion object {
+        fun nextInstruction(op: Int, noThrows: Boolean = false): Instruction =
+                OP_ARRAY[op]
+                        ?: Unknown(op)
         // NMI vector
 //        const val NMI_VECTOR_L = 0xfffa
 //        const val NMI_VECTOR_H = 0xfffb
@@ -50,7 +44,6 @@ data class Cpu(val memory: Memory,
 interface Operand {
     fun get(): Int
     fun set(v: Int)
-    val name: String
     val byte: Int
     val word: Int
 }
@@ -66,7 +59,8 @@ abstract class OperandBase(computer: Computer, override val byte: Int, override 
 }
 
 enum class Addressing {
-    IMMEDIATE, ZP, ZP_X, ZP_Y, ABSOLUTE, ABSOLUTE_X, ABSOLUTE_Y, INDIRECT_X, INDIRECT_Y, REGISTER_A, INDIRECT, NONE;
+    IMMEDIATE, ZP, ZP_X, ZP_Y, ABSOLUTE, ABSOLUTE_X, ABSOLUTE_Y, INDIRECT_X, INDIRECT_Y, REGISTER_A, INDIRECT,
+        RELATIVE, NONE;
 
     fun toOperand(c: Computer, byte: Int, word: Int): Operand {
         return when(this) {
@@ -81,39 +75,54 @@ enum class Addressing {
             INDIRECT_Y -> OperandIndirectY(c, byte, word)
             REGISTER_A -> OperandRegisterA(c, byte, word)
             INDIRECT -> OperandIndirect(c, byte, word)
+            RELATIVE -> OperandRelative(c, byte, word)
             NONE -> OperandNone(c, byte, word)
         }
     }
+
+    fun toString(pc: Int, byte: Int, word: Int): String {
+        return when(this) {
+            IMMEDIATE -> " #$${byte.h()}"
+            ZP -> " $${byte.h()}"
+            ZP_X -> " $${byte.h()},X"
+            ZP_Y -> " $${byte.h()},Y"
+            ABSOLUTE -> " $${word.hh()}"
+            ABSOLUTE_X -> " $${word.hh()},X"
+            ABSOLUTE_Y -> " $${word.hh()},Y"
+            INDIRECT_X -> " ($${byte.h()},X)"
+            INDIRECT_Y -> " ($${byte.h()},Y)"
+            REGISTER_A -> ""
+            INDIRECT -> " ($${word.hh()})"
+            RELATIVE -> " $${(pc + byte + 2).hh()}"
+            NONE -> ""
+        }
+    }
+
 }
 
 class OperandNone(c: Computer, byte: Int, word: Int): OperandBase(c, byte, word) {
     override fun get() = byte
     override fun set(v: Int) = TODO("Should never happen")
-    override val name get() = ""
 }
 
 class OperandImmediate(c: Computer, byte: Int, word: Int): OperandBase(c, byte, word) {
     override fun get() = byte
     override fun set(v: Int) = TODO("Should never happen")
-    override val name get() = " #$${byte.h()}"
 }
 
 class OperandAbsolute(c: Computer, byte: Int, word: Int): OperandBase(c, byte, word) {
     override fun get() = memory[word]
     override fun set(v: Int) { memory[word] = v }
-    override val name get() = " $${word.h()}"
 }
 
 class OperandAbsoluteX(c: Computer, byte: Int, word: Int): OperandBase(c, byte, word) {
     override fun get() = memory[word + cpu.X]
     override fun set(v: Int) { memory[word + cpu.X] = v }
-    override val name get() = " $${word.h()},X"
 }
 
 class OperandAbsoluteY(c: Computer, byte: Int, word: Int): OperandBase(c, byte, word) {
     override fun get() = memory[word + cpu.Y]
     override fun set(v: Int) { memory[word + cpu.Y] = v }
-    override val name get() = " $${word.h()},Y"
 }
 
 class OperandIndirectX(c: Computer, byte: Int, word: Int): OperandBase(c, byte, word) {
@@ -121,7 +130,6 @@ class OperandIndirectX(c: Computer, byte: Int, word: Int): OperandBase(c, byte, 
 
     override fun get() = memory[address]
     override fun set(v: Int) { memory[address] = v }
-    override val name get() = " ($${byte.h()},X)"
 }
 
 class OperandIndirectY(c: Computer, byte: Int, word: Int): OperandBase(c, byte, word) {
@@ -129,31 +137,26 @@ class OperandIndirectY(c: Computer, byte: Int, word: Int): OperandBase(c, byte, 
 
     override fun get() = memory[address + cpu.Y]
     override fun set(v: Int) { memory[address + cpu.Y] = v }
-    override val name get() = " ($${byte.h()}),Y"
 }
 
 class OperandZp(c: Computer, byte: Int, word: Int): OperandBase(c, byte, word) {
     override fun get() = memory[byte]
     override fun set(v: Int) { memory[byte] = v }
-    override val name get() = " $${byte.h()}"
 }
 
 class OperandZpX(c: Computer, byte: Int, word: Int): OperandBase(c, byte, word) {
     override fun get() = memory[(byte + cpu.X) and 0xff]
     override fun set(v: Int) { memory[(byte + cpu.X) and 0xff] = v }
-    override val name get() = " $${byte.h()},X"
 }
 
 class OperandZpY(c: Computer, byte: Int, word: Int): OperandBase(c, byte, word) {
     override fun get() = memory[(byte + cpu.Y) and 0xff]
     override fun set(v: Int) { memory[(byte + cpu.Y) and 0xff] = v }
-    override val name get() = " $${byte.h()},Y"
 }
 
 class OperandRegisterA(c: Computer, byte: Int, word: Int): OperandBase(c, byte, word) {
     override fun get() = cpu.A
     override fun set(v: Int) { cpu.A = v }
-    override val name get() = ""
 }
 
 class OperandIndirect(c: Computer, byte: Int, word: Int): OperandBase(c, byte, word) {
@@ -161,15 +164,19 @@ class OperandIndirect(c: Computer, byte: Int, word: Int): OperandBase(c, byte, w
 
     override fun get() = memory[address]
     override fun set(v: Int) { memory[address] = v }
-    override val name get() = " ($${word.hh()})"
+}
+
+class OperandRelative(val c: Computer, byte: Int, word: Int): OperandBase(c, byte, word) {
+    override fun get() = TODO("Should never happen")
+    override fun set(v: Int) { TODO("Should never happen") }
 }
 
 abstract class InstructionBase(override val name: String, override val opCode: Int, override val size: Int,
         override val timing: Int, override val addressing: Addressing = Addressing.NONE) : Instruction
 {
     override fun run(c: Computer, byte: Int, word: Int) = run(c, addressing.toOperand(c, byte, word))
-    override fun toString(c: Computer, byte: Int, word: Int)
-            = toString() + addressing.toOperand(c, byte, word).name
+    override fun toString(c: Computer, byte: Int, word: Int) = toString(c.cpu.PC, byte, word)
+    override fun toString(pc: Int, byte: Int, word: Int) = toString() + addressing.toString(pc, byte, word)
     override fun toString() = name
 
     abstract fun run(c: Computer, op: Operand)

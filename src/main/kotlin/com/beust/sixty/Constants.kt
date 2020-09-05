@@ -355,3 +355,9 @@ val OPCODES = listOf<Instruction>(
         BitZp(),
         BitAbsolute())
 
+val OP_ARRAY = Array<Instruction?>(0x100) { _ -> null }.apply {
+    OPCODES.forEach {
+        this[it.opCode] = it
+    }
+}
+

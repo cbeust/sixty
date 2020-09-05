@@ -3,7 +3,7 @@ package com.beust.sixty.op
 import com.beust.sixty.*
 
 abstract class BranchBase(override val name: String, override val opCode: Int)
-    : InstructionBase(name, opCode, 2, 2)
+    : InstructionBase(name, opCode, 2, 2, Addressing.RELATIVE)
 {
     abstract fun condition(c: Computer): Boolean
 

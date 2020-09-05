@@ -11,7 +11,7 @@ class FunctionalTest {
             load(ins!!, 0)
         }
         Computer(cpu = Cpu(memory = memory),
-                memoryListener = DebugMemoryListener).apply {
+                memoryListener = DebugMemoryListener()).apply {
             pcListener = object : PcListener {
                 override fun onPcChanged(newValue: Int) {
                     if (newValue == 0x346c || newValue == 0x3469) {
