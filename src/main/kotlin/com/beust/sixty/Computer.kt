@@ -117,7 +117,7 @@ class Computer(val cpu: Cpu = Cpu(memory = Memory()),
         val bytes = StringBuffer(inst.opCode.h())
         bytes.append(if (inst.size > 1) (" " + memory[pc + 1].h()) else "   ")
         bytes.append(if (inst.size == 3) (" " + memory[pc + 2].h()) else "   ")
-        return String.format("%-5s: %-10s", pc.hh(), bytes.toString())
+        return String.format("%-5s: %-11s", pc.hh(), bytes.toString())
     }
 
     private fun formatInstruction(inst: Instruction, byte: Int, word: Int): String {
