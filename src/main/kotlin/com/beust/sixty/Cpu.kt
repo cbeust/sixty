@@ -66,7 +66,7 @@ abstract class OperandBase(computer: Computer, override val byte: Int, override 
 }
 
 enum class Addressing {
-    IMMEDIATE, ZP, ZP_X, ZP_Y, ABSOLUTE, ABSOLUTE_X, ABSOLUTE_Y, INDIRECT_X, INDIRECT_Y, REGISTER_A, NONE;
+    IMMEDIATE, ZP, ZP_X, ZP_Y, ABSOLUTE, ABSOLUTE_X, ABSOLUTE_Y, INDIRECT_X, INDIRECT_Y, REGISTER_A, INDIRECT, NONE;
 
     fun toOperand(c: Computer, byte: Int, word: Int): Operand {
         return when(this) {
@@ -80,6 +80,7 @@ enum class Addressing {
             INDIRECT_X -> OperandIndirectX(c, byte, word)
             INDIRECT_Y -> OperandIndirectY(c, byte, word)
             REGISTER_A -> OperandRegisterA(c, byte, word)
+            INDIRECT -> OperandIndirect(c, byte, word)
             NONE -> OperandNone(c, byte, word)
         }
     }
@@ -155,6 +156,14 @@ class OperandRegisterA(c: Computer, byte: Int, word: Int): OperandBase(c, byte, 
     override val name get() = ""
 }
 
+class OperandIndirect(c: Computer, byte: Int, word: Int): OperandBase(c, byte, word) {
+    private val address = memory[(this.byte + cpu.X) and 0xff].or(memory[(this.byte + cpu.X + 1) and 0xff].shl(8))
+
+    override fun get() = memory[address]
+    override fun set(v: Int) { memory[address] = v }
+    override val name get() = " ($${word.hh()})"
+}
+
 abstract class InstructionBase(override val name: String, override val opCode: Int, override val size: Int,
         override val timing: Int, override val addressing: Addressing = Addressing.NONE) : Instruction
 {
@@ -198,7 +207,7 @@ class Rti: InstructionBase("RTI", RTI, 1, 6) {
 }
 
 /** 0x4c, JMP $1234 */
-class Jmp: InstructionBase("JMP", JMP, 3, 3) {
+class Jmp: InstructionBase("JMP", JMP, 3, 3, Addressing.ABSOLUTE) {
     override fun run(c: Computer, op: Operand) {
         with(c) {
             cpu.PC = op.word
@@ -216,7 +225,7 @@ class Rts: InstructionBase("RTS", RTS, 1, 6) {
 }
 
 /** 0x6c, JMP ($0036) */
-class JmpIndirect: InstructionBase("JMP", JMP_IND, 3, 5) {
+class JmpIndirect: InstructionBase("JMP", JMP_IND, 3, 5, Addressing.INDIRECT) {
     override fun run(c: Computer, op: Operand) {
         with(c) {
             cpu.PC = memory.wordAt(op.word)
