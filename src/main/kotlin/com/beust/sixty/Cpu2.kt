@@ -10,12 +10,12 @@ import com.beust.app.StackPointer
 
 data class Cpu2(val memory: Memory,
         var A: Int = 0, var X: Int = 0, var Y: Int = 0, var PC: Int = 0,
-        val P: StatusFlags = StatusFlags()): ICpu {
+        val P: StatusFlags = StatusFlags()) {
     val SP: StackPointer = StackPointer(memory)
 
     fun toWord(address: Int) = memory[address].or(memory[address + 1].shl(8))
 
-    override fun nextInstruction(pc: Int, debugMemory: Boolean, debugAsm: Boolean) {
+    fun nextInstruction(pc: Int = PC, debugMemory: Boolean = false, debugAsm: Boolean = false) {
         var opCode = memory[pc]
         var byte = memory[pc + 1]
         var word = byte.or(memory[pc + 2].shl(8))

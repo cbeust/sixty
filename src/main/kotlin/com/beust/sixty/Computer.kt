@@ -20,10 +20,6 @@ interface PcListener {
     fun onPcChanged(newValue: Int)
 }
 
-interface ICpu {
-     fun nextInstruction(pc: Int, debugMemory: Boolean = false, debugAsm: Boolean = false)
-}
-
 class Computer(val cpu: Cpu2 = Cpu2(memory = Memory()),
         memoryListener: MemoryListener? = null,
         memoryInterceptor: MemoryInterceptor? = null,
