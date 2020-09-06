@@ -23,6 +23,8 @@ fun apple2Computer(debugMem: Boolean): Computer {
 //        load("d:\\pd\\Apple Disks\\roms\\C000.dump", 0xc000)
         loadResource("Apple2e.rom", 0xc000)
         loadResource("DISK2.ROM", 0xc600)
+        this[0xfcac] = BEQ
+        this[0xfcb1] = BEQ
 //        load("d:\\pd\\Apple Disks\\dos", 0x9600)
 //        load("d:\\pd\\Apple Disks\\a000.dmp", 0)
         // JMP $C600
@@ -46,6 +48,8 @@ fun apple2Computer(debugMem: Boolean): Computer {
     }
 
     val interceptor = object: MemoryInterceptor {
+        val woz = Woz(Woz::class.java.classLoader.getResource("woz2/DOS 3.3 System Master.woz").openStream())
+
         override fun onRead(location: Int, value: Int): MemoryInterceptor.Response {
             val byte = when(location) {
                 0xc0e8 -> {
@@ -65,8 +69,11 @@ fun apple2Computer(debugMem: Boolean): Computer {
                     value
                 }
                 0xc0ec -> {
-                    println("Reading byte")
-                    0xd5
+                    val result = woz.bitStream.nextByte()
+                    if (result == 0xd5) {
+                        println("Woz returning byte ${result.h()}")
+                    }
+                    result
                 }
                 else -> value
             }
@@ -90,11 +97,10 @@ fun apple2Computer(debugMem: Boolean): Computer {
 
         override fun onWrite(location: Int, value: Int) {
             if (location >= 0x400 && location < 0x7ff) {
-                println("Drawing text: "+ value.and(0xff).toChar())
-                println("")
+//                println("Drawing text: "+ value.and(0xff).toChar())
 //                textScreen.drawMemoryLocation(location, value)
             } else if (location >= 0x2000 && location <= 0x3fff) {
-                if (value != 0) println("Graphics: [$" + location.hh() + "]=$" + value.and(0xff).h())
+//                if (value != 0) println("Graphics: [$" + location.hh() + "]=$" + value.and(0xff).h())
 //                graphicsScreen.drawMemoryLocation(memory, location, value)
             } else when(location) {
                 0xc054 -> {} // LOWSCR
@@ -107,7 +113,7 @@ fun apple2Computer(debugMem: Boolean): Computer {
 
     }
 
-    val appleCpu = Cpu(memory = memory)
+    val appleCpu = Cpu2(memory = memory)
     val result = Computer(cpu = appleCpu).apply {
         memory.listener = listener
         memory.interceptor = interceptor

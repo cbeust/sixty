@@ -10,50 +10,50 @@ import com.beust.app.StackPointer
 
 data class Cpu2(val memory: Memory,
         var A: Int = 0, var X: Int = 0, var Y: Int = 0, var PC: Int = 0,
-        val P: StatusFlags = StatusFlags()) {
+        val P: StatusFlags = StatusFlags()): ICpu {
     val SP: StackPointer = StackPointer(memory)
 
-    fun nextInstruction(debugMemory: Boolean = false, debugAsm: Boolean = false) {
-        var opCode = memory[PC]
-        var byte = memory[PC + 1]
-        var word = byte.or(memory[PC + 2].shl(8))
-        var timing = 1 // TODO
+    override fun nextInstruction(pc: Int, debugMemory: Boolean, debugAsm: Boolean) {
+        var opCode = memory[pc]
+        var byte = memory[pc + 1]
+        var word = byte.or(memory[pc + 2].shl(8))
+        var timing = TIMINGS[opCode]
         // Opcode bits:  aaabbbcc where bbb determines the addressing
         // Source: http://nparker.llx.com/a2/opcodes.html
         val bbb = opCode.and(0x14).shr(2)
         val cc = opCode.and(0x3)
         val effectiveAddress =
-        if (cc == 0) {
-            when(bbb) {
-                1 -> byte // zp
-                3 -> word // absolute
-                5 -> (byte + X) and 0xff // zp,X
-                7 -> word + X // abs,X
-                else -> -1
+            if (cc == 0) {
+                when(bbb) {
+                    1 -> byte // zp
+                    3 -> word // absolute
+                    5 -> (byte + X) and 0xff // zp,X
+                    7 -> word + X // abs,X
+                    else -> 0
+                }
+            } else if (cc == 1) {
+                when(bbb) {
+                    0 -> (byte + X) and 0xff // zp,x
+                    1 -> byte // zp
+                    3 -> word // absolute
+                    4 -> memory[byte] + Y// (zp),y
+                    5 -> (byte + X) and 0xff // zp,X
+                    6 -> word + Y // abs,Y
+                    7 -> word + X // abs,X
+                    else -> 0
+                }
+            } else if (cc == 2) {
+                when(bbb) {
+                    1 -> byte // zp
+                    2 -> A // accumulator
+                    3 -> word // absolute
+                    5 -> (byte + X) and 0xff // zp,X
+                    7 -> word + X // abs,X
+                    else -> 0
+                }
+            } else {
+                0
             }
-        } else if (cc == 1) {
-            when(bbb) {
-                0 -> (byte + X) and 0xff // zp,x
-                1 -> byte // zp
-                3 -> word // absolute
-                4 -> memory[byte] + Y// (zp),y
-                5 -> (byte + X) and 0xff // zp,X
-                6 -> word + Y // abs,Y
-                7 -> word + X // abs,X
-                else -> -1
-            }
-        } else if (cc == 2) {
-            when(bbb) {
-                1 -> byte // zp
-                2 -> A // accumulator
-                3 -> word // absolute
-                5 -> (byte + X) and 0xff // zp,X
-                7 -> word + X // abs,X
-                else -> -1
-            }
-        } else {
-            -1
-        }
 
         val mea = memory[effectiveAddress]
 
@@ -148,10 +148,27 @@ data class Cpu2(val memory: Memory,
                 memory[effectiveAddress] = mea + 1
                 P.setNZFlags(mea)
             }
-            JMP -> PC = word
+            JMP -> {
+                println("SETTING PC TO ${word.hh()}")
+                PC = word
+            }
             JSR -> {
                 SP.pushWord(PC - 1)
                 PC = word
+            }
+            LDA_IMM -> {
+                A = byte
+                P.setNZFlags(A)
+            }
+            LDA_ZP, LDA_ZP_X, LDA_ABS, LDA_ABS_X, LDA_ABS_Y, LDA_IND_X, LDA_IND_Y -> {
+                A = mea
+                P.setNZFlags(A)
+                when(opCode) {
+                    LDA_ABS_X, LDA_ABS_Y, LDA_IND_Y -> {
+                        timing += pageCrossed(PC, effectiveAddress)
+                    }
+
+                }
             }
             LDX_IMM -> {
                 X = byte
@@ -168,11 +185,11 @@ data class Cpu2(val memory: Memory,
             }
             LDY_IMM -> {
                 Y = byte
-                P.setNZFlags(X)
+                P.setNZFlags(Y)
             }
             LDY_ZP, LDY_ZP_X, LDY_ABS, LDY_ABS_X -> {
                 Y = mea
-                P.setNZFlags(A)
+                P.setNZFlags(Y)
                 when(opCode) {
                     LDY_ABS_X -> {
                         timing += pageCrossed(PC, effectiveAddress)
@@ -386,4 +403,7 @@ data class Cpu2(val memory: Memory,
         return if (old.and(0x80).xor(new.and(0x80)) != 0) 1 else 0
     }
 
+    override fun toString(): String {
+        return "A=${A.h()} X=${X.h()} Y=${Y.h()} S=${SP.S.h()} P=${P.toByte().h()} PC=\$${PC.h()} P=${P} SP=$SP"
+    }
 }

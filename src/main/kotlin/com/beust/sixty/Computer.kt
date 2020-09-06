@@ -20,7 +20,11 @@ interface PcListener {
     fun onPcChanged(newValue: Int)
 }
 
-class Computer(val cpu: Cpu = Cpu(memory = Memory()),
+interface ICpu {
+     fun nextInstruction(pc: Int, debugMemory: Boolean = false, debugAsm: Boolean = false)
+}
+
+class Computer(val cpu: Cpu2 = Cpu2(memory = Memory()),
         memoryListener: MemoryListener? = null,
         memoryInterceptor: MemoryInterceptor? = null,
         var pcListener: PcListener? = null
@@ -52,28 +56,38 @@ class Computer(val cpu: Cpu = Cpu(memory = Memory()),
         var previousPc = 0
         while (! done && ! stop) {
             cycles++
+            val opCode = memory[cpu.PC]
 
-            if (memory[cpu.PC] == 0x60 && cpu.SP.isEmpty()) {
+            if (opCode == 0x60 && cpu.SP.isEmpty()) {
                 done = true
             } else {
                 if (cpu.PC == 0xc202) {
                     println(this)
                     println("breakpoint: " + memory[0xe].h())
                 }
+
+                val (byte, word) = byteWord()
+                val debugString = formatPc(cpu.PC, opCode) + formatInstruction(opCode, cpu.PC, byte, word)
                 previousPc = cpu.PC
-                if (debugAsm) {
-                    val inst = cpu.nextInstruction()
-                    val (byte, word) = byteWord()
-                    val debugString = formatPc(cpu, inst) + formatInstruction(inst, byte, word)
-                    cpu.PC += inst.size
-                    inst.run(this, byte, word)
-                    println(debugString + " " + cpu.toString())
-                } else {
-                    val inst = cpu.nextInstruction()
-                    val (byte, word) = byteWord()
-                    cpu.PC += inst.size
-                    inst.run(this, byte, word)
-                }
+                cpu.PC += SIZES[opCode]
+                cpu.nextInstruction(previousPc)
+                println(debugString + " " + cpu.toString())
+//                if (debugAsm) {
+//                    val inst = cpu.nextInstruction()
+//                    val (byte, word) = byteWord()
+//                    val debugString = formatPc(cpu, inst) + formatInstruction(inst, byte, word)
+//                    cpu.PC += inst.size
+//                    inst.run(this, byte, word)
+//                    println(debugString + " " + cpu.toString())
+//                } else {
+//                    val inst = cpu.nextInstruction()
+//                    val (byte, word) = byteWord()
+//                    cpu.PC += inst.size
+//                    inst.run(this, byte, word)
+//                    if (cpu.PC == 0xc6f8) {
+//                        stop()
+//                    }
+//                }
 
                 if (previousPc == cpu.PC) {
                     // Current functional tests highest score: 158489
@@ -96,13 +110,20 @@ class Computer(val cpu: Cpu = Cpu(memory = Memory()),
 
     class RunResult(val durationMillis: Long, val cycles: Int)
 
-    private fun formatPc(cpu: Cpu, inst: Instruction) = formatPc(cpu.PC, inst)
+    private fun formatPc(cpu: Cpu, inst: Instruction) = formatPc(cpu.PC, inst.opCode)
 
-    private fun formatPc(pc: Int, inst: Instruction): String {
-        val bytes = StringBuffer(inst.opCode.h())
-        bytes.append(if (inst.size > 1) (" " + memory[pc + 1].h()) else "   ")
-        bytes.append(if (inst.size == 3) (" " + memory[pc + 2].h()) else "   ")
+    private fun formatPc(pc: Int, opCode: Int): String {
+        val size = SIZES[opCode]
+        val bytes = StringBuffer(opCode.h())
+        bytes.append(if (size > 1) (" " + memory[pc + 1].h()) else "   ")
+        bytes.append(if (size == 3) (" " + memory[pc + 2].h()) else "   ")
         return String.format("%-5s: %-11s", pc.hh(), bytes.toString())
+    }
+
+    private fun formatInstruction(opCode: Int, pc: Int, byte: Int, word: Int): String {
+        val addressing = instructionModes[opCode]
+        val name = NAMES[opCode]
+        return String.format("%s %-12s", name, addressing.toString(pc, byte, word))
     }
 
     private fun formatInstruction(inst: Instruction, byte: Int, word: Int): String {
@@ -111,11 +132,12 @@ class Computer(val cpu: Cpu = Cpu(memory = Memory()),
 
     fun disassemble(start: Int, length: Int = 10) {
         var pc = start
+        val opCode = memory[pc]
         repeat(length) {
             with(Cpu.nextInstruction(memory[pc])) {
                 val byte = memory[pc + 1]
                 val word = memory[pc + 1].or(memory[pc + 2].shl(8))
-                println(formatPc(pc, this) + toString(pc, byte, word))
+                println(formatPc(pc, opCode) + toString(pc, byte, word))
                 pc += size
             }
         }

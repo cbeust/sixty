@@ -60,7 +60,7 @@ abstract class OperandBase(computer: Computer, override val byte: Int, override 
 
 enum class Addressing {
     IMMEDIATE, ZP, ZP_X, ZP_Y, ABSOLUTE, ABSOLUTE_X, ABSOLUTE_Y, INDIRECT_X, INDIRECT_Y, REGISTER_A, INDIRECT,
-        RELATIVE, NONE;
+        RELATIVE, ZPI, AIX, NONE;
 
     fun toOperand(c: Computer, byte: Int, word: Int): Operand {
         return when(this) {
@@ -76,7 +76,9 @@ enum class Addressing {
             REGISTER_A -> OperandRegisterA(c, byte, word)
             INDIRECT -> OperandIndirect(c, byte, word)
             RELATIVE -> OperandRelative(c, byte, word)
-            NONE -> OperandNone(c, byte, word)
+            ZPI -> TODO("Zero page indirect")
+            AIX -> TODO("AIX")
+            ZPI, NONE -> OperandNone(c, byte, word)
         }
     }
 
@@ -94,7 +96,7 @@ enum class Addressing {
             REGISTER_A -> ""
             INDIRECT -> " ($${word.hh()})"
             RELATIVE -> " $${(pc + byte.toByte() + 2).hh()}"
-            NONE -> ""
+            ZPI, AIX, NONE -> ""
         }
     }
 

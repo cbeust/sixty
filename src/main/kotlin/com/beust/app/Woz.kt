@@ -6,10 +6,12 @@ import java.io.File
 import java.io.InputStream
 
 fun main() {
-    Woz().read(Woz::class.java.classLoader.getResource("woz2/DOS 3.3 System Master.woz").openStream())
+    Woz(Woz::class.java.classLoader.getResource("woz2/DOS 3.3 System Master.woz").openStream())
 }
 
-class Woz {
+class Woz(val ins: InputStream) {
+    val bitStream = read(ins)
+
     class Stream(val bytes: ByteArray) {
         var i = 0
 
@@ -104,15 +106,21 @@ class Woz {
                 val bitCount = stream.read4()
                 val trk = Trk(sb, bc, bitCount)
                 trks.add(trk)
-                println("Added TRK #$it: " + trk)
             }
-            println("BITS now")
         }
     }
 
     class BitStream(val bytes: ByteArray, start: Long) {
         var i = start.toInt()
         var currentBit = 7
+
+        fun nextByte(): Int {
+            if (i >= bytes.size) {
+                println("Read a whole track")
+                i = 0
+            }
+            return bytes[i++].toInt() and 0xff
+        }
 
         fun nextBit(): Int {
             if (currentBit < 0) {
@@ -126,9 +134,9 @@ class Woz {
         }
     }
 
-    fun read(file: File) = read(file.inputStream())
+    fun read(file: File): BitStream = read(file.inputStream())
 
-    fun read(ins: InputStream) {
+    fun read(ins: InputStream): BitStream {
         val bytes = ins.readBytes()
         val stream = Stream(bytes)
         println("Header: " + readHeader(stream))
@@ -148,10 +156,6 @@ class Woz {
         }
         val offset = tmap.offsetFor(30)
         val trackInfo = trks.trks[offset.toInt()]
-        val bs = BitStream(bytes, trackInfo.startingBlock * 512)
-        repeat(32) {
-            bs.nextBit()
-        }
-        println(trackInfo)
+        return BitStream(bytes, trackInfo.startingBlock * 512)
     }
 }

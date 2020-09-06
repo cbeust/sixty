@@ -15,7 +15,7 @@ import java.nio.file.Paths
 import kotlin.system.exitProcess
 
 fun main() {
-    val choice = 2
+    val choice = 3
 
     when(choice) {
         1 -> {
@@ -29,7 +29,7 @@ fun main() {
             apple2Computer(debugMem).run()//true, true)
         }
         else -> {
-            val result = functionalTestComputer().run()
+            val result = functionalTestComputer().run(true, true)
             with(result) {
                 val sec = durationMillis / 1000
                 val mhz = String.format("%.2f", cycles / sec / 1_000_000.0)
