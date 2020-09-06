@@ -15,7 +15,7 @@ import java.nio.file.Paths
 import kotlin.system.exitProcess
 
 fun main() {
-    val choice = 3
+    val choice = 2
 
     when(choice) {
         1 -> {
@@ -26,7 +26,8 @@ fun main() {
         }
         2 -> {
             val debugMem = false
-            apple2Computer(debugMem).run()//true, true)
+            val debugAsm = false
+            apple2Computer(debugMem).run(debugMem, debugAsm)//true, true)
         }
         else -> {
             val result = functionalTestComputer(false).run()//true, true)

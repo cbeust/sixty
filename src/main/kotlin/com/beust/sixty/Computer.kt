@@ -17,7 +17,7 @@ open class MemoryListener(val debugMem: Boolean = false): BaseMemoryListener() {
 }
 
 interface PcListener {
-    fun onPcChanged(newValue: Int)
+    fun onPcChanged(c: Computer)
 }
 
 class Computer(val cpu: Cpu2 = Cpu2(memory = Memory()),
@@ -57,10 +57,10 @@ class Computer(val cpu: Cpu2 = Cpu2(memory = Memory()),
             if (opCode == 0x60 && cpu.SP.isEmpty()) {
                 done = true
             } else {
-//                if (cpu.PC == 0x2a66) {
-//                    println(this)
-//                    println("breakpoint: " + memory[0xe].h())
-//                }
+                if (cpu.PC == 0xc6f8) {
+                    println(this)
+                    println("breakpoint: " + memory[0xe].h())
+                }
 
                 if (debugAsm) {
                     val (byte, word) = byteWord()
@@ -89,7 +89,7 @@ class Computer(val cpu: Cpu2 = Cpu2(memory = Memory()),
                 }
                 memory.listener?.lastMemDebug?.clear()
             }
-            pcListener?.onPcChanged(cpu.PC)
+            pcListener?.onPcChanged(this)
         }
         return RunResult(System.currentTimeMillis() - startTime, cycles)
     }
