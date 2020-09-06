@@ -289,7 +289,7 @@ data class Cpu2(val memory: Memory,
     }
 
     private fun ror(v: Int): Int {
-        val bit0 = v.and(0x1)
+        val bit0 = v.and(1)
         val result = v.shr(1).or(P.C.int().shl(7))
         P.setNZFlags(result)
         P.C = bit0.toBoolean()
@@ -297,9 +297,9 @@ data class Cpu2(val memory: Memory,
     }
 
     private fun lsr(v: Int): Int {
-        P.C = v.and(1) != 0
         val bit0 = v.and(1)
-        val result = v.shr(1).or(bit0.shl(7))
+        P.C = bit0 != 0
+        val result = v.shr(1)
         P.setNZFlags(result)
         return result
     }
