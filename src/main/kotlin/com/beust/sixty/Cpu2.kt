@@ -183,7 +183,7 @@ data class Cpu2(val memory: Memory,
             LSR_ZP, LSR_ZP_X, LSR_ABS, LSR_ABS_X -> memory[effectiveAddress] = lsr(mea)
             NOP -> {}
             ORA_IMM -> {
-                A = A.or(byte)
+                A = A.or(mea)
                 P.setNZFlags(A)
                 when(opCode) {
                     ORA_ABS_X, ORA_ABS_Y, ORA_IND_Y -> {
