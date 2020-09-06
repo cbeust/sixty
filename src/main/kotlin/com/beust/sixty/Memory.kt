@@ -26,6 +26,9 @@ class Memory(val size: Int = 0x10000, vararg bytes: Int) {
     }
 
     operator fun set(i: Int, value: Int) {
+        if (i == 0) {
+            println("PROBLEM")
+        }
         if (interceptor != null) {
             val response = interceptor!!.onWrite(i, value)
             if (response.override) {

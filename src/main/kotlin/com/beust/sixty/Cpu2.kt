@@ -22,38 +22,48 @@ data class Cpu2(val memory: Memory,
         // Source: http://nparker.llx.com/a2/opcodes.html
         val bbb = opCode.and(0x14).shr(2)
         val cc = opCode.and(0x3)
-        val effectiveAddress =
-            if (cc == 0) {
-                when(bbb) {
-                    1 -> byte // zp
-                    3 -> word // absolute
-                    5 -> (byte + X) and 0xff // zp,X
-                    7 -> word + X // abs,X
-                    else -> 0
-                }
-            } else if (cc == 1) {
-                when(bbb) {
-                    0 -> (byte + X) and 0xff // zp,x
-                    1 -> byte // zp
-                    3 -> word // absolute
-                    4 -> memory[byte] + Y// (zp),y
-                    5 -> (byte + X) and 0xff // zp,X
-                    6 -> word + Y // abs,Y
-                    7 -> word + X // abs,X
-                    else -> 0
-                }
-            } else if (cc == 2) {
-                when(bbb) {
-                    1 -> byte // zp
-                    2 -> A // accumulator
-                    3 -> word // absolute
-                    5 -> (byte + X) and 0xff // zp,X
-                    7 -> word + X // abs,X
-                    else -> 0
-                }
-            } else {
-                0
-            }
+        val effectiveAddress = when(instructionModes[opCode]) {
+            Addressing.ABSOLUTE -> word
+            Addressing.ZP -> byte
+            Addressing.ZP_X -> byte + X
+            Addressing.ZP_Y -> memory[byte] + Y
+            Addressing.ABSOLUTE -> word
+            Addressing.ABSOLUTE_X -> word + X
+            Addressing.ABSOLUTE_Y -> word + Y
+            else -> 0
+        }
+//        val effectiveAddress =
+//            if (cc == 0) {
+//                when(bbb) {
+//                    1 -> byte // zp
+//                    3 -> word // absolute
+//                    5 -> (byte + X) and 0xff // zp,X
+//                    7 -> word + X // abs,X
+//                    else -> 0
+//                }
+//            } else if (cc == 1) {
+//                when(bbb) {
+//                    0 -> (byte + X) and 0xff // zp,x
+//                    1 -> byte // zp
+//                    3 -> word // absolute
+//                    4 -> memory[byte] + Y// (zp),y
+//                    5 -> (byte + X) and 0xff // zp,X
+//                    6 -> word + Y // abs,Y
+//                    7 -> word + X // abs,X
+//                    else -> 0
+//                }
+//            } else if (cc == 2) {
+//                when(bbb) {
+//                    1 -> byte // zp
+//                    2 -> A // accumulator
+//                    3 -> word // absolute
+//                    5 -> (byte + X) and 0xff // zp,X
+//                    7 -> word + X // abs,X
+//                    else -> 0
+//                }
+//            } else {
+//                0
+//            }
 
         val mea = memory[effectiveAddress]
 
@@ -148,10 +158,7 @@ data class Cpu2(val memory: Memory,
                 memory[effectiveAddress] = mea + 1
                 P.setNZFlags(mea)
             }
-            JMP -> {
-                println("SETTING PC TO ${word.hh()}")
-                PC = word
-            }
+            JMP -> PC = word
             JSR -> {
                 SP.pushWord(PC - 1)
                 PC = word
