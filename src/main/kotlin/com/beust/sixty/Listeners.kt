@@ -9,4 +9,8 @@ class DebugMemoryListener(val debugMemory: Boolean = false) : MemoryListener() {
         if (debugMemory) logMem(location, value)
     }
 
+//    override fun onRead(location: Int, value: Int) {
+//        if (debugMemory)
+//            logMem(location, value)
+//    }
 }

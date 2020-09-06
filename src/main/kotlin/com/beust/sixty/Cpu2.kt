@@ -13,6 +13,8 @@ data class Cpu2(val memory: Memory,
         val P: StatusFlags = StatusFlags()): ICpu {
     val SP: StackPointer = StackPointer(memory)
 
+    fun toWord(address: Int) = memory[address].or(memory[address + 1].shl(8))
+
     override fun nextInstruction(pc: Int, debugMemory: Boolean, debugAsm: Boolean) {
         var opCode = memory[pc]
         var byte = memory[pc + 1]
@@ -22,50 +24,20 @@ data class Cpu2(val memory: Memory,
         // Source: http://nparker.llx.com/a2/opcodes.html
         val bbb = opCode.and(0x14).shr(2)
         val cc = opCode.and(0x3)
-        val effectiveAddress = when(instructionModes[opCode]) {
-            Addressing.ABSOLUTE -> word
-            Addressing.ZP -> byte
-            Addressing.ZP_X -> byte + X
-            Addressing.ZP_Y -> memory[byte] + Y
-            Addressing.ABSOLUTE -> word
-            Addressing.ABSOLUTE_X -> word + X
-            Addressing.ABSOLUTE_Y -> word + Y
-            else -> 0
+        val (effectiveAddress, mea) = when(instructionModes[opCode]) {
+            Addressing.ABSOLUTE -> word to toWord(word)
+            Addressing.ZP -> byte to memory[byte]
+            Addressing.ZP_X -> (byte + X).let { it to memory[it] }
+            Addressing.ZP_Y -> (memory[byte] + Y).let { it to memory[memory[byte] + Y] }
+            Addressing.ABSOLUTE -> word to toWord(word)
+            Addressing.ABSOLUTE_X -> (word + X).let { it to toWord(it) }
+            Addressing.ABSOLUTE_Y -> (word + Y).let { it to toWord(it) }
+            Addressing.INDIRECT -> word to memory[word].or(memory[word + 1].shl(8))
+            else -> 0 to 0
         }
-//        val effectiveAddress =
-//            if (cc == 0) {
-//                when(bbb) {
-//                    1 -> byte // zp
-//                    3 -> word // absolute
-//                    5 -> (byte + X) and 0xff // zp,X
-//                    7 -> word + X // abs,X
-//                    else -> 0
-//                }
-//            } else if (cc == 1) {
-//                when(bbb) {
-//                    0 -> (byte + X) and 0xff // zp,x
-//                    1 -> byte // zp
-//                    3 -> word // absolute
-//                    4 -> memory[byte] + Y// (zp),y
-//                    5 -> (byte + X) and 0xff // zp,X
-//                    6 -> word + Y // abs,Y
-//                    7 -> word + X // abs,X
-//                    else -> 0
-//                }
-//            } else if (cc == 2) {
-//                when(bbb) {
-//                    1 -> byte // zp
-//                    2 -> A // accumulator
-//                    3 -> word // absolute
-//                    5 -> (byte + X) and 0xff // zp,X
-//                    7 -> word + X // abs,X
-//                    else -> 0
-//                }
-//            } else {
-//                0
-//            }
-
-        val mea = memory[effectiveAddress]
+        if (opCode == 0x6c) {
+            println("BREAKPOINT")
+        }
 
         when(opCode) {
             ADC_IMM -> {
@@ -159,7 +131,7 @@ data class Cpu2(val memory: Memory,
                 P.setNZFlags(mea)
             }
             JMP -> PC = word
-            JMP_IND -> PC = memory[effectiveAddress]
+            JMP_IND -> PC = mea
             JSR -> {
                 SP.pushWord(PC - 1)
                 PC = word
@@ -284,7 +256,7 @@ data class Cpu2(val memory: Memory,
                     }
                 }
             }
-            STA_ZP, STA_ZP_X, STA_ABS, STA_ABS_X, STA_IND_X, STA_IND_Y -> {
+            STA_ZP, STA_ZP_X, STA_ABS, STA_ABS_X, STA_ABS_Y, STA_IND_X, STA_IND_Y -> {
                 memory[effectiveAddress] = A
             }
             TXS -> SP.S = X
