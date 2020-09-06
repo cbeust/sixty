@@ -86,7 +86,7 @@ data class Cpu2(val memory: Memory,
             ASL -> {
                 A = asl(A)
             }
-            ASL_ZP, ASL_ZP_X, ASL_ZP_X, ASL_ABS, ASL_ABS_X -> {
+            ASL_ZP, ASL_ZP_X, ASL_ABS, ASL_ABS_X -> {
                 memory[effectiveAddress] = asl(mea)
             }
             BIT_ZP, BIT_ABS -> mea.let { v ->
@@ -99,7 +99,7 @@ data class Cpu2(val memory: Memory,
             BNE -> timing += branch(byte) { ! P.Z }
             BEQ -> timing += branch(byte) { P.Z }
             BCC -> timing += branch(byte) { ! P.C }
-            BCC -> timing += branch(byte) { P.C }
+            BCS -> timing += branch(byte) { P.C }
             BVC -> timing += branch(byte) { ! P.V }
             BVS -> timing += branch(byte) { P.V }
             BRK -> {
@@ -153,19 +153,6 @@ data class Cpu2(val memory: Memory,
                 SP.pushWord(PC - 1)
                 PC = word
             }
-            ORA_IMM -> {
-                A = byte
-                P.setNZFlags(A)
-            }
-            ORA_ZP, ORA_ZP_X, ORA_ABS, ORA_ABS_X, ORA_ABS_Y, ORA_IND_X, ORA_IND_Y -> {
-                A = mea
-                P.setNZFlags(A)
-                when(opCode) {
-                    ORA_ABS_X, ORA_ABS_Y, ORA_IND_Y -> {
-                        timing += pageCrossed(PC, effectiveAddress)
-                    }
-                }
-            }
             LDX_IMM -> {
                 X = byte
                 P.setNZFlags(X)
@@ -195,6 +182,7 @@ data class Cpu2(val memory: Memory,
             LSR -> A = lsr(byte)
             LSR_ZP, LSR_ZP_X, LSR_ABS, LSR_ABS_X -> memory[effectiveAddress] = lsr(mea)
             NOP -> {}
+
             ORA_IMM -> {
                 A = A.or(byte)
                 P.setNZFlags(A)
@@ -212,7 +200,7 @@ data class Cpu2(val memory: Memory,
                 X = A
                 P.setNZFlags(X)
             }
-            TAX -> {
+            TXA -> {
                 A = X
                 P.setNZFlags(A)
             }
