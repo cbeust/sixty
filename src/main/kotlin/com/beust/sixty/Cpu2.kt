@@ -28,7 +28,7 @@ data class Cpu2(val memory: Memory,
             Addressing.ABSOLUTE -> word to toWord(word)
             Addressing.ZP -> byte to memory[byte]
             Addressing.ZP_X -> (byte + X).let { it to memory[it] }
-            Addressing.ZP_Y -> (memory[byte] + Y).let { it to memory[memory[byte] + Y] }
+            Addressing.ZP_Y -> (byte + Y).let { it to memory[it] }
             Addressing.ABSOLUTE -> word to toWord(word)
             Addressing.ABSOLUTE_X -> (word + X).let { it to toWord(it) }
             Addressing.ABSOLUTE_Y -> (word + Y).let { it to toWord(it) }
