@@ -126,7 +126,7 @@ data class Cpu2(val memory: Memory,
             SED -> P.D = true
             CLV -> P.V = false
             INC_ZP, INC_ZP_X, INC_ABS, INC_ABS_X -> {
-                (mea + 1).let {
+                (mea + 1).and(0xff).let {
                     memory[effectiveAddress] = it
                     P.setNZFlags(it)
                 }
