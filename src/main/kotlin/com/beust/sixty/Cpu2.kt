@@ -27,15 +27,15 @@ data class Cpu2(val memory: Memory,
         val (effectiveAddress, mea) = when(instructionModes[opCode]) {
             Addressing.ABSOLUTE -> word to toWord(word)
             Addressing.ZP -> byte to memory[byte]
-            Addressing.ZP_X -> (byte + X).let { it to memory[it] }
-            Addressing.ZP_Y -> (byte + Y).let { it to memory[it] }
+            Addressing.ZP_X -> (byte + X).and(0xff).let { it to memory[it] }
+            Addressing.ZP_Y -> (byte + Y).and(0xff).let { it to memory[it] }
             Addressing.ABSOLUTE -> word to toWord(word)
             Addressing.ABSOLUTE_X -> (word + X).let { it to memory[it] }
             Addressing.ABSOLUTE_Y -> (word + Y).let { it to memory[it] }
             Addressing.INDIRECT -> word to memory[word].or(memory[word + 1].shl(8))
             else -> 0 to 0
         }
-        if (opCode == 0x6c) {
+        if (opCode == 0xb9) {
             println("BREAKPOINT")
         }
 
