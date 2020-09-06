@@ -13,162 +13,297 @@ data class Cpu2(val memory: Memory,
         val P: StatusFlags = StatusFlags()) {
     val SP: StackPointer = StackPointer(memory)
 
-    fun run(debugMemory: Boolean = false, debugAsm: Boolean = false): Computer.RunResult {
-        var done = false
-        while (!done) {
-            var opCode = memory[PC]
-            var byte = memory[PC + 1]
-            var word = byte.or(memory[PC + 2].shl(8))
-            var timing = 1 // TODO
-            // Opcode bits:  aaabbbcc where bbb determines the addressing
-            val bbb = opCode.and(0x14).shr(2)
-            val cc = opCode.and(0x3)
-            val aaa = opCode.and(0xe0).shr(5)
-            val effectiveAddress =
-                if (cc == 0) {
-                    when(bbb) {
-                        1 -> byte // zp
-                        3 -> word // absolute
-                        5 -> byte + X // zp,X
-                        7 -> word + X // abs,X
-                        else -> -1
-                    }
-                } else if (cc == 1) {
-                    when(bbb) {
-                        0 -> byte + X // zp,x
-                        1 -> byte // zp
-                        3 -> word // absolute
-                        4 -> memory[byte] + Y// (zp),y
-                        5 -> byte + X// zp,X
-                        6 -> word + Y // abs,Y
-                        7 -> word + X // abs,X
-                        else -> -1
-                    }
-                } else if (cc == 2) {
-                    when(bbb) {
-                        1 -> byte // zp
-                        2 -> A // accumulator
-                        3 -> word // absolute
-                        5 -> byte + X // zp,X
-                        7 -> word + X // abs,X
-                        else -> -1
-                    }
-                } else {
-                    -1
-                }
+    fun nextInstruction(debugMemory: Boolean = false, debugAsm: Boolean = false) {
+        var opCode = memory[PC]
+        var byte = memory[PC + 1]
+        var word = byte.or(memory[PC + 2].shl(8))
+        var timing = 1 // TODO
+        // Opcode bits:  aaabbbcc where bbb determines the addressing
+        // Source: http://nparker.llx.com/a2/opcodes.html
+        val bbb = opCode.and(0x14).shr(2)
+        val cc = opCode.and(0x3)
+        val effectiveAddress =
+        if (cc == 0) {
+            when(bbb) {
+                1 -> byte // zp
+                3 -> word // absolute
+                5 -> (byte + X) and 0xff // zp,X
+                7 -> word + X // abs,X
+                else -> -1
+            }
+        } else if (cc == 1) {
+            when(bbb) {
+                0 -> (byte + X) and 0xff // zp,x
+                1 -> byte // zp
+                3 -> word // absolute
+                4 -> memory[byte] + Y// (zp),y
+                5 -> (byte + X) and 0xff // zp,X
+                6 -> word + Y // abs,Y
+                7 -> word + X // abs,X
+                else -> -1
+            }
+        } else if (cc == 2) {
+            when(bbb) {
+                1 -> byte // zp
+                2 -> A // accumulator
+                3 -> word // absolute
+                5 -> (byte + X) and 0xff // zp,X
+                7 -> word + X // abs,X
+                else -> -1
+            }
+        } else {
+            -1
+        }
 
-            val mea = memory[effectiveAddress]
+        val mea = memory[effectiveAddress]
 
-            when(opCode) {
-                ADC_IMM -> {
-                    adc(byte)
-                }
-                ADC_ZP, ADC_ZP_X, ADC_ABS, ADC_ABS_X, ADC_ABS_Y, ADC_IND_X, ADC_IND_Y -> {
-                    adc(mea)
-                    when(opCode) {
-                        ADC_ABS_X, ADC_ABS_Y, ADC_IND_Y -> {
-                            timing += pageCrossed(PC, effectiveAddress)
-                        }
+        when(opCode) {
+            ADC_IMM -> {
+                adc(byte)
+            }
+            ADC_ZP, ADC_ZP_X, ADC_ABS, ADC_ABS_X, ADC_ABS_Y, ADC_IND_X, ADC_IND_Y -> {
+                adc(mea)
+                when(opCode) {
+                    ADC_ABS_X, ADC_ABS_Y, ADC_IND_Y -> {
+                        timing += pageCrossed(PC, effectiveAddress)
                     }
-                }
-                AND_IMM -> {
-                    A = A.and(byte)
-                    P.setNZFlags(A)
-                }
-                AND_ZP, AND_ZP_X, AND_ABS, AND_ABS_X, AND_ABS_Y, AND_IND_X, AND_IND_Y -> {
-                    A = A.and(mea)
-                    P.setNZFlags(A)
-                    when(opCode) {
-                        AND_ABS_X, AND_ABS_Y, AND_IND_Y -> {
-                            timing += pageCrossed(PC, effectiveAddress)
-                        }
-                    }
-
-                }
-                ASL -> {
-                    A = asl(A)
-                }
-                ASL_ZP, ASL_ZP_X, ASL_ZP_X, ASL_ABS, ASL_ABS_X -> {
-                    memory[effectiveAddress] = asl(mea)
-                }
-                BIT_ZP, BIT_ABS -> mea.let { v ->
-                    P.Z = (v and A) == 0
-                    P.N = (v and 0x80) != 0
-                    P.V = (v and 0x40) != 0
-                }
-                BPL -> timing += branch(byte) { ! P.N }
-                BMI -> timing += branch(byte) { P.N }
-                BNE -> timing += branch(byte) { ! P.Z }
-                BEQ -> timing += branch(byte) { P.Z }
-                BCC -> timing += branch(byte) { ! P.C }
-                BCC -> timing += branch(byte) { P.C }
-                BVC -> timing += branch(byte) { ! P.V }
-                BVS -> timing += branch(byte) { P.V }
-                BRK -> {
-                    handleInterrupt(true, Cpu.IRQ_VECTOR_H, Cpu.IRQ_VECTOR_L)
-                }
-                CMP_IMM -> cmp(A, byte)
-                CMP_ZP, CMP_ZP_X, CMP_ABS, CMP_ABS_X, CMP_ABS_Y, CMP_IND_X, CMP_IND_Y -> {
-                    cmp(A, mea)
-                }
-                CPX_IMM -> cmp(X, byte)
-                CPX_ZP, CPX_ABS -> cmp(X, mea)
-                CPY_IMM -> cmp(Y, byte)
-                CPY_ZP, CPY_ABS -> cmp(Y, mea)
-                DEC_ZP, DEC_ZP_X, DEC_ABS, DEC_ABS_X -> {
-                    memory[effectiveAddress] = mea - 1
-                    P.setNZFlags(mea)
-                }
-                EOR_IMM -> {
-                    A = A.xor(byte)
-                    P.setNZFlags(A)
-                }
-                EOR_ZP, EOR_ZP_X, EOR_ABS, EOR_ABS_X, EOR_ABS_Y, EOR_IND_Y, EOR_IND_X -> {
-                    A = A.xor(mea)
-                    P.setNZFlags(A)
-                }
-                CLC -> P.C = false
-                SEC -> P.C = true
-                CLI -> P.I = false
-                SEI -> P.I = true
-                CLD -> P.D = false
-                SED -> P.D = true
-                CLV -> P.V = false
-                INC_ZP, INC_ZP_X, INC_ABS, INC_ABS_X -> {
-                    memory[effectiveAddress] = mea + 1
-                    P.setNZFlags(mea)
-                }
-                JMP -> PC = word
-                JSR -> {
-                    SP.pushWord(PC - 1)
-                    PC = word
-                }
-                LDA_IMM -> {
-                    A = byte
-                    P.setNZFlags(A)
-                }
-                LDA_ZP, LDA_ZP_X, LDA_ABS, LDA_ABS_X, LDA_ABS_Y, LDA_IND_X, LDA_IND_Y -> {
-                    A = mea
-                    P.setNZFlags(A)
-                }
-                LDX_IMM -> {
-                    X = byte
-                    P.setNZFlags(X)
-                }
-                LDX_ZP, LDX_ZP_Y, LDX_ABS, LDX_ABS_Y -> {
-                    X = mea
-                    P.setNZFlags(A)
-                }
-                LDY_IMM -> {
-                    Y = byte
-                    P.setNZFlags(X)
-                }
-                LDY_ZP, LDY_ZP_X, LDY_ABS, LDY_ABS_X -> {
-                    Y = mea
-                    P.setNZFlags(A)
                 }
             }
+            AND_IMM -> {
+                A = A.and(byte)
+                P.setNZFlags(A)
+            }
+            AND_ZP, AND_ZP_X, AND_ABS, AND_ABS_X, AND_ABS_Y, AND_IND_X, AND_IND_Y -> {
+                A = A.and(mea)
+                P.setNZFlags(A)
+                when(opCode) {
+                    AND_ABS_X, AND_ABS_Y, AND_IND_Y -> {
+                        timing += pageCrossed(PC, effectiveAddress)
+                    }
+                }
+
+            }
+            ASL -> {
+                A = asl(A)
+            }
+            ASL_ZP, ASL_ZP_X, ASL_ZP_X, ASL_ABS, ASL_ABS_X -> {
+                memory[effectiveAddress] = asl(mea)
+            }
+            BIT_ZP, BIT_ABS -> mea.let { v ->
+                P.Z = (v and A) == 0
+                P.N = (v and 0x80) != 0
+                P.V = (v and 0x40) != 0
+            }
+            BPL -> timing += branch(byte) { ! P.N }
+            BMI -> timing += branch(byte) { P.N }
+            BNE -> timing += branch(byte) { ! P.Z }
+            BEQ -> timing += branch(byte) { P.Z }
+            BCC -> timing += branch(byte) { ! P.C }
+            BCC -> timing += branch(byte) { P.C }
+            BVC -> timing += branch(byte) { ! P.V }
+            BVS -> timing += branch(byte) { P.V }
+            BRK -> {
+                handleInterrupt(true, Cpu.IRQ_VECTOR_H, Cpu.IRQ_VECTOR_L)
+            }
+            CMP_IMM -> cmp(A, byte)
+            CMP_ZP, CMP_ZP_X, CMP_ABS, CMP_ABS_X, CMP_ABS_Y, CMP_IND_X, CMP_IND_Y -> {
+                cmp(A, mea)
+                when(opCode) {
+                    CMP_ABS_X, CMP_ABS_Y, CMP_IND_Y -> {
+                        timing += pageCrossed(PC, effectiveAddress)
+                    }
+                }
+
+            }
+            CPX_IMM -> cmp(X, byte)
+            CPX_ZP, CPX_ABS -> cmp(X, mea)
+            CPY_IMM -> cmp(Y, byte)
+            CPY_ZP, CPY_ABS -> cmp(Y, mea)
+            DEC_ZP, DEC_ZP_X, DEC_ABS, DEC_ABS_X -> {
+                memory[effectiveAddress] = mea - 1
+                P.setNZFlags(mea)
+            }
+            EOR_IMM -> {
+                A = A.xor(byte)
+                P.setNZFlags(A)
+            }
+            EOR_ZP, EOR_ZP_X, EOR_ABS, EOR_ABS_X, EOR_ABS_Y, EOR_IND_Y, EOR_IND_X -> {
+                A = A.xor(mea)
+                P.setNZFlags(A)
+                when(opCode) {
+                    EOR_ABS_X, EOR_ABS_Y, EOR_IND_Y -> {
+                        timing += pageCrossed(PC, effectiveAddress)
+                    }
+                }
+
+            }
+            CLC -> P.C = false
+            SEC -> P.C = true
+            CLI -> P.I = false
+            SEI -> P.I = true
+            CLD -> P.D = false
+            SED -> P.D = true
+            CLV -> P.V = false
+            INC_ZP, INC_ZP_X, INC_ABS, INC_ABS_X -> {
+                memory[effectiveAddress] = mea + 1
+                P.setNZFlags(mea)
+            }
+            JMP -> PC = word
+            JSR -> {
+                SP.pushWord(PC - 1)
+                PC = word
+            }
+            ORA_IMM -> {
+                A = byte
+                P.setNZFlags(A)
+            }
+            ORA_ZP, ORA_ZP_X, ORA_ABS, ORA_ABS_X, ORA_ABS_Y, ORA_IND_X, ORA_IND_Y -> {
+                A = mea
+                P.setNZFlags(A)
+                when(opCode) {
+                    ORA_ABS_X, ORA_ABS_Y, ORA_IND_Y -> {
+                        timing += pageCrossed(PC, effectiveAddress)
+                    }
+                }
+            }
+            LDX_IMM -> {
+                X = byte
+                P.setNZFlags(X)
+            }
+            LDX_ZP, LDX_ZP_Y, LDX_ABS, LDX_ABS_Y -> {
+                X = mea
+                P.setNZFlags(A)
+                when(opCode) {
+                    LDX_ABS_Y -> {
+                        timing += pageCrossed(PC, effectiveAddress)
+                    }
+                }
+            }
+            LDY_IMM -> {
+                Y = byte
+                P.setNZFlags(X)
+            }
+            LDY_ZP, LDY_ZP_X, LDY_ABS, LDY_ABS_X -> {
+                Y = mea
+                P.setNZFlags(A)
+                when(opCode) {
+                    LDY_ABS_X -> {
+                        timing += pageCrossed(PC, effectiveAddress)
+                    }
+                }
+            }
+            LSR -> A = lsr(byte)
+            LSR_ZP, LSR_ZP_X, LSR_ABS, LSR_ABS_X -> memory[effectiveAddress] = lsr(mea)
+            NOP -> {}
+            ORA_IMM -> {
+                A = A.or(byte)
+                P.setNZFlags(A)
+                when(opCode) {
+                    ORA_ABS_X, ORA_ABS_Y, ORA_IND_Y -> {
+                        timing += pageCrossed(PC, effectiveAddress)
+                    }
+                }
+            }
+            ORA_ZP, ORA_ZP_X, ORA_ABS, ORA_ABS_X, ORA_ABS_Y, ORA_IND_X, ORA_IND_Y -> {
+                memory[effectiveAddress] = A.or(mea)
+                P.setNZFlags(A)
+            }
+            TAX -> {
+                X = A
+                P.setNZFlags(X)
+            }
+            TAX -> {
+                A = X
+                P.setNZFlags(A)
+            }
+            DEX -> {
+                X = (X - 1).and(0xff)
+                P.setNZFlags(X)
+            }
+            INX -> {
+                X = (X + 1).and(0xff)
+                P.setNZFlags(X)
+            }
+            TAY -> {
+                Y = A
+                P.setNZFlags(Y)
+            }
+            TYA -> {
+                A = Y
+                P.setNZFlags(A)
+            }
+            DEY -> {
+                Y = (Y - 1).and(0xff)
+                P.setNZFlags(Y)
+            }
+            INY -> {
+                Y = (Y + 1).and(0xff)
+                P.setNZFlags(Y)
+            }
+            ROL, ROL_ZP, ROL_ZP_X, ROL_ABS, ROL_ABS_X -> {
+                val result = (mea.shl(1).or(P.C.int())) and 0xff
+                P.C = mea.and(0x80) != 0
+                memory[effectiveAddress] = result
+                P.setNZFlags(result)
+            }
+            ROR, ROR_ZP, ROR_ZP_X, ROR_ABS, ROR_ABS_X -> {
+                val bit0 = mea.and(0x1)
+                val result = mea.shr(1).or(P.C.int().shl(7))
+                P.setNZFlags(result)
+                P.C = bit0.toBoolean()
+                memory[effectiveAddress] = result
+            }
+            RTI -> {
+                P.fromByte(SP.popByte())
+                PC = SP.popWord()
+            }
+            RTS -> {
+                PC = SP.popWord() + 1
+            }
+            SBC_IMM -> {
+                sbc(byte)
+            }
+            SBC_ZP, SBC_ZP_X, SBC_ABS, SBC_ABS_X, SBC_ABS_Y, SBC_IND_X, SBC_IND_Y -> {
+                sbc(mea)
+                when(opCode) {
+                    SBC_ABS_X, SBC_ABS_Y, SBC_IND_Y -> {
+                        timing += pageCrossed(PC, effectiveAddress)
+                    }
+                }
+            }
+            STA_ZP, STA_ZP_X, STA_ABS, STA_ABS_X, STA_IND_X, STA_IND_Y -> {
+                memory[effectiveAddress] = A
+            }
+            TXS -> SP.S = X
+            TSX -> {
+                X = SP.S.and(0xff)
+                P.setNZFlags(X)
+            }
+            PHA -> SP.pushByte(A.toByte())
+            PLA -> {
+                A = SP.popByte().toInt().and(0xff)
+                P.setNZFlags(A)
+            }
+            PHP -> {
+                P.B = true
+                P.reserved = true
+                SP.pushByte(P.toByte())
+            }
+            PLP -> P.fromByte(SP.popByte())
+            STX_ZP, STX_ZP_Y, STX_ABS -> {
+                memory[effectiveAddress] = X
+            }
+            STY_ZP, STY_ZP_X, STY_ABS -> {
+                memory[effectiveAddress] = X
+            }
         }
+    }
+
+    private fun lsr(v: Int): Int {
+        P.C = v.and(1) != 0
+        val result = v.shr(1)
+        P.setNZFlags(result)
+        return result
     }
 
     private fun cmp(register: Int, v: Int) {
@@ -207,6 +342,26 @@ data class Cpu2(val memory: Memory,
         return result
     }
 
+    private fun sbc(v: Int) {
+        if (P.D) {
+            var l = (A and 0x0f) - (v and 0x0f) - if (P.C) 0 else 1
+            if (l and 0x10 != 0) l -= 6
+            var h = (A shr 4) - (v shr 4) - if (l and 0x10 != 0) 1 else 0
+            if (h and 0x10 != 0) h -= 6
+            val result = l and 0x0f or (h shl 4) and 0xff
+
+            P.C = h and 0xff < 15
+            P.Z = result == 0
+            P.V = false // BCD never sets overflow flag
+            P.N = result and 0x80 != 0 // N Flag is valid on CMOS 6502/65816
+
+            A = result and 0xff
+        } else {
+            // Call ADC with the one complement of the operand
+            add((v.inv().and(0xff)))
+        }
+    }
+
     private fun adc(v: Int) {
         if (P.D) {
             var l = (A and 0x0f) + (v and 0x0f) + P.C.int()
@@ -222,14 +377,18 @@ data class Cpu2(val memory: Memory,
 
             A = result
         } else {
-            var result: Int = A + v + P.C.int()
-            val carry6: Int = A.and(0x7f) + v.and(0x7f) + P.C.int()
-            P.C = result.and(0x100) != 0
-            P.V = P.C.xor((carry6.and(0x80) != 0))
-            result = result and 0xff
-            P.setNZFlags(result)
-            A = result
+            add(v)
         }
+    }
+
+    private fun add(v: Int) {
+        var result: Int = A + v + P.C.int()
+        val carry6: Int = A.and(0x7f) + v.and(0x7f) + P.C.int()
+        P.C = result.and(0x100) != 0
+        P.V = P.C.xor((carry6.and(0x80) != 0))
+        result = result and 0xff
+        P.setNZFlags(result)
+        A = result
     }
 
     /**
