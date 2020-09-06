@@ -32,14 +32,14 @@ data class Cpu2(val memory: Memory,
             Addressing.ABSOLUTE -> word to toWord(word)
             Addressing.ABSOLUTE_X -> (word + X).let { it to memory[it] }
             Addressing.ABSOLUTE_Y -> (word + Y).let { it to memory[it] }
-            Addressing.INDIRECT -> word to memory[word].or(memory[word + 1].shl(8))
+            Addressing.INDIRECT -> word to toWord(word)
             Addressing.INDIRECT_X -> memory[(byte + X) and 0xff].or(memory[(byte + X + 1) and 0xff].shl(8))
                     .let { byte to memory[it]}
             Addressing.INDIRECT_Y -> memory[byte].or(memory[(byte + 1) and 0xff].shl(8))
-                    .let { byte to memory[it + Y] }
+                    .let { (it + Y) to memory[it + Y] }
             else -> 0 to 0
         }
-        if (opCode == 0xb1) {
+        if (opCode == 0x91) {
             println("BREAKPOINT")
         }
 
