@@ -4,21 +4,117 @@ import com.beust.sixty.h
 import com.beust.sixty.hh
 import java.io.File
 import java.io.InputStream
+import java.lang.IllegalArgumentException
 
 fun main() {
-    Woz(Woz::class.java.classLoader.getResource("woz2/DOS 3.3 System Master.woz").openStream())
+    val ins = Woz::class.java.classLoader.getResource("woz2/DOS 3.3 System Master.woz").openStream()
+    val ins2 = File("d:\\pd\\Apple DIsks\\woz2\\The Apple at Play.woz").inputStream()
+    val disk = WozDisk(ins)
+    var carry = 1
+    fun rol(v: Int): Int {
+        val bit7 = if (v.and(1.shl(7)) != 0) 1 else 0
+        val result = v.shl(1).or(carry)
+//        carry = bit7
+        return result
+    }
+    repeat(10000) {
+        var b = disk.nextByte()
+        fun pair(): Int {
+            val b1 = disk.nextByte()
+            val b2 = disk.nextByte()
+            println("     PAIRING " + b1.h() + " " + b2.h())
+            return rol(b1).and(b2).and(0xff)
+        }
+        start@ while(true) {
+            while (b != 0xd5) b = disk.nextByte()
+            if (disk.nextByte() != 0xaa) break@start
+            if (disk.nextByte() != 0x96) break@start
+            val volume = pair()
+            val track = pair()
+            val sector = pair()
+            val checksum = pair()
+            val expected = volume.xor(track).xor(sector)
+            println("Offset " + (0x600 + disk.position).hh()
+                    + " volume: ${volume.h()} track: ${track.h()} sector: ${sector.h()}"
+                    + " checksum: $checksum expected: $expected")
+            if (disk.nextByte() != 0xde) {
+                println("PROBLEM")
+            }
+            if (disk.nextByte() != 0xaa) {
+                println("PROBLEM")
+            }
+        }
+        b = disk.nextByte()
+        start2@ while(true) {
+            while (b != 0xd5) b = disk.nextByte()
+            if (disk.nextByte() != 0xaa) break@start2
+            if (disk.nextByte() != 0xad) break@start2
+            var c = 0
+            repeat(342) {
+                val nb = disk.nextByte()
+                c = c.xor(nb)
+            }
+            val checksum = disk.nextByte()
+            println("  Data checksum: $checksum")
+            if (disk.nextByte() != 0xde) {
+                println("PROBLEM")
+            }
+            if (disk.nextByte() != 0xaa) {
+                println("PROBLEM")
+            }
+        }
+    }
 }
 
-class Woz(val ins: InputStream) {
-    val bitStream = read(ins)
+class WozDisk(val ins: InputStream) {
+    val MAX_TRACK = 160
+
+    var quarterTrack = 0
+    var position = 0
+    val bytes = ins.readAllBytes()
+    val woz = Woz(bytes)
+
+    fun nextByte(): Int {
+        val tmapOffset = woz.tmap.offsetFor(quarterTrack)
+        val trk = woz.trks.trks[tmapOffset]
+        val streamSizeInBytes = (trk.bitCount / 8)
+//        if (trk.startingBlock * 512 + position > streamSizeInBytes) {
+//            println("Wrapping around")
+//        }
+        val byteOffset = (trk.startingBlock * 512 + position) % streamSizeInBytes
+        val result = bytes[byteOffset].toInt().and(0xff)
+        position++
+//        println("Returning ${result.h()}")
+        return result
+    }
+
+    fun incrementTrack() {
+        quarterTrack = (quarterTrack + 1) % MAX_TRACK
+    }
+
+    fun decrementTrack() {
+        if (quarterTrack == 0) quarterTrack = MAX_TRACK - 1
+        else quarterTrack--
+    }
+
+}
+
+class Woz(bytes: ByteArray) {
+    lateinit var info: ChunkInfo
+    lateinit var tmap: ChunkTmap
+    lateinit var trks: ChunkTrks
+
+    init {
+        read(bytes)
+    }
 
     class Stream(val bytes: ByteArray) {
         var i = 0
 
         fun hasNext() = i < bytes.size
 
-        fun read1(): Long {
-            return bytes[i++].toUByte().toLong()
+        fun read1(): Int {
+            return bytes[i++].toUByte().toInt()
         }
 
         fun read4Bytes(): ByteArray {
@@ -26,18 +122,18 @@ class Woz(val ins: InputStream) {
             i += 4
             return result.toByteArray()
         }
-
-        fun read4(): Long {
-            val result = bytes[i].toUByte().toULong()
-                    .or(bytes[i + 1].toUByte().toULong().shl(8))
-                    .or(bytes[i + 2].toUByte().toULong().shl(16))
-                    .or(bytes[i + 3].toUByte().toULong().shl(24))
+        
+        fun read4(): Int {
+            val result = bytes[i].toUByte().toUInt()
+                    .or(bytes[i + 1].toUByte().toUInt().shl(8))
+                    .or(bytes[i + 2].toUByte().toUInt().shl(16))
+                    .or(bytes[i + 3].toUByte().toUInt().shl(24))
             i += 4
-            return result.toLong()
+            return result.toInt()
 
         }
 
-        fun read2(): Long = read1().or(read1().shl(8))
+        fun read2(): Int = read1().or(read1().shl(8))
 
         fun read4String() = String(read4Bytes())
 
@@ -64,20 +160,20 @@ class Woz(val ins: InputStream) {
         return Header(name, ff.toByte(), crc)
     }
 
-    open class Chunk(val name: String, val size: Long) {
+    open class Chunk(val name: String, val size: Int) {
         override fun toString(): String {
             return "{$name size=$size}"
         }
     }
 
-    class ChunkInfo(private val stream: Stream, size: Long): Chunk("INFO", size) {
+    class ChunkInfo(stream: Stream, size: Int): Chunk("INFO", size) {
         init {
-            stream.readN(size.toInt())
+            stream.readN(size)
         }
     }
 
-    class ChunkTmap(private val stream: Stream, size: Long): Chunk("TMAP", size) {
-        private val map = hashMapOf<Int, Long>()
+    class ChunkTmap(private val stream: Stream, size: Int): Chunk("TMAP", size) {
+        private val map = hashMapOf<Int, Int>()
         init {
             repeat(160) {
                 map[it] = stream.read1()
@@ -85,19 +181,22 @@ class Woz(val ins: InputStream) {
         }
 
         /**
-         * Track number multiplied by 100:  0 -> 0, 0.25 -> 25, 0.50 -> 500
+         * Track number, each increment is a quarter track: 0 -> 0, 1 -> 0.25, 2 -> 0.5, ...
          */
-        fun offsetFor(trackNumber: Int): Long {
-            return map[trackNumber / 25]!!
+        fun offsetFor(trackNumber: Int): Int {
+            if (! (trackNumber in 0..160)) {
+                throw IllegalArgumentException("Quarter track illegal: $trackNumber")
+            }
+            return map[trackNumber]!!
         }
 
         override fun toString(): String {
-            return "{TMAP size=$size 0:" + offsetFor(0) + " 1:" + offsetFor(25) + " 2:" + offsetFor(50) + "...}"
+            return "{TMAP size=$size 0:" + offsetFor(0) + " 1:" + offsetFor(1) + " 2:" + offsetFor(2) + "...}"
         }
     }
 
-    class ChunkTrks(private val stream: Stream, size: Long): Chunk("TRKS", size) {
-        data class Trk(val startingBlock: Long, val blockCount: Long, val bitCount: Long)
+    class ChunkTrks(private val stream: Stream, size: Int): Chunk("TRKS", size) {
+        data class Trk(val startingBlock: Int, val blockCount: Int, val bitCount: Int)
         val trks = arrayListOf<Trk>()
         init {
             repeat(160) {
@@ -134,17 +233,13 @@ class Woz(val ins: InputStream) {
         }
     }
 
-    fun read(file: File): BitStream = read(file.inputStream())
+//    fun read(file: File): BitStream = read(file.inputStream())
 
-    fun read(ins: InputStream): BitStream {
-        val bytes = ins.readBytes()
+    fun read(bytes: ByteArray) {
         val stream = Stream(bytes)
         println("Header: " + readHeader(stream))
 
-        var info: ChunkInfo? = null
-        var tmap: ChunkTmap? = null
-        var trks: ChunkTrks? = null
-        while (info == null || tmap == null || trks == null) {
+        while (! this::info.isInitialized || ! this::tmap.isInitialized || ! this::trks.isInitialized) {
             val name = stream.read4String()
             val size = stream.read4()
             val result = when (name) {
@@ -154,8 +249,8 @@ class Woz(val ins: InputStream) {
                 else -> Chunk(name, size)
             }
         }
-        val offset = tmap.offsetFor(30)
-        val trackInfo = trks.trks[offset.toInt()]
-        return BitStream(bytes, trackInfo.startingBlock * 512)
+//        val offset = tmap.offsetFor(30)
+//        val trackInfo = trks.trks[offset.toInt()]
+//        return BitStream(bytes, trackInfo.startingBlock * 512)
     }
 }

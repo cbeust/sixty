@@ -48,7 +48,7 @@ fun apple2Computer(debugMem: Boolean): Computer {
     }
 
     val interceptor = object: MemoryInterceptor {
-        val woz = Woz(Woz::class.java.classLoader.getResource("woz2/DOS 3.3 System Master.woz").openStream())
+        val disk = WozDisk(Woz::class.java.classLoader.getResource("woz2/DOS 3.3 System Master.woz").openStream())
 
         override fun onRead(location: Int, value: Int): MemoryInterceptor.Response {
             val byte = when(location) {
@@ -69,7 +69,7 @@ fun apple2Computer(debugMem: Boolean): Computer {
                     value
                 }
                 0xc0ec -> {
-                    val result = woz.bitStream.nextByte()
+                    val result = disk.nextByte()
                     if (result == 0xd5) {
                         println("Woz returning byte ${result.h()}")
                     }
