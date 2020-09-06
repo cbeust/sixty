@@ -126,8 +126,10 @@ data class Cpu2(val memory: Memory,
             SED -> P.D = true
             CLV -> P.V = false
             INC_ZP, INC_ZP_X, INC_ABS, INC_ABS_X -> {
-                memory[effectiveAddress] = mea + 1
-                P.setNZFlags(mea)
+                (mea + 1).let {
+                    memory[effectiveAddress] = it
+                    P.setNZFlags(it)
+                }
             }
             JMP -> PC = word
             JMP_IND -> PC = mea
@@ -178,7 +180,6 @@ data class Cpu2(val memory: Memory,
             LSR -> A = lsr(A)
             LSR_ZP, LSR_ZP_X, LSR_ABS, LSR_ABS_X -> memory[effectiveAddress] = lsr(mea)
             NOP -> {}
-
             ORA_IMM -> {
                 A = A.or(byte)
                 P.setNZFlags(A)
