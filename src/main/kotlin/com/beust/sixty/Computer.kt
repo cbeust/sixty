@@ -66,28 +66,18 @@ class Computer(val cpu: Cpu2 = Cpu2(memory = Memory()),
 //                    println("breakpoint: " + memory[0xe].h())
 //                }
 
-                val (byte, word) = byteWord()
-                val debugString = formatPc(cpu.PC, opCode) + formatInstruction(opCode, cpu.PC, byte, word)
-                previousPc = cpu.PC
-                cpu.PC += SIZES[opCode]
-                cpu.nextInstruction(previousPc)
-                if (debugAsm) println(debugString + " " + cpu.toString())
-//                if (debugAsm) {
-//                    val inst = cpu.nextInstruction()
-//                    val (byte, word) = byteWord()
-//                    val debugString = formatPc(cpu, inst) + formatInstruction(inst, byte, word)
-//                    cpu.PC += inst.size
-//                    inst.run(this, byte, word)
-//                    println(debugString + " " + cpu.toString())
-//                } else {
-//                    val inst = cpu.nextInstruction()
-//                    val (byte, word) = byteWord()
-//                    cpu.PC += inst.size
-//                    inst.run(this, byte, word)
-//                    if (cpu.PC == 0xc6f8) {
-//                        stop()
-//                    }
-//                }
+                if (debugAsm) {
+                    val (byte, word) = byteWord()
+                    val debugString = formatPc(cpu.PC, opCode) + formatInstruction(opCode, cpu.PC, byte, word)
+                    previousPc = cpu.PC
+                    cpu.PC += SIZES[opCode]
+                    cpu.nextInstruction(previousPc)
+                    if (debugAsm) println(debugString + " " + cpu.toString())
+                } else {
+                    previousPc = cpu.PC
+                    cpu.PC += SIZES[opCode]
+                    cpu.nextInstruction(previousPc)
+                }
 
                 if (previousPc == cpu.PC) {
                     // Current functional tests highest score: 158489
