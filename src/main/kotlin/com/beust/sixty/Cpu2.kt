@@ -25,7 +25,7 @@ data class Cpu2(val memory: Memory,
         val bbb = opCode.and(0x14).shr(2)
         val cc = opCode.and(0x3)
         val (effectiveAddress, mea) = when(instructionModes[opCode]) {
-            Addressing.ABSOLUTE -> word to toWord(word)
+            Addressing.ABSOLUTE -> word to memory[word]
             Addressing.ZP -> byte to memory[byte]
             Addressing.ZP_X -> (byte + X).and(0xff).let { it to memory[it] }
             Addressing.ZP_Y -> (byte + Y).and(0xff).let { it to memory[it] }
