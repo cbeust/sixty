@@ -224,18 +224,13 @@ data class Cpu2(val memory: Memory,
                 Y = (Y + 1).and(0xff)
                 P.setNZFlags(Y)
             }
-            ROL, ROL_ZP, ROL_ZP_X, ROL_ABS, ROL_ABS_X -> {
-                val result = (mea.shl(1).or(P.C.int())) and 0xff
-                P.C = mea.and(0x80) != 0
-                memory[effectiveAddress] = result
-                P.setNZFlags(result)
+            ROL -> A = rol(A)
+            ROL_ZP, ROL_ZP_X, ROL_ABS, ROL_ABS_X -> {
+                memory[effectiveAddress] = rol(mea)
             }
-            ROR, ROR_ZP, ROR_ZP_X, ROR_ABS, ROR_ABS_X -> {
-                val bit0 = mea.and(0x1)
-                val result = mea.shr(1).or(P.C.int().shl(7))
-                P.setNZFlags(result)
-                P.C = bit0.toBoolean()
-                memory[effectiveAddress] = result
+            ROR -> A = ror(A)
+            ROR_ZP, ROR_ZP_X, ROR_ABS, ROR_ABS_X -> {
+                memory[effectiveAddress] = ror(mea)
             }
             RTI -> {
                 P.fromByte(SP.popByte())
@@ -286,9 +281,25 @@ data class Cpu2(val memory: Memory,
         }
     }
 
+    private fun rol(v: Int): Int {
+        val result = (v.shl(1).or(P.C.int())) and 0xff
+        P.C = v.and(0x80) != 0
+        P.setNZFlags(result)
+        return result
+    }
+
+    private fun ror(v: Int): Int {
+        val bit0 = v.and(0x1)
+        val result = v.shr(1).or(P.C.int().shl(7))
+        P.setNZFlags(result)
+        P.C = bit0.toBoolean()
+        return result
+    }
+
     private fun lsr(v: Int): Int {
         P.C = v.and(1) != 0
-        val result = v.shr(1)
+        val bit0 = v.and(1)
+        val result = v.shr(1).or(bit0.shl(7))
         P.setNZFlags(result)
         return result
     }
