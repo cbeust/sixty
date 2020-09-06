@@ -159,6 +159,7 @@ data class Cpu2(val memory: Memory,
                 P.setNZFlags(mea)
             }
             JMP -> PC = word
+            JMP_IND -> PC = memory[effectiveAddress]
             JSR -> {
                 SP.pushWord(PC - 1)
                 PC = word
@@ -307,6 +308,9 @@ data class Cpu2(val memory: Memory,
             }
             STY_ZP, STY_ZP_X, STY_ABS -> {
                 memory[effectiveAddress] = X
+            }
+            else -> {
+                TODO("Unknown opcode: ${opCode.h()}")
             }
         }
     }
