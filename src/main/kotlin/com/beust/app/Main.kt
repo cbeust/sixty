@@ -29,7 +29,7 @@ fun main() {
             apple2Computer(debugMem).run()//true, true)
         }
         else -> {
-            val result = functionalTestComputer().run(true, true)
+            val result = functionalTestComputer(false).run()//true, true)
             with(result) {
                 val sec = durationMillis / 1000
                 val mhz = String.format("%.2f", cycles / sec / 1_000_000.0)

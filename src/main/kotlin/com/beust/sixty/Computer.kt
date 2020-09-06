@@ -61,17 +61,17 @@ class Computer(val cpu: Cpu2 = Cpu2(memory = Memory()),
             if (opCode == 0x60 && cpu.SP.isEmpty()) {
                 done = true
             } else {
-                if (cpu.PC == 0xc202) {
-                    println(this)
-                    println("breakpoint: " + memory[0xe].h())
-                }
+//                if (cpu.PC == 0x2a66) {
+//                    println(this)
+//                    println("breakpoint: " + memory[0xe].h())
+//                }
 
                 val (byte, word) = byteWord()
                 val debugString = formatPc(cpu.PC, opCode) + formatInstruction(opCode, cpu.PC, byte, word)
                 previousPc = cpu.PC
                 cpu.PC += SIZES[opCode]
                 cpu.nextInstruction(previousPc)
-                println(debugString + " " + cpu.toString())
+                if (debugAsm) println(debugString + " " + cpu.toString())
 //                if (debugAsm) {
 //                    val inst = cpu.nextInstruction()
 //                    val (byte, word) = byteWord()

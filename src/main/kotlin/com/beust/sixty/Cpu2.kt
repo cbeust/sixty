@@ -34,9 +34,9 @@ data class Cpu2(val memory: Memory,
                     .let { (it + Y) to memory[it + Y] }
             else -> 0 to 0
         }
-        if (opCode == 0x91) {
-            println("BREAKPOINT")
-        }
+//        if (opCode == 0x91) {
+//            println("BREAKPOINT")
+//        }
 
         when(opCode) {
             ADC_IMM -> {
