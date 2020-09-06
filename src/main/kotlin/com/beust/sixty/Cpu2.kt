@@ -156,7 +156,7 @@ data class Cpu2(val memory: Memory,
             }
             LDX_ZP, LDX_ZP_Y, LDX_ABS, LDX_ABS_Y -> {
                 X = mea
-                P.setNZFlags(A)
+                P.setNZFlags(X)
                 when(opCode) {
                     LDX_ABS_Y -> {
                         timing += pageCrossed(PC, effectiveAddress)
@@ -279,7 +279,7 @@ data class Cpu2(val memory: Memory,
                 memory[effectiveAddress] = X
             }
             STY_ZP, STY_ZP_X, STY_ABS -> {
-                memory[effectiveAddress] = X
+                memory[effectiveAddress] = Y
             }
             else -> {
                 TODO("Unknown opcode: ${opCode.h()}")
