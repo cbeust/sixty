@@ -20,10 +20,6 @@ data class Cpu2(val memory: Memory,
         var byte = memory[pc + 1]
         var word = byte.or(memory[pc + 2].shl(8))
         var timing = TIMINGS[opCode]
-        // Opcode bits:  aaabbbcc where bbb determines the addressing
-        // Source: http://nparker.llx.com/a2/opcodes.html
-        val bbb = opCode.and(0x14).shr(2)
-        val cc = opCode.and(0x3)
         val (effectiveAddress, mea) = when(instructionModes[opCode]) {
             Addressing.ABSOLUTE -> word to memory[word]
             Addressing.ZP -> byte to memory[byte]
