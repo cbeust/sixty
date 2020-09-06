@@ -101,8 +101,10 @@ data class Cpu2(val memory: Memory,
             CPY_IMM -> cmp(Y, byte)
             CPY_ZP, CPY_ABS -> cmp(Y, mea)
             DEC_ZP, DEC_ZP_X, DEC_ABS, DEC_ABS_X -> {
-                memory[effectiveAddress] = mea - 1
-                P.setNZFlags(mea)
+                (mea - 1).and(0xff).let {
+                    memory[effectiveAddress] = it
+                    P.setNZFlags(it)
+                }
             }
             EOR_IMM -> {
                 A = A.xor(byte)
