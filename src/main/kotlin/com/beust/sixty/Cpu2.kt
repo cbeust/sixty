@@ -175,7 +175,7 @@ data class Cpu2(val memory: Memory,
                     }
                 }
             }
-            LSR -> A = lsr(byte)
+            LSR -> A = lsr(A)
             LSR_ZP, LSR_ZP_X, LSR_ABS, LSR_ABS_X -> memory[effectiveAddress] = lsr(mea)
             NOP -> {}
 
