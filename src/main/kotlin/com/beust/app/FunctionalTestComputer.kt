@@ -9,7 +9,8 @@ fun functionalTestComputer(debugMemory: Boolean): Computer {
     val result = Computer(cpu = Cpu2(memory = functionalTestMemory),
             memoryListener = DebugMemoryListener(debugMemory)).apply {
         pcListener = object: PcListener {
-            override fun onPcChanged(newValue: Int) {
+            override fun onPcChanged(c: Computer) {
+                val newValue = c.cpu.PC
                 if (newValue == 0x334e) {
                     print("\r  Arithmetic test (hex): " + memory[0xe])
                 }

@@ -2,6 +2,7 @@ package com.beust.app
 
 import com.beust.sixty.h
 import com.beust.sixty.hh
+import com.beust.sixty.int
 import java.io.File
 import java.io.InputStream
 import java.lang.IllegalArgumentException
@@ -12,10 +13,18 @@ fun main() {
     val disk = WozDisk(ins)
     var carry = 1
     fun rol(v: Int): Int {
-        val bit7 = if (v.and(1.shl(7)) != 0) 1 else 0
-        val result = v.shl(1).or(carry)
-//        carry = bit7
+        val result = (v.shl(1).or(carry)) and 0xff
+        carry = if (v.and(0x80) != 0) 1 else 0
         return result
+    }
+    repeat(100) {
+        var acc = 0
+        repeat(4) {
+            val b = disk.next2Bits()
+//            println("Next 2 bits: $b")
+            acc = acc.shl(2).or(b)
+        }
+//        println(" ==> ${acc.h()}")
     }
     repeat(10000) {
         var b = disk.nextByte()
@@ -34,7 +43,7 @@ fun main() {
             val sector = pair()
             val checksum = pair()
             val expected = volume.xor(track).xor(sector)
-            println("Offset " + (0x600 + disk.position).hh()
+            println("Offset " + (0x600 + (disk.bitPosition / 8)).hh()
                     + " volume: ${volume.h()} track: ${track.h()} sector: ${sector.h()}"
                     + " checksum: $checksum expected: $expected")
             if (disk.nextByte() != 0xde) {
@@ -70,20 +79,38 @@ class WozDisk(val ins: InputStream) {
     val MAX_TRACK = 160
 
     var quarterTrack = 0
-    var position = 0
+    var bitPosition = 0
     val bytes = ins.readAllBytes()
     val woz = Woz(bytes)
 
     fun nextByte(): Int {
+        val a = next2Bits().shl(6)
+        val b = next2Bits().shl(4)
+        val c = next2Bits().shl(2)
+        val d = next2Bits()
+        val result = a or b or c or d
+        return result
+    }
+
+    fun next2Bits(): Int {
         val tmapOffset = woz.tmap.offsetFor(quarterTrack)
         val trk = woz.trks.trks[tmapOffset]
         val streamSizeInBytes = (trk.bitCount / 8)
 //        if (trk.startingBlock * 512 + position > streamSizeInBytes) {
 //            println("Wrapping around")
 //        }
-        val byteOffset = (trk.startingBlock * 512 + position) % streamSizeInBytes
-        val result = bytes[byteOffset].toInt().and(0xff)
-        position++
+        val byteOffset = (trk.startingBlock * 512 + (bitPosition / 8)) % streamSizeInBytes
+        val byte = bytes[byteOffset].toInt().and(0xff)
+//        println("  current byte: ${byte.h()}")
+        val inPosition = bitPosition % 8
+        val result = when(inPosition) {
+            0 -> (byte and 0xc0).shr(6)
+            2 -> (byte and 0x30).shr(4)
+            4 -> (byte and 0xc).shr(2)
+            6 -> (byte and 3)
+            else -> TODO("should never happen")
+        }
+        bitPosition = (bitPosition + 2) % (streamSizeInBytes * 8)
 //        println("Returning ${result.h()}")
         return result
     }

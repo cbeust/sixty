@@ -69,7 +69,10 @@ fun apple2Computer(debugMem: Boolean): Computer {
                     value
                 }
                 0xc0ec -> {
-                    val result = disk.nextByte()
+                    val result = value.shl(2).or(disk.next2Bits()).and(0xff)
+                    if (result.and(0x80) != 0) {
+                        println("Full byte: $result")
+                    }
                     if (result == 0xd5) {
                         println("Woz returning byte ${result.h()}")
                     }
@@ -115,8 +118,8 @@ fun apple2Computer(debugMem: Boolean): Computer {
     val pcListener = object: PcListener {
         override fun onPcChanged(c: Computer) {
             val newValue = c.cpu.PC
-            if (newValue == 0xc683) {
-                println("READ D5 AA 96")
+            if (newValue == 0xc696) {
+                println("Finished anding")
             }
             if (newValue == 0xc697) with(c) {
                 when(cpu.Y) {
@@ -124,6 +127,7 @@ fun apple2Computer(debugMem: Boolean): Computer {
                     1 -> println("Read track ${cpu.A}")
                     0 -> println("Read sector ${cpu.A}")
                 }
+                println("")
             }
         }
 

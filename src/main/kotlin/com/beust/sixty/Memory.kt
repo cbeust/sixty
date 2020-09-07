@@ -15,8 +15,10 @@ class Memory(val size: Int = 0x10000, vararg bytes: Int) {
     operator fun get(i: Int): Int {
         val result = if (interceptor != null) {
             val response = interceptor!!.onRead(i, content[i])
-            if (response.override) response.value
-            else content[i]
+            if (response.override) {
+                content[i] = response.value
+            }
+            content[i]
         } else {
             content[i]
         }

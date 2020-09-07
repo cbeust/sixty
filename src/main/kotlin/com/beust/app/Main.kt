@@ -25,8 +25,9 @@ fun main() {
             c.run(debugAsm = false)
         }
         2 -> {
-            val debugMem = false
-            val debugAsm = false
+            val d = true
+            val debugMem = true
+            val debugAsm = true
             apple2Computer(debugMem).run(debugMem, debugAsm)//true, true)
         }
         else -> {
