@@ -28,29 +28,6 @@ val SIZES = intArrayOf(
 
 /**
  * Number of clock cycles required for each instruction when
- * in NMOS mode.
- */
-val instructionClocksNmos = intArrayOf(
-        7, 6, 1, 8, 3, 3, 5, 5, 3, 2, 2, 2, 4, 4, 6, 6,  // 0x00-0x0f
-        2, 5, 1, 8, 4, 4, 6, 6, 2, 4, 2, 7, 4, 4, 7, 7,  // 0x10-0x1f
-        6, 6, 1, 8, 3, 3, 5, 5, 4, 2, 2, 2, 4, 4, 6, 6,  // 0x20-0x2f
-        2, 5, 1, 8, 4, 4, 6, 6, 2, 4, 2, 7, 4, 4, 7, 7,  // 0x30-0x3f
-        6, 6, 1, 8, 3, 3, 5, 5, 3, 2, 2, 2, 3, 4, 6, 6,  // 0x40-0x4f
-        2, 5, 1, 8, 4, 4, 6, 6, 2, 4, 2, 7, 4, 4, 7, 7,  // 0x50-0x5f
-        6, 6, 1, 8, 3, 3, 5, 5, 4, 2, 2, 2, 5, 4, 6, 6,  // 0x60-0x6f
-        2, 5, 1, 8, 4, 4, 6, 6, 2, 4, 2, 7, 4, 4, 7, 7,  // 0x70-0x7f
-        2, 6, 2, 6, 3, 3, 3, 3, 2, 2, 2, 2, 4, 4, 4, 4,  // 0x80-0x8f
-        2, 6, 1, 6, 4, 4, 4, 4, 2, 5, 2, 5, 5, 5, 5, 5,  // 0x90-0x9f
-        2, 6, 2, 6, 3, 3, 3, 3, 2, 2, 2, 2, 4, 4, 4, 4,  // 0xa0-0xaf
-        2, 5, 1, 5, 4, 4, 4, 4, 2, 4, 2, 4, 4, 4, 4, 4,  // 0xb0-0xbf
-        2, 6, 2, 8, 3, 3, 5, 5, 2, 2, 2, 2, 4, 4, 6, 6,  // 0xc0-0xcf
-        2, 5, 1, 8, 4, 4, 6, 6, 2, 4, 2, 7, 4, 4, 7, 7,  // 0xd0-0xdf
-        2, 6, 2, 8, 3, 3, 5, 5, 2, 2, 2, 2, 4, 4, 6, 6,  // 0xe0-0xef
-        2, 5, 1, 8, 4, 4, 6, 6, 2, 4, 2, 7, 4, 4, 7, 7 // 0xf0-0xff
-)
-
-/**
- * Number of clock cycles required for each instruction when
  * in CMOS mode
  */
 val TIMINGS = intArrayOf(
@@ -77,7 +54,7 @@ val TIMINGS = intArrayOf(
  * Instruction opcode names. This lists all opcodes for
  * NMOS 6502, CMOS 65C02, and CMOS 65C816
  */
-val NAMES = arrayOf(
+val OPCODE_NAMES = arrayOf(
         "BRK", "ORA", "NOP", "NOP", "TSB", "ORA", "ASL", "RMB0",  // 0x00-0x07
         "PHP", "ORA", "ASL", "NOP", "TSB", "ORA", "ASL", "BBR0",  // 0x08-0x0f
         "BPL", "ORA", "ORA", "NOP", "TRB", "ORA", "ASL", "RMB1",  // 0x10-0x17
@@ -117,7 +94,7 @@ val NAMES = arrayOf(
  * for all instructions for NMOS 6502, CMOS 65C02,
  * and CMOS 65C816
  */
-var instructionModes = arrayOf<AddressingType> (
+var ADDRESSING_TYPES = arrayOf<AddressingType> (
         NONE, INDIRECT_X, NONE, NONE,  // 0x00-0x03
         ZP, ZP, ZP, ZP,  // 0x04-0x07
         NONE, IMMEDIATE, REGISTER_A, NONE,  // 0x08-0x0b

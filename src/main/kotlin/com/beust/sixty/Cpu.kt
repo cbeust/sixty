@@ -20,7 +20,7 @@ data class Cpu(val memory: Memory,
         var byte = memory[pc + 1]
         var word = byte.or(memory[pc + 2].shl(8))
         var timing = TIMINGS[opCode]
-        val (effectiveAddress, mea) = when(instructionModes[opCode]) {
+        val (effectiveAddress, mea) = when(ADDRESSING_TYPES[opCode]) {
             AddressingType.ABSOLUTE -> word to memory[word]
             AddressingType.ZP -> byte to memory[byte]
             AddressingType.ZP_X -> (byte + X).and(0xff).let { it to memory[it] }

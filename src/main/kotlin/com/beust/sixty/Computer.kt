@@ -105,8 +105,8 @@ class Computer(val cpu: Cpu = Cpu(memory = Memory()),
     }
 
     private fun formatInstruction(opCode: Int, pc: Int, byte: Int, word: Int): String {
-        val addressing = instructionModes[opCode]
-        val name = NAMES[opCode]
+        val addressing = ADDRESSING_TYPES[opCode]
+        val name = OPCODE_NAMES[opCode]
         return String.format("%s %-12s", name, addressing.toString(pc, byte, word))
     }
 
@@ -117,7 +117,7 @@ class Computer(val cpu: Cpu = Cpu(memory = Memory()),
     fun disassemble(start: Int, length: Int = 10) {
         var pc = start
         val opCode = memory[pc]
-        val addressing = instructionModes[opCode]
+        val addressing = ADDRESSING_TYPES[opCode]
         repeat(length) {
             val byte = memory[pc + 1]
             val word = memory[pc + 1].or(memory[pc + 2].shl(8))
