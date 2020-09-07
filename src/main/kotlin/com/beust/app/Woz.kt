@@ -1,11 +1,10 @@
 package com.beust.app
 
+import com.beust.sixty.b
 import com.beust.sixty.h
 import com.beust.sixty.hh
-import com.beust.sixty.int
 import java.io.File
 import java.io.InputStream
-import java.lang.IllegalArgumentException
 
 fun main() {
     val ins = Woz::class.java.classLoader.getResource("woz2/DOS 3.3 System Master.woz").openStream()
@@ -14,19 +13,19 @@ fun main() {
     var carry = 1
     fun rol(v: Int): Int {
         val result = (v.shl(1).or(carry)) and 0xff
-        carry = if (v.and(0x80) != 0) 1 else 0
+//        carry = if (v.and(0x80) != 0) 1 else 0
         return result
     }
-    repeat(100) {
-        var acc = 0
-        repeat(4) {
-            val b = disk.next2Bits()
-//            println("Next 2 bits: $b")
-            acc = acc.shl(2).or(b)
-        }
-//        println(" ==> ${acc.h()}")
-    }
-    repeat(10000) {
+//    repeat(100) {
+//        var acc = 0
+//        repeat(4) {
+//            val b = disk.next2Bits()
+////            println("Next 2 bits: $b")
+//            acc = acc.shl(2).or(b)
+//        }
+////        println(" ==> ${acc.h()}")
+//    }
+    repeat(100000) {
         var b = disk.nextByte()
         fun pair(): Int {
             val b1 = disk.nextByte()
@@ -75,6 +74,9 @@ fun main() {
     }
 }
 
+fun Byte.bit(n: Int) = this.toInt().bit(n)
+fun Int.bit(n: Int) = this.and(1.shl(n)).shr(n)
+
 class WozDisk(val ins: InputStream) {
     val MAX_TRACK = 160
 
@@ -83,37 +85,97 @@ class WozDisk(val ins: InputStream) {
     val bytes = ins.readAllBytes()
     val woz = Woz(bytes)
 
+    fun createBits(bytes: ByteArray): List<Int> {
+        val result = arrayListOf<Int>()
+        bytes.forEach {
+            for (i in 0..8) {
+                result.add(it.bit(7 - i))
+            }
+        }
+        return result
+    }
     fun nextByte(): Int {
-        val a = next2Bits().shl(6)
-        val b = next2Bits().shl(4)
-        val c = next2Bits().shl(2)
-        val d = next2Bits()
-        val result = a or b or c or d
+//        val a = next2Bits().shl(6)
+//        val b = next2Bits().shl(4)
+//        val c = next2Bits().shl(2)
+//        val d = next2Bits()
+//        val result = a or b or c or d
+        var result = 0
+        while (result and 0x80 == 0) {
+            val pb = peekBits(8)
+            println("  Expected next: ${pb.b()}")
+            val nb = nextBit()
+            println("Shifting in $nb")
+            if (nb != pb[0]) {
+                println("PROBLEM")
+            }
+            result = result.shl(1).or(nb)
+        }
+        val rh = result.h()
+        println("Next byte: $rh")
         return result
     }
 
-    fun next2Bits(): Int {
+    var head_window = 0
+
+    /**
+     * @return the next byte and the stream size in bits
+     */
+    fun calculateCurrentByte(currentBitPosition: Int): Pair<Int, Int> {
         val tmapOffset = woz.tmap.offsetFor(quarterTrack)
         val trk = woz.trks.trks[tmapOffset]
         val streamSizeInBytes = (trk.bitCount / 8)
 //        if (trk.startingBlock * 512 + position > streamSizeInBytes) {
 //            println("Wrapping around")
 //        }
-        val byteOffset = (trk.startingBlock * 512 + (bitPosition / 8)) % streamSizeInBytes
+        val relativeOffset = currentBitPosition / 8
+        val byteOffset = (trk.startingBlock * 512 + relativeOffset) % streamSizeInBytes
         val byte = bytes[byteOffset].toInt().and(0xff)
-//        println("  current byte: ${byte.h()}")
-        val inPosition = bitPosition % 8
-        val result = when(inPosition) {
-            0 -> (byte and 0xc0).shr(6)
-            2 -> (byte and 0x30).shr(4)
-            4 -> (byte and 0xc).shr(2)
-            6 -> (byte and 3)
-            else -> TODO("should never happen")
+        println("  bitPosition $bitPosition: $relativeOffset byteOffset: $byteOffset byte: ${byte.h()}")
+        return byte to trk.bitCount
+    }
+
+    fun peekBits(n: Int): List<Int> {
+        val result = arrayListOf<Int>()
+        repeat(n) {
+            result.add(peekBit(it))
         }
-        bitPosition = (bitPosition + 2) % (streamSizeInBytes * 8)
-//        println("Returning ${result.h()}")
         return result
     }
+
+    fun peekBit(ahead: Int = 0) = nextBit(true, ahead)
+
+    fun nextBit(peek: Boolean = false, ahead: Int = 0): Int {
+        val (byte, streamSizeInBits) = calculateCurrentByte(bitPosition + ahead)
+        head_window = head_window shl 1
+        val bp = (bitPosition + ahead) % 8
+        val nextWozBit = byte.bit(7 - bp)
+//        head_window = head_window or nextWozBit
+        if (! peek) bitPosition = (bitPosition + 1) % streamSizeInBits
+//        val result = if (head_window and 0x0f !== 0x00) {
+//            (head_window and 0x02) shr 1
+//        } else {
+//            1
+//        }
+//        println("Current byte ${byte.h()}, bit: $result ($bitPosition)")
+        return nextWozBit
+    }
+
+//    fun next2Bits(): Int {
+//        val (byte, streamSizeInBits) = calculateCurrentByte()
+////        println("  current byte: ${byte.h()}")
+//        val inPosition = bitPosition % 8
+//        val result = when(inPosition) {
+//            0 -> (byte and 0xc0).shr(6)
+//            2 -> (byte and 0x30).shr(4)
+//            4 -> (byte and 0xc).shr(2)
+//            6 -> (byte and 3)
+//            else -> TODO("should never happen")
+//        }
+//        bitPosition = (bitPosition + 2) % streamSizeInBits
+////        println("Returning ${result.h()}")
+//        return result
+//    }
 
     fun incrementTrack() {
         quarterTrack = (quarterTrack + 1) % MAX_TRACK

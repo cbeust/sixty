@@ -39,3 +39,15 @@ fun Color.s() = when(this) {
 fun Boolean.int(): Int = if (this) 1 else 0
 fun Int.toBoolean(): Boolean = if (this == 0) false else if (this == 1) true
     else TODO("Illegal boolean: $this")
+
+fun List<Int>.b(): String {
+    val result = StringBuffer()
+    var i = 0
+    this.forEach {
+        if (i != 0 && i % 8 == 0) result.append(" ")
+        else if (i != 0 && i % 4 == 0) result.append("_")
+        result.append(it)
+        i++
+    }
+    return result.toString()
+}

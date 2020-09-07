@@ -67,12 +67,17 @@ fun apple2Computer(debugMem: Boolean): Computer {
                     value
                 }
                 0xc0ec -> {
-                    val result = value.shl(2).or(disk.next2Bits()).and(0xff)
+//                    val pb = disk.peekBits(160)
+//                    println("  Expected next: ${pb.b()}")
+
+                    val v = if (value and 0x80 != 0) 0 else value
+                    val result = v.shl(1).or(disk.nextBit()).and(0xff)
                     if (result.and(0x80) != 0) {
-                        println("Full byte: $result")
+                        println("Full byte: ${result.h()}")
                     }
                     if (result == 0xd5) {
                         println("Woz returning byte ${result.h()}")
+//                        val nb = disk.nextByte()
                     }
                     result
                 }
