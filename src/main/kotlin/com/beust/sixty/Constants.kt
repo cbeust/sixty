@@ -1,7 +1,5 @@
 package com.beust.sixty
 
-import com.beust.sixty.op.*
-
 const val BRK = 0x00
 
 const val ADC_IMM = 0x69
@@ -183,181 +181,14 @@ const val INY = 0xc8
 
 const val RTS = 0x60
 
-val OPCODES = listOf<Instruction>(
-        Brk(),
-        Php(),
-        Clc(),
-        Jsr(),
-        RolZp(),
-        Plp(),
-        Rol(),
-        RolAbsolute(),
-        Sec(),
-        RolAbsoluteX(),
-        RolZpX(),
-        Rti(),
-        LsrZp(),
-        Lsr(),
-        Jmp(),
-        Pha(),
-        LsrAbsolute(),
-        LsrAbsoluteX(),
-        LsrZpX(),
-        Cli(),
-        Rts(),
-        RorZp(),
-        Pla(),
-        JmpIndirect(),
-        Ror(),
-        RorAbsolute(),
-        RorZpX(),
-        Sei(),
-        RorAbsoluteX(),
-        Dey(),
-        Txa(),
-        Tya(),
-        Txs(),
-        Tay(),
-        Tax(),
-        Clv(),
-        Tsx(),
-        Iny(),
-        Dex(),
-        Cld(),
-        Inx(),
-        Nop(),
-        Sed(),
+// NMI vector
+//        const val NMI_VECTOR_L = 0xfffa
+//        const val NMI_VECTOR_H = 0xfffb
+//
+//        // Reset vector
+//        const val RST_VECTOR_L = 0xfffc
+//        const val RST_VECTOR_H = 0xfffd
 
-        Asl(),
-        AslZp(),
-        AslZpX(),
-        AslAbsolute(),
-        AslAbsoluteX(),
-
-        Bpl(),
-        Bmi(),
-        Bvc(),
-        Bvs(),
-        Bcc(),
-        Bcs(),
-        Bne(),
-        Beq(),
-
-        CmpImmediate(),
-        CmpZp(),
-        CmpZpX(),
-        CmpAbsolute(),
-        CmpAbsoluteX(),
-        CmpAbsoluteY(),
-        CmpIndX(),
-        CmpIndY(),
-
-        CpxImm(),
-        CpxZp(),
-        CpxAbsolute(),
-
-        CpyImm(),
-        CpyZp(),
-        CpyAbsolute(),
-
-        DecZp(),
-        DecZpX(),
-        DecAbsolute(),
-        DecAbsoluteX(),
-
-        IncZp(),
-        IncZpX(),
-        IncAbsolute(),
-        IncAbsoluteX(),
-
-        AndImmediate(),
-        AndZp(),
-        AndZpX(),
-        AndAbsolute(),
-        AndAbsoluteX(),
-        AndAbsoluteY(),
-        AndIndX(),
-        AndIndY(),
-
-        AdcImmediate(),
-        AdcZp(),
-        AdcZpX(),
-        AdcAbsolute(),
-        AdcAbsoluteX(),
-        AdcAbsoluteY(),
-        AdcIndX(),
-        AdcIndY(),
-
-        EorImmediate(),
-        EorZp(),
-        EorZpX(),
-        EorAbsolute(),
-        EorIndX(),
-        EorIndY(),
-        EorAbsoluteX(),
-        EorAbsoluteY(),
-
-        LdaImmediate(),
-        LdaZp(),
-        LdaZpX(),
-        LdaAbsolute(),
-        LdaAbsoluteX(),
-        LdaAbsoluteY(),
-        LdaIndX(),
-        LdaIndY(),
-
-        LdxImm(),
-        LdxZp(),
-        LdxZpY(),
-        LdxAbsolute(),
-        LdxAbsoluteY(),
-
-        LdyImm(),
-        LdyZp(),
-        LdyZpX(),
-        LdyAbsolute(),
-        LdyAbsoluteX(),
-
-        OraImmediate(),
-        OraZp(),
-        OraZpX(),
-        OraAbsolute(),
-        OraIndX(),
-        OraIndY(),
-        OraAbsoluteX(),
-        OraAbsoluteY(),
-
-        SbcImmediate(),
-        SbcZp(),
-        SbcZpX(),
-        SbcAbsolute(),
-        SbcAbsoluteX(),
-        SbcAbsoluteY(),
-        SbcIndX(),
-        SbcIndY(),
-
-        StaZp(),
-        StaZpX(),
-        StaAbsolute(),
-        StaAbsoluteX(),
-        StaAbsoluteY(),
-        StaIndX(),
-        StaIndY(),
-
-        StxZp(),
-        StxZpY(),
-        StxAbsolute(),
-
-        StyZp(),
-        StyZpX(),
-        StyAbsolute(),
-
-        BitZp(),
-        BitAbsolute())
-
-val OP_ARRAY = Array<Instruction?>(0x100) { _ -> null }.apply {
-    OPCODES.forEach {
-        this[it.opCode] = it
-    }
-}
-
+// IRQ vector
+const val IRQ_VECTOR_L = 0xfffe
+const val IRQ_VECTOR_H = 0xffff

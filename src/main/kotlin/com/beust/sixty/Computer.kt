@@ -96,8 +96,6 @@ class Computer(val cpu: Cpu2 = Cpu2(memory = Memory()),
 
     class RunResult(val durationMillis: Long, val cycles: Int)
 
-    private fun formatPc(cpu: Cpu, inst: Instruction) = formatPc(cpu.PC, inst.opCode)
-
     private fun formatPc(pc: Int, opCode: Int): String {
         val size = SIZES[opCode]
         val bytes = StringBuffer(opCode.h())
@@ -119,13 +117,12 @@ class Computer(val cpu: Cpu2 = Cpu2(memory = Memory()),
     fun disassemble(start: Int, length: Int = 10) {
         var pc = start
         val opCode = memory[pc]
+        val addressing = instructionModes[opCode]
         repeat(length) {
-            with(Cpu.nextInstruction(memory[pc])) {
-                val byte = memory[pc + 1]
-                val word = memory[pc + 1].or(memory[pc + 2].shl(8))
-                println(formatPc(pc, opCode) + toString(pc, byte, word))
-                pc += size
-            }
+            val byte = memory[pc + 1]
+            val word = memory[pc + 1].or(memory[pc + 2].shl(8))
+            println(formatPc(pc, opCode) + addressing.toString(pc, byte, word))
+            pc += SIZES[opCode]
         }
     }
 

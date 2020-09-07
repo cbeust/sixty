@@ -84,7 +84,7 @@ data class Cpu2(val memory: Memory,
             BVC -> timing += branch(byte) { ! P.V }
             BVS -> timing += branch(byte) { P.V }
             BRK -> {
-                handleInterrupt(true, Cpu.IRQ_VECTOR_H, Cpu.IRQ_VECTOR_L)
+                handleInterrupt(true, IRQ_VECTOR_H, IRQ_VECTOR_L)
             }
             CMP_IMM -> cmp(A, byte)
             CMP_ZP, CMP_ZP_X, CMP_ABS, CMP_ABS_X, CMP_ABS_Y, CMP_IND_X, CMP_IND_Y -> {

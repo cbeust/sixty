@@ -1,6 +1,5 @@
 package com.beust.sixty
 
-import com.beust.sixty.op.CpyImm
 import org.assertj.core.api.Assertions.assertThat
 import org.testng.annotations.DataProvider
 import org.testng.annotations.Test
@@ -103,30 +102,30 @@ abstract class BaseTest {
         }
     }
 
-    private fun cmpFlags(y: Int, compared: Int, n: Int, z: Int, c: Int) {
-        with(computer(0xc0, compared)) {
-            cpu.Y = y
-            with(cpu.P) {
-                assertFlag("N", N, 0)
-                assertFlag("Z", Z, 0)
-                assertFlag("C", C, 0)
-            }
-            CpyImm().run(this)
-            with(cpu.P) {
-                assertFlag("N", N, n)
-                assertFlag("Z", Z, z)
-                assertFlag("C", C, c)
-            }
-        }
-    }
+//    private fun cmpFlags(y: Int, compared: Int, n: Int, z: Int, c: Int) {
+//        with(computer(0xc0, compared)) {
+//            cpu.Y = y
+//            with(cpu.P) {
+//                assertFlag("N", N, 0)
+//                assertFlag("Z", Z, 0)
+//                assertFlag("C", C, 0)
+//            }
+//            CpyImm().run(this)
+//            with(cpu.P) {
+//                assertFlag("N", N, n)
+//                assertFlag("Z", Z, z)
+//                assertFlag("C", C, c)
+//            }
+//        }
+//    }
 
-    fun cpyImm() {
-        // LDY #$80, CPY #$7F
-        cmpFlags(0x80, 0x7f, 0, 0, 1) // P: 0x31  N=0 Z=0 C=1
-
-        // LDY #$1, CPY #$FF
-        cmpFlags(1, 0xff, 0, 0, 0) // P: 0x31  N=0 Z=0 C=1
-    }
+//    fun cpyImm() {
+//        // LDY #$80, CPY #$7F
+//        cmpFlags(0x80, 0x7f, 0, 0, 1) // P: 0x31  N=0 Z=0 C=1
+//
+//        // LDY #$1, CPY #$FF
+//        cmpFlags(1, 0xff, 0, 0, 0) // P: 0x31  N=0 Z=0 C=1
+//    }
 
     fun bne() {
         with(computer(0xd0, 0, 0x90, 1, 0x60, 0xa9, 1, 0x60)) {
