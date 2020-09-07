@@ -25,12 +25,12 @@ fun main() {
 //        }
 ////        println(" ==> ${acc.h()}")
 //    }
-    repeat(100000) {
+    var sectorsRead = 0
+    while (sectorsRead < 13) {
         var b = disk.nextByte()
         fun pair(): Int {
             val b1 = disk.nextByte()
             val b2 = disk.nextByte()
-            println("     PAIRING " + b1.h() + " " + b2.h())
             return rol(b1).and(b2).and(0xff)
         }
         start@ while(true) {
@@ -70,6 +70,7 @@ fun main() {
             if (disk.nextByte() != 0xaa) {
                 println("PROBLEM")
             }
+            sectorsRead++
         }
     }
 }
@@ -102,17 +103,10 @@ class WozDisk(val ins: InputStream) {
 //        val result = a or b or c or d
         var result = 0
         while (result and 0x80 == 0) {
-            val pb = peekBits(8)
-            println("  Expected next: ${pb.b()}")
             val nb = nextBit()
-            println("Shifting in $nb")
-            if (nb != pb[0]) {
-                println("PROBLEM")
-            }
             result = result.shl(1).or(nb)
         }
         val rh = result.h()
-        println("Next byte: $rh")
         return result
     }
 
@@ -131,7 +125,7 @@ class WozDisk(val ins: InputStream) {
         val relativeOffset = currentBitPosition / 8
         val byteOffset = (trk.startingBlock * 512 + relativeOffset) % streamSizeInBytes
         val byte = bytes[byteOffset].toInt().and(0xff)
-        println("  bitPosition $bitPosition: $relativeOffset byteOffset: $byteOffset byte: ${byte.h()}")
+//        println("  bitPosition $bitPosition: $relativeOffset byteOffset: $byteOffset byte: ${byte.h()}")
         return byte to trk.bitCount
     }
 

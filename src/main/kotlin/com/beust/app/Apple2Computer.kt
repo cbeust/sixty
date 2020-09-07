@@ -130,7 +130,9 @@ fun apple2Computer(debugMem: Boolean): Computer {
                     1 -> println("Read track ${cpu.A}")
                     0 -> println("Read sector ${cpu.A}")
                 }
-                println("")
+            }
+            if (newValue == 0xc6a6) {
+                println("Decoding data")
             }
         }
 
