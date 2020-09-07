@@ -13,7 +13,8 @@ class FunctionalTest {
         Computer(cpu = Cpu2(memory = memory),
                 memoryListener = DebugMemoryListener()).apply {
             pcListener = object : PcListener {
-                override fun onPcChanged(newValue: Int) {
+                override fun onPcChanged(c: Computer) {
+                    val newValue = c.cpu.PC
                     if (newValue == 0x346c || newValue == 0x3469) {
                         println("\nAll 6502 functional tests passed")
                         stop()

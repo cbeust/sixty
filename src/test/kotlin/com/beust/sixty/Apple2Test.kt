@@ -22,7 +22,8 @@ class Apple2Test: BaseTest() {
         }
         return Computer(Cpu2(memory)).apply {
             pcListener = object: PcListener {
-                override fun onPcChanged(newValue: Int) {
+                override fun onPcChanged(c: Computer) {
+                    val newValue = c.cpu.PC
                     if (memory[newValue] == BRK) stop()
                 }
 
