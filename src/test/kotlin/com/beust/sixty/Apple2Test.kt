@@ -20,7 +20,7 @@ class Apple2Test: BaseTest() {
             }
 
         }
-        return Computer(Cpu2(memory)).apply {
+        return Computer(Cpu(memory)).apply {
             pcListener = object: PcListener {
                 override fun onPcChanged(c: Computer) {
                     val newValue = c.cpu.PC

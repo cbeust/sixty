@@ -1,9 +1,7 @@
 package com.beust.sixty
 
-import org.assertj.core.api.Assertions
-
 class CpuTest: BaseTest() {
-    override fun createComputer(vararg bytes: Int) = Computer(Cpu2(Memory(bytes = *bytes))).apply {
+    override fun createComputer(vararg bytes: Int) = Computer(Cpu(Memory(bytes = *bytes))).apply {
         pcListener = object: PcListener {
             override fun onPcChanged(c: Computer) {
                 if (memory[c.cpu.PC] == BRK) stop()

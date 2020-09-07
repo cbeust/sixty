@@ -20,7 +20,7 @@ interface PcListener {
     fun onPcChanged(c: Computer)
 }
 
-class Computer(val cpu: Cpu2 = Cpu2(memory = Memory()),
+class Computer(val cpu: Cpu = Cpu(memory = Memory()),
         memoryListener: MemoryListener? = null,
         memoryInterceptor: MemoryInterceptor? = null,
         var pcListener: PcListener? = null

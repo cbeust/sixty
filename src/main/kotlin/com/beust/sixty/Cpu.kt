@@ -8,7 +8,7 @@ import com.beust.app.StackPointer
  * http://www.6502.org/tutorials/6502opcodes.html
  */
 
-data class Cpu2(val memory: Memory,
+data class Cpu(val memory: Memory,
         var A: Int = 0, var X: Int = 0, var Y: Int = 0, var PC: Int = 0,
         val P: StatusFlags = StatusFlags()) {
     val SP: StackPointer = StackPointer(memory)
