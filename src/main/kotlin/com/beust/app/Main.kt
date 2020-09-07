@@ -14,6 +14,8 @@ import javafx.stage.Stage
 import java.nio.file.Paths
 import kotlin.system.exitProcess
 
+val DEBUG = false
+
 fun main() {
     val choice = 2
 
@@ -26,8 +28,8 @@ fun main() {
         }
         2 -> {
             val d = true
-            val debugMem = true
-            val debugAsm = true
+            val debugMem = DEBUG
+            val debugAsm = DEBUG
             apple2Computer(debugMem).run(debugMem, debugAsm)//true, true)
         }
         else -> {

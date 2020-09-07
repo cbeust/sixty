@@ -21,6 +21,8 @@ fun apple2Computer(debugMem: Boolean): Computer {
 //        load("d:\\pd\\Apple Disks\\roms\\C000.dump", 0xc000)
         loadResource("Apple2e.rom", 0xc000)
         loadResource("DISK2.ROM", 0xc600)
+        // When restarting, don't move the head 50 tracks, only 1
+        this[0xc63c] = 1
 //        this[0xfcac] = BEQ
 //        this[0xfcb1] = BEQ
 //        load("d:\\pd\\Apple Disks\\dos", 0x9600)
@@ -50,6 +52,10 @@ fun apple2Computer(debugMem: Boolean): Computer {
 
         override fun onRead(location: Int, value: Int): MemoryInterceptor.Response {
             val byte = when(location) {
+                in 0xc0e0 .. 0xc0e4 -> {
+                    println("Step motor: ${location.hh()}")
+                    value
+                }
                 0xc0e8 -> {
                     println("Turning motor off")
                     value
@@ -72,17 +78,6 @@ fun apple2Computer(debugMem: Boolean): Computer {
 
                     val v = if (value and 0x80 != 0) 0 else value
                     val result = v.shl(1).or(disk.nextBit()).and(0xff)
-                    if (result.and(0x80) != 0) {
-                        println("Full byte: ${result.h()}")
-                    }
-                    if (result == 0xd5) {
-                        println("Woz returning byte ${result.h()}")
-//                        val nb = disk.nextByte()
-                    }
-                    if (result == 0xad) {
-                        println("Woz returning byte ${result.h()}")
-//                        val nb = disk.nextByte()
-                    }
                     result
                 }
                 else -> value
@@ -126,25 +121,22 @@ fun apple2Computer(debugMem: Boolean): Computer {
         override fun onPcChanged(c: Computer) {
             val newValue = c.cpu.PC
             when(newValue) {
-                0xc696 -> {
-                    println("Finished anding")
-                }
-                0xc697 -> with(c) {
-                    when(cpu.Y) {
-                        2 -> println("Read volume ${cpu.A}")
-                        1 -> println("Read track ${cpu.A}")
-                        0 -> println("Read sector ${cpu.A}")
-                    }
-                }
-                0xc67d -> {
-                    println("Decoding data")
-                }
-                0xc699 -> {
-                    println("Testing carry")
-                }
-                0xc6a6 -> {
-                    println("Decoding data")
-                }
+//                0xc697 -> with(c) {
+//                    when(cpu.Y) {
+//                        2 -> println("Read volume ${cpu.A}")
+//                        1 -> println("Read track ${cpu.A}")
+//                        0 -> println("Read sector ${cpu.A}")
+//                    }
+//                }
+//                0xc67d -> {
+//                    println("Decoding data")
+//                }
+//                0xc699 -> {
+//                    println("Testing carry")
+//                }
+//                0xc6a6 -> {
+//                    println("Decoding data")
+//                }
                 0xc6f8 -> {
                     println("JMP $801")
                 }
