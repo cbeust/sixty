@@ -1,6 +1,6 @@
 package com.beust.sixty
 
-enum class Addressing {
+enum class AddressingType {
     IMMEDIATE, ZP, ZP_X, ZP_Y, ABSOLUTE, ABSOLUTE_X, ABSOLUTE_Y, INDIRECT_X, INDIRECT_Y, REGISTER_A, INDIRECT,
         RELATIVE, ZPI, AIX, NONE;
 

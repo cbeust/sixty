@@ -21,16 +21,16 @@ data class Cpu(val memory: Memory,
         var word = byte.or(memory[pc + 2].shl(8))
         var timing = TIMINGS[opCode]
         val (effectiveAddress, mea) = when(instructionModes[opCode]) {
-            Addressing.ABSOLUTE -> word to memory[word]
-            Addressing.ZP -> byte to memory[byte]
-            Addressing.ZP_X -> (byte + X).and(0xff).let { it to memory[it] }
-            Addressing.ZP_Y -> (byte + Y).and(0xff).let { it to memory[it] }
-            Addressing.ABSOLUTE -> word to toWord(word)
-            Addressing.ABSOLUTE_X -> (word + X).let { it to memory[it] }
-            Addressing.ABSOLUTE_Y -> (word + Y).let { it to memory[it] }
-            Addressing.INDIRECT -> word to toWord(word)
-            Addressing.INDIRECT_X -> toWord((byte + X).and(0xff)).let { it to memory[it] }
-            Addressing.INDIRECT_Y -> memory[byte].or(memory[(byte + 1).and(0xff)].shl(8))
+            AddressingType.ABSOLUTE -> word to memory[word]
+            AddressingType.ZP -> byte to memory[byte]
+            AddressingType.ZP_X -> (byte + X).and(0xff).let { it to memory[it] }
+            AddressingType.ZP_Y -> (byte + Y).and(0xff).let { it to memory[it] }
+            AddressingType.ABSOLUTE -> word to toWord(word)
+            AddressingType.ABSOLUTE_X -> (word + X).let { it to memory[it] }
+            AddressingType.ABSOLUTE_Y -> (word + Y).let { it to memory[it] }
+            AddressingType.INDIRECT -> word to toWord(word)
+            AddressingType.INDIRECT_X -> toWord((byte + X).and(0xff)).let { it to memory[it] }
+            AddressingType.INDIRECT_Y -> memory[byte].or(memory[(byte + 1).and(0xff)].shl(8))
                     .let { (it + Y) to memory[it + Y] }
             else -> 0 to 0
         }

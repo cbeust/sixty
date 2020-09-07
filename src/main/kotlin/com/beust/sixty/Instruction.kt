@@ -17,7 +17,7 @@ interface Instruction {
      */
     val timing: Int
 
-    val addressing: Addressing
+    val addressing: AddressingType
 
     val name: String
 
