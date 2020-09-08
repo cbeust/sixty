@@ -144,9 +144,9 @@ class WozDisk(ins: InputStream) {
 
     private var quarterTrack = 0
 //    var bitPosition = 0
-    val bytes = ins.readAllBytes()
-    val woz = Woz(bytes)
-    val bitStream = BitStream(bytes.slice(0x600 until bytes.size).toByteArray())
+    private val bytes: ByteArray = ins.readAllBytes()
+    private val woz = Woz(bytes)
+    private val bitStream = BitStream(bytes.slice(0x600 until bytes.size).toByteArray())
 
     fun createBits(bytes: ByteArray): List<Int> {
         val result = arrayListOf<Int>()
@@ -168,7 +168,7 @@ class WozDisk(ins: InputStream) {
         return result
     }
 
-    fun peekByte(ahead: Int) = nextByte(true, ahead)
+    fun peekByte() = nextByte(true)
 
     fun nextBytes(count: Int) : List<Int> {
         val result = arrayListOf<Int>()
@@ -178,17 +178,7 @@ class WozDisk(ins: InputStream) {
         return result
     }
 
-//    fun peekBytes(count: Int, ahead: Int = 0): List<Int> {
-//        val position = bitPosition
-//        val result = arrayListOf<Int>()
-//        repeat(count) {
-//            result.add(nextByte())
-//        }
-//        bitPosition = position
-//        return result // .joinToString { it.h() }
-//    }
-
-    fun nextByte(peek: Boolean = false, ahead: Int = 0): Int {
+    fun nextByte(peek: Boolean = false): Int {
         var result = 0
         if (peek) {
             bitStream.save()
@@ -212,60 +202,11 @@ class WozDisk(ins: InputStream) {
         val tmapOffset = woz.tmap.offsetFor(quarterTrack)
         val trk = woz.trks.trks[tmapOffset]
         val streamSizeInBytes = (trk.bitCount / 8)
-//        if (trk.startingBlock * 512 + position > streamSizeInBytes) {
-//            println("Wrapping around")
-//        }
         val relativeOffset = currentBitPosition / 8
         val byteOffset = (trk.startingBlock * 512 + relativeOffset) % streamSizeInBytes
         val byte = bytes[byteOffset].toInt().and(0xff)
-//        println("  bitPosition $bitPosition: $relativeOffset byteOffset: $byteOffset byte: ${byte.h()}")
         return byte to trk.bitCount
     }
-
-//    fun peekBits(n: Int): List<Int> {
-//        val result = arrayListOf<Int>()
-//        repeat(n) {
-//            result.add(peekBit(it))
-//        }
-//        return result
-//    }
-//
-//    fun peekBit(ahead: Int = 0) = nextBit(true, ahead)
-//
-//    var head_window = 0
-//
-//    fun nextBit(peek: Boolean = false, ahead: Int = 0): Int {
-//        val (byte, streamSizeInBits) = calculateCurrentByte(bitPosition + ahead)
-//        val bp = (bitPosition + ahead) % 8
-//        val nextWozBit = byte.bit(7 - bp)
-//        head_window = head_window shl 1
-//        head_window = head_window or nextWozBit
-//        if (! peek) bitPosition = (bitPosition + 1) % streamSizeInBits
-//        val result = if ((head_window and 0x0f) !== 0x00) {
-//            (head_window and 0x02) shr 1
-//        } else {
-//            1
-//        }
-////        println("Current byte ${byte.h()}, bit: $result ($bitPosition)")
-//        return nextWozBit
-////        return result
-//    }
-
-//    fun next2Bits(): Int {
-//        val (byte, streamSizeInBits) = calculateCurrentByte()
-////        println("  current byte: ${byte.h()}")
-//        val inPosition = bitPosition % 8
-//        val result = when(inPosition) {
-//            0 -> (byte and 0xc0).shr(6)
-//            2 -> (byte and 0x30).shr(4)
-//            4 -> (byte and 0xc).shr(2)
-//            6 -> (byte and 3)
-//            else -> TODO("should never happen")
-//        }
-//        bitPosition = (bitPosition + 2) % streamSizeInBits
-////        println("Returning ${result.h()}")
-//        return result
-//    }
 
     fun incrementTrack() {
         quarterTrack = (quarterTrack + 1) % MAX_TRACK
@@ -308,7 +249,7 @@ class Woz(bytes: ByteArray) {
                     .or(bytes[i + 2].toInt().shl(16))
                     .or(bytes[i + 3].toInt().shl(24))
             i += 4
-            return result.toInt()
+            return result
 
         }
 
@@ -317,7 +258,7 @@ class Woz(bytes: ByteArray) {
         fun read4String() = String(read4Bytes())
 
         fun readN(length: Int): ByteArray {
-            val result = bytes.slice(i..i + length - 1).toByteArray()
+            val result = bytes.slice(i until i + length).toByteArray()
             i += length
             return result
         }
@@ -327,9 +268,9 @@ class Woz(bytes: ByteArray) {
         }
     }
 
-    data class Header(val name: String, val ff: Byte, val crc: ByteArray)
+    data class Header(val name: String, val ff: Byte, private val crc: ByteArray)
 
-    fun readHeader(s: Stream): Header {
+    private fun readHeader(s: Stream): Header {
         val name = s.read4String()
         val ff = s.read1()
         repeat(3) {
@@ -363,7 +304,7 @@ class Woz(bytes: ByteArray) {
          * Track number, each increment is a quarter track: 0 -> 0, 1 -> 0.25, 2 -> 0.5, ...
          */
         fun offsetFor(trackNumber: Int): Int {
-            if (! (trackNumber in 0..160)) {
+            if (trackNumber !in 0..160) {
                 throw IllegalArgumentException("Quarter track illegal: $trackNumber")
             }
             return map[trackNumber]!!
@@ -392,14 +333,6 @@ class Woz(bytes: ByteArray) {
         var i = start.toInt()
         var currentBit = 7
 
-        fun nextByte(): Int {
-            if (i >= bytes.size) {
-                println("Read a whole track")
-                i = 0
-            }
-            return bytes[i++].toInt() and 0xff
-        }
-
         fun next(): Int {
             if (currentBit < 0) {
                 currentBit = 7
@@ -411,8 +344,6 @@ class Woz(bytes: ByteArray) {
             return result
         }
     }
-
-//    fun read(file: File): BitStream = read(file.inputStream())
 
     fun read(bytes: ByteArray) {
         val stream = Stream(bytes)
@@ -428,14 +359,11 @@ class Woz(bytes: ByteArray) {
                 else -> Chunk(name, size)
             }
         }
-//        val offset = tmap.offsetFor(30)
-//        val trackInfo = trks.trks[offset.toInt()]
-//        return BitStream(bytes, trackInfo.startingBlock * 512)
     }
 }
 
 class BitStream(val bytes: ByteArray) {
-    var bitPosition = 0
+    private var bitPosition = 0
     var saved = 0
 
     fun next(): Int {
@@ -451,40 +379,29 @@ class BitStream(val bytes: ByteArray) {
     fun restore() { bitPosition = saved }
 }
 
-class _BitStream(val bytes: ByteArray) {
-    var position = 0
-    val bits = arrayListOf<Int>()
-    var saved = 0
-
-    init {
-        bytes.forEach { b ->
-            var i = 7
-            repeat(8) {
-                bits.add(b.bit(i--))
-            }
-        }
-        ""
-    }
-
-    fun next(): Int {
-        val result = bits[position]
-        position = (position + 1) % bytes.size
-        return result
-    }
-
-    fun save() { saved = position }
-    fun restore() { position = saved }
-
-    fun peek(count: Int): List<Int> {
-        var saved = position
-        val result = arrayListOf<Int>()
-        repeat(count) {
-            result.add(next())
-        }
-        position = saved
-        return result
-    }
-}
+//class _BitStream(val bytes: ByteArray) {
+//    var position = 0
+//    val bits = arrayListOf<Int>()
+//    var saved = 0
+//
+//    init {
+//        bytes.forEach { b ->
+//            var i = 7
+//            repeat(8) {
+//                bits.add(b.bit(i--))
+//            }
+//        }
+//    }
+//
+//    fun next(): Int {
+//        val result = bits[position]
+//        position = (position + 1) % bytes.size
+//        return result
+//    }
+//
+//    fun save() { saved = position }
+//    fun restore() { position = saved }
+//}
 
 val WRITE_TABLE = listOf(
     0x96, 0x97, 0x9A, 0x9B, 0x9D, 0x9E, 0x9F, 0xA6, 0xA7, 0xAB, 0xAC, 0xAD, 0xAE, 0xAF, 0xB2, 0xB3,
