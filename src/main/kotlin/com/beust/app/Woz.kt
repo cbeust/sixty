@@ -11,66 +11,74 @@ fun main() {
     val ins2 = File("d:\\pd\\Apple DIsks\\woz2\\The Apple at Play.woz").inputStream()
     val disk = WozDisk(ins)
     var carry = 1
+
     fun rol(v: Int): Int {
         val result = (v.shl(1).or(carry)) and 0xff
 //        carry = if (v.and(0x80) != 0) 1 else 0
         return result
     }
-//    repeat(100) {
-//        var acc = 0
-//        repeat(4) {
-//            val b = disk.next2Bits()
-////            println("Next 2 bits: $b")
-//            acc = acc.shl(2).or(b)
-//        }
-////        println(" ==> ${acc.h()}")
-//    }
-    var sectorsRead = 0
-    while (sectorsRead < 13) {
-        var b = disk.nextByte()
-        fun pair(): Int {
-            val b1 = disk.nextByte()
-            val b2 = disk.nextByte()
-            return rol(b1).and(b2).and(0xff)
-        }
-        start@ while(true) {
-            while (b != 0xd5) b = disk.nextByte()
-            if (disk.nextByte() != 0xaa) break@start
-            if (disk.nextByte() != 0x96) break@start
-            val volume = pair()
-            val track = pair()
-            val sector = pair()
-            val checksum = pair()
-            val expected = volume.xor(track).xor(sector)
-            println("Offset " + (0x600 + (disk.bitPosition / 8)).hh()
-                    + " volume: ${volume.h()} track: ${track.h()} sector: ${sector.h()}"
-                    + " checksum: $checksum expected: $expected")
-            if (disk.nextByte() != 0xde) {
-                println("PROBLEM")
+
+    val s = disk.peekBytes(2)
+    repeat(100) {
+        println(disk.nextByte().h() + " ")
+    }
+
+    fun readTest() {
+        var sectorsRead = 0
+        while (sectorsRead < 13) {
+            var b = disk.nextByte()
+            fun pair(): Int {
+                val b1 = disk.nextByte()
+                val b2 = disk.nextByte()
+                return rol(b1).and(b2).and(0xff)
             }
-            if (disk.nextByte() != 0xaa) {
-                println("PROBLEM")
+            start@ while (true) {
+                while (b != 0xd5) b = disk.nextByte()
+                if (disk.nextByte() != 0xaa) break@start
+                if (disk.nextByte() != 0x96) break@start
+                val volume = pair()
+                val track = pair()
+                val sector = pair()
+                val checksum = pair()
+                val expected = volume.xor(track).xor(sector)
+                println("Offset " + (0x600 + (disk.bitPosition / 8)).hh()
+                        + " volume: ${volume.h()} track: ${track.h()} sector: ${sector.h()}"
+                        + " checksum: $checksum expected: $expected")
+                if (disk.nextByte() != 0xde) {
+                    println("PROBLEM")
+                }
+                if (disk.nextByte() != 0xaa) {
+                    println("PROBLEM")
+                }
             }
-        }
-        b = disk.nextByte()
-        start2@ while(true) {
-            while (b != 0xd5) b = disk.nextByte()
-            if (disk.nextByte() != 0xaa) break@start2
-            if (disk.nextByte() != 0xad) break@start2
-            var c = 0
-            repeat(342) {
-                val nb = disk.nextByte()
-                c = c.xor(nb)
+            b = disk.nextByte()
+            println("next: " + disk.peekBytes(10))
+            start2@ while (true) {
+                while (b != 0xd5) b = disk.nextByte()
+                if (disk.nextByte() != 0xaa)
+                    break@start2
+                if (disk.nextByte() != 0xad)
+                    break@start2
+                var c = 0
+                repeat(342) {
+                    val nb = disk.nextByte()
+                    c = c.xor(nb)
+                }
+                val checksum1 = disk.nextByte()
+                //            val checksum2 = disk.nextByte()
+                println("  Data checksum: $checksum1")
+                if (disk.nextByte() != 0xde) {
+                    println("PROBLEM")
+                }
+                if (disk.nextByte(peek = true) != 0xaa) {
+                    println("PROBLEM: expected \$aa but got " + disk.nextByte(peek = true))
+                }
+                disk.nextByte()
+                if (disk.nextByte(peek = false) != 0xeb) {
+                    println("PROBLEM")
+                }
+                sectorsRead++
             }
-            val checksum = disk.nextByte()
-            println("  Data checksum: $checksum")
-            if (disk.nextByte() != 0xde) {
-                println("PROBLEM")
-            }
-            if (disk.nextByte() != 0xaa) {
-                println("PROBLEM")
-            }
-            sectorsRead++
         }
     }
 }
@@ -95,15 +103,21 @@ class WozDisk(val ins: InputStream) {
         }
         return result
     }
-    fun nextByte(): Int {
-//        val a = next2Bits().shl(6)
-//        val b = next2Bits().shl(4)
-//        val c = next2Bits().shl(2)
-//        val d = next2Bits()
-//        val result = a or b or c or d
+
+    fun peekByte(ahead: Int) = nextByte(true, ahead)
+
+    fun peekBytes(count: Int, ahead: Int = 0): String {
+        val result = arrayListOf<Int>()
+        repeat(count) {
+            result.add(nextByte(true, ahead + it))
+        }
+        return result.joinToString { it.h() }
+    }
+
+    fun nextByte(peek: Boolean = false, ahead: Int = 0): Int {
         var result = 0
         while (result and 0x80 == 0) {
-            val nb = nextBit()
+            val nb = nextBit(peek, ahead * 8)
             result = result.shl(1).or(nb)
         }
         val rh = result.h()
