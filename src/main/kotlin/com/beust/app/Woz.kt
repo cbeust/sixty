@@ -1,6 +1,5 @@
 package com.beust.app
 
-import com.beust.sixty.b
 import com.beust.sixty.h
 import com.beust.sixty.hh
 import java.io.File
@@ -18,7 +17,59 @@ fun main() {
         return result
     }
 
-    val s = disk.peekBytes(2)
+    fun pair(): Int {
+        val b1 = disk.nextByte()
+        val b2 = disk.nextByte()
+        return rol(b1).and(b2).and(0xff)
+    }
+
+    repeat(13) {
+        while (disk.peekBytes(3) != listOf(0xd5, 0xaa, 0x96)) {
+            disk.nextByte()
+        }
+        val s = disk.nextBytes(3)
+        val volume = pair()
+        val track = pair()
+        val sector = pair()
+        val checksum = pair()
+        if (volume.xor(track).xor(sector) != checksum) {
+            TODO("Checksum doesn't match")
+        }
+        println("Volume: $volume Track: $track Sector: $sector")
+        if (disk.nextBytes(3) != listOf(0xde, 0xaa, 0xeb)) {
+            TODO("Didn't find closing for address")
+        }
+
+        while (disk.peekBytes(3) != listOf(0xd5, 0xaa, 0xad)) {
+            disk.nextByte()
+        }
+        disk.nextBytes(3)
+        val bb00 = ArrayList<Int>(86)
+        var ind0 = 0
+        val bc00 = ArrayList<Int>(256)
+        var acc = 0
+        var ind1 = 0
+        repeat(86) {
+            val nb = READ_TABLE[disk.nextByte()]!!
+            val x = nb.xor(acc)
+            bb00.add(x)
+            acc = x
+        }
+        repeat(256) {
+            val nb = READ_TABLE[disk.nextByte()]!!
+            val x = nb.xor(acc)
+            bc00.add(x)
+            acc = x
+        }
+        val checksum1 = disk.nextByte()
+        if (sector == 12) {
+            println("PROBLEM")
+        }
+        if (disk.nextBytes(3) != listOf(0xde, 0xaa, 0xeb)) {
+            TODO("Didn't find closing for data")
+        }
+    }
+
     repeat(100) {
         println(disk.nextByte().h() + " ")
     }
@@ -27,11 +78,6 @@ fun main() {
         var sectorsRead = 0
         while (sectorsRead < 13) {
             var b = disk.nextByte()
-            fun pair(): Int {
-                val b1 = disk.nextByte()
-                val b2 = disk.nextByte()
-                return rol(b1).and(b2).and(0xff)
-            }
             start@ while (true) {
                 while (b != 0xd5) b = disk.nextByte()
                 if (disk.nextByte() != 0xaa) break@start
@@ -106,12 +152,22 @@ class WozDisk(val ins: InputStream) {
 
     fun peekByte(ahead: Int) = nextByte(true, ahead)
 
-    fun peekBytes(count: Int, ahead: Int = 0): String {
+    fun nextBytes(count: Int) : List<Int> {
         val result = arrayListOf<Int>()
         repeat(count) {
-            result.add(nextByte(true, ahead + it))
+            result.add(nextByte())
         }
-        return result.joinToString { it.h() }
+        return result
+    }
+
+    fun peekBytes(count: Int, ahead: Int = 0): List<Int> {
+        val position = bitPosition
+        val result = arrayListOf<Int>()
+        repeat(count) {
+            result.add(nextByte())
+        }
+        bitPosition = position
+        return result // .joinToString { it.h() }
     }
 
     fun nextByte(peek: Boolean = false, ahead: Int = 0): Int {
@@ -351,3 +407,36 @@ class Woz(bytes: ByteArray) {
 //        return BitStream(bytes, trackInfo.startingBlock * 512)
     }
 }
+
+val WRITE_TABLE = listOf(
+    0x96, 0x97, 0x9A, 0x9B, 0x9D, 0x9E, 0x9F, 0xA6, 0xA7, 0xAB, 0xAC, 0xAD, 0xAE, 0xAF, 0xB2, 0xB3,
+        0xB4, 0xB5, 0xB6, 0xB7, 0xB9, 0xBA, 0xBB, 0xBC, 0xBD, 0xBE, 0xBF, 0xCB, 0xCD, 0xCE, 0xCF, 0xD3,
+        0xD6, 0xD7, 0xD9, 0xDA, 0xDB, 0xDC, 0xDD, 0xDE, 0xDF, 0xE5, 0xE6, 0xE7, 0xE9, 0xEA, 0xEB, 0xEC,
+        0xED, 0xEE, 0xEF, 0xF2, 0xF3, 0xF4, 0xF5, 0xF6, 0xF7, 0xF9, 0xFA, 0xFB, 0xFC, 0xFD, 0xFE, 0xFF
+)
+
+val READ_TABLE = hashMapOf<Int, Int>().apply {
+    WRITE_TABLE.withIndex().forEach {  (ind, v) ->
+        this[v] = ind
+    }
+}
+
+val READ_TABLE_ = listOf(
+        0x00, 0x01, 0x98, 0x99, 0x02, 0x03, 0x9c, 0x04, 0x05, 0x06,
+        0xa0, 0xa1, 0xa2, 0xa3, 0xa4, 0xa5, 0x07, 0x08, 0xa8, 0xa9, 0xaa, 0x09, 0x0a, 0x0b, 0x0c, 0x0d,
+        0xb0, 0xb1, 0x0e, 0x0f, 0x10, 0x11, 0x12, 0x13, 0xb8, 0x14, 0x15, 0x16, 0x17, 0x18, 0x19, 0x1a,
+        0xc0, 0xc1, 0xc2, 0xc3, 0xc4, 0xc5, 0xc6, 0xc7, 0xc8, 0xc9, 0xca, 0x1b, 0xcc, 0x1c, 0x1d, 0x1e,
+        0xd0, 0xd1, 0xd2, 0x1f, 0xd4, 0xd5, 0x20, 0x21, 0xd8, 0x22, 0x23, 0x24, 0x25, 0x26, 0x27, 0x28,
+        0xe0, 0xe1, 0xe2, 0xe3, 0xe4, 0x29, 0x2a, 0x2b, 0xe8, 0x2c, 0x2d, 0x2e, 0x2f, 0x30, 0x31, 0x32,
+        0xf0, 0xf1, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38, 0xf8, 0x39, 0x3a, 0x3b, 0x3c, 0x3d, 0x3e, 0x3f
+)
+
+val INDICES = listOf(
+        0x08, 0x9, 0xc,
+        0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x18, 0x19, 0x1a,
+        0x20, 0x21, 0x28,
+        0x30, 0x31, 0x32, 0x34, 0x35, 0x38, 0x39, 0x3a, 0x3c,
+        0x40, 0x41, 0x42, 0x44, 0x45, 0x48,
+        0x50, 0x51, 0x52, 0x53, 0x54, 0x58,
+        0x60, 0x61, 0x68
+)
