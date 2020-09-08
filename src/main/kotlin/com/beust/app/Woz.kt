@@ -7,22 +7,11 @@ import java.io.InputStream
 
 
 fun main() {
-    val ins = Woz::class.java.classLoader.getResource("woz2/DOS 3.3 System Master.woz").openStream()
+    val ins = Woz::class.java.classLoader.getResource("woz2/DOS 3.3 System Master.woz")!!.openStream()
     val ins2 = File("d:\\pd\\Apple DIsks\\woz2\\The Apple at Play.woz").inputStream()
     val disk = WozDisk(ins)
-    var carry = 1
 
-    fun rol(v: Int): Int {
-        val result = (v.shl(1).or(carry)) and 0xff
-//        carry = if (v.and(0x80) != 0) 1 else 0
-        return result
-    }
-
-    fun pair(): Int {
-        val b1 = disk.nextByte()
-        val b2 = disk.nextByte()
-        return rol(b1).and(b2).and(0xff)
-    }
+    fun pair() = disk.nextByte().shl(1).and(disk.nextByte()).and(0xff)
 
     repeat(13) {
         run {
@@ -33,7 +22,7 @@ fun main() {
             val volume = pair()
             val track = pair()
             val sector = pair()
-            var checksum = pair()
+            val checksum = pair()
             if (volume.xor(track).xor(sector) != checksum) {
                 TODO("Checksum doesn't match")
             }
@@ -48,9 +37,9 @@ fun main() {
             disk.nextBytes(3)
         }
 
-        var buffer = IntArray(342)
-        var checksum: Int = 0
-        for (i in 0 until buffer.size) {
+        val buffer = IntArray(342)
+        var checksum = 0
+        for (i in buffer.indices) {
             val b = disk.nextByte()
             if (READ_TABLE[b] == null) {
                 println("INVALID NIBBLE")
@@ -68,7 +57,7 @@ fun main() {
         }
 
         val sectorData = IntArray(256)
-        for (i in 0..sectorData.size - 1) {
+        for (i in sectorData.indices) {
             val b1: Int = buffer[i]
             val lowerBits: Int = buffer.size - i % 86 - 1
             val b2: Int = buffer[lowerBits]
@@ -88,8 +77,9 @@ fun main() {
     }
 
     repeat(100) {
-        println(disk.nextByte().h() + " ")
+        print(disk.nextByte().h() + " ")
     }
+    println("")
 
 //    fun readTest() {
 //        var sectorsRead = 0
@@ -149,10 +139,10 @@ fun main() {
 fun Byte.bit(n: Int) = this.toInt().bit(n)
 fun Int.bit(n: Int) = this.and(1.shl(n)).shr(n)
 
-class WozDisk(val ins: InputStream) {
-    val MAX_TRACK = 160
+class WozDisk(ins: InputStream) {
+    private val MAX_TRACK = 160
 
-    var quarterTrack = 0
+    private var quarterTrack = 0
 //    var bitPosition = 0
     val bytes = ins.readAllBytes()
     val woz = Woz(bytes)
@@ -303,7 +293,7 @@ class Woz(bytes: ByteArray) {
         fun hasNext() = i < bytes.size
 
         fun read1(): Int {
-            return bytes[i++].toUByte().toInt()
+            return bytes[i++].toInt()
         }
 
         fun read4Bytes(): ByteArray {
@@ -313,10 +303,10 @@ class Woz(bytes: ByteArray) {
         }
         
         fun read4(): Int {
-            val result = bytes[i].toUByte().toUInt()
-                    .or(bytes[i + 1].toUByte().toUInt().shl(8))
-                    .or(bytes[i + 2].toUByte().toUInt().shl(16))
-                    .or(bytes[i + 3].toUByte().toUInt().shl(24))
+            val result = bytes[i].toInt()
+                    .or(bytes[i + 1].toInt().shl(8))
+                    .or(bytes[i + 2].toInt().shl(16))
+                    .or(bytes[i + 3].toInt().shl(24))
             i += 4
             return result.toInt()
 
@@ -410,7 +400,7 @@ class Woz(bytes: ByteArray) {
             return bytes[i++].toInt() and 0xff
         }
 
-        fun nextBit(): Int {
+        fun next(): Int {
             if (currentBit < 0) {
                 currentBit = 7
                 i++
@@ -431,7 +421,7 @@ class Woz(bytes: ByteArray) {
         while (! this::info.isInitialized || ! this::tmap.isInitialized || ! this::trks.isInitialized) {
             val name = stream.read4String()
             val size = stream.read4()
-            val result = when (name) {
+            when (name) {
                 "INFO" -> info = ChunkInfo(stream, size)
                 "TMAP" -> tmap = ChunkTmap(stream, size)
                 "TRKS" -> trks = ChunkTrks(stream, size)
@@ -445,6 +435,23 @@ class Woz(bytes: ByteArray) {
 }
 
 class BitStream(val bytes: ByteArray) {
+    var bitPosition = 0
+    var saved = 0
+
+    fun next(): Int {
+        val byteIndex = bitPosition / 8
+        val bitIndex = bitPosition % 8
+        val byte = bytes[byteIndex]
+        val result = byte.bit(7 - bitIndex)
+        bitPosition = (bitPosition + 1) % bytes.size
+        return result
+    }
+
+    fun save() { saved = bitPosition }
+    fun restore() { bitPosition = saved }
+}
+
+class _BitStream(val bytes: ByteArray) {
     var position = 0
     val bits = arrayListOf<Int>()
     var saved = 0
@@ -491,26 +498,6 @@ val READ_TABLE = hashMapOf<Int, Int>().apply {
         this[v] = ind
     }
 }
-
-val READ_TABLE_ = listOf(
-        0x00, 0x01, 0x98, 0x99, 0x02, 0x03, 0x9c, 0x04, 0x05, 0x06,
-        0xa0, 0xa1, 0xa2, 0xa3, 0xa4, 0xa5, 0x07, 0x08, 0xa8, 0xa9, 0xaa, 0x09, 0x0a, 0x0b, 0x0c, 0x0d,
-        0xb0, 0xb1, 0x0e, 0x0f, 0x10, 0x11, 0x12, 0x13, 0xb8, 0x14, 0x15, 0x16, 0x17, 0x18, 0x19, 0x1a,
-        0xc0, 0xc1, 0xc2, 0xc3, 0xc4, 0xc5, 0xc6, 0xc7, 0xc8, 0xc9, 0xca, 0x1b, 0xcc, 0x1c, 0x1d, 0x1e,
-        0xd0, 0xd1, 0xd2, 0x1f, 0xd4, 0xd5, 0x20, 0x21, 0xd8, 0x22, 0x23, 0x24, 0x25, 0x26, 0x27, 0x28,
-        0xe0, 0xe1, 0xe2, 0xe3, 0xe4, 0x29, 0x2a, 0x2b, 0xe8, 0x2c, 0x2d, 0x2e, 0x2f, 0x30, 0x31, 0x32,
-        0xf0, 0xf1, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38, 0xf8, 0x39, 0x3a, 0x3b, 0x3c, 0x3d, 0x3e, 0x3f
-)
-
-val INDICES = listOf(
-        0x08, 0x9, 0xc,
-        0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x18, 0x19, 0x1a,
-        0x20, 0x21, 0x28,
-        0x30, 0x31, 0x32, 0x34, 0x35, 0x38, 0x39, 0x3a, 0x3c,
-        0x40, 0x41, 0x42, 0x44, 0x45, 0x48,
-        0x50, 0x51, 0x52, 0x53, 0x54, 0x58,
-        0x60, 0x61, 0x68
-)
 
 /**
  * Found at $36c during stage 1, used by decoding routine a $c6a6.
