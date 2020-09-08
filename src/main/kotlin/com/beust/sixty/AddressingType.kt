@@ -14,7 +14,7 @@ enum class AddressingType {
             ABSOLUTE_X -> " $${word.hh()},X"
             ABSOLUTE_Y -> " $${word.hh()},Y"
             INDIRECT_X -> " ($${byte.h()},X)"
-            INDIRECT_Y -> " ($${byte.h()},Y)"
+            INDIRECT_Y -> " ($${byte.h()}),Y"
             REGISTER_A -> ""
             INDIRECT -> " ($${word.hh()})"
             RELATIVE -> " $${(pc + byte.toByte() + 2).hh()}"
