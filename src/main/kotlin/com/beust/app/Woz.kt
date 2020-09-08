@@ -5,6 +5,7 @@ import com.beust.sixty.hh
 import java.io.File
 import java.io.InputStream
 
+
 fun main() {
     val ins = Woz::class.java.classLoader.getResource("woz2/DOS 3.3 System Master.woz").openStream()
     val ins2 = File("d:\\pd\\Apple DIsks\\woz2\\The Apple at Play.woz").inputStream()
@@ -24,109 +25,125 @@ fun main() {
     }
 
     repeat(13) {
-        while (disk.peekBytes(3) != listOf(0xd5, 0xaa, 0x96)) {
-            disk.nextByte()
-        }
-        val s = disk.nextBytes(3)
-        val volume = pair()
-        val track = pair()
-        val sector = pair()
-        val checksum = pair()
-        if (volume.xor(track).xor(sector) != checksum) {
-            TODO("Checksum doesn't match")
-        }
-        println("Volume: $volume Track: $track Sector: $sector")
-        if (disk.nextBytes(3) != listOf(0xde, 0xaa, 0xeb)) {
-            TODO("Didn't find closing for address")
+        run {
+            while (disk.peekBytes(3) != listOf(0xd5, 0xaa, 0x96)) {
+                disk.nextByte()
+            }
+            val s = disk.nextBytes(3)
+            val volume = pair()
+            val track = pair()
+            val sector = pair()
+            var checksum = pair()
+            if (volume.xor(track).xor(sector) != checksum) {
+                TODO("Checksum doesn't match")
+            }
+            println("Volume: $volume Track: $track Sector: $sector")
+            if (disk.nextBytes(3) != listOf(0xde, 0xaa, 0xeb)) {
+                TODO("Didn't find closing for address")
+            }
+
+            while (disk.peekBytes(3) != listOf(0xd5, 0xaa, 0xad)) {
+                disk.nextByte()
+            }
+            disk.nextBytes(3)
         }
 
-        while (disk.peekBytes(3) != listOf(0xd5, 0xaa, 0xad)) {
-            disk.nextByte()
+        var buffer = IntArray(342)
+        var checksum: Int = 0
+        for (i in 0 until buffer.size) {
+            val b = disk.nextByte()
+            if (READ_TABLE[b] == null) {
+                println("INVALID NIBBLE")
+            }
+            checksum = checksum xor READ_TABLE[b]!!
+            if (i < 86) {
+                buffer[buffer.size - i - 1] = checksum
+            } else {
+                buffer[i - 86] = checksum
+            }
         }
-        disk.nextBytes(3)
-        val bb00 = ArrayList<Int>(86)
-        var ind0 = 0
-        val bc00 = ArrayList<Int>(256)
-        var acc = 0
-        var ind1 = 0
-        repeat(86) {
-            val nb = READ_TABLE[disk.nextByte()]!!
-            val x = nb.xor(acc)
-            bb00.add(x)
-            acc = x
+        checksum = checksum xor READ_TABLE[disk.nextByte()]!!
+        if (checksum != 0) {
+            TODO("BAD CHECKSUM")
         }
-        repeat(256) {
-            val nb = READ_TABLE[disk.nextByte()]!!
-            val x = nb.xor(acc)
-            bc00.add(x)
-            acc = x
+
+        val sectorData = IntArray(256)
+        for (i in 0..sectorData.size - 1) {
+            val b1: Int = buffer[i]
+            val lowerBits: Int = buffer.size - i % 86 - 1
+            val b2: Int = buffer[lowerBits]
+            val shiftPairs = i / 86 * 2
+            // shift b1 up by 2 bytes (contains bits 7-2)
+            // align 2 bits in b2 appropriately, mask off anything but
+            // bits 0 and 1 and then REVERSE THEM...
+            val reverseValues = intArrayOf(0x0, 0x2, 0x1, 0x3)
+            val b = b1 shl 2 or reverseValues[b2 shr shiftPairs and 0x03]
+            sectorData[i] = b
         }
-        val checksum1 = disk.nextByte()
-        if (sector == 12) {
-            println("PROBLEM")
-        }
+
         if (disk.nextBytes(3) != listOf(0xde, 0xaa, 0xeb)) {
             TODO("Didn't find closing for data")
         }
+        println("  Successfully read track")
     }
 
     repeat(100) {
         println(disk.nextByte().h() + " ")
     }
 
-    fun readTest() {
-        var sectorsRead = 0
-        while (sectorsRead < 13) {
-            var b = disk.nextByte()
-            start@ while (true) {
-                while (b != 0xd5) b = disk.nextByte()
-                if (disk.nextByte() != 0xaa) break@start
-                if (disk.nextByte() != 0x96) break@start
-                val volume = pair()
-                val track = pair()
-                val sector = pair()
-                val checksum = pair()
-                val expected = volume.xor(track).xor(sector)
-                println("Offset " + (0x600 + (disk.bitPosition / 8)).hh()
-                        + " volume: ${volume.h()} track: ${track.h()} sector: ${sector.h()}"
-                        + " checksum: $checksum expected: $expected")
-                if (disk.nextByte() != 0xde) {
-                    println("PROBLEM")
-                }
-                if (disk.nextByte() != 0xaa) {
-                    println("PROBLEM")
-                }
-            }
-            b = disk.nextByte()
-            println("next: " + disk.peekBytes(10))
-            start2@ while (true) {
-                while (b != 0xd5) b = disk.nextByte()
-                if (disk.nextByte() != 0xaa)
-                    break@start2
-                if (disk.nextByte() != 0xad)
-                    break@start2
-                var c = 0
-                repeat(342) {
-                    val nb = disk.nextByte()
-                    c = c.xor(nb)
-                }
-                val checksum1 = disk.nextByte()
-                //            val checksum2 = disk.nextByte()
-                println("  Data checksum: $checksum1")
-                if (disk.nextByte() != 0xde) {
-                    println("PROBLEM")
-                }
-                if (disk.nextByte(peek = true) != 0xaa) {
-                    println("PROBLEM: expected \$aa but got " + disk.nextByte(peek = true))
-                }
-                disk.nextByte()
-                if (disk.nextByte(peek = false) != 0xeb) {
-                    println("PROBLEM")
-                }
-                sectorsRead++
-            }
-        }
-    }
+//    fun readTest() {
+//        var sectorsRead = 0
+//        while (sectorsRead < 13) {
+//            var b = disk.nextByte()
+//            start@ while (true) {
+//                while (b != 0xd5) b = disk.nextByte()
+//                if (disk.nextByte() != 0xaa) break@start
+//                if (disk.nextByte() != 0x96) break@start
+//                val volume = pair()
+//                val track = pair()
+//                val sector = pair()
+//                val checksum = pair()
+//                val expected = volume.xor(track).xor(sector)
+//                println("Offset " + (0x600 + (disk.bitPosition / 8)).hh()
+//                        + " volume: ${volume.h()} track: ${track.h()} sector: ${sector.h()}"
+//                        + " checksum: $checksum expected: $expected")
+//                if (disk.nextByte() != 0xde) {
+//                    println("PROBLEM")
+//                }
+//                if (disk.nextByte() != 0xaa) {
+//                    println("PROBLEM")
+//                }
+//            }
+//            b = disk.nextByte()
+//            println("next: " + disk.peekBytes(10))
+//            start2@ while (true) {
+//                while (b != 0xd5) b = disk.nextByte()
+//                if (disk.nextByte() != 0xaa)
+//                    break@start2
+//                if (disk.nextByte() != 0xad)
+//                    break@start2
+//                var c = 0
+//                repeat(342) {
+//                    val nb = disk.nextByte()
+//                    c = c.xor(nb)
+//                }
+//                val checksum1 = disk.nextByte()
+//                //            val checksum2 = disk.nextByte()
+//                println("  Data checksum: $checksum1")
+//                if (disk.nextByte() != 0xde) {
+//                    println("PROBLEM")
+//                }
+//                if (disk.nextByte(peek = true) != 0xaa) {
+//                    println("PROBLEM: expected \$aa but got " + disk.nextByte(peek = true))
+//                }
+//                disk.nextByte()
+//                if (disk.nextByte(peek = false) != 0xeb) {
+//                    println("PROBLEM")
+//                }
+//                sectorsRead++
+//            }
+//        }
+//    }
 }
 
 fun Byte.bit(n: Int) = this.toInt().bit(n)
@@ -136,9 +153,10 @@ class WozDisk(val ins: InputStream) {
     val MAX_TRACK = 160
 
     var quarterTrack = 0
-    var bitPosition = 0
+//    var bitPosition = 0
     val bytes = ins.readAllBytes()
     val woz = Woz(bytes)
+    val bitStream = BitStream(bytes.slice(0x600 until bytes.size).toByteArray())
 
     fun createBits(bytes: ByteArray): List<Int> {
         val result = arrayListOf<Int>()
@@ -147,6 +165,16 @@ class WozDisk(val ins: InputStream) {
                 result.add(it.bit(7 - i))
             }
         }
+        return result
+    }
+
+    fun peekBytes(count: Int): ArrayList<Int> {
+        val result = arrayListOf<Int>()
+        bitStream.save()
+        repeat(count) {
+            result.add(nextByte())
+        }
+        bitStream.restore()
         return result
     }
 
@@ -160,27 +188,32 @@ class WozDisk(val ins: InputStream) {
         return result
     }
 
-    fun peekBytes(count: Int, ahead: Int = 0): List<Int> {
-        val position = bitPosition
-        val result = arrayListOf<Int>()
-        repeat(count) {
-            result.add(nextByte())
-        }
-        bitPosition = position
-        return result // .joinToString { it.h() }
-    }
+//    fun peekBytes(count: Int, ahead: Int = 0): List<Int> {
+//        val position = bitPosition
+//        val result = arrayListOf<Int>()
+//        repeat(count) {
+//            result.add(nextByte())
+//        }
+//        bitPosition = position
+//        return result // .joinToString { it.h() }
+//    }
 
     fun nextByte(peek: Boolean = false, ahead: Int = 0): Int {
         var result = 0
+        if (peek) {
+            bitStream.save()
+        }
         while (result and 0x80 == 0) {
-            val nb = nextBit(peek, ahead * 8)
+            val nb = bitStream.next()
+//            val nb = nextBit(peek, ahead * 8)
             result = result.shl(1).or(nb)
+        }
+        if (peek) {
+            bitStream.restore()
         }
         val rh = result.h()
         return result
     }
-
-    var head_window = 0
 
     /**
      * @return the next byte and the stream size in bits
@@ -199,31 +232,34 @@ class WozDisk(val ins: InputStream) {
         return byte to trk.bitCount
     }
 
-    fun peekBits(n: Int): List<Int> {
-        val result = arrayListOf<Int>()
-        repeat(n) {
-            result.add(peekBit(it))
-        }
-        return result
-    }
-
-    fun peekBit(ahead: Int = 0) = nextBit(true, ahead)
-
-    fun nextBit(peek: Boolean = false, ahead: Int = 0): Int {
-        val (byte, streamSizeInBits) = calculateCurrentByte(bitPosition + ahead)
-        head_window = head_window shl 1
-        val bp = (bitPosition + ahead) % 8
-        val nextWozBit = byte.bit(7 - bp)
+//    fun peekBits(n: Int): List<Int> {
+//        val result = arrayListOf<Int>()
+//        repeat(n) {
+//            result.add(peekBit(it))
+//        }
+//        return result
+//    }
+//
+//    fun peekBit(ahead: Int = 0) = nextBit(true, ahead)
+//
+//    var head_window = 0
+//
+//    fun nextBit(peek: Boolean = false, ahead: Int = 0): Int {
+//        val (byte, streamSizeInBits) = calculateCurrentByte(bitPosition + ahead)
+//        val bp = (bitPosition + ahead) % 8
+//        val nextWozBit = byte.bit(7 - bp)
+//        head_window = head_window shl 1
 //        head_window = head_window or nextWozBit
-        if (! peek) bitPosition = (bitPosition + 1) % streamSizeInBits
-//        val result = if (head_window and 0x0f !== 0x00) {
+//        if (! peek) bitPosition = (bitPosition + 1) % streamSizeInBits
+//        val result = if ((head_window and 0x0f) !== 0x00) {
 //            (head_window and 0x02) shr 1
 //        } else {
 //            1
 //        }
-//        println("Current byte ${byte.h()}, bit: $result ($bitPosition)")
-        return nextWozBit
-    }
+////        println("Current byte ${byte.h()}, bit: $result ($bitPosition)")
+//        return nextWozBit
+////        return result
+//    }
 
 //    fun next2Bits(): Int {
 //        val (byte, streamSizeInBits) = calculateCurrentByte()
@@ -408,6 +444,41 @@ class Woz(bytes: ByteArray) {
     }
 }
 
+class BitStream(val bytes: ByteArray) {
+    var position = 0
+    val bits = arrayListOf<Int>()
+    var saved = 0
+
+    init {
+        bytes.forEach { b ->
+            var i = 7
+            repeat(8) {
+                bits.add(b.bit(i--))
+            }
+        }
+        ""
+    }
+
+    fun next(): Int {
+        val result = bits[position]
+        position = (position + 1) % bytes.size
+        return result
+    }
+
+    fun save() { saved = position }
+    fun restore() { position = saved }
+
+    fun peek(count: Int): List<Int> {
+        var saved = position
+        val result = arrayListOf<Int>()
+        repeat(count) {
+            result.add(next())
+        }
+        position = saved
+        return result
+    }
+}
+
 val WRITE_TABLE = listOf(
     0x96, 0x97, 0x9A, 0x9B, 0x9D, 0x9E, 0x9F, 0xA6, 0xA7, 0xAB, 0xAC, 0xAD, 0xAE, 0xAF, 0xB2, 0xB3,
         0xB4, 0xB5, 0xB6, 0xB7, 0xB9, 0xBA, 0xBB, 0xBC, 0xBD, 0xBE, 0xBF, 0xCB, 0xCD, 0xCE, 0xCF, 0xD3,
@@ -439,4 +510,17 @@ val INDICES = listOf(
         0x40, 0x41, 0x42, 0x44, 0x45, 0x48,
         0x50, 0x51, 0x52, 0x53, 0x54, 0x58,
         0x60, 0x61, 0x68
+)
+
+/**
+ * Found at $36c during stage 1, used by decoding routine a $c6a6.
+ */
+val A36C = listOf(
+        0x00, 0x01, 0x00, 0x00, 0x02, 0x03, 0x00, 0x04, 0x05, 0x06, 0x00, 0x00, 0xff, 0xff, 0x00, 0x00,
+        0x07, 0x08, 0x00, 0x00, 0xff, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x00, 0x00, 0x0e, 0x0f, 0x10, 0x11,
+        0x12, 0x13, 0x00, 0x14, 0x15, 0x16, 0x17, 0x18, 0x19, 0x1a, 0x00, 0x00, 0xff, 0xff, 0x00, 0x00,
+        0xff, 0xff, 0x00, 0x00, 0xff, 0x1b, 0x00, 0x1c, 0x1d, 0x1e, 0x00, 0x00, 0xff, 0x1f, 0x00, 0x00,
+        0x20, 0x21, 0x00, 0x22, 0x23, 0x24, 0x25, 0x26, 0x27, 0x38, 0x00, 0x00, 0xff, 0xff, 0x00, 0x29,
+        0x2a, 0x2b, 0x00, 0x2c, 0x2d, 0x2e, 0x2f, 0x30, 0x31, 0x32, 0x00, 0x00, 0x33, 0x34, 0x35, 0x36,
+        0x37, 0x38, 0x00, 0x39, 0x3a, 0x3b, 0x3c, 0x3d, 0x3e, 0x3f
 )

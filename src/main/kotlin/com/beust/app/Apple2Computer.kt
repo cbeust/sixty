@@ -53,7 +53,7 @@ fun apple2Computer(debugMem: Boolean): Computer {
         override fun onRead(location: Int, value: Int): MemoryInterceptor.Response {
             val byte = when(location) {
                 in 0xc0e0 .. 0xc0e4 -> {
-                    println("Step motor: ${location.hh()}")
+//                    println("Step motor: ${location.hh()}")
                     value
                 }
                 0xc0e8 -> {
@@ -103,8 +103,9 @@ fun apple2Computer(debugMem: Boolean): Computer {
         }
 
         override fun onWrite(location: Int, value: Int) {
-            if (location >= 0x400 && location < 0x7ff && value >= 0x20 && value <= 0x7f ) {
+            if (location >= 0x400 && location < 0x7ff && value >= 0x41 && value <= 0x5a ) {
                 println("Drawing text: "+ value.and(0xff).toChar())
+                ""
 //                textScreen.drawMemoryLocation(location, value)
             } else if (location >= 0x2000 && location <= 0x3fff) {
 //                if (value != 0) println("Graphics: [$" + location.hh() + "]=$" + value.and(0xff).h())
