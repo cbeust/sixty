@@ -73,11 +73,13 @@ fun apple2Computer(debugMem: Boolean): Computer {
                     value
                 }
                 0xc0ec -> {
-//                    val pb = disk.peekBits(160)
-//                    println("  Expected next: ${pb.b()}")
-
-                    val v = if (value and 0x80 != 0) 0 else value
-                    val result = v.shl(1).or(disk.nextBit()).and(0xff)
+//                    val v = if (value and 0x80 != 0) 0 else value
+//                    val result = v.shl(1).or(disk.nextBit()).and(0xff)
+//                    if (result == 0xd5 || result == 0x96 || result == 0xad) {
+//                        val rh = result.h()
+//                        println("MAGIC: $result")
+//                    }
+                    val result = disk.nextByte()
                     result
                 }
                 else -> value
@@ -107,6 +109,8 @@ fun apple2Computer(debugMem: Boolean): Computer {
             } else if (location >= 0x2000 && location <= 0x3fff) {
 //                if (value != 0) println("Graphics: [$" + location.hh() + "]=$" + value.and(0xff).h())
 //                graphicsScreen.drawMemoryLocation(memory, location, value)
+            } else if (location >= 0x300 && location <= 0x3ff) {
+                println("mem[${location.hh()}]=${value.h()}")
             } else when(location) {
                 0xc054 -> {} // LOWSCR
                 0xc056 -> {} // LORES
@@ -121,24 +125,68 @@ fun apple2Computer(debugMem: Boolean): Computer {
         override fun onPcChanged(c: Computer) {
             val newValue = c.cpu.PC
             when(newValue) {
-//                0xc697 -> with(c) {
-//                    when(cpu.Y) {
+                0xc697 -> with(c) {
+                    when(cpu.Y) {
 //                        2 -> println("Read volume ${cpu.A}")
 //                        1 -> println("Read track ${cpu.A}")
-//                        0 -> println("Read sector ${cpu.A}")
-//                    }
-//                }
+                        0 -> {
+                            println("Read sector ${cpu.A}")
+                            ""
+                        }
+                        else -> {}
+
+                    }
+                }
 //                0xc67d -> {
 //                    println("Decoding data")
 //                }
 //                0xc699 -> {
 //                    println("Testing carry")
 //                }
-//                0xc6a6 -> {
-//                    println("Decoding data")
-//                }
-                0xc6f8 -> {
-                    println("JMP $801")
+                0xc6a6 -> {
+                    println("Decoding data sector $" + memory[0x3d].h() + " into " + c.word(address = 0x26).hh())
+                    ""
+                }
+                0x822 -> {
+                    println("BMI for X: " + c.cpu.X)
+                }
+                0x829 -> {
+                    println("Decrementing $8ff: " + memory[0x8ff].hh())
+                }
+                0x836 -> {
+                    println("Reading next sector: "+ memory[0x3d].h())
+                    ""
+                }
+                0x839 -> {
+                    println("Next part of stage 2")
+                }
+                0xc6ed -> {
+                    println("Incrementing $3d: " + memory[0x3d].h())
+                }
+                0xc6e9 -> {
+                    if (c.cpu.Y == 0) {
+                        println("Incrementing Y: " + c.cpu.Y)
+                    }
+                }
+                0xc6da -> {
+                    if (c.cpu.X == 0) {
+                        println("Decrementing x: " + c.cpu.X)
+                    }
+                }
+                0xc6a6 -> {
+                    println("Decoding data")
+                }
+                0xc6f6 -> {
+                    println("Done decoding at address " + c.word(address = 0x26).hh())
+                    ""
+                }
+                0xc6e9 -> {
+                    println("Incrementing Y: " + c.cpu.Y)
+                    ""
+                }
+                0xc6eb -> {
+                    println("Incrementing target memory address")
+                    ""
                 }
             }
         }

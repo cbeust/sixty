@@ -41,8 +41,11 @@ class Computer(val cpu: Cpu = Cpu(memory = Memory()),
         stop = true
     }
 
+    fun word(memory: Memory = cpu.memory, address: Int = cpu.PC + 1): Int
+        = memory[address].or(memory[address + 1].shl(8))
+
     fun byteWord(memory: Memory = cpu.memory, address: Int = cpu.PC + 1): Pair<Int, Int> {
-        return memory[address] to memory[address].or(memory[address + 1].shl(8))
+        return memory[address] to word(memory, address)
     }
 
     fun run(debugMemory: Boolean = false, debugAsm: Boolean = false): RunResult {
@@ -57,10 +60,10 @@ class Computer(val cpu: Cpu = Cpu(memory = Memory()),
             if (opCode == 0x60 && cpu.SP.isEmpty()) {
                 done = true
             } else {
-                if (cpu.PC == 0xc6f8) {
-                    println(this)
-                    println("breakpoint: " + memory[0xe].h())
-                }
+//                if (cpu.PC == 0xc6f8) {
+//                    println(this)
+//                    println("breakpoint: " + memory[0xe].h())
+//                }
 
                 if (debugAsm) {
                     val (byte, word) = byteWord()
@@ -69,6 +72,13 @@ class Computer(val cpu: Cpu = Cpu(memory = Memory()),
                     cpu.PC += SIZES[opCode]
                     cpu.nextInstruction(previousPc)
                     if (debugAsm) println(debugString + " " + cpu.toString())
+                    if (0xc67a == cpu.PC) {
+                        println("PROBLEM")
+                    }
+                    if (0xc6cb == cpu.PC) {
+                        disassemble(0xc6cb)
+                    }
+                    ""
                 } else {
                     previousPc = cpu.PC
                     cpu.PC += SIZES[opCode]
@@ -116,12 +126,12 @@ class Computer(val cpu: Cpu = Cpu(memory = Memory()),
 
     fun disassemble(start: Int, length: Int = 10) {
         var pc = start
-        val opCode = memory[pc]
-        val addressing = ADDRESSING_TYPES[opCode]
         repeat(length) {
+            val opCode = memory[pc]
+            val addressing = ADDRESSING_TYPES[opCode]
             val byte = memory[pc + 1]
             val word = memory[pc + 1].or(memory[pc + 2].shl(8))
-            println(formatPc(pc, opCode) + addressing.toString(pc, byte, word))
+            println(formatPc(pc, opCode) + formatInstruction(opCode, pc, byte, word) + " " + cpu.toString())
             pc += SIZES[opCode]
         }
     }
