@@ -22,7 +22,7 @@ fun apple2Computer(debugMem: Boolean): Computer {
         loadResource("Apple2e.rom", 0xc000)
         loadResource("DISK2.ROM", 0xc600)
         // When restarting, don't move the head 50 tracks, only 1
-        this[0xc63c] = 1
+        this[0xc63c] = 4
 //        this[0xfcac] = BEQ
 //        this[0xfcb1] = BEQ
 //        load("d:\\pd\\Apple Disks\\dos", 0x9600)
