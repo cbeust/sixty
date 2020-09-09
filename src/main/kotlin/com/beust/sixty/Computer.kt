@@ -135,6 +135,7 @@ class Computer(val cpu: Cpu = Cpu(memory = Memory()),
             println(formatPc(pc, opCode) + formatInstruction(opCode, pc, byte, word) + " " + cpu.toString())
             pc += SIZES[opCode]
         }
+        println("===================")
     }
 
     override fun toString(): String {

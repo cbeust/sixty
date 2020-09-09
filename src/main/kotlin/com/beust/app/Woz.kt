@@ -75,9 +75,14 @@ class WozDisk(ins: InputStream,
                 val trk = woz.trks.trks[tmapOffset]
                 val streamSizeInBytes = (trk.bitCount / 8)
                 val trackOffset = trk.startingBlock * 512
-                val slice = bytes.slice(trackOffset.. (trackOffset + streamSizeInBytes))
-                println("Track ${track / 4.0} starts at ${trackOffset.hh()}")
-                bitStreamFactory(slice)
+                try {
+                    val slice = bytes.slice(trackOffset..(trackOffset + streamSizeInBytes))
+                    println("Track ${track / 4.0} starts at ${trackOffset.hh()}")
+                    bitStreamFactory(slice)
+                } catch(ex: Exception) {
+                    println("PROBLEM")
+                    throw ex
+                }
             }
         }
 
@@ -148,7 +153,7 @@ class Woz(bytes: ByteArray) {
 
         }
 
-        fun read2(): Int = read1().or(read1().shl(8))
+        fun read2(): Int = read1().toUByte().toUInt().or(read1().toUByte().toUInt().shl(8)).toInt()
 
         fun read4String() = String(read4Bytes())
 

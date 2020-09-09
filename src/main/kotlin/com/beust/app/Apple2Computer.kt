@@ -61,8 +61,28 @@ fun apple2Computer(debugMem: Boolean): Computer {
             } else if (location in 0x2000..0x3fff) {
 //                if (value != 0) println("Graphics: [$" + location.hh() + "]=$" + value.and(0xff).h())
 //                graphicsScreen.drawMemoryLocation(memory, location, value)
+            } else if (location == 0x36) {
+                if (value == 0x30) {
+                    println("Watching 36")
+                }
             } else if (location in 0x300..0x3ff) {
 //                println("mem[${location.hh()}]=${value.h()}")
+            }else if (location in 0xc000..0xc100) {
+                when(location) {
+                    0xC000 -> {} // KBD/CLR80STORE
+                    0xC001 -> {} // SET80STORE
+                    0xC006 -> {} // SETSLOTCXROM
+                    0xc007 -> {} // SETINTCXROM
+                    0xC00C -> {} // CLR80COL
+                    0xC00E -> {} // CLRALTCHAR
+                    0xC054 -> {} // LOWSCR
+                    0xC055 -> {} // HISCR
+                    else -> {
+                        println("SOFT SWITCH: " + location.hh())
+                        ""
+                    }
+
+                }
             } else when(location) {
                 0xc054 -> {} // LOWSCR
                 0xc056 -> {} // LORES

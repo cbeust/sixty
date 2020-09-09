@@ -9,10 +9,16 @@ import com.beust.app.StackPointer
  */
 
 data class Cpu(val memory: Memory,
-        var A: Int = 0, var X: Int = 0, var Y: Int = 0, var PC: Int = 0,
+        var A: Int = 0, var X: Int = 0, var Y: Int = 0,
         val P: StatusFlags = StatusFlags()) {
     val SP: StackPointer = StackPointer(memory)
-
+    var PC: Int = 0
+        set(n) {
+            if (n < 0x100) {
+                TODO("SHOULD NOT HAPPEN")
+            }
+            field = n
+        }
     fun toWord(address: Int) = memory[address].or(memory[address + 1].shl(8))
 
     fun nextInstruction(pc: Int = PC, debugMemory: Boolean = false, debugAsm: Boolean = false) {
