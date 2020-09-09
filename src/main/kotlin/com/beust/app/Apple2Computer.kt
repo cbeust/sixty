@@ -48,23 +48,37 @@ fun apple2Computer(debugMem: Boolean): Computer {
     }
 
     val interceptor = object: MemoryInterceptor {
+        var magnets = BooleanArray(4) { _ -> false }
+        var track = 0
         val disk = WozDisk(Woz::class.java.classLoader.getResource("woz2/DOS 3.3 System Master.woz").openStream())
+
+        fun magnet(index: Int, state: Boolean) {
+            val t = track
+            if (! state) {
+                if (magnets[(index + 1) and 3]) track++
+            } else {
+                if (magnets[(index + 1) and 3]) track--
+            }
+            println("Magnet $index=$state")
+                if (t != track) println("  New track position: $track")
+            magnets[index] = state
+        }
 
         override fun onRead(location: Int, value: Int): MemoryInterceptor.Response {
             val byte = when(location) {
                 in 0xc0e0 .. 0xc0e7 -> {
-                    val message = when (location) {
-                        0xc0e0 -> "  motor 0 phase off"
-                        0xc0e1 -> "  motor 0 phase on"
-                        0xc0e2 -> "  motor 1 phase off"
-                        0xc0e3 -> "  motor 1 phase on"
-                        0xc0e4 -> "  motor 2 phase off"
-                        0xc0e5 -> "  motor 2 phase on"
-                        0xc0e6 -> "  motor 3 phase off"
-                        0xc0e7 -> "  motor 3 phase on"
+                    // Seek address: $b9a0
+                    when (location) {
+                        0xc0e0 -> magnet(0, false)
+                        0xc0e1 -> magnet(0, true)
+                        0xc0e2 -> magnet(1, false)
+                        0xc0e3 -> magnet(1, true)
+                        0xc0e4 -> magnet(2, false)
+                        0xc0e5 -> magnet(2, true)
+                        0xc0e6 -> magnet(3, false)
+                        0xc0e7 -> magnet(3, true)
                         else -> ""
                     }
-                    println(message)
                     value
                 }
                 0xc0e8 -> {
