@@ -6,145 +6,15 @@ import com.beust.sixty.hh
 import java.io.File
 import java.io.InputStream
 
-
-fun main() {
-    val ins = Woz::class.java.classLoader.getResource("woz2/DOS 3.3 System Master.woz")!!.openStream()
-    val ins2 = File("d:\\pd\\Apple DIsks\\woz2\\The Apple at Play.woz").inputStream()
-    val disk = WozDisk(ins)
-
-    fun pair() = disk.nextByte().shl(1).and(disk.nextByte()).and(0xff)
-
-    repeat(13) {
-        run {
-            while (disk.peekBytes(3) != listOf(0xd5, 0xaa, 0x96)) {
-                disk.nextByte()
-            }
-            val s = disk.nextBytes(3)
-            val volume = pair()
-            val track = pair()
-            val sector = pair()
-            val checksum = pair()
-            if (volume.xor(track).xor(sector) != checksum) {
-                TODO("Checksum doesn't match")
-            }
-            println("Volume: $volume Track: $track Sector: $sector")
-            if (disk.nextBytes(3) != listOf(0xde, 0xaa, 0xeb)) {
-                TODO("Didn't find closing for address")
-            }
-
-            while (disk.peekBytes(3) != listOf(0xd5, 0xaa, 0xad)) {
-                disk.nextByte()
-            }
-            disk.nextBytes(3)
-        }
-
-        val buffer = IntArray(342)
-        var checksum = 0
-        for (i in buffer.indices) {
-            val b = disk.nextByte()
-            if (READ_TABLE[b] == null) {
-                println("INVALID NIBBLE")
-            }
-            checksum = checksum xor READ_TABLE[b]!!
-            if (i < 86) {
-                buffer[buffer.size - i - 1] = checksum
-            } else {
-                buffer[i - 86] = checksum
-            }
-        }
-        checksum = checksum xor READ_TABLE[disk.nextByte()]!!
-        if (checksum != 0) {
-            TODO("BAD CHECKSUM")
-        }
-
-        val sectorData = IntArray(256)
-        for (i in sectorData.indices) {
-            val b1: Int = buffer[i]
-            val lowerBits: Int = buffer.size - i % 86 - 1
-            val b2: Int = buffer[lowerBits]
-            val shiftPairs = i / 86 * 2
-            // shift b1 up by 2 bytes (contains bits 7-2)
-            // align 2 bits in b2 appropriately, mask off anything but
-            // bits 0 and 1 and then REVERSE THEM...
-            val reverseValues = intArrayOf(0x0, 0x2, 0x1, 0x3)
-            val b = b1 shl 2 or reverseValues[b2 shr shiftPairs and 0x03]
-            sectorData[i] = b
-        }
-
-        if (disk.nextBytes(3) != listOf(0xde, 0xaa, 0xeb)) {
-            TODO("Didn't find closing for data")
-        }
-        println("  Successfully read track")
-    }
-
-    repeat(100) {
-        print(disk.nextByte().h() + " ")
-    }
-    println("")
-
-//    fun readTest() {
-//        var sectorsRead = 0
-//        while (sectorsRead < 13) {
-//            var b = disk.nextByte()
-//            start@ while (true) {
-//                while (b != 0xd5) b = disk.nextByte()
-//                if (disk.nextByte() != 0xaa) break@start
-//                if (disk.nextByte() != 0x96) break@start
-//                val volume = pair()
-//                val track = pair()
-//                val sector = pair()
-//                val checksum = pair()
-//                val expected = volume.xor(track).xor(sector)
-//                println("Offset " + (0x600 + (disk.bitPosition / 8)).hh()
-//                        + " volume: ${volume.h()} track: ${track.h()} sector: ${sector.h()}"
-//                        + " checksum: $checksum expected: $expected")
-//                if (disk.nextByte() != 0xde) {
-//                    println("PROBLEM")
-//                }
-//                if (disk.nextByte() != 0xaa) {
-//                    println("PROBLEM")
-//                }
-//            }
-//            b = disk.nextByte()
-//            println("next: " + disk.peekBytes(10))
-//            start2@ while (true) {
-//                while (b != 0xd5) b = disk.nextByte()
-//                if (disk.nextByte() != 0xaa)
-//                    break@start2
-//                if (disk.nextByte() != 0xad)
-//                    break@start2
-//                var c = 0
-//                repeat(342) {
-//                    val nb = disk.nextByte()
-//                    c = c.xor(nb)
-//                }
-//                val checksum1 = disk.nextByte()
-//                //            val checksum2 = disk.nextByte()
-//                println("  Data checksum: $checksum1")
-//                if (disk.nextByte() != 0xde) {
-//                    println("PROBLEM")
-//                }
-//                if (disk.nextByte(peek = true) != 0xaa) {
-//                    println("PROBLEM: expected \$aa but got " + disk.nextByte(peek = true))
-//                }
-//                disk.nextByte()
-//                if (disk.nextByte(peek = false) != 0xeb) {
-//                    println("PROBLEM")
-//                }
-//                sectorsRead++
-//            }
-//        }
-//    }
-}
-
-class WozDisk(ins: InputStream, bitStreamFactory: (bytes: ByteArray) -> IBitStream = { bytes -> BitStream(bytes) }) {
+class WozDisk(ins: InputStream,
+        val bitStreamFactory: (bytes: List<Byte>) -> IBitStream = { bytes -> BitStream(bytes) }) {
     private val MAX_TRACK = 160
 
-    private var quarterTrack = 0
+    var track = 0
 //    var bitPosition = 0
     private val bytes: ByteArray = ins.readAllBytes()
     private val woz = Woz(bytes)
-    private val bitStream: IBitStream = bitStreamFactory(bytes.slice(0x600 until bytes.size).toByteArray())
+    private val bitStreams = mutableMapOf<Int, IBitStream>()
 
     fun createBits(bytes: ByteArray): List<Int> {
         val result = arrayListOf<Int>()
@@ -156,8 +26,18 @@ class WozDisk(ins: InputStream, bitStreamFactory: (bytes: ByteArray) -> IBitStre
         return result
     }
 
+    fun incTrack() {
+        track++
+        if (track >= MAX_TRACK) track = MAX_TRACK - 1
+    }
+
+    fun decTrack() {
+        if (track > 0) track--
+    }
+
     fun peekBytes(count: Int): ArrayList<Int> {
         val result = arrayListOf<Int>()
+        val b = bitStream
         bitStream.save()
         repeat(count) {
             result.add(nextByte())
@@ -175,6 +55,19 @@ class WozDisk(ins: InputStream, bitStreamFactory: (bytes: ByteArray) -> IBitStre
         }
         return result
     }
+
+    val bitStream: IBitStream
+        get() {
+            return bitStreams.getOrPut(track) {
+                val tmapOffset = woz.tmap.offsetFor(track)
+                val trk = woz.trks.trks[tmapOffset]
+                val streamSizeInBytes = (trk.bitCount / 8)
+                val trackOffset = trk.startingBlock * 512
+                val slice = bytes.slice(trackOffset.. (trackOffset + streamSizeInBytes))
+                println("Track $track starts at ${trackOffset.hh()}")
+                bitStreamFactory(slice)
+            }
+        }
 
     fun nextByte(peek: Boolean = false): Int {
         var result = 0
@@ -196,25 +89,15 @@ class WozDisk(ins: InputStream, bitStreamFactory: (bytes: ByteArray) -> IBitStre
     /**
      * @return the next byte and the stream size in bits
      */
-    fun calculateCurrentByte(currentBitPosition: Int): Pair<Int, Int> {
-        val tmapOffset = woz.tmap.offsetFor(quarterTrack)
-        val trk = woz.trks.trks[tmapOffset]
-        val streamSizeInBytes = (trk.bitCount / 8)
-        val relativeOffset = currentBitPosition / 8
-        val byteOffset = (trk.startingBlock * 512 + relativeOffset) % streamSizeInBytes
-        val byte = bytes[byteOffset].toInt().and(0xff)
-        return byte to trk.bitCount
-    }
-
-    fun incrementTrack() {
-        quarterTrack = (quarterTrack + 1) % MAX_TRACK
-    }
-
-    fun decrementTrack() {
-        if (quarterTrack == 0) quarterTrack = MAX_TRACK - 1
-        else quarterTrack--
-    }
-
+//    fun calculateCurrentByte(currentBitPosition: Int): Pair<Int, Int> {
+//        val tmapOffset = woz.tmap.offsetFor(track)
+//        val trk = woz.trks.trks[tmapOffset]
+//        val streamSizeInBytes = (trk.bitCount / 8)
+//        val relativeOffset = currentBitPosition / 8
+//        val byteOffset = (trk.startingBlock * 512 + relativeOffset) % streamSizeInBytes
+//        val byte = bytes[byteOffset].toInt().and(0xff)
+//        return byte to trk.bitCount
+//    }
 }
 
 class Woz(bytes: ByteArray) {
@@ -226,6 +109,7 @@ class Woz(bytes: ByteArray) {
         read(bytes)
     }
 
+    @Suppress("EXPERIMENTAL_API_USAGE")
     class Stream(val bytes: ByteArray) {
         var i = 0
 
@@ -242,12 +126,12 @@ class Woz(bytes: ByteArray) {
         }
         
         fun read4(): Int {
-            val result = bytes[i].toInt()
-                    .or(bytes[i + 1].toInt().shl(8))
-                    .or(bytes[i + 2].toInt().shl(16))
-                    .or(bytes[i + 3].toInt().shl(24))
+            val result = bytes[i].toUByte().toUInt()
+                    .or(bytes[i + 1].toUByte().toUInt().shl(8))
+                    .or(bytes[i + 2].toUByte().toUInt().shl(16))
+                    .or(bytes[i + 3].toUByte().toUInt().shl(24))
             i += 4
-            return result
+            return result.toInt()
 
         }
 
@@ -345,7 +229,7 @@ class Woz(bytes: ByteArray) {
 }
 
 abstract class IBitStream() {
-    protected var position: Int = 0
+    var position: Int = 0
     private var saved: Int = 0
 
     abstract fun next(): Int
@@ -355,14 +239,18 @@ abstract class IBitStream() {
 }
 
 
-class BitStream(val bytes: ByteArray): IBitStream() {
+class BitStream(val bytes: List<Byte>): IBitStream() {
     override fun next(): Int {
         val byteIndex = position / 8
         val bitIndex = position % 8
         val byte = bytes[byteIndex]
         val result = byte.bit(7 - bitIndex)
-        position = (position + 1) % bytes.size
+        position = (position + 1) % (bytes.size * 8)
         return result
+    }
+
+    override fun toString(): String {
+        return "{BitStream position:$position}"
     }
 }
 
