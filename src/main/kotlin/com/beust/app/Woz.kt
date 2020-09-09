@@ -327,22 +327,6 @@ class Woz(bytes: ByteArray) {
         }
     }
 
-    class BitStream(val bytes: ByteArray, start: Long) {
-        var i = start.toInt()
-        var currentBit = 7
-
-        fun next(): Int {
-            if (currentBit < 0) {
-                currentBit = 7
-                i++
-            }
-            val result = bytes[i].toInt().and(1.shl(currentBit)).shr(currentBit)
-            println("Index: $i Byte: ${bytes[i].h()} Bit: $result")
-            currentBit--
-            return result
-        }
-    }
-
     fun read(bytes: ByteArray) {
         val stream = Stream(bytes)
         println("Header: " + readHeader(stream))
