@@ -1,0 +1,284 @@
+Newsgroups: comp.sys.apple2.programmer
+Subject: Re: Disk Drive softswitches
+Summary:
+Expires:
+References: <28k0bv$pk3@usenet.INS.CWRU.Edu>
+Sender:
+Followup-To:
+Distribution:
+Organization: The Universal Society for the Prevention of Reality
+Keywords:
+
+In article <28k0bv$pk3@usenet.INS.CWRU.Edu> dt408@cleveland.Freenet.Edu (John
+T. Criswell) writes:
+>
+>Hi.
+>	Does anyone know how to use the disk drive softswitches
+>to read and write data to the 5 1/4 inch disk drive?  I've read
+>a little about them in Beneath Apple Prodos from out library,
+>but it doesn't give a very detailed description of how to use
+>them.  If anyone could either send me some information on it
+>or could tell me the name of a book which describes them
+>very well, I'd really appreciate.  I want to write a format
+>program, and the 5 1/4 inch device driver in ProDOS does
+>not have a FORMAT call.
+>	If you do have any information on it, please either
+>send it to my e-mail address below or post it here.  Maybe
+>other people have questions on it, too.
+
+The other good book to look in is _Beneath_Apple_DOS_ (the predecessor to
+_Beneath_Apple_ProDOS_).  The description of the soft switches is almost
+the same, but it has one thing that _Beneath_Apple_ProDOS_ doesn't have--
+a complete description of the internal logic of DOS 3.3.  I highly
+recommend booting a DOS 3.3 disk and disassembling the RWTS routines (using
+the Monitor's "L" command) while following along in the logic description.
+Just about everything you ever wanted to know about controlling the disk
+drive can be learned this way.
+
+
+The 5.25" drive is controlled by the interface card's I/O locations, found
+at memory locations $C0n0 through $C0nF, where "n" is a hexadecimal digit
+from 9 to F, depending on what slot the card is in (9 is slot 1, A is slot
+2, and so on).  These sixteen I/O locations are paired to form eight
+"switches"--referencing location X turns the switch off, and referencing
+location X+1 turns it on.
+
+Addr.  Name    Purpose
+-----  ----    -------
+$C0n0  PHASE0  Stepper motor phase 0
+$C0n2  PHASE1  Stepper motor phase 1
+$C0n4  PHASE2  Stepper motor phase 2
+$C0n6  PHASE3  Stepper motor phase 3
+$C0n8  ENABLE  Turn disk drive off or on
+$C0nA  SELECT  Select drive 1 or 2
+$C0nC  Q6      (see below)
+$C0nE  Q7      (see below)
+
+To turn the disk drive on, reference location $C0n9.  To turn it off,
+reference location $C0n8.  For example,
+
+DRIVEON   LDA $C089,X
+          RTS
+DRIVEOFF  LDA $C088,X
+          RTS
+(In this example and the examples that follow, the X-register is assumed to
+contain the desired slot number multiplied by $10--e.g. for slot 6, store
+a $60 in the X-register.)
+
+After turning the drive on, your program should delay for a while before
+doing any reading or writing, in order to give the disk drive motor time to
+come up to full speed.  A delay of about one second is sufficient (DOS 3.3
+is able to reduce the delay by watching the read data until it starts to
+change).
+
+To select drive one, reference $C0nA.  To select drive two, reference
+$C0nB.  For example,
+
+DRIVE1    LDA $C08A,X
+          RTS
+DRIVE2    LDA $C08B,X
+          RTS
+
+The Q6 and Q7 switches are used together to control several operations:
+reading, writing, and testing the write-protect notch.
+
+To read data from the disk drive, first reference location $C0nE--this
+activates "read" mode.  Then wait until the high bit at $C0nC turns on, and
+read the data byte from $C0nC.
+
+          LDA $C08E,X
+          ...
+READLP    LDA $C08C,X
+          BPL READLP
+          STA DATA
+
+To sense the write-protect switch, reference location $C0nD, and read the
+high bit of $C0nE.  If the high bit is set, then the disk is
+write-protected.
+
+          LDA $C08D,X
+          LDA $C08E,X
+          BMI WRPROT
+
+Of all the operations the disk drive can perform, writing is probably the
+most difficult.  The hardware writes one bit every four cycles, which means
+your program has to feed bytes to the controller at precise 32-cycle
+intervals.  The controller will not tell you when it's time to write the
+next byte--your code has to figure this out all by itself, by carefully
+counting out the execution times of the instructions in the write loop.
+
+To prepare the controller for writing, first test the write-protect switch.
+Then turn on "write" mode by referencing $C0nF.  The byte written to $C0nF
+or $C0nD will be stored within the controller, and your program should then
+immediately reference $C0nC, which causes the controller to start
+transmitting the bits to the disk.  When your program is finished writing,
+it should immediately reference $C0nE to turn off "write" mode.
+
+          LDA $C08D,X
+          LDA $C08E,X
+          BMI ERROR
+          LDA DATA1     (absolute load = 4 cycles)
+          STA $C08F,X   (5 cycles)
+          BIT $C08C,X   (4)
+          JSR PAUSE     (6)
+          LDA DATA2     (4)
+          STA $C08D,X   (5)
+          BIT $C08C,X   (4)
+          JSR PAUSE     (6)
+          ...
+          LDA DATALAST  (4)
+          STA $C08D,X   (5)
+          BIT $C08C,X   (4)
+          JSR PAUSE     (6)
+          NOP           (2)
+          NOP           (2)
+          BIT $C08E,X   (4)
+          RTS
+
+PAUSE     PHA           (3)
+          PLA           (4)
+          RTS           (6)
+
+Important things to notice in the above code:
+
+     * The first byte is written by storing at $C0nF, and subsequent bytes
+       are written by storing at $C0nD.
+     * There are exactly 32 cycles between references to $C0nD, and exactly
+       32 cycles between references to $C0nC.
+     * After writing the final byte, there is a delay before turning off
+       write mode, to give the bits time to get written.
+     * Interrupts must be disabled when writing.  If an interrupt were to
+       occur, the timing would become hopelessly lost.  (Interrupts should
+       also be disabled when reading, to avoid missing data.)
+
+In practice, the above routine is horribly impractical for writing actual
+data--more likely you would use a loop to write a sector of data at a time.
+When writing the loop, be sure to remember the timing nuances of branches
+taken or not taken, as well as indexing or branching across a page
+boundary.  (If you're on a IIGS, you don't need to worry about system
+speed--the system automatically switches to "slow" speed when the disk
+drive is turned on.)
+
+If writing is the hardest action to perform, then moving the arm from one
+track to another must be the hardest to explain.
+
+The arm is attached to a stepper motor with four positions.  This motor may
+be though of like the hand of a clock, which can point to 12 o'clock
+("phase 0"), 3 o'clock ("phase 1"), 6 o'clock ("phase 2") or 9 o'clock
+("phase 3").  When the "hand" moves clockwise, the read/write head moves
+inward, toward higher-numbered tracks, and when the hand moves
+counter-clockwise, the head moves outward toward lower-numbered tracks.  A
+complete revolution of the "hand" causes the head to pass over four tracks.
+
+At each of the four "clock positions," or "phases," there is an
+electromagnet, and the "hand" may be attracted toward a position by turning
+on the corresponding magnet and waiting.  The "hand" may be made to revolve
+around the "clock" by doing this several times in succession--for example
+to move clockwise from 12 o'clock back to 12 o'clock,
+
+     Turn on the 3 o'clock magnet ("phase 1")
+     Wait
+     Turn off the 3 o'clock magnet
+     Turn on the 6 o'clock magnet ("phase 2")
+     Wait
+     Turn off the 6 o'clock magnet
+     Turn on the 9 o'clock magnet ("phase 3")
+     Wait
+     Turn off the 9 o'clock magnet
+     Turn on the 12 o'clock magnet ("phase 0")
+     Wait
+     Turn off the 12 o'clock magnet
+
+After this is done, the head will be positioned four tracks farther inward
+than it was previously.
+
+Each position of the "clock hand" corresponds to a track on the disk.
+Track 0 is "underneath" the 12 o'clock position.  One would probably expect,
+then, to find track 1 under the 3 o'clock position, track 2 under 6 o'clock
+and so forth.
+
+Unfortunately, this isn't quite the case.  The read/write head on an Apple
+drive is wider than the tracks, so if data were recorded on track 1, some
+of it would "slop over" and interfere with the data on track 0 and track
+2.  Therefore, only the even-numbered tracks are actually used on a normal
+disk.  The operating system multiplies all track numbers by two before
+moving the head--the operating system's track 1 is on physical track 2
+(under the 6 o'clock position), the operating system's track 2 is on
+physical track 4 (under the 12 o'clock position), etc.  The 3 o'clock and 9
+o'clock positions are unused on normal disks (but they are often used on
+copy-protected disks, and are usually called "half tracks").
+
+The disk hardware provides no means for determining what track the head is
+currently positioned over, or what clock position the stepper motor is
+pointing to.  Therefore, the disk I/O routines must keep their own records
+of the current head position.  If the I/O routines don't know what the
+current track is, the usual method of coping with the situation is to
+assume that we're currently on some high-numbered track beyond the
+innermost position, and move the head from there to track 0.  This is what
+causes the horrible grinding sound when a 5.25" disk boots.
+
+Here are a couple of routines to move the head to any desired track:
+
+; TRKMOVE -- move the head to any track on a 5.25" disk.
+; Inputs: A-reg = desired track
+;         X-reg = slot * 16
+; Assumes the disk drive has already been turned on
+;
+PHASE0   EQU $C080           ;Stepper motor phase 0
+;
+WAIT     EQU $FCA8           ;Monitor routine to waste time
+;
+TRKMOVE  ASL                 ;(Some assemblers require ASL A here)
+TRKMOVE1 STX SLOT            ;Save slot number
+         SEC
+         SBC CURPH           ;Compare with current position
+         BEQ DONE            ;Quit if already there
+         BCS IN1             ;Moving inward?
+         EOR #$FF            ;No--take 2's-complement of track difference...
+         TAY                 ;...and save in Y reg
+         INY
+         BCC OUT1            ;(branch always taken)
+IN1      TAY                 ;Save track diff in Y reg
+IN2      INC CURPH           ;Move one track inward
+         BCS STEP            ;(branch always taken)
+OUT1     DEC CURPH           ;Move one track outward
+STEP     PHP                 ;Save step direction (in C flag)
+         LDA CURPH
+         AND #3              ;Convert track to phase number
+         ASL                 ;(Some assemblers require ASL A here)
+         ORA SLOT
+         TAX
+         LDA PHASE0+1,X      ;Turn on motor phase
+         LDA #$56
+         JSR WAIT            ;Waste some time
+         LDA PHASE0,X        ;Turn off motor phase
+         PLP
+         DEY                 ;More steps left?
+         BEQ DONE            ;If not, quit
+         BCS IN2             ;If going inward, do it again
+         BCC OUT1            ;If going outward, do it again
+DONE     RTS
+CURPH    DS  1               ;Space to save current track number
+SLOT     DS  1               ;Space to save slot number
+;
+; RECAL -- routine to recalibrate head to track 0
+; Call this if you don't know what track you're on
+; Inputs:  X-reg = slot number * 16
+; Assumes disk drive is already turned on
+; (Warning:  This routine is noisy!)
+;
+RECAL    LDA #$50            ;Pretend we're on phase 80 (track 40)
+         STA CURPH
+         LDA #0              ;Go to track 0
+         JMP TRKMOVE1        ;Do it
+
+If you want to position the head over one of the unused tracks (the 3
+o'clock and 9 o'clock tracks), enter the subroutine at TRKMOVE1 instead of
+TRKMOVE.  This skips the conversion of the operating system's track number
+into the physical track number.
+
+           - Neil Parker
+--
+Neil Parker                 No cute ASCII art...no cute quote...no cute
+nparker@cie.uoregon.edu     disclaimer...no deposit, no return...
+parker@corona.uoregon.edu   (This space intentionally left blank:           )
