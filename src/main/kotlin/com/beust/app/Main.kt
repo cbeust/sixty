@@ -62,7 +62,7 @@ fun testDisk() {
         while (disk.peekBytes(3) != listOf(0xd5, 0xaa, 0x96)) {
             disk.nextByte()
         }
-        println("Found d5 aa 96 at position " + (disk.bitStream.position / 8).hh())
+        println("Found d5 aa 96 at position " + (disk.position / 8).hh())
         val s = disk.nextBytes(3)
         val volume = pair()
         val track = pair()

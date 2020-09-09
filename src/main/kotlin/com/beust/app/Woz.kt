@@ -10,11 +10,17 @@ class WozDisk(ins: InputStream,
         val bitStreamFactory: (bytes: List<Byte>) -> IBitStream = { bytes -> BitStream(bytes) }) {
     private val MAX_TRACK = 160
 
+    var position: Int = 0
+    private var saved: Int = 0
+
     var track = 0
 //    var bitPosition = 0
     private val bytes: ByteArray = ins.readAllBytes()
     private val woz = Woz(bytes)
     private val bitStreams = mutableMapOf<Int, IBitStream>()
+
+    private fun save() { saved = position }
+    private fun restore() { position = saved }
 
     fun createBits(bytes: ByteArray): List<Int> {
         val result = arrayListOf<Int>()
@@ -38,11 +44,11 @@ class WozDisk(ins: InputStream,
     fun peekBytes(count: Int): ArrayList<Int> {
         val result = arrayListOf<Int>()
         val b = bitStream
-        bitStream.save()
+        save()
         repeat(count) {
             result.add(nextByte())
         }
-        bitStream.restore()
+        restore()
         return result
     }
 
@@ -64,7 +70,7 @@ class WozDisk(ins: InputStream,
                 val streamSizeInBytes = (trk.bitCount / 8)
                 val trackOffset = trk.startingBlock * 512
                 val slice = bytes.slice(trackOffset.. (trackOffset + streamSizeInBytes))
-                println("Track $track starts at ${trackOffset.hh()}")
+                println("Track ${track / 4.0} starts at ${trackOffset.hh()}")
                 bitStreamFactory(slice)
             }
         }
@@ -72,15 +78,16 @@ class WozDisk(ins: InputStream,
     fun nextByte(peek: Boolean = false): Int {
         var result = 0
         if (peek) {
-            bitStream.save()
+            save()
         }
         while (result and 0x80 == 0) {
-            val nb = bitStream.next()
+            val (newPosition, nb) = bitStream.next(position)
+            position = newPosition
 //            val nb = nextBit(peek, ahead * 8)
             result = result.shl(1).or(nb)
         }
         if (peek) {
-            bitStream.restore()
+            restore()
         }
         val rh = result.h()
         return result
@@ -229,28 +236,19 @@ class Woz(bytes: ByteArray) {
 }
 
 abstract class IBitStream() {
-    var position: Int = 0
-    private var saved: Int = 0
-
-    abstract fun next(): Int
-
-    fun save() { saved = position }
-    fun restore() { position = saved }
+    /**
+     * @return a pair of the new index and the returned bit.
+     */
+    abstract fun next(position: Int): Pair<Int, Int>
 }
 
-
 class BitStream(val bytes: List<Byte>): IBitStream() {
-    override fun next(): Int {
+    override fun next(position: Int): Pair<Int, Int> {
         val byteIndex = position / 8
         val bitIndex = position % 8
         val byte = bytes[byteIndex]
         val result = byte.bit(7 - bitIndex)
-        position = (position + 1) % (bytes.size * 8)
-        return result
-    }
-
-    override fun toString(): String {
-        return "{BitStream position:$position}"
+        return Pair((position + 1) % (bytes.size * 8), result)
     }
 }
 
