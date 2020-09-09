@@ -35,9 +35,12 @@ class WozDisk(ins: InputStream,
     fun incTrack() {
         track++
         if (track >= MAX_TRACK) track = MAX_TRACK - 1
+        track++
+        if (track >= MAX_TRACK) track = MAX_TRACK - 1
     }
 
     fun decTrack() {
+        if (track > 0) track--
         if (track > 0) track--
     }
 
@@ -66,6 +69,9 @@ class WozDisk(ins: InputStream,
         get() {
             return bitStreams.getOrPut(track) {
                 val tmapOffset = woz.tmap.offsetFor(track)
+                if (tmapOffset == -1) {
+                    TODO("-1 tmap offset")
+                }
                 val trk = woz.trks.trks[tmapOffset]
                 val streamSizeInBytes = (trk.bitCount / 8)
                 val trackOffset = trk.startingBlock * 512

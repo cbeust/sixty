@@ -18,7 +18,7 @@ import kotlin.system.exitProcess
 val DEBUG = false
 
 fun main() {
-    val choice = 3
+    val choice = 2
 
     when(choice) {
         1 -> {
@@ -31,7 +31,7 @@ fun main() {
             val d = true
             val debugMem = DEBUG
             val debugAsm = DEBUG
-            apple2Computer(debugMem).run(false, debugAsm)//true, true)
+            apple2Computer(debugMem).run(debugMem, debugAsm)//true, true)
         }
         3 -> {
             testDisk()

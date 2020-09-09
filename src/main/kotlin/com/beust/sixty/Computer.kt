@@ -7,6 +7,7 @@ open class BaseMemoryListener {
 interface MemoryInterceptor {
     class Response(val override: Boolean, val value: Int)
 
+    val computer: Computer
     fun onRead(location: Int, value: Int): Response
     fun onWrite(location: Int, value: Int): Response
 }
