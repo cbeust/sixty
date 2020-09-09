@@ -52,8 +52,19 @@ fun apple2Computer(debugMem: Boolean): Computer {
 
         override fun onRead(location: Int, value: Int): MemoryInterceptor.Response {
             val byte = when(location) {
-                in 0xc0e0 .. 0xc0e4 -> {
-//                    println("Step motor: ${location.hh()}")
+                in 0xc0e0 .. 0xc0e7 -> {
+                    val message = when (location) {
+                        0xc0e0 -> "  motor 0 phase off"
+                        0xc0e1 -> "  motor 0 phase on"
+                        0xc0e2 -> "  motor 1 phase off"
+                        0xc0e3 -> "  motor 1 phase on"
+                        0xc0e4 -> "  motor 2 phase off"
+                        0xc0e5 -> "  motor 2 phase on"
+                        0xc0e6 -> "  motor 3 phase off"
+                        0xc0e7 -> "  motor 3 phase on"
+                        else -> ""
+                    }
+                    println(message)
                     value
                 }
                 0xc0e8 -> {
@@ -103,7 +114,7 @@ fun apple2Computer(debugMem: Boolean): Computer {
         }
 
         override fun onWrite(location: Int, value: Int) {
-            if (location >= 0x400 && location < 0x7ff && value >= 0x41 && value <= 0x5a ) {
+            if (location >= 0x400 && location < 0x477 && value >= 0x41 && value <= 0x5a ) {
                 println("Drawing text: "+ value.and(0xff).toChar())
                 ""
 //                textScreen.drawMemoryLocation(location, value)
@@ -115,6 +126,14 @@ fun apple2Computer(debugMem: Boolean): Computer {
             } else when(location) {
                 0xc054 -> {} // LOWSCR
                 0xc056 -> {} // LORES
+                0x478 -> {
+                    val t = memory[0x478]
+                    if (t == 0xa0) {
+                        println("STOP")
+                    }
+                    println("Moving target track to " + t)
+                    ""
+                }
                 else -> {}
             }
 

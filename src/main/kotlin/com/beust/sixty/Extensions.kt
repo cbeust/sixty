@@ -6,6 +6,9 @@ fun Byte.h(): String = String.format("%02x", this).toUpperCase()
 fun Int.h(): String = String.format("%02x", this).toUpperCase()
 fun Int.hh(): String = String.format("%04x", this).toUpperCase()
 
+fun Byte.bit(n: Int) = this.toInt().bit(n)
+fun Int.bit(n: Int) = this.and(1.shl(n)).shr(n)
+
 //fun Int.b() = Integer.toBinaryString(this)
 
 /** Int to binary */

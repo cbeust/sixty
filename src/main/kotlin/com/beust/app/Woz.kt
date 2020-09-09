@@ -1,5 +1,6 @@
 package com.beust.app
 
+import com.beust.sixty.bit
 import com.beust.sixty.h
 import com.beust.sixty.hh
 import java.io.File
@@ -136,17 +137,14 @@ fun main() {
 //    }
 }
 
-fun Byte.bit(n: Int) = this.toInt().bit(n)
-fun Int.bit(n: Int) = this.and(1.shl(n)).shr(n)
-
-class WozDisk(ins: InputStream) {
+class WozDisk(ins: InputStream, bitStreamFactory: (bytes: ByteArray) -> IBitStream = { bytes -> BitStream(bytes) }) {
     private val MAX_TRACK = 160
 
     private var quarterTrack = 0
 //    var bitPosition = 0
     private val bytes: ByteArray = ins.readAllBytes()
     private val woz = Woz(bytes)
-    private val bitStream = BitStream(bytes.slice(0x600 until bytes.size).toByteArray())
+    private val bitStream: IBitStream = bitStreamFactory(bytes.slice(0x600 until bytes.size).toByteArray())
 
     fun createBits(bytes: ByteArray): List<Int> {
         val result = arrayListOf<Int>()
@@ -362,46 +360,27 @@ class Woz(bytes: ByteArray) {
     }
 }
 
-class BitStream(val bytes: ByteArray) {
-    private var bitPosition = 0
-    var saved = 0
+abstract class IBitStream() {
+    protected var position: Int = 0
+    private var saved: Int = 0
 
-    fun next(): Int {
-        val byteIndex = bitPosition / 8
-        val bitIndex = bitPosition % 8
-        val byte = bytes[byteIndex]
-        val result = byte.bit(7 - bitIndex)
-        bitPosition = (bitPosition + 1) % bytes.size
-        return result
-    }
+    abstract fun next(): Int
 
-    fun save() { saved = bitPosition }
-    fun restore() { bitPosition = saved }
+    fun save() { saved = position }
+    fun restore() { position = saved }
 }
 
-//class _BitStream(val bytes: ByteArray) {
-//    var position = 0
-//    val bits = arrayListOf<Int>()
-//    var saved = 0
-//
-//    init {
-//        bytes.forEach { b ->
-//            var i = 7
-//            repeat(8) {
-//                bits.add(b.bit(i--))
-//            }
-//        }
-//    }
-//
-//    fun next(): Int {
-//        val result = bits[position]
-//        position = (position + 1) % bytes.size
-//        return result
-//    }
-//
-//    fun save() { saved = position }
-//    fun restore() { position = saved }
-//}
+
+class BitStream(val bytes: ByteArray): IBitStream() {
+    override fun next(): Int {
+        val byteIndex = position / 8
+        val bitIndex = position % 8
+        val byte = bytes[byteIndex]
+        val result = byte.bit(7 - bitIndex)
+        position = (position + 1) % bytes.size
+        return result
+    }
+}
 
 val WRITE_TABLE = listOf(
     0x96, 0x97, 0x9A, 0x9B, 0x9D, 0x9E, 0x9F, 0xA6, 0xA7, 0xAB, 0xAC, 0xAD, 0xAE, 0xAF, 0xB2, 0xB3,
