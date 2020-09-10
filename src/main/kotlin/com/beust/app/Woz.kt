@@ -37,11 +37,13 @@ class WozDisk(ins: InputStream,
         if (track >= MAX_TRACK) track = MAX_TRACK - 1
         track++
         if (track >= MAX_TRACK) track = MAX_TRACK - 1
+        println("New track on WozDisk: $" + track.h() + " (" + track / 4.0 + ")")
     }
 
     fun decTrack() {
         if (track > 0) track--
         if (track > 0) track--
+        println("New track on WozDisk: $" + track.h() + " (" + track / 4.0 + ")")
     }
 
     fun peekBytes(count: Int): ArrayList<Int> {

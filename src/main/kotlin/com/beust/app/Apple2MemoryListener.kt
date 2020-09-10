@@ -13,6 +13,10 @@ class Apple2MemoryListener(val debugMem: () -> Boolean): MemoryListener() {
 
     override fun onWrite(location: Int, value: Int) {
         val memory = computer!!.memory
+        if (location == 0x7d0) {
+            println("Storing into 0x7d0: " + value.toChar() + " " + value.h())
+            ""
+        }
         if (location == 0x48f && value == 0xc1) {
             println("FOUND AN A")
         }

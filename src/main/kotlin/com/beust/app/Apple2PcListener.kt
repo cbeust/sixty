@@ -14,6 +14,9 @@ class Apple2PcListener: PcListener {
             0xc28b -> {
                 println("Waiting for key")
             }
+            0x3d0, 0x9dbf -> {
+                println("Calling AppleSoft")
+            }
 //                0xc67d -> {
 //                    println("Decoding data")
 //                }
@@ -41,7 +44,7 @@ class Apple2PcListener: PcListener {
 //                    println("Incrementing $3d: " + memory[0x3d].h())
 //                }
             0xaca3 -> {
-                println("Storing potentially in $36 [$42]=" + memory[0x42].h() + memory[0x43].h())
+//                println("Storing potentially in $36 [$42]=" + memory[0x42].h() + memory[0x43].h())
                 ""
             }
             0x9fc5 -> {

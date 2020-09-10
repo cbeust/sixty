@@ -46,7 +46,7 @@ fun apple2Computer(debugMem: Boolean): Computer {
             val result = when (location) {
                 in StepperMotor.RANGE -> StepperMotor.onRead(location, value, disk)
                 in SoftDisk.RANGE -> SoftDisk.onRead(location, value, disk)
-                in SoftSwitches.RANGE -> SoftSwitches.onRead(location, value)
+                in SoftSwitches.RANGE -> SoftSwitches.onRead(computer, location, value)
                 else -> MemoryInterceptor.Response(true, value)
             }
             return result
@@ -57,15 +57,15 @@ fun apple2Computer(debugMem: Boolean): Computer {
 
             if (location in SoftSwitches.RANGE) {
                 result = SoftSwitches.onWrite(location, value)
-            } else if (location == 0x36 || location == 0x37) {
-                if (location == 0x37 && value != 0xfd) {
-                    println("Should not write here")
-                    result = MemoryInterceptor.Response(true, value)
-                } else if (value != 189 && value != 240) {
-                    println("Writing to CSWL: $value")
-                    return MemoryInterceptor.Response(true, value)
-                    result = MemoryInterceptor.Response(true, value)
-                }
+//            } else if (location == 0x36 || location == 0x37) {
+//                if (location == 0x37 && value != 0xfd) {
+//                    println("Should not write here")
+//                    result = MemoryInterceptor.Response(true, value)
+//                } else if (value != 189 && value != 240) {
+//                    println("Writing to CSWL: $value")
+//                    return MemoryInterceptor.Response(true, value)
+//                    result = MemoryInterceptor.Response(true, value)
+//                }
             }
             return result
         }

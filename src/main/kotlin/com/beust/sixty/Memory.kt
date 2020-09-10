@@ -94,7 +94,7 @@ class Memory(val size: Int = 0x10000, vararg bytes: Int) {
             }
             sb.append(" ")
             repeat(8) { byte ->
-                val c = this[address + line * lineLength + byte - 0x80].toChar()
+                val c = (this[address + line * lineLength + byte] and 0x7f).toChar()
                 sb.append(String.format("%c", c))
             }
             println(sb.toString())
