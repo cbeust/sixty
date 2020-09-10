@@ -92,7 +92,13 @@ class Memory(val size: Int = 0x10000, vararg bytes: Int) {
             repeat(8) { byte ->
                 sb.append(String.format("%02x ", this[address + line * lineLength + byte]))
             }
+            sb.append(" ")
+            repeat(8) { byte ->
+                val c = this[address + line * lineLength + byte - 0x80].toChar()
+                sb.append(String.format("%c", c))
+            }
             println(sb.toString())
         }
+        println("===")
     }
 }

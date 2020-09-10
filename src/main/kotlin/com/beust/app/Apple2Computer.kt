@@ -22,113 +22,21 @@ fun apple2Computer(debugMem: Boolean): Computer {
 
 //        load("d:\\pd\\Apple Disks\\roms\\APPLE2E.ROM", 0xc000)
 //        load("d:\\pd\\Apple Disks\\roms\\C000.dump", 0xc000)
-        loadResource("Apple2e.rom", 0xc000)
+//        loadResource("Apple2e.rom", 0xc000)
+        loadResource("Apple2_Plus.rom", 0xd000)
         loadResource("DISK2.ROM", 0xc600)
 
         // When restarting, don't move the head 50 tracks, only 1
         this[0xc63c] = 4
     }
 
-    val listener = object: MemoryListener() {
-        fun logMem(i: Int, value: Int, extra: String = "") {
-            lastMemDebug.add("mem[${i.hh()}] = ${(value.and(0xff)).h()} $extra")
-        }
-
-        override fun onWrite(location: Int, value: Int) {
-            if (location == 0x48f && value == 0xc1) {
-                println("FOUND AN A")
-            }
-            if (location in 0x400..0x740 && value in 0xc1..0xda) {
-                println("Drawing text: "+ value.and(0xff).toChar())
-                ""
-//                textScreen.drawMemoryLocation(location, value)
-            } else if (location in 0x2000..0x3fff) {
-//                if (value != 0) println("Graphics: [$" + location.hh() + "]=$" + value.and(0xff).h())
-//                graphicsScreen.drawMemoryLocation(memory, location, value)
-            } else if (location == 0x36) {
-                if (value == 0x30) {
-                    println("Watching 36")
-                }
-            } else if (location in 0x300..0x3ff) {
-//                println("mem[${location.hh()}]=${value.h()}")
-            } else when(location) {
-                0xc054 -> {} // LOWSCR
-                0xc056 -> {} // LORES
-                0x2e -> {
-                    println("----- Reading track $" + memory[0x2e].h())
-                    ""
-                }
-                0x2d -> {
-                    println("-----     Reading sector $" + memory[0x2d].h())
-                    ""
-                }
-                0x42 -> {
-                    if (value == 0x36) {
-                        println("Writing $36 in $42")
-                        ""
-                    }
-                }
-                else -> {}
-            }
-
-            if (debugMem) logMem(location, value)
-        }
-
-    }
-    val pcListener = object: PcListener {
-        override fun onPcChanged(c: Computer) {
-            val newValue = c.cpu.PC
-            when(newValue) {
-                0xc28b -> {
-                    println("Waiting for key")
-                }
-//                0xc67d -> {
-//                    println("Decoding data")
-//                }
-//                0xc699 -> {
-//                    println("Testing carry")
-//                }
-//                0xc6a6 -> {
-//                    println("Decoding data sector $" + memory[0x3d].h() + " into " + c.word(address = 0x26).hh())
-//                    ""
-//                }
-//                0x822 -> {
-//                    println("BMI for X: " + c.cpu.X)
-//                }
-//                0x829 -> {
-//                    println("Decrementing $8ff: " + memory[0x8ff].hh())
-//                }
-//                0x836 -> {
-//                    println("Reading next sector: "+ memory[0x3d].h())
-//                    ""
-//                }
-//                0x839 -> {
-//                    println("Next part of stage 2")
-//                }
-//                0xc6ed -> {
-//                    println("Incrementing $3d: " + memory[0x3d].h())
-//                }
-                0xaca3 -> {
-                    println("Storing potentially in $36 [$42]=" + memory[0x42].h() + memory[0x43].h())
-                    ""
-                }
-                0x9fc5 -> {
-                    // TODO
-                    memory[0x36] = 0xf0
-                    memory[0x37] = 0xfd
-                }
-                0x9eba -> {
-                    // TODO
-                    memory[0x38] = 0x1b
-                    memory[0x39] = 0xfd
-
-                }
-            }
-        }
-    }
+    val listener = Apple2MemoryListener { -> debugMem }
+    val pcListener = Apple2PcListener()
 
     val appleCpu = Cpu(memory = memory)
     val result = Computer(cpu = appleCpu, pcListener = pcListener)
+    listener.computer = result
+    pcListener.computer = result
 
     val interceptor = object: MemoryInterceptor {
         override val computer = result

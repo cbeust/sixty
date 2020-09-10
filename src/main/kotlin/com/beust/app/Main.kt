@@ -15,7 +15,8 @@ import java.io.File
 import java.nio.file.Paths
 import kotlin.system.exitProcess
 
-val DEBUG = false
+var DEBUG = false
+val BREAKPOINT = 0x3dab
 
 fun main() {
     val choice = 2
@@ -28,9 +29,8 @@ fun main() {
             c.run(_debugAsm = false)
         }
         2 -> {
-            val d = true
-            val debugMem = false
-            val debugAsm = false
+            val debugMem = DEBUG
+            val debugAsm = DEBUG
             apple2Computer(debugMem).run(debugMemory = debugMem, _debugAsm = debugAsm)//true, true)
         }
         3 -> {

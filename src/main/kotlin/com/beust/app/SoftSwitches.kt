@@ -7,8 +7,12 @@ object SoftSwitches {
     val RANGE = 0xc000..0xc0ff
 
     fun onRead(location: Int, value: Int): MemoryInterceptor.Response {
+        var result = 0xd
         when(location) {
-            0xC000 -> {} // KBD/CLR80STORE
+            0xC000 -> {
+                DEBUG = true
+                result = 0xc1
+            } // KBD/CLR80STORE
             0xC001 -> {} // SET80STORE
             0xC006 -> {} // SETSLOTCXROM
             0xc007 -> {} // SETINTCXROM
@@ -16,7 +20,7 @@ object SoftSwitches {
             0xC00E -> {} // CLRALTCHAR
             0xC010 -> {} // KBDSTRB
             0xC015 -> {} // RDCXROM
-            0xC018 -> {} // RD80STORE
+            0xC018 -> { result = 0x8d } // RD80STORE
             0xC01C -> {} // RDPAGE2
             0xC054 -> {} // LOWSCR
             0xC051 -> {} // TXTSET
@@ -26,7 +30,7 @@ object SoftSwitches {
                 println("Unknown soft switch: " + location.hh())
             }
         }
-        return MemoryInterceptor.Response(false, value)
+        return MemoryInterceptor.Response(true, result)
     }
 
     fun onWrite(location: Int, value: Int): MemoryInterceptor.Response {

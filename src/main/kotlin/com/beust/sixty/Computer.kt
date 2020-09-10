@@ -1,5 +1,8 @@
 package com.beust.sixty
 
+import com.beust.app.BREAKPOINT
+import com.beust.app.DEBUG
+
 open class BaseMemoryListener {
     val lastMemDebug = arrayListOf<String>()
 }
@@ -63,26 +66,20 @@ class Computer(val cpu: Cpu = Cpu(memory = Memory()),
             if (opCode == 0x60 && cpu.SP.isEmpty()) {
                 done = true
             } else {
-//                if (cpu.PC == 0xc6f8) {
-//                    println(this)
-//                    println("breakpoint: " + memory[0xe].h())
-//                }
+                if (cpu.PC == BREAKPOINT) {
+                    println(this)
+                    println("breakpoint")
+                }
 
                 try {
-                    debugAsm = debugAsm || cycles >= 13415307
-                    if (debugAsm) {
+//                    debugAsm = debugAsm || cpu.PC >= BREAKPOINT
+                    if (DEBUG) {
                         val (byte, word) = byteWord()
                         val debugString = formatPc(cpu.PC, opCode) + formatInstruction(opCode, cpu.PC, byte, word)
                         previousPc = cpu.PC
                         cpu.PC += SIZES[opCode]
                         cpu.nextInstruction(previousPc)
-                        if (debugAsm) println(debugString + " " + cpu.toString())
-                        if (0xc67a == cpu.PC) {
-                            println("PROBLEM")
-                        }
-                        if (0xc6cb == cpu.PC) {
-                            disassemble(0xc6cb)
-                        }
+                        if (debugAsm) println(debugString + " " + cpu.toString() + " " + cycles)
                         ""
                     } else {
                         previousPc = cpu.PC
