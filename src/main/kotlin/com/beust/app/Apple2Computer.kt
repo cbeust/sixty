@@ -26,7 +26,7 @@ fun apple2Computer(debugMem: Boolean): Computer {
         loadResource("Apple2_Plus.rom", 0xd000)
         loadResource("DISK2.ROM", 0xc600)
 
-        // When restarting, don't move the head 50 tracks, only 1
+        // When restarting, no need to move the head 0x50 tracks
         this[0xc63c] = 4
     }
 
