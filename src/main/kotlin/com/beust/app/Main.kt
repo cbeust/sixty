@@ -25,13 +25,13 @@ fun main() {
             println("Running the following 6502 program which will display HELLO")
             val c = TestComputer.createComputer()
             c.disassemble(start = 0, length = 15)
-            c.run(debugAsm = false)
+            c.run(_debugAsm = false)
         }
         2 -> {
             val d = true
-            val debugMem = DEBUG
-            val debugAsm = DEBUG
-            apple2Computer(debugMem).run(debugMem, debugAsm)//true, true)
+            val debugMem = false
+            val debugAsm = false
+            apple2Computer(debugMem).run(debugMemory = debugMem, _debugAsm = debugAsm)//true, true)
         }
         3 -> {
             testDisk()

@@ -5,6 +5,7 @@ open class BaseMemoryListener {
 }
 
 interface MemoryInterceptor {
+    /** If override is true, the returned value should be used instead of the one initially provided */
     class Response(val override: Boolean, val value: Int)
 
     val computer: Computer
@@ -12,7 +13,7 @@ interface MemoryInterceptor {
     fun onWrite(location: Int, value: Int): Response
 }
 
-open class MemoryListener(val debugMem: Boolean = false): BaseMemoryListener() {
+open class MemoryListener: BaseMemoryListener() {
     open fun onRead(location: Int, value: Int) {}
     open fun onWrite(location: Int, value: Int){}
 }
@@ -49,7 +50,8 @@ class Computer(val cpu: Cpu = Cpu(memory = Memory()),
         return memory[address] to word(memory, address)
     }
 
-    fun run(debugMemory: Boolean = false, debugAsm: Boolean = false): RunResult {
+    fun run(debugMemory: Boolean = false, _debugAsm: Boolean = false): RunResult {
+        var debugAsm = _debugAsm
         startTime = System.currentTimeMillis()
         var cycles = 0
         var done = false
@@ -66,27 +68,35 @@ class Computer(val cpu: Cpu = Cpu(memory = Memory()),
 //                    println("breakpoint: " + memory[0xe].h())
 //                }
 
-                if (debugAsm) {
-                    val (byte, word) = byteWord()
-                    val debugString = formatPc(cpu.PC, opCode) + formatInstruction(opCode, cpu.PC, byte, word)
-                    previousPc = cpu.PC
-                    cpu.PC += SIZES[opCode]
-                    cpu.nextInstruction(previousPc)
-                    if (debugAsm) println(debugString + " " + cpu.toString())
-                    if (0xc67a == cpu.PC) {
-                        println("PROBLEM")
+                try {
+                    debugAsm = debugAsm || cycles >= 13415307
+                    if (debugAsm) {
+                        val (byte, word) = byteWord()
+                        val debugString = formatPc(cpu.PC, opCode) + formatInstruction(opCode, cpu.PC, byte, word)
+                        previousPc = cpu.PC
+                        cpu.PC += SIZES[opCode]
+                        cpu.nextInstruction(previousPc)
+                        if (debugAsm) println(debugString + " " + cpu.toString())
+                        if (0xc67a == cpu.PC) {
+                            println("PROBLEM")
+                        }
+                        if (0xc6cb == cpu.PC) {
+                            disassemble(0xc6cb)
+                        }
+                        ""
+                    } else {
+                        previousPc = cpu.PC
+                        cpu.PC += SIZES[opCode]
+                        cpu.nextInstruction(previousPc)
                     }
-                    if (0xc6cb == cpu.PC) {
-                        disassemble(0xc6cb)
-                    }
-                    ""
-                } else {
-                    previousPc = cpu.PC
-                    cpu.PC += SIZES[opCode]
-                    cpu.nextInstruction(previousPc)
+                } catch(ex: Throwable) {
+                    ex.printStackTrace()
+                    println("Failed at cycle $cycles")
+                    throw ex
                 }
 
-                if (previousPc == cpu.PC) {
+
+            if (previousPc == cpu.PC) {
                     // Current functional tests highest score: 158489
                     println(this)
                     println("Forever loop after $cycles cycles")

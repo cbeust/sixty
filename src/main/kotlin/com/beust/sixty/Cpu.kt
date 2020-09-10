@@ -14,9 +14,9 @@ data class Cpu(val memory: Memory,
     val SP: StackPointer = StackPointer(memory)
     var PC: Int = 0
         set(n) {
-            if (n < 0x100) {
-                TODO("SHOULD NOT HAPPEN")
-            }
+//            if (n < 0x100) {
+//                TODO("SHOULD NOT HAPPEN")
+//            }
             field = n
         }
     fun toWord(address: Int) = memory[address].or(memory[address + 1].shl(8))

@@ -1,3 +1,5 @@
+@file:Suppress("UnnecessaryVariable")
+
 package com.beust.app
 
 import com.beust.sixty.*
@@ -22,39 +24,21 @@ fun apple2Computer(debugMem: Boolean): Computer {
 //        load("d:\\pd\\Apple Disks\\roms\\C000.dump", 0xc000)
         loadResource("Apple2e.rom", 0xc000)
         loadResource("DISK2.ROM", 0xc600)
+
         // When restarting, don't move the head 50 tracks, only 1
         this[0xc63c] = 4
-//        this[0xfcac] = BEQ
-//        this[0xfcb1] = BEQ
-//        load("d:\\pd\\Apple Disks\\dos", 0x9600)
-//        load("d:\\pd\\Apple Disks\\a000.dmp", 0)
-        // JMP $C600
-//        this.init(pc, 0x4c, 0, 0xc6)
-//        // jsr $fded
-//        this.init(pc, 0xa9, 0x41, 0x20, 0xed, 0xfd, 0x60)
-        // Draw a line
-//        this.init(pc, JSR, 0xe2, 0xf3, // hgr
-//                LDX_IMM, 3,   // a2
-//                JSR, 0xf0, 0xf6, // HCOLOR (set color to white)
-//                LDA_IMM, 0,   // a9
-//                TAY,          // a8
-//                TAX,          // aa
-//                JSR, 0x57, 0xf4,  // HPLOT
-//                LDA_IMM, 0x17, // a9
-//                LDX_IMM, 1,    // a2
-//                JSR, 0x3a, 0xf5  // HLINE TO 279,0
-//        )
-//        this[0x36] = 0xbd
-//        this[0x37] = 0x9e
     }
 
-    val listener = object: MemoryListener(debugMem) {
+    val listener = object: MemoryListener() {
         fun logMem(i: Int, value: Int, extra: String = "") {
             lastMemDebug.add("mem[${i.hh()}] = ${(value.and(0xff)).h()} $extra")
         }
 
         override fun onWrite(location: Int, value: Int) {
-            if (location in 0x400..1142 && value in 0x41..0x5a) {
+            if (location == 0x48f && value == 0xc1) {
+                println("FOUND AN A")
+            }
+            if (location in 0x400..0x740 && value in 0xc1..0xda) {
                 println("Drawing text: "+ value.and(0xff).toChar())
                 ""
 //                textScreen.drawMemoryLocation(location, value)
@@ -67,40 +51,22 @@ fun apple2Computer(debugMem: Boolean): Computer {
                 }
             } else if (location in 0x300..0x3ff) {
 //                println("mem[${location.hh()}]=${value.h()}")
-            }else if (location in 0xc000..0xc100) {
-                when(location) {
-                    0xC000 -> {} // KBD/CLR80STORE
-                    0xC001 -> {} // SET80STORE
-                    0xC006 -> {} // SETSLOTCXROM
-                    0xc007 -> {} // SETINTCXROM
-                    0xC00C -> {} // CLR80COL
-                    0xC00E -> {} // CLRALTCHAR
-                    0xC054 -> {} // LOWSCR
-                    0xC055 -> {} // HISCR
-                    else -> {
-                        println("SOFT SWITCH: " + location.hh())
-                        ""
-                    }
-
-                }
             } else when(location) {
                 0xc054 -> {} // LOWSCR
                 0xc056 -> {} // LORES
                 0x2e -> {
-                    println("Reading track " + memory[0x2e].h())
+                    println("----- Reading track $" + memory[0x2e].h())
                     ""
                 }
                 0x2d -> {
-                    println("Reading sector " + memory[0x2d])
+                    println("-----     Reading sector $" + memory[0x2d].h())
                     ""
                 }
-                0x478 -> {
-                    val t = memory[0x478]
-                    if (t == 0xa0) {
-                        println("STOP")
+                0x42 -> {
+                    if (value == 0x36) {
+                        println("Writing $36 in $42")
+                        ""
                     }
-                    println("---------------------------------------- Moving target track to " + t)
-                    ""
                 }
                 else -> {}
             }
@@ -113,17 +79,8 @@ fun apple2Computer(debugMem: Boolean): Computer {
         override fun onPcChanged(c: Computer) {
             val newValue = c.cpu.PC
             when(newValue) {
-                0xc697 -> with(c) {
-                    when(cpu.Y) {
-//                        2 -> println("Read volume ${cpu.A}")
-//                        1 -> println("Read track ${cpu.A}")
-                        0 -> {
-                            println("Read sector ${cpu.A}")
-                            ""
-                        }
-                        else -> {}
-
-                    }
+                0xc28b -> {
+                    println("Waiting for key")
                 }
 //                0xc67d -> {
 //                    println("Decoding data")
@@ -131,51 +88,41 @@ fun apple2Computer(debugMem: Boolean): Computer {
 //                0xc699 -> {
 //                    println("Testing carry")
 //                }
-                0xc6a6 -> {
-                    println("Decoding data sector $" + memory[0x3d].h() + " into " + c.word(address = 0x26).hh())
-                    ""
-                }
+//                0xc6a6 -> {
+//                    println("Decoding data sector $" + memory[0x3d].h() + " into " + c.word(address = 0x26).hh())
+//                    ""
+//                }
 //                0x822 -> {
 //                    println("BMI for X: " + c.cpu.X)
 //                }
 //                0x829 -> {
 //                    println("Decrementing $8ff: " + memory[0x8ff].hh())
 //                }
-                0x836 -> {
-                    println("Reading next sector: "+ memory[0x3d].h())
+//                0x836 -> {
+//                    println("Reading next sector: "+ memory[0x3d].h())
+//                    ""
+//                }
+//                0x839 -> {
+//                    println("Next part of stage 2")
+//                }
+//                0xc6ed -> {
+//                    println("Incrementing $3d: " + memory[0x3d].h())
+//                }
+                0xaca3 -> {
+                    println("Storing potentially in $36 [$42]=" + memory[0x42].h() + memory[0x43].h())
                     ""
                 }
-                0x839 -> {
-                    println("Next part of stage 2")
+                0x9fc5 -> {
+                    // TODO
+                    memory[0x36] = 0xf0
+                    memory[0x37] = 0xfd
                 }
-                0xc6ed -> {
-                    println("Incrementing $3d: " + memory[0x3d].h())
+                0x9eba -> {
+                    // TODO
+                    memory[0x38] = 0x1b
+                    memory[0x39] = 0xfd
+
                 }
-//                0xc6e9 -> {
-//                    if (c.cpu.Y == 0) {
-//                        println("Incrementing Y: " + c.cpu.Y)
-//                    }
-//                }
-//                0xc6da -> {
-//                    if (c.cpu.X == 0) {
-//                        println("Decrementing x: " + c.cpu.X)
-//                    }
-//                }
-//                0xc6a6 -> {
-//                    println("Decoding data")
-//                }
-//                0xc6f6 -> {
-//                    println("Done decoding at address " + c.word(address = 0x26).hh())
-//                    ""
-//                }
-//                0xc6e9 -> {
-//                    println("Incrementing Y: " + c.cpu.Y)
-//                    ""
-//                }
-//                0xc6eb -> {
-//                    println("Incrementing target memory address")
-//                    ""
-//                }
             }
         }
     }
@@ -186,112 +133,34 @@ fun apple2Computer(debugMem: Boolean): Computer {
     val interceptor = object: MemoryInterceptor {
         override val computer = result
         val disk = WozDisk(Woz::class.java.classLoader.getResource("woz2/DOS 3.3 System Master.woz").openStream())
-        var magnets = BooleanArray(4) { _ -> false }
-        var phase = 0
-
-        private fun magnet(index: Int, state: Boolean) {
-            if (state) {
-                when(phase) {
-                    0 -> {
-                        if (index == 1) {
-                            phase = 1
-                            disk.incTrack()
-                        } else if (index == 3) {
-                            phase = 3
-                            disk.decTrack()
-                        }
-                    }
-                    1 -> {
-                        if (index == 2) {
-                            phase = 2
-                            disk.incTrack()
-                        } else if (index == 0) {
-                            phase = 0
-                            disk.decTrack()
-                        }
-                    }
-                    2 -> {
-                        if (index == 3) {
-                            phase = 3
-                            disk.incTrack()
-                        } else if (index == 1) {
-                            phase = 1
-                            disk.decTrack()
-                        }
-                    }
-                    3 -> {
-                        if (index == 0) {
-                            phase = 0
-                            disk.incTrack()
-                        } else if (index == 2) {
-                            phase = 2
-                            disk.decTrack()
-                        }
-                    }
-                }
-            }
-
-            println("=== Track: "+ disk.track + " magnet $index=$state")
-            magnets[index] = state
-        }
 
         override fun onRead(location: Int, value: Int): MemoryInterceptor.Response {
-            val byte = when(location) {
-                in 0xc0e0 .. 0xc0e7 -> {
-                    // Seek address: $b9a0
-                    when (location) {
-                        0xc0e0 -> magnet(0, false)
-                        0xc0e1 -> magnet(0, true)
-                        0xc0e2 -> magnet(1, false)
-                        0xc0e3 -> magnet(1, true)
-                        0xc0e4 -> magnet(2, false)
-                        0xc0e5 -> magnet(2, true)
-                        0xc0e6 -> magnet(3, false)
-                        0xc0e7 -> magnet(3, true)
-                        else -> ""
-                    }
-                    value
-                }
-                0xc0e8 -> {
-                    println("Turning motor off")
-                    value
-                }
-                0xc0e9 -> {
-                    println("Turning motor on")
-                    value
-                }
-                0xc0ea -> {
-                    println("Turning on drive 1")
-                    value
-                }
-                0xc0eb -> {
-                    println("Turning on drive 2")
-                    value
-                }
-                0xc0ec -> {
-//                    val v = if (value and 0x80 != 0) 0 else value
-//                    val result = v.shl(1).or(disk.nextBit()).and(0xff)
-//                    if (result == 0xd5 || result == 0x96 || result == 0xad) {
-//                        val rh = result.h()
-//                        println("MAGIC: $result")
-//                    }
-                    val result = disk.nextByte()
-                    result
-                }
-                else -> value
+            val result = when (location) {
+                in StepperMotor.RANGE -> StepperMotor.onRead(location, value, disk)
+                in SoftDisk.RANGE -> SoftDisk.onRead(location, value, disk)
+                in SoftSwitches.RANGE -> SoftSwitches.onRead(location, value)
+                else -> MemoryInterceptor.Response(true, value)
             }
-            return MemoryInterceptor.Response(true, byte)
-//            if (location >= 0xc080 && location <= 0xc0ff) {
-//                return MemoryInterceptor.Response(true, 0xd5)
-//            } else {
-//                return MemoryInterceptor.Response(false, value)
-//            }
+            return result
         }
 
         override fun onWrite(location: Int, value: Int): MemoryInterceptor.Response {
-            return MemoryInterceptor.Response(true, value)
-        }
+            var result = MemoryInterceptor.Response(true, value)
 
+            if (location in SoftSwitches.RANGE) {
+                result = SoftSwitches.onWrite(location, value)
+            } else if (location == 0x36 || location == 0x37) {
+                if (location == 0x37 && value != 0xfd) {
+                    println("Should not write here")
+                    result = MemoryInterceptor.Response(true, value)
+                } else if (value != 189 && value != 240) {
+                    println("Writing to CSWL: $value")
+                    return MemoryInterceptor.Response(true, value)
+                    result = MemoryInterceptor.Response(true, value)
+                }
+            }
+            return result
+        }
     }
 
     result.apply {

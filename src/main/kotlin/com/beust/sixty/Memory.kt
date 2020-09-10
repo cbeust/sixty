@@ -32,11 +32,14 @@ class Memory(val size: Int = 0x10000, vararg bytes: Int) {
             val response = interceptor!!.onWrite(i, value)
             if (response.override) {
                 content[i] = value
+                listener?.onWrite(i, value)
+            } else {
+                // No need to notify the listener, that change was vetoed
             }
         } else {
             content[i] = value
+            listener?.onWrite(i, value)
         }
-        listener?.onWrite(i, value)
     }
 
     override fun toString(): String {
