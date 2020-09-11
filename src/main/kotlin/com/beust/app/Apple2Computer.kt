@@ -30,7 +30,7 @@ class ScreenPanel: JPanel() {
     private val content = Array(TextScreen.width * TextScreen.height) { 0x20 }
     private val fontWidth = 10
     private val fontHeight = 10
-    private val gap = 5
+    private val gap = 2
     private val fullWidth = (fontWidth + gap) * TextScreen.width + 40
     private val fullHeight = (fontHeight + gap) * TextScreen.height + 40
 

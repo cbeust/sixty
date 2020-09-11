@@ -18,6 +18,10 @@ import kotlin.system.exitProcess
 var DEBUG = false
 val BREAKPOINT = 0xfb7c
 
+val DISK = WozDisk(Woz::class.java.classLoader.getResource("woz2/DOS 3.3 System Master.woz").openStream())
+val DISK_ = WozDisk(
+        File("d:\\pd\\Apple Disks\\woz2\\First Math Adventures - Understanding word problems.woz").inputStream())
+
 fun main() {
     val choice = 2
 

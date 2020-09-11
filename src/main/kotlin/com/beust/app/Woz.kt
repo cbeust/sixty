@@ -3,8 +3,8 @@ package com.beust.app
 import com.beust.sixty.bit
 import com.beust.sixty.h
 import com.beust.sixty.hh
-import java.io.File
 import java.io.InputStream
+import kotlin.random.Random
 
 class WozDisk(ins: InputStream,
         val bitStreamFactory: (bytes: List<Byte>) -> IBitStream = { bytes -> BitStream(bytes) }) {
@@ -32,17 +32,30 @@ class WozDisk(ins: InputStream,
         return result
     }
 
+    private fun updatePosition(oldTrack: Int, newTrack: Int) {
+        val oldTrackLength = woz.trks.trks[oldTrack].bitCount / 8
+        val newTrackLength = woz.trks.trks[newTrack].bitCount / 8
+        if (oldTrackLength != 0 && newTrack != 0) {
+            position = position * newTrackLength / oldTrackLength
+            println("Update position oldTrack: $oldTrack -> $newTrack, new position: $position")
+        }
+    }
+
     fun incTrack() {
+        val t = track
         track++
         if (track >= MAX_TRACK) track = MAX_TRACK - 1
         track++
         if (track >= MAX_TRACK) track = MAX_TRACK - 1
+        if (t != track) updatePosition(t, track)
         println("New track on WozDisk: $" + track.h() + " (" + track / 4.0 + ")")
     }
 
     fun decTrack() {
+        val t = track
         if (track > 0) track--
         if (track > 0) track--
+        if (t != track) updatePosition(t, track)
         println("New track on WozDisk: $" + track.h() + " (" + track / 4.0 + ")")
     }
 
@@ -72,26 +85,38 @@ class WozDisk(ins: InputStream,
             return bitStreams.getOrPut(track) {
                 val tmapOffset = woz.tmap.offsetFor(track)
                 if (tmapOffset == -1) {
-                    TODO("-1 tmap offset")
-                }
-                val trk = woz.trks.trks[tmapOffset]
-                val streamSizeInBytes = (trk.bitCount / 8)
-                val trackOffset = trk.startingBlock * 512
-                try {
-                    val slice = bytes.slice(trackOffset..(trackOffset + streamSizeInBytes))
-                    println("Track ${track / 4.0} starts at ${trackOffset.hh()}")
-                    bitStreamFactory(slice)
-                } catch(ex: Exception) {
-                    println("PROBLEM")
-                    throw ex
+                    val trk = woz.trks.trks[track]
+                    val streamSizeInBytes = (trk.bitCount / 8)
+                    FakeBitStream(streamSizeInBytes)
+                } else {
+                    val trk = woz.trks.trks[tmapOffset]
+                    val streamSizeInBytes = (trk.bitCount / 8)
+                    val trackOffset = trk.startingBlock * 512
+                    try {
+                        val slice = bytes.slice(trackOffset..(trackOffset + streamSizeInBytes))
+                        println("Track ${track / 4.0} starts at ${trackOffset.hh()}")
+                        bitStreamFactory(slice)
+                    } catch (ex: Exception) {
+                        println("PROBLEM")
+                        throw ex
+                    }
                 }
             }
         }
+
+    private var headWindow = 0
 
     fun nextBit(): Int {
         bitStream.next(position).let { (newPosition, bit) ->
             position = newPosition
             return bit
+//            headWindow = headWindow shl 1
+//            headWindow = headWindow or bit
+//            return if (headWindow and 0x0f !== 0x00) {
+//                headWindow and 0x02 shr 1
+//            } else {
+//                FAKE_BIT_STREAM.next()
+//            }
         }
     }
 
@@ -266,11 +291,29 @@ class BitStream(val bytes: List<Byte>): IBitStream() {
     override fun next(position: Int): Pair<Int, Int> {
         val byteIndex = position / 8
         val bitIndex = position % 8
+        if (byteIndex > bytes.size) {
+            TODO("ERROR")
+        }
         val byte = bytes[byteIndex]
         val result = byte.bit(7 - bitIndex)
         return Pair((position + 1) % (bytes.size * 8), result)
     }
 }
+
+class FakeBitStream(val trackSize: Int): IBitStream() {
+    override fun next(position: Int): Pair<Int, Int> {
+        val result = if (Random.nextInt() % 10 < 3) 1 else 0
+        return Pair((position + 1) % trackSize, result)
+    }
+
+    fun next(): Int {
+        val index = 0
+        val p = next(index)
+        return p.second
+    }
+}
+
+
 
 val WRITE_TABLE = listOf(
         0x96, 0x97, 0x9a, 0x9b, 0x9d, 0x9e, 0x9f, 0xa6,

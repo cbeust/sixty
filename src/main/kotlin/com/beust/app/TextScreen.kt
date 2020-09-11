@@ -49,9 +49,7 @@ class TextScreen(private val panel: ScreenPanel) {
     private val calculator = LineCalculator()
 
     fun drawMemoryLocation(location: Int, value: Int) {
-        val p = calculator.coordinatesFor(location)
-        p?.let { (x, y) ->
-            println("Location $${location.hh()} ($x,$y) = " + value.and(0x7f).toChar())
+        calculator.coordinatesFor(location)?.let { (x, y) ->
             panel.drawCharacter(x, y, value)
         }
     }

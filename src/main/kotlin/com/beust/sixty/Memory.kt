@@ -1,5 +1,6 @@
 package com.beust.sixty
 
+import com.beust.app.DISK
 import com.beust.app.StepperMotor
 import com.beust.app.Woz
 import com.beust.app.WozDisk
@@ -7,8 +8,6 @@ import java.io.File
 import java.io.InputStream
 
 class Memory(val size: Int = 0x10000, vararg bytes: Int) {
-    private val disk = WozDisk(Woz::class.java.classLoader.getResource("woz2/DOS 3.3 System Master.woz").openStream())
-
     var interceptor: MemoryInterceptor? = null
     var listener: MemoryListener? = null
     val content: IntArray = IntArray(size)
@@ -28,7 +27,7 @@ class Memory(val size: Int = 0x10000, vararg bytes: Int) {
 
                     // More formal way: bit by bit
                     if (latch and 0x80 != 0) latch = 0
-                    latch = latch.shl(1).or(disk.nextBit()).and(0xff)
+                    latch = latch.shl(1).or(DISK.nextBit()).and(0xff)
                     return latch
                 }
                 0xc0ed -> {
@@ -39,7 +38,7 @@ class Memory(val size: Int = 0x10000, vararg bytes: Int) {
                     content[0xc010]
                 }
                 in StepperMotor.RANGE -> {
-                    StepperMotor.onRead(i, content[i], disk)
+                    StepperMotor.onRead(i, content[i], DISK)
                 }
                 else -> content[i]
             }
