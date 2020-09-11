@@ -32,9 +32,6 @@ class LineCalculator {
         return if (p != null) {
             val y = p.second
             val x = (location - p.first) % TextScreen.width
-            if (location == 0x7d1 || location == 0x40b) {
-                println("BREAKPOINT")
-            }
             x to y
         } else {
             null
