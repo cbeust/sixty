@@ -12,7 +12,7 @@ class LineCalculator {
         listOf(0, 0x28, 0x50).forEach { m ->
             repeat(8) {
                 val address = 0x400 + it * 0x80 + m
-                println("Address: " + address.hh() + " line: $line")
+//                println("Address: " + address.hh() + " line: $line")
                 lineMap[address] = line++
             }
         }
