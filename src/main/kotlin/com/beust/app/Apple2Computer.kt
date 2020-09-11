@@ -40,14 +40,14 @@ class ScreenPanel: JPanel() {
 
     override fun paintComponent(g: Graphics) {
         super.paintComponent(g)
-        g.color = Color.white
+        g.color = Color.black
         g.fillRect(0, 0, fullWidth, fullHeight)
-        g.color = Color.blue
+        g.color = Color.green
         repeat(TextScreen.height) { y ->
             repeat(TextScreen.width) { x ->
                 val xx = x * (fontWidth + gap)
                 val yy = y * (fontHeight + gap) + 15
-                val character = content[y * TextScreen.height + x]
+                val character = content[y * TextScreen.width + x]
 //                if (character != " " && yy == 345) {
 //                    println("PROBLEM")
 //                }
@@ -60,10 +60,7 @@ class ScreenPanel: JPanel() {
     fun drawCharacter(x: Int, y: Int, value: Int) {
         if (value in 0xa0..0xfe) {
             val c = (value and 0x7f).toChar()
-            if (c == 'E') {
-                println("BREAKPOINT")
-            }
-            content[y * TextScreen.height + x] = c.toString()
+            content[y * TextScreen.width + x] = c.toString()
             repaint()
         }
     }
