@@ -47,20 +47,16 @@ class ScreenPanel: JPanel() {
             repeat(TextScreen.width) { x ->
                 val xx = x * (fontWidth + gap)
                 val yy = y * (fontHeight + gap) + 15
-                val character = content[y * TextScreen.width + x]
-//                if (character != " " && yy == 345) {
-//                    println("PROBLEM")
-//                }
+                val c = content[y * TextScreen.width + x].toChar().toString()
 //                println("Drawing at ($x, $y) ($xx,$yy): $character")
-                g.drawString(character, xx, yy)
+                g.drawString(c, xx, yy)
             }
         }
     }
 
     fun drawCharacter(x: Int, y: Int, value: Int) {
         if (value in 0xa0..0xfe) {
-            val c = (value and 0x7f).toChar()
-            content[y * TextScreen.width + x] = c.toString()
+            content[y * TextScreen.width + x] = value and 0x7f
             repaint()
         }
     }
