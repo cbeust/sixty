@@ -3,6 +3,7 @@ package com.beust.sixty
 import com.beust.app.BitStream
 import com.beust.app.IBitStream
 import com.beust.app.Woz
+import com.beust.app.WozDisk
 import org.assertj.core.api.Assertions.assertThat
 import org.testng.annotations.Test
 
@@ -22,6 +23,35 @@ class WozTest {
             assertThat(b).isEqualTo(d)
             position1 = a
             position2 = c
+        }
+    }
+
+    fun bytes() {
+        val ins = Woz::class.java.classLoader.getResource("woz2/DOS 3.3 System Master.woz")!!.openStream()
+        val disk = WozDisk(ins)
+
+        val ins2 = Woz::class.java.classLoader.getResource("woz2/DOS 3.3 System Master.woz")!!.openStream()
+        val bytes: ByteArray = ins2.readAllBytes()
+        val size = bytes.size - 0x600
+        var position1 = 0
+        repeat(35) { track ->
+            val bitStream = disk.bitStream
+            repeat(size) {
+                var latch = 0
+                val byte = disk.nextByte()
+                if (latch and 0x80 != 0) latch = 0
+                while (latch and 0x80 == 0) {
+                    val (newPosition, bit) = bitStream.next(position1)
+                    latch = latch.shl(1).or(bit)
+                    position1 = newPosition
+                }
+                val byte2 = latch
+                assertThat(byte)
+                        .withFailMessage("Failure at track $track, position $position1")
+                        .isEqualTo(byte2)
+            }
+            disk.incTrack()
+            disk.incTrack()
         }
     }
 }
