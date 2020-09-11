@@ -17,10 +17,23 @@ class Memory(val size: Int = 0x10000, vararg bytes: Int) {
         bytes.copyInto(content)
     }
 
+    private var latch = 0
+
     operator fun get(i: Int): Int {
         val result =
             when(i) {
-                0xc0ec -> disk.nextByte()
+                0xc0ec -> {
+                    // Faster way for unprotected disks
+                    // return disk.nextByte()
+
+                    // More formal way: bit by bit
+                    if (latch and 0x80 != 0) latch = 0
+                    latch = latch.shl(1).or(disk.nextBit()).and(0xff)
+                    return latch
+                }
+                0xc0ed -> {
+                    TODO("Clearing data latch not supported")
+                }
                 0xc010 -> {
                     content[0xc000] = content[0xc000] and 0x7f
                     content[0xc010]
@@ -40,7 +53,7 @@ class Memory(val size: Int = 0x10000, vararg bytes: Int) {
 //            content[i]
 //        }
 
-        listener?.onRead(i, result)
+//        listener?.onRead(i, result)
         return result.and(0xff)
     }
 

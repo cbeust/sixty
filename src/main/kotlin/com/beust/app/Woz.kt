@@ -88,6 +88,13 @@ class WozDisk(ins: InputStream,
             }
         }
 
+    fun nextBit(): Int {
+        bitStream.next(position).let { (newPosition, bit) ->
+            position = newPosition
+            return bit
+        }
+    }
+
     fun nextByte(peek: Boolean = false): Int {
         var result = 0
         if (peek) {
