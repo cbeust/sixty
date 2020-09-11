@@ -1,7 +1,7 @@
 package com.beust.app
 
 import com.beust.sixty.s
-import javafx.scene.paint.Color
+import java.awt.Color
 
 class BitPattern(private val byte0: Int, private val byte1: Int) {
     var p0: Int = 0

@@ -41,22 +41,24 @@ class WozDisk(ins: InputStream,
         }
     }
 
-    fun incTrack() {
+    private fun moveTrack(block: () -> Unit) {
         val t = track
-        track++
-        if (track >= MAX_TRACK) track = MAX_TRACK - 1
-        track++
-        if (track >= MAX_TRACK) track = MAX_TRACK - 1
-        if (t != track) updatePosition(t, track)
-        println("New track on WozDisk: $" + track.h() + " (" + track / 4.0 + ")")
+        block()
+        if (t != track) {
+            updatePosition(t, track)
+            println("New track: $" + track.h() + " (" + track / 4.0 + ")")
+        }
     }
 
-    fun decTrack() {
-        val t = track
+    fun incTrack() = moveTrack {
+        track++
+        if (track >= MAX_TRACK) track = MAX_TRACK - 1
+        track++
+    }
+
+    fun decTrack() = moveTrack {
         if (track > 0) track--
         if (track > 0) track--
-        if (t != track) updatePosition(t, track)
-        println("New track on WozDisk: $" + track.h() + " (" + track / 4.0 + ")")
     }
 
     fun peekBytes(count: Int): ArrayList<Int> {

@@ -1,19 +1,8 @@
 package com.beust.app
 
-import com.beust.sixty.*
-import javafx.application.Application
-import javafx.application.Platform
-import javafx.event.EventHandler
-import javafx.fxml.FXMLLoader
-import javafx.scene.Scene
-import javafx.scene.canvas.Canvas
-import javafx.scene.input.KeyCode
-import javafx.scene.input.KeyEvent
-import javafx.scene.layout.AnchorPane
-import javafx.stage.Stage
+import com.beust.sixty.h
+import com.beust.sixty.hh
 import java.io.File
-import java.nio.file.Paths
-import kotlin.system.exitProcess
 
 var DEBUG = false
 val BREAKPOINT = 0xfb7c

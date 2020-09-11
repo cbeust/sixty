@@ -1,6 +1,6 @@
 package com.beust.sixty
 
-import javafx.scene.paint.Color
+import java.awt.Color
 
 fun Byte.h(): String = String.format("%02x", this).toUpperCase()
 fun Int.h(): String = String.format("%02x", this).toUpperCase()
@@ -32,7 +32,6 @@ fun Color.s() = when(this) {
     Color.BLACK -> "black"
     Color.WHITE -> "white"
     Color.GREEN -> "green"
-    Color.VIOLET -> "violet"
     Color.MAGENTA -> "magenta"
     Color.ORANGE -> "orange"
     Color.BLUE -> "blue"

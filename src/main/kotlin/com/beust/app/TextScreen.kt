@@ -1,9 +1,5 @@
 package com.beust.app
 
-import com.beust.sixty.hh
-import javafx.scene.canvas.Canvas
-import javafx.scene.paint.Color
-
 class LineCalculator {
     private val lineMap = hashMapOf<Int, Int>()
 

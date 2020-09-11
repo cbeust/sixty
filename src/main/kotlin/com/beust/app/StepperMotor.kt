@@ -99,7 +99,7 @@ object StepperMotor {
             }
         }
 
-        println("=== Track: "+ disk.track + " magnet $index=$state")
+//        println("=== Track: "+ disk.track + " magnet $index=$state")
         magnets[index] = state
     }
 }

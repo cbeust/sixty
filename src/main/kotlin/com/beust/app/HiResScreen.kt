@@ -1,8 +1,9 @@
 package com.beust.app
 
 import com.beust.sixty.Memory
-import javafx.scene.canvas.Canvas
-import javafx.scene.paint.Color
+import java.awt.Color
+import java.awt.Graphics
+import javax.swing.JPanel
 
 /**
  * Bit pattern for two consecutive bytes:
@@ -14,15 +15,13 @@ import javafx.scene.paint.Color
  * DD is split over two bytes
  * then EE, FF, GG
  */
-class HiResScreen(private val canvas: Canvas) {
-    private val width = 140
-    private val height = 192
+class HiResScreen: JPanel() {
     private val blockWidth = 5
     private val blockHeight = 5
     private val gap = 2
     private val fullWidth = (blockWidth + gap) * width + 40
     private val fullHeight = (blockHeight + gap) * height + 40
-    private val board = Board(canvas, width, height)
+    private val board = Board(width, height)
 
     /**
      * 2000-2027
@@ -45,6 +44,10 @@ class HiResScreen(private val canvas: Canvas) {
 //        (0..0x1fff).forEach {
 //            drawMemoryLocation(it, 1)
 //        }
+    }
+
+    override fun paintComponent(g: Graphics) {
+        board.redraw(g)
     }
 
     fun drawMemoryLocation(memory: Memory, location: Int, value: Int) {
@@ -87,6 +90,7 @@ class HiResScreen(private val canvas: Canvas) {
 
         fun drawPixel(x: Int, y: Int, color: Color) {
             board.draw(x, y, color)
+            repaint()
         }
 
         drawPixel(x + i++, y!!, BitPattern.color(bitPattern.p0, bitPattern.aa, x))

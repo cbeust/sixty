@@ -1,33 +1,33 @@
 package com.beust.app
 
-import javafx.scene.canvas.Canvas
-import javafx.scene.layout.AnchorPane
-import javafx.scene.paint.Color
+import java.awt.Color
+import java.awt.Graphics
+import javax.swing.JPanel
 
-class Board(val canvas: Canvas, val width: Int, val height: Int) {
-    val blockWidth = 6.0
-    val blockHeight = 3.0
-    val gap = 0
+class Board(val w: Int, val h: Int): JPanel() {
+    private val blockWidth = 6
+    private val blockHeight = 3
+    private val gap = 0
+    private val WIDTH = 280
+    private val HEIGHT = 192
+    private val content = ArrayList<Color>(WIDTH * HEIGHT)
 
     init {
-        val fullWidth = (blockWidth + gap) * width
-        val fullHeight = (blockHeight + gap) * height
-        with(canvas.parent as AnchorPane) {
-            prefWidth = fullWidth
-            prefHeight = fullHeight
+        setBounds(0, 0, w, h)
+    }
+
+    private fun index(x: Int, y: Int) = y * WIDTH + x
+
+    fun redraw(g: Graphics) {
+        repeat(HEIGHT) { y ->
+            repeat(WIDTH) { x ->
+                g.color = content[index(x, y)]
+                g.fillRect(x, y, blockWidth, blockHeight)
+            }
         }
-//        with(canvas.graphicsContext2D) {
-//            fill = Color.BLUE
-//            fillRect(0.0, 0.0, fullWidth, fullHeight)
-//        }
     }
 
     fun draw(x: Int, y: Int, color: Color) {
-        val xx = x.toDouble() * (blockWidth + gap)
-        val yy = y.toDouble() * (blockHeight + gap)
-        with(canvas.graphicsContext2D) {
-            fill = color
-            fillRect(xx, yy, blockWidth, blockHeight)
-        }
+        content[index(x, y)] = color
     }
 }
