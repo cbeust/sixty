@@ -9,10 +9,10 @@ class StepperMotorTest {
         fun incTrack() = track++
         fun decTrack() = track--
     }
-    val disk = Disk()
+    private val disk = Disk()
 
-    var magnets = BooleanArray(4) { _ -> false }
-    var phase = 0
+    private var magnets = BooleanArray(4) { _ -> false }
+    private var phase = 0
 
     private fun magnet(index: Int, state: Boolean) {
         if (state) {
