@@ -114,14 +114,14 @@ fun apple2Computer(debugMem: Boolean): Computer {
 //    val graphicsScreen = HiResScreen(Apple2App.canvas)
 
     val listener = Apple2MemoryListener(textScreen) { -> debugMem }
-    val pcListener = Apple2PcListener()
+//    val pcListener = Apple2PcListener()
     val interceptor = Apple2MemoryInterceptor()
 
     val appleCpu = Cpu(memory = memory)
-    val result = Computer(cpu = appleCpu, pcListener = pcListener)
+    val result = Computer(cpu = appleCpu)
     listener.computer = result
     interceptor.computer = result
-    pcListener.computer = result
+//    pcListener.computer = result
 
     result.apply {
         memory.listener = listener
