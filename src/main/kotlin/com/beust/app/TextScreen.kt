@@ -20,6 +20,8 @@ class TextScreen(private val panel: ScreenPanel) {
                 lineMap[address] = line++
             }
         }
+        val l = lineFor(0x7d1)
+        ""
     }
 
 //    init {
@@ -29,17 +31,21 @@ class TextScreen(private val panel: ScreenPanel) {
 //        }
 //    }
 
-    private fun lineFor(location: Int): Int? {
+    private fun lineFor(location: Int): Pair<Int, Int>? {
         val result = lineMap.filter { (k, v) ->
-            location in k..k+width
-        }.values.firstOrNull()
-        return result
+            location in k until k+width
+        }
+        return if (result.isEmpty()) null else  result.iterator().next().let { it.key to it.value }
     }
 
     fun drawMemoryLocation(location: Int, value: Int) {
-        val y = lineFor(location)
-        if (y != null) {
-            val x = (location - 0x400) % width
+        val p = lineFor(location)
+        if (p != null) {
+            val y = p.second
+            val x = (location - p.first) % width
+            if (location == 0x7d1 || location == 0x40b) {
+                println("BREAKPOINT")
+            }
             println("Location $${location.hh()} ($x,$y) = " + value.and(0x7f).toChar())
             panel.drawCharacter(x, y, value)
         }

@@ -51,7 +51,7 @@ class ScreenPanel: JPanel() {
                 if (character != " " && yy == 345) {
                     println("PROBLEM")
                 }
-                println("Drawing at ($x, $y) ($xx,$yy): $character")
+//                println("Drawing at ($x, $y) ($xx,$yy): $character")
                 g.drawString(character, xx, yy)
             }
         }

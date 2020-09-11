@@ -12,6 +12,9 @@ object SoftSwitches {
         when(location) {
             0xC000 -> {
 //                DEBUG = true
+                if ( c.memory[0x7d0] == 170) {
+                    println("BREAKPOINT")
+                }
 //                c.memory.dump(0x400, 200)
 //                if (c.cpu.PC != 0xfd24 && c.cpu.PC != 0xfb7f)
 //                    result = 0xc1
