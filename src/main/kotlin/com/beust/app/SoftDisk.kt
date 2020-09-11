@@ -8,7 +8,7 @@ import com.beust.sixty.MemoryInterceptor
 object SoftDisk {
     val RANGE = 0xc0e8..0xc0ec
 
-    fun onRead(location: Int, value: Int, disk: WozDisk): MemoryInterceptor.Response {
+    fun onRead(location: Int, value: Int, disk: WozDisk): Int {
         val byte = when(location) {
             0xc0e8 -> {
                 println("Turning motor off")
@@ -41,7 +41,7 @@ object SoftDisk {
             }
         }
 
-        return MemoryInterceptor.Response(true, byte)
+        return byte
     }
 
 }

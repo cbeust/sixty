@@ -7,10 +7,12 @@ import com.beust.sixty.hh
 object SoftSwitches {
     val RANGE = 0xc000..0xc0e7
 
-    fun onRead(c: Computer, location: Int, value: Int): MemoryInterceptor.Response {
+    fun onRead(c: Computer, location: Int, value: Int): Int {
         var result = 0xd
         when(location) {
             0xC000 -> {
+                println("Returning key: $value")
+                result = value
 //                DEBUG = true
 //                if ( c.memory[0x7d0] == 170) {
 //                    println("BREAKPOINT")
@@ -25,7 +27,7 @@ object SoftSwitches {
             0xC00C -> {} // CLR80COL
             0xC00E -> {} // CLRALTCHAR
             0xC010 -> {
-                c.cpu.memory[0xc000] = c.cpu.memory[0xc000].and(0x7f)
+                c.cpu.memory.forceValue(0xc000, c.cpu.memory[0xc000].and(0x7f))
             } // KBDSTRB
             0xC015 -> {} // RDCXROM
             0xC018 -> { result = 0x8d } // RD80STORE
@@ -40,7 +42,7 @@ object SoftSwitches {
                 println("Unknown soft switch: " + location.hh())
             }
         }
-        return MemoryInterceptor.Response(true, result)
+        return result
     }
 
     fun onWrite(location: Int, value: Int): MemoryInterceptor.Response {
@@ -52,7 +54,7 @@ object SoftSwitches {
             0xc007 -> {} // SETINTCXROM
             0xC00C -> {} // CLR80COL
             0xC00E -> {} // CLRALTCHAR
-            0xC010 -> {} // KBDSTRB
+            0xC010 -> { allow = true } // KBDSTRB
             0xC054 -> {} // LOWSCR
             0xC055 -> {} // HISCR
             else -> {

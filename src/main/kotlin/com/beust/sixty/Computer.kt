@@ -9,7 +9,7 @@ open class BaseMemoryListener {
 
 interface MemoryInterceptor {
     /** If override is true, the returned value should be used instead of the one initially provided */
-    class Response(val allow: Boolean, val value: Int)
+    data class Response(val allow: Boolean, val value: Int)
 
     val computer: Computer
     fun onRead(location: Int, value: Int): Response
@@ -72,7 +72,7 @@ class Computer(val cpu: Cpu = Cpu(memory = Memory()),
                 }
 
                 try {
-//                    debugAsm = debugAsm || cpu.PC >= BREAKPOINT
+                    debugAsm = debugAsm || cycles >= 14927866
                     if (DEBUG) {
                         val (byte, word) = byteWord()
                         val debugString = formatPc(cpu.PC, opCode) + formatInstruction(opCode, cpu.PC, byte, word)
@@ -92,7 +92,9 @@ class Computer(val cpu: Cpu = Cpu(memory = Memory()),
                     throw ex
                 }
 
-
+            if (cpu.PC < 0x100) {
+                println("PROBLEM")
+            }
             if (previousPc == cpu.PC) {
                     // Current functional tests highest score: 158489
                     println(this)

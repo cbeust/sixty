@@ -5,7 +5,7 @@ import com.beust.sixty.MemoryInterceptor
 object StepperMotor {
     val RANGE = 0xc0e0 .. 0xc0e7
 
-    fun onRead(location: Int, value: Int, disk: WozDisk): MemoryInterceptor.Response {
+    fun onRead(location: Int, value: Int, disk: WozDisk): Int {
         val byte = when(location) {
             in RANGE -> {
                 // Seek address: $b9a0
@@ -51,7 +51,7 @@ object StepperMotor {
             }
             else -> value
         }
-        return MemoryInterceptor.Response(true, byte)
+        return byte
     }
 
     private var magnets = BooleanArray(4) { _ -> false }

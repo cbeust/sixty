@@ -1,18 +1,30 @@
 package com.beust.app
 
-import com.beust.sixty.Computer
-import com.beust.sixty.MemoryListener
-import com.beust.sixty.h
-import com.beust.sixty.hh
+import com.beust.sixty.*
 
 class Apple2MemoryListener(val textScreen: TextScreen, val debugMem: () -> Boolean): MemoryListener() {
-    var computer: Computer? = null
+    val disk = WozDisk(Woz::class.java.classLoader.getResource("woz2/DOS 3.3 System Master.woz").openStream())
+
+    lateinit var computer: Computer
     fun logMem(i: Int, value: Int, extra: String = "") {
         lastMemDebug.add("mem[${i.hh()}] = ${(value.and(0xff)).h()} $extra")
     }
 
+    override fun onRead(location: Int, value: Int) {
+        when (location) {
+            in StepperMotor.RANGE -> StepperMotor.onRead(location, value, disk)
+            in SoftDisk.RANGE -> SoftDisk.onRead(location, value, disk)
+            in SoftSwitches.RANGE -> SoftSwitches.onRead(computer, location, value)
+            else -> value
+        }
+    }
+
     override fun onWrite(location: Int, value: Int) {
         val memory = computer!!.memory
+        if (location == 0xe000) {
+            println("BREAKPOINT")
+        }
+
         if (location == 0x7d0) {
             println("Storing into 0x7d0: " + value.toChar() + " " + value.h())
             ""

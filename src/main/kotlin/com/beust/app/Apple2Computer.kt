@@ -104,7 +104,12 @@ fun apple2Computer(debugMem: Boolean): Computer {
             override fun keyTyped(e: java.awt.event.KeyEvent?) {}
 
             override fun keyPressed(e: java.awt.event.KeyEvent) {
-                memory[0xc000] = e.keyCode.or(0x80)
+                val key = when(e.keyCode) {
+                    10 -> 0x8d
+                    else -> e.keyCode.or(0x80)
+                }
+                memory.forceValue(0xc000, key)
+                memory.forceValue(0xc010, 0x80)
             }
         })
     }
@@ -113,54 +118,20 @@ fun apple2Computer(debugMem: Boolean): Computer {
 
     val listener = Apple2MemoryListener(textScreen) { -> debugMem }
     val pcListener = Apple2PcListener()
+    val interceptor = Apple2MemoryInterceptor()
 
     val appleCpu = Cpu(memory = memory)
     val result = Computer(cpu = appleCpu, pcListener = pcListener)
     listener.computer = result
+    interceptor.computer = result
     pcListener.computer = result
-
-    val interceptor = object: MemoryInterceptor {
-        override val computer = result
-        val disk = WozDisk(Woz::class.java.classLoader.getResource("woz2/DOS 3.3 System Master.woz").openStream())
-
-        override fun onRead(location: Int, value: Int): MemoryInterceptor.Response {
-            val result = when (location) {
-                in StepperMotor.RANGE -> StepperMotor.onRead(location, value, disk)
-                in SoftDisk.RANGE -> SoftDisk.onRead(location, value, disk)
-                in SoftSwitches.RANGE -> SoftSwitches.onRead(computer, location, value)
-                else -> MemoryInterceptor.Response(true, value)
-            }
-            return result
-        }
-
-        override fun onWrite(location: Int, value: Int): MemoryInterceptor.Response {
-            var result = MemoryInterceptor.Response(true, value)
-
-            if (location in SoftSwitches.RANGE) {
-                result = SoftSwitches.onWrite(location, value)
-//            } else if (location == 0x36 || location == 0x37) {
-//                if (location == 0x37 && value != 0xfd) {
-//                    println("Should not write here")
-//                    result = MemoryInterceptor.Response(true, value)
-//                } else if (value != 189 && value != 240) {
-//                    println("Writing to CSWL: $value")
-//                    return MemoryInterceptor.Response(true, value)
-//                    result = MemoryInterceptor.Response(true, value)
-//                }
-            }
-            return result
-        }
-    }
 
     result.apply {
         memory.listener = listener
-        memory.interceptor = interceptor
+//        memory.interceptor = interceptor
 //            fillScreen(memory)
 //            fillWithNumbers(memory)
 //            loadPic(memory)
-        if (false) {
-            memory[0] = 0
-        }
         val start = memory[0xfffc].or(memory[0xfffd].shl(8))
 //        disassemble(0, 20)
         cpu.PC = start

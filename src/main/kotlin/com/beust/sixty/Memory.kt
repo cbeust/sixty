@@ -1,9 +1,14 @@
 package com.beust.sixty
 
+import com.beust.app.StepperMotor
+import com.beust.app.Woz
+import com.beust.app.WozDisk
 import java.io.File
 import java.io.InputStream
 
 class Memory(val size: Int = 0x10000, vararg bytes: Int) {
+    private val disk = WozDisk(Woz::class.java.classLoader.getResource("woz2/DOS 3.3 System Master.woz").openStream())
+
     var interceptor: MemoryInterceptor? = null
     var listener: MemoryListener? = null
     val content: IntArray = IntArray(size)
@@ -13,33 +18,50 @@ class Memory(val size: Int = 0x10000, vararg bytes: Int) {
     }
 
     operator fun get(i: Int): Int {
-        val result = if (interceptor != null) {
-            val response = interceptor!!.onRead(i, content[i])
-            if (response.allow) {
-                content[i] = response.value
+        val result =
+            when(i) {
+                0xc0ec -> disk.nextByte()
+                0xc010 -> {
+                    content[0xc000] = content[0xc000] and 0x7f
+                    content[0xc010]
+                }
+                in StepperMotor.RANGE -> {
+                    StepperMotor.onRead(i, content[i], disk)
+                }
+                else -> content[i]
             }
-            content[i]
-        } else {
-            content[i]
-        }
+//        val result = if (interceptor != null) {
+//            val response = interceptor!!.onRead(i, content[i])
+//            if (response.allow) {
+//                content[i] = response.value
+//            }
+//            content[i]
+//        } else {
+//            content[i]
+//        }
 
         listener?.onRead(i, result)
         return result.and(0xff)
     }
 
     operator fun set(i: Int, value: Int) {
-        if (interceptor != null) {
-            val response = interceptor!!.onWrite(i, value)
-            if (response.allow) {
-                content[i] = value
-                listener?.onWrite(i, value)
-            } else {
-                // No need to notify the listener, that change was vetoed
-            }
-        } else {
+//        if (interceptor != null) {
+//            val response = interceptor!!.onWrite(i, value)
+//            if (response.allow) {
+//                content[i] = value
+//                listener?.onWrite(i, value)
+//            } else {
+//                // No need to notify the listener, that change was vetoed
+//            }
+//        } else {
+        if (i < 0xc000) {
             content[i] = value
             listener?.onWrite(i, value)
         }
+    }
+
+    fun forceValue(i: Int, value: Int) {
+        content[i] = value
     }
 
     override fun toString(): String {
@@ -67,22 +89,6 @@ class Memory(val size: Int = 0x10000, vararg bytes: Int) {
 
     fun loadResource(name: String, address: Int) {
         load(this::class.java.classLoader.getResource(name).openStream(), address)
-    }
-
-    fun wordAt(word: Int): Int {
-        return get(word + 1).shl(8).or(get(word))
-    }
-
-    fun clone(): Memory {
-        return Memory().apply {
-            init(0, *content)  // careful, aliasing content here
-        }
-//        return Memory(content)
-//        val newContent = IntArray(size)
-//        content.copyInto(newContent, 0, size)
-//        return Memory().apply {
-//            init(0, *content)
-//        }
     }
 
     fun dump(address: Int, length: Int = 80) {

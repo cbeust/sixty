@@ -16,7 +16,7 @@ import java.nio.file.Paths
 import kotlin.system.exitProcess
 
 var DEBUG = false
-val BREAKPOINT = 0xfdf9
+val BREAKPOINT = 0xfb7c
 
 fun main() {
     val choice = 2
