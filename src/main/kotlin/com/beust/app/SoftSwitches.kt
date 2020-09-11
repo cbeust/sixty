@@ -11,15 +11,7 @@ object SoftSwitches {
         var result = 0xd
         when(location) {
             0xC000 -> {
-                println("Returning key: $value")
                 result = value
-//                DEBUG = true
-//                if ( c.memory[0x7d0] == 170) {
-//                    println("BREAKPOINT")
-//                }
-//                c.memory.dump(0x400, 200)
-//                if (c.cpu.PC != 0xfd24 && c.cpu.PC != 0xfb7f)
-//                    result = 0xc1
             } // KBD/CLR80STORE
             0xC001 -> {} // SET80STORE
             0xC006 -> {} // SETSLOTCXROM
