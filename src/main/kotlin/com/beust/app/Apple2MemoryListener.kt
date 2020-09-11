@@ -5,7 +5,7 @@ import com.beust.sixty.MemoryListener
 import com.beust.sixty.h
 import com.beust.sixty.hh
 
-class Apple2MemoryListener(val debugMem: () -> Boolean): MemoryListener() {
+class Apple2MemoryListener(val textScreen: TextScreen, val debugMem: () -> Boolean): MemoryListener() {
     var computer: Computer? = null
     fun logMem(i: Int, value: Int, extra: String = "") {
         lastMemDebug.add("mem[${i.hh()}] = ${(value.and(0xff)).h()} $extra")
@@ -20,8 +20,9 @@ class Apple2MemoryListener(val debugMem: () -> Boolean): MemoryListener() {
         if (location == 0x48f && value == 0xc1) {
             println("FOUND AN A")
         }
-        if (location in 0x400..0x740 && value in 0xc1..0xda) {
-            println("Drawing text: "+ value.and(0xff).toChar())
+        if (location in 0x400..0x7ff) {
+            println("Drawing text: "+ value.and(0x7f).toChar())
+            textScreen.drawMemoryLocation(location, value)
             ""
 //                textScreen.drawMemoryLocation(location, value)
         } else if (location in 0x2000..0x3fff) {

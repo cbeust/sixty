@@ -1,39 +1,47 @@
 package com.beust.app
 
+import com.beust.sixty.hh
 import javafx.scene.canvas.Canvas
 import javafx.scene.paint.Color
 
-class TextScreen(private val canvas: Canvas) {
-    private val width = 40
-    private val height = 24
-    private val fontWidth = 10
-    private val fontHeight = 10
-    private val gap = 5
-    private val fullWidth = (fontWidth + gap) * width + 40
-    private val fullHeight = (fontHeight + gap) * height + 40
+class TextScreen(private val panel: ScreenPanel) {
+    companion object {
+        val width = 40
+        val height = 24
+    }
+    val lineMap = hashMapOf<Int, Int>()
 
     init {
-        with(canvas.graphicsContext2D) {
-            fill = Color.BLACK
-            fillRect(0.0, 0.0, fullWidth.toDouble(), fullHeight.toDouble())
+        var line = 0
+        listOf(0, 0x28, 0x50).forEach { m ->
+            repeat(8) {
+                val address = 0x400 + it * 0x80 + m
+                println("Address: " + address.hh() + " line: $line")
+                lineMap[address] = line++
+            }
         }
     }
 
-    fun drawMemoryLocation(location: Int, value: Int) {
-        val z = location - 0x400
-        val x = z % width
-        val y = z / width
-        drawCharacter(x, y, value.toChar())
+//    init {
+//        with(canvas().graphicsContext2D) {
+//            fill = Color.BLACK
+//            fillRect(0.0, 0.0, fullWidth.toDouble(), fullHeight.toDouble())
+//        }
+//    }
+
+    private fun lineFor(location: Int): Int? {
+        val result = lineMap.filter { (k, v) ->
+            location in k..k+width
+        }.values.firstOrNull()
+        return result
     }
 
-    private fun drawCharacter(x: Int, y: Int, character: Char) {
-        if (x < width && y < height) {
-            val xx = x * (fontWidth + gap)
-            val yy = y * (fontHeight + gap)
-            with(canvas.graphicsContext2D) {
-                fill = Color.WHITE
-                fillText(character.toString(), xx.toDouble(), yy.toDouble())
-            }
+    fun drawMemoryLocation(location: Int, value: Int) {
+        val y = lineFor(location)
+        if (y != null) {
+            val x = (location - 0x400) % width
+            println("Location $${location.hh()} ($x,$y) = " + value.and(0x7f).toChar())
+            panel.drawCharacter(x, y, value)
         }
     }
 }

@@ -31,6 +31,7 @@ fun main() {
         2 -> {
             val debugMem = DEBUG
             val debugAsm = DEBUG
+//            frame()
             apple2Computer(debugMem).run(debugMemory = debugMem, _debugAsm = debugAsm)//true, true)
         }
         3 -> {

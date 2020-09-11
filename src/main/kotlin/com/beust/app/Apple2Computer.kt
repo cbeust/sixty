@@ -2,21 +2,92 @@
 
 package com.beust.app
 
-import com.beust.sixty.*
+import com.beust.sixty.Computer
+import com.beust.sixty.Cpu
+import com.beust.sixty.Memory
+import com.beust.sixty.MemoryInterceptor
 import javafx.application.Application
 import javafx.application.Platform
 import javafx.event.EventHandler
 import javafx.fxml.FXMLLoader
 import javafx.scene.Scene
+import javafx.scene.canvas.Canvas
 import javafx.scene.input.KeyCode
 import javafx.scene.input.KeyEvent
 import javafx.scene.layout.AnchorPane
 import javafx.stage.Stage
+import java.awt.Color
+import java.awt.Graphics
 import java.nio.file.Paths
+import javax.swing.JButton
+import javax.swing.JFrame
+import javax.swing.JPanel
 import kotlin.system.exitProcess
 
+
+class ScreenPanel: JPanel() {
+    data class DW(val string: String, val x: Int, val y: Int)
+    private val content = Array(TextScreen.width * TextScreen.height) { " " }
+    private val fontWidth = 10
+    private val fontHeight = 10
+    private val gap = 5
+    private val fullWidth = (fontWidth + gap) * TextScreen.width + 40
+    private val fullHeight = (fontHeight + gap) * TextScreen.height + 40
+
+    init {
+        setBounds(0, 0, fullWidth, fullHeight)
+    }
+
+    override fun paintComponent(g: Graphics) {
+        super.paintComponent(g)
+        g.color = Color.white
+        g.fillRect(0, 0, fullWidth, fullHeight)
+        g.color = Color.blue
+        repeat(TextScreen.height) { y ->
+            repeat(TextScreen.width) { x ->
+                val xx = x * (fontWidth + gap)
+                val yy = y * (fontHeight + gap) + 15
+                val character = content[y * TextScreen.height + x]
+                if (character != " " && yy == 345) {
+                    println("PROBLEM")
+                }
+                println("Drawing at ($x, $y) ($xx,$yy): $character")
+                g.drawString(character, xx, yy)
+            }
+        }
+    }
+
+    fun drawCharacter(x: Int, y: Int, value: Int) {
+        if (value in 0xa0..0xfe) {
+            val c = (value and 0x7f).toChar()
+            if (c == 'E') {
+                println("BREAKPOINT")
+            }
+            content[y * TextScreen.height + x] = c.toString()
+            repaint()
+        }
+    }
+
+}
+
+class Apple2Frame: JFrame() {
+    val screenPanel: ScreenPanel
+
+    init {
+        layout = null //using no layout managers
+        isVisible = true //making the frame visible
+        setSize(1000, 800)
+
+        screenPanel = ScreenPanel().apply {
+            background = Color.RED
+        }
+        add(screenPanel)
+    }
+}
+
 fun apple2Computer(debugMem: Boolean): Computer {
-//    val textScreen = TextScreen(Apple2App.canvas)
+    val frame = Apple2Frame()
+    val textScreen = TextScreen(frame.screenPanel)
 //    val graphicsScreen = HiResScreen(Apple2App.canvas)
     val memory = Memory(65536).apply {
 
@@ -30,7 +101,7 @@ fun apple2Computer(debugMem: Boolean): Computer {
         this[0xc63c] = 4
     }
 
-    val listener = Apple2MemoryListener { -> debugMem }
+    val listener = Apple2MemoryListener(textScreen) { -> debugMem }
     val pcListener = Apple2PcListener()
 
     val appleCpu = Cpu(memory = memory)
@@ -86,8 +157,6 @@ fun apple2Computer(debugMem: Boolean): Computer {
 //                run()
     }
 
-//    Application.launch(Apple2App::class.java)
-
     return result
 }
 
@@ -118,12 +187,15 @@ class Apple2App : Application() {
             }
         }
 
-//        val canvas = root.lookup("#canvas") as Canvas
+        canvas = root.lookup("#canvas") as Canvas
 //        _canvas = Canvas(1000.0, 600.0)
 //        root.children.add(_canvas)
 
         stage.show()
+    }
 
+    companion object {
+        var canvas: Canvas? = null
     }
 }
 private fun loadPic(memory: Memory) {
