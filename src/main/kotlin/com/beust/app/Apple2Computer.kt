@@ -27,7 +27,7 @@ import kotlin.system.exitProcess
 
 class ScreenPanel: JPanel() {
     data class DW(val string: String, val x: Int, val y: Int)
-    private val content = Array(TextScreen.width * TextScreen.height) { " " }
+    private val content = Array(TextScreen.width * TextScreen.height) { "@" }
     private val fontWidth = 10
     private val fontHeight = 10
     private val gap = 5
@@ -48,9 +48,9 @@ class ScreenPanel: JPanel() {
                 val xx = x * (fontWidth + gap)
                 val yy = y * (fontHeight + gap) + 15
                 val character = content[y * TextScreen.height + x]
-                if (character != " " && yy == 345) {
-                    println("PROBLEM")
-                }
+//                if (character != " " && yy == 345) {
+//                    println("PROBLEM")
+//                }
 //                println("Drawing at ($x, $y) ($xx,$yy): $character")
                 g.drawString(character, xx, yy)
             }
@@ -86,9 +86,6 @@ class Apple2Frame: JFrame() {
 }
 
 fun apple2Computer(debugMem: Boolean): Computer {
-    val frame = Apple2Frame()
-    val textScreen = TextScreen(frame.screenPanel)
-//    val graphicsScreen = HiResScreen(Apple2App.canvas)
     val memory = Memory(65536).apply {
 
 //        load("d:\\pd\\Apple Disks\\roms\\APPLE2E.ROM", 0xc000)
@@ -100,6 +97,19 @@ fun apple2Computer(debugMem: Boolean): Computer {
         // When restarting, no need to move the head 0x50 tracks
         this[0xc63c] = 4
     }
+
+    val frame = Apple2Frame().apply {
+        addKeyListener(object: java.awt.event.KeyListener {
+            override fun keyReleased(e: java.awt.event.KeyEvent?) {}
+            override fun keyTyped(e: java.awt.event.KeyEvent?) {}
+
+            override fun keyPressed(e: java.awt.event.KeyEvent) {
+                memory[0xc000] = e.keyCode.or(0x80)
+            }
+        })
+    }
+    val textScreen = TextScreen(frame.screenPanel)
+//    val graphicsScreen = HiResScreen(Apple2App.canvas)
 
     val listener = Apple2MemoryListener(textScreen) { -> debugMem }
     val pcListener = Apple2PcListener()

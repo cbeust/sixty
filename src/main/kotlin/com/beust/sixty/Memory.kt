@@ -15,7 +15,7 @@ class Memory(val size: Int = 0x10000, vararg bytes: Int) {
     operator fun get(i: Int): Int {
         val result = if (interceptor != null) {
             val response = interceptor!!.onRead(i, content[i])
-            if (response.override) {
+            if (response.allow) {
                 content[i] = response.value
             }
             content[i]
@@ -30,7 +30,7 @@ class Memory(val size: Int = 0x10000, vararg bytes: Int) {
     operator fun set(i: Int, value: Int) {
         if (interceptor != null) {
             val response = interceptor!!.onWrite(i, value)
-            if (response.override) {
+            if (response.allow) {
                 content[i] = value
                 listener?.onWrite(i, value)
             } else {

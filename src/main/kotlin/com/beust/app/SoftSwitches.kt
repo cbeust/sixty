@@ -12,9 +12,9 @@ object SoftSwitches {
         when(location) {
             0xC000 -> {
 //                DEBUG = true
-                if ( c.memory[0x7d0] == 170) {
-                    println("BREAKPOINT")
-                }
+//                if ( c.memory[0x7d0] == 170) {
+//                    println("BREAKPOINT")
+//                }
 //                c.memory.dump(0x400, 200)
 //                if (c.cpu.PC != 0xfd24 && c.cpu.PC != 0xfb7f)
 //                    result = 0xc1
@@ -24,7 +24,9 @@ object SoftSwitches {
             0xc007 -> {} // SETINTCXROM
             0xC00C -> {} // CLR80COL
             0xC00E -> {} // CLRALTCHAR
-            0xC010 -> {} // KBDSTRB
+            0xC010 -> {
+                c.cpu.memory[0xc000] = c.cpu.memory[0xc000].and(0x7f)
+            } // KBDSTRB
             0xC015 -> {} // RDCXROM
             0xC018 -> { result = 0x8d } // RD80STORE
             0xC01C -> {} // RDPAGE2
@@ -42,8 +44,9 @@ object SoftSwitches {
     }
 
     fun onWrite(location: Int, value: Int): MemoryInterceptor.Response {
+        var allow = false
         when(location) {
-            0xC000 -> {} // KBD/CLR80STORE
+            0xC000 -> { allow = true } // KBD/CLR80STORE
             0xC001 -> {} // SET80STORE
             0xC006 -> {} // SETSLOTCXROM
             0xc007 -> {} // SETINTCXROM
@@ -56,6 +59,6 @@ object SoftSwitches {
                 TODO("Unknown soft switch: " + location.hh())
             }
         }
-        return MemoryInterceptor.Response(false, value)
+        return MemoryInterceptor.Response(allow, value)
     }
 }

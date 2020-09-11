@@ -9,7 +9,7 @@ open class BaseMemoryListener {
 
 interface MemoryInterceptor {
     /** If override is true, the returned value should be used instead of the one initially provided */
-    class Response(val override: Boolean, val value: Int)
+    class Response(val allow: Boolean, val value: Int)
 
     val computer: Computer
     fun onRead(location: Int, value: Int): Response
