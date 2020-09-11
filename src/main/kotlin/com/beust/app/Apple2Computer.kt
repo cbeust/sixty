@@ -27,7 +27,7 @@ import kotlin.system.exitProcess
 
 class ScreenPanel: JPanel() {
     data class DW(val string: String, val x: Int, val y: Int)
-    private val content = Array(TextScreen.width * TextScreen.height) { "@" }
+    private val content = Array(TextScreen.width * TextScreen.height) { 0x20 }
     private val fontWidth = 10
     private val fontHeight = 10
     private val gap = 5
