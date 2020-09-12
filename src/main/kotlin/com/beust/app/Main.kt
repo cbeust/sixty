@@ -45,7 +45,7 @@ fun main() {
 fun testDisk() {
     val ins = Woz::class.java.classLoader.getResource("woz2/DOS 3.3 System Master.woz")!!.openStream()
     val ins2 = File("d:\\pd\\Apple DIsks\\woz2\\The Apple at Play.woz").inputStream()
-    val disk = WozDisk(ins)
+    val disk: IDisk = WozDisk(ins)
 
     fun pair() = disk.nextByte().shl(1).or(1).and(disk.nextByte()).and(0xff)
 

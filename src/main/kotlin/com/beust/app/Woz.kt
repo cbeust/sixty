@@ -7,10 +7,10 @@ import java.io.InputStream
 import kotlin.random.Random
 
 class WozDisk(ins: InputStream,
-        val bitStreamFactory: (bytes: List<Byte>) -> IBitStream = { bytes -> BitStream(bytes) }) {
+        val bitStreamFactory: (bytes: List<Byte>) -> IBitStream = { bytes -> BitStream(bytes) }): IDisk {
     private val MAX_TRACK = 160
 
-    var position: Int = 0
+    override var position: Int = 0
     private var saved: Int = 0
 
     var track = 0
@@ -50,18 +50,20 @@ class WozDisk(ins: InputStream,
         }
     }
 
-    fun incTrack() = moveTrack {
-        track++
-        if (track >= MAX_TRACK) track = MAX_TRACK - 1
-        track++
+    override fun incTrack() {
+        moveTrack {
+            track++
+            if (track >= MAX_TRACK) track = MAX_TRACK - 1
+            track++
+        }
     }
 
-    fun decTrack() = moveTrack {
+    override fun decTrack() = moveTrack {
         if (track > 0) track--
         if (track > 0) track--
     }
 
-    fun peekBytes(count: Int): ArrayList<Int> {
+    override fun peekBytes(count: Int): ArrayList<Int> {
         val result = arrayListOf<Int>()
         val b = bitStream
         save()
@@ -74,7 +76,7 @@ class WozDisk(ins: InputStream,
 
     fun peekByte() = nextByte(true)
 
-    fun nextBytes(count: Int) : List<Int> {
+    override fun nextBytes(count: Int) : List<Int> {
         val result = arrayListOf<Int>()
         repeat(count) {
             result.add(nextByte())
@@ -121,6 +123,8 @@ class WozDisk(ins: InputStream,
 //            }
         }
     }
+
+    override fun nextByte() = nextByte(false)
 
     fun nextByte(peek: Boolean = false): Int {
         var result = 0
