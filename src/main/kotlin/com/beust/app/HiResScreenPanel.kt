@@ -19,9 +19,7 @@ class HiResScreenPanel: JPanel() {
     private val blockWidth = 5
     private val blockHeight = 5
     private val gap = 2
-    private val fullWidth = (blockWidth + gap) * width + 40
-    private val fullHeight = (blockHeight + gap) * height + 40
-    private val board = Board(400, 300)
+    private val board = Board()
 
     /**
      * 2000-2027
@@ -40,7 +38,6 @@ class HiResScreenPanel: JPanel() {
                 lineMap[il + c] = l++
             }
         }
-        setBounds(300, 10, 400, 300)
 //        drawMemoryLocation(0x0000, 0x2a)
 //        (0..0x1fff).forEach {
 //            drawMemoryLocation(it, 1)
@@ -92,7 +89,6 @@ class HiResScreenPanel: JPanel() {
 
         fun drawPixel(x: Int, y: Int, color: Color) {
             board.draw(x, y, color)
-            repaint()
         }
 
         drawPixel(x + i++, y!!, BitPattern.color(bitPattern.p0, bitPattern.aa, x))
@@ -102,6 +98,7 @@ class HiResScreenPanel: JPanel() {
         drawPixel(x + i++, y, BitPattern.color(bitPattern.p1, bitPattern.ee, x+4))
         drawPixel(x + i++, y, BitPattern.color(bitPattern.p1, bitPattern.ff, x+5))
         drawPixel(x + i++, y, BitPattern.color(bitPattern.p1, bitPattern.gg, x+6))
+        repaint()
 
 //        println("")
     }

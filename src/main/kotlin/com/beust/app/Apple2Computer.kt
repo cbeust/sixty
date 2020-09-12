@@ -17,14 +17,17 @@ class Apple2Frame: JFrame() {
     init {
         layout = null //using no layout managers
         isVisible = true //making the frame visible
-        setSize(1000, 800)
+        setSize(1000, 1000)
+
+        val w = TextScreenPanel.fullWidth
+        val h = TextScreenPanel.fullHeight
 
         textScreenPanel = TextScreenPanel().apply {
-            background = Color.RED
+            setBounds(0, 0, w, h)
         }
         add(textScreenPanel)
         hiresPanel = HiResScreenPanel().apply {
-//            background = Color.BLUE
+            setBounds(w + 10, 0, w, h)
         }
         add(hiresPanel)
     }
@@ -76,7 +79,6 @@ fun apple2Computer(debugMem: Boolean): Computer {
 //            fillWithNumbers(memory)
             loadPic(memory)
         val start = memory[0xfffc].or(memory[0xfffd].shl(8))
-//        disassemble(0, 20)
         cpu.PC = start
 //                run()
     }

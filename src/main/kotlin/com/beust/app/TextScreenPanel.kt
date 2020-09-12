@@ -5,13 +5,7 @@ import java.awt.Graphics
 import javax.swing.JPanel
 
 class TextScreenPanel: JPanel() {
-    data class DW(val string: String, val x: Int, val y: Int)
     private val content = Array(TextScreenPanel.width * TextScreenPanel.height) { 0x20 }
-    private val fontWidth = 10
-    private val fontHeight = 10
-    private val gap = 2
-    private val fullWidth = (fontWidth + gap) * TextScreenPanel.width + 40
-    private val fullHeight = (fontHeight + gap) * TextScreenPanel.height + 40
 
     init {
         setBounds(0, 0, fullWidth, fullHeight)
@@ -20,6 +14,11 @@ class TextScreenPanel: JPanel() {
     companion object {
         val width = 40
         val height = 24
+        private val fontWidth = 10
+        private val fontHeight = 10
+        private val gap = 2
+        val fullWidth = (fontWidth + gap) * TextScreenPanel.width + 20
+        val fullHeight = (fontHeight + gap) * TextScreenPanel.height + 20
     }
 
     private val calculator = LineCalculator()
@@ -53,4 +52,40 @@ class TextScreenPanel: JPanel() {
         }
     }
 
+}
+
+class LineCalculator {
+    private val lineMap = hashMapOf<Int, Int>()
+
+    init {
+        var line = 0
+        listOf(0, 0x28, 0x50).forEach { m ->
+            repeat(8) {
+                val address = 0x400 + it * 0x80 + m
+//                println("Address: " + address.hh() + " line: $line")
+                lineMap[address] = line++
+            }
+        }
+        val l = lineFor(0x7d1)
+        ""
+    }
+
+    private fun lineFor(location: Int): Pair<Int, Int>? {
+        val result = lineMap.filter { (k, v) ->
+            location in k until k + TextScreenPanel.width
+        }
+        return if (result.isEmpty()) null else  result.iterator().next().let { it.key to it.value }
+    }
+
+    fun coordinatesFor(location: Int): Pair<Int, Int>?  {
+        val p = lineFor(location)
+        return if (p != null) {
+            val y = p.second
+            val x = (location - p.first) % TextScreenPanel.width
+            x to y
+        } else {
+            null
+
+        }
+    }
 }

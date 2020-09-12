@@ -37,7 +37,7 @@ class WozDisk(ins: InputStream,
         val newTrackLength = woz.trks.trks[newTrack].bitCount / 8
         if (oldTrackLength != 0 && newTrack != 0) {
             position = position * newTrackLength / oldTrackLength
-            println("Update position oldTrack: $oldTrack -> $newTrack, new position: $position")
+//            println("Update position oldTrack: $oldTrack -> $newTrack, new position: $position")
         }
     }
 
