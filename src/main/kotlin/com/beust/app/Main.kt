@@ -12,7 +12,7 @@ val DISK_ = WozDisk(
         File("d:\\pd\\Apple Disks\\woz2\\First Math Adventures - Understanding word problems.woz").inputStream())
 
 fun main() {
-    val choice = 2
+    val choice = 3
 
     when(choice) {
         1 -> {
@@ -45,20 +45,24 @@ fun main() {
 fun testDisk() {
     val ins = Woz::class.java.classLoader.getResource("woz2/DOS 3.3 System Master.woz")!!.openStream()
     val ins2 = File("d:\\pd\\Apple DIsks\\woz2\\The Apple at Play.woz").inputStream()
-    val disk: IDisk = WozDisk(ins)
+    val disk: IByteStream = WozDisk(ins)
+    testByteStream(disk)
+}
 
-    fun pair() = disk.nextByte().shl(1).or(1).and(disk.nextByte()).and(0xff)
+fun testByteStream(byteStream: IByteStream) {
 
-    repeat(12) {
-        disk.incTrack()
-    }
+    fun pair() = byteStream.nextByte().shl(1).or(1).and(byteStream.nextByte()).and(0xff)
+
+//    repeat(12) {
+//        disk.incTrack()
+//    }
 
     repeat(13) {
-        while (disk.peekBytes(3) != listOf(0xd5, 0xaa, 0x96)) {
-            disk.nextByte()
+        while (byteStream.peekBytes(3) != listOf(0xd5, 0xaa, 0x96)) {
+            byteStream.nextByte()
         }
-        println("Found d5 aa 96 at position " + (disk.position / 8).hh())
-        val s = disk.nextBytes(3)
+        println("Found d5 aa 96 at position " + (byteStream.position / 8).hh())
+        val s = byteStream.nextBytes(3)
         val volume = pair()
         val track = pair()
         val sector = pair()
@@ -67,19 +71,19 @@ fun testDisk() {
             TODO("Checksum doesn't match")
         }
         println("Volume: $volume Track: $track Sector: $sector checksum: $checksumAddress")
-        if (disk.nextBytes(3) != listOf(0xde, 0xaa, 0xeb)) {
+        if (byteStream.nextBytes(3) != listOf(0xde, 0xaa, 0xeb)) {
             TODO("Didn't find closing for address")
         }
 
-        while (disk.peekBytes(3) != listOf(0xd5, 0xaa, 0xad)) {
-            disk.nextByte()
+        while (byteStream.peekBytes(3) != listOf(0xd5, 0xaa, 0xad)) {
+            byteStream.nextByte()
         }
-        disk.nextBytes(3)
+        byteStream.nextBytes(3)
 
         val buffer = IntArray(342)
         var checksum = 0
         for (i in buffer.indices) {
-            val b = disk.nextByte()
+            val b = byteStream.nextByte()
             if (READ_TABLE[b] == null) {
                 println("INVALID NIBBLE")
             }
@@ -90,7 +94,8 @@ fun testDisk() {
                 buffer[i - 86] = checksum
             }
         }
-        checksum = checksum xor READ_TABLE[disk.nextByte()]!!
+        val bh = byteStream.peekBytes(1).first().h()
+        checksum = checksum xor READ_TABLE[byteStream.nextByte()]!!
         if (checksum != 0) {
             TODO("BAD CHECKSUM")
         }
@@ -109,14 +114,14 @@ fun testDisk() {
             sectorData[i] = b
         }
 
-        if (disk.nextBytes(3) != listOf(0xde, 0xaa, 0xeb)) {
+        if (byteStream.nextBytes(3) != listOf(0xde, 0xaa, 0xeb)) {
             TODO("Didn't find closing for data")
         }
-        println("  Successfully read track")
+        println("  Successfully read sector $sector")
     }
 
     repeat(100) {
-        print(disk.nextByte().h() + " ")
+        print(byteStream.nextByte().h() + " ")
     }
     println("")
 }

@@ -16,23 +16,32 @@ class DskDisk {
     private val DEST_SIZE = 343
     private val bitBuffer = arrayListOf<Int>()
     private val isProdos = false
+    private val TRACK_SIZE_ENCODED = 6028
 
     init {
         val bytes = File("src/test/resources/audit.dsk").inputStream().readAllBytes()
         bytes.forEach { src.add(it.toInt()) }
-        repeat(1) { track ->
-            encodeTrack(track, src.slice(track * TRACK_SIZE until TRACK_SIZE))
+        repeat(2) { track ->
+            val start = track * TRACK_SIZE
+            encodeTrack(track, src.slice(start until start + TRACK_SIZE))
+
+            val startEncoded = TRACK_SIZE_ENCODED * track
         }
-        var i = 0
-        while (i < bitBuffer.size) {
-            var byte = 0
-            repeat(8) {
-                byte = byte.shl(1).or(bitBuffer[it + i])
-            }
-            print(byte.h() + " ")
-            if (i > 0 && i % (16*8) == 0) println("")
-            i += 8
-        }
+        val byteStream = ByteStream(bitBuffer)
+        testByteStream(byteStream)
+//        var i = 0
+//        while (i < bitBuffer.size) {
+//            var byte = 0
+//            repeat(8) {
+//                byte = byte.shl(1).or(bitBuffer[it + i])
+//            }
+//            print(byte.h() + " ")
+//            if (i > 0 && i % (16*8) == 0) println("")
+//            i += 8
+//
+//        }
+
+        ""
     }
 
     private fun encodeTrack(track: Int, bytes: List<Int>) {
@@ -44,9 +53,9 @@ class DskDisk {
             write4And4(track)
             write4And4(sector)
             write4And4(0xfe xor track xor sector)
+            write8(0xde, 0xaa, 0xeb)
 
             writeSync(2)
-            write8(0xd5, 0xaa, 0xeb)
 
             write8(0xd5, 0xaa, 0xad)
             val logicalSector = if (sector == 15) 15 else ((sector * (if (isProdos) 8 else 7)) % 15);
@@ -58,6 +67,7 @@ class DskDisk {
 
             writeSync(3)
         }
+
     }
 
     private fun writeSync(count: Int) {
@@ -81,6 +91,12 @@ class DskDisk {
     }
 
     private fun write4And4(value: Int) {
+        var n = 0
+        println(value.shr(1).or(0xaa))
+        println(value.or(0xaa))
+        n = 1
+        println(value.shr(1).or(0xaa))
+        println(value.or(0xaa))
         write8(value.shr(1).or(0xaa))
         write8(value.or(0xaa))
     }

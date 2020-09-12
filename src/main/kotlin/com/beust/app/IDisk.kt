@@ -1,15 +1,22 @@
 package com.beust.app
 
-interface IDisk {
+interface IByteStream {
     /** Position in bytes */
-    val position: Int
-    fun peekBytes(count: Int): List<Int>
-    fun nextByte(): Int
-    fun incTrack()
-    fun decTrack()
-    fun nextBytes(n: Int) : List<Int> {
-        val result = arrayListOf<Int>()
-        repeat(n) { result.add(nextByte())}
+    var position: Int
+
+    fun nextBytes(n: Int): List<Int>
+
+    fun peekBytes(n: Int): List<Int> {
+        val saved = position
+        val result = nextBytes(n)
+        position = saved
         return result
     }
+
+    fun nextByte() = nextBytes(1).first()
 }
+interface IDisk: IByteStream {
+    fun incTrack()
+    fun decTrack()
+}
+
