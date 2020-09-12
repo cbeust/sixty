@@ -2,8 +2,8 @@ package com.beust.app
 
 import com.beust.sixty.*
 
-class Apple2MemoryListener(private val textScreen: TextScreen,
-        private val hiresScreen: HiResScreen,
+class Apple2MemoryListener(private val textScreen: TextScreenPanel,
+        private val hiresScreen: HiResScreenPanel,
         val debugMem: () -> Boolean): MemoryListener() {
     val disk = WozDisk(Woz::class.java.classLoader.getResource("woz2/DOS 3.3 System Master.woz").openStream())
 

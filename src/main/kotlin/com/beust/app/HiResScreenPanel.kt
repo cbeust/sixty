@@ -15,7 +15,7 @@ import javax.swing.JPanel
  * DD is split over two bytes
  * then EE, FF, GG
  */
-class HiResScreen: JPanel() {
+class HiResScreenPanel: JPanel() {
     private val blockWidth = 5
     private val blockHeight = 5
     private val gap = 2

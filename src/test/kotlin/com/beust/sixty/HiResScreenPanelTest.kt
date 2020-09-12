@@ -6,7 +6,7 @@ import org.testng.annotations.DataProvider
 import org.testng.annotations.Test
 
 @Test
-class HiResScreenTest {
+class HiResScreenPanelTest {
     /**
      * * PDCCBBAA PGGFFEED
      */

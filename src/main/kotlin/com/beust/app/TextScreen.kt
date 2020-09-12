@@ -18,7 +18,7 @@ class LineCalculator {
 
     private fun lineFor(location: Int): Pair<Int, Int>? {
         val result = lineMap.filter { (k, v) ->
-            location in k until k + TextScreen.width
+            location in k until k + TextScreenPanel.width
         }
         return if (result.isEmpty()) null else  result.iterator().next().let { it.key to it.value }
     }
@@ -27,26 +27,11 @@ class LineCalculator {
         val p = lineFor(location)
         return if (p != null) {
             val y = p.second
-            val x = (location - p.first) % TextScreen.width
+            val x = (location - p.first) % TextScreenPanel.width
             x to y
         } else {
             null
 
-        }
-    }
-}
-
-class TextScreen(private val panel: ScreenPanel) {
-    companion object {
-        val width = 40
-        val height = 24
-    }
-
-    private val calculator = LineCalculator()
-
-    fun drawMemoryLocation(location: Int, value: Int) {
-        calculator.coordinatesFor(location)?.let { (x, y) ->
-            panel.drawCharacter(x, y, value)
         }
     }
 }

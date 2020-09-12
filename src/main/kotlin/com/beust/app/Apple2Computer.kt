@@ -6,65 +6,24 @@ import com.beust.sixty.Computer
 import com.beust.sixty.Cpu
 import com.beust.sixty.Memory
 import java.awt.Color
-import java.awt.Graphics
 import java.nio.file.Paths
 import javax.swing.JFrame
-import javax.swing.JPanel
-import kotlin.system.exitProcess
 
-
-class ScreenPanel: JPanel() {
-    data class DW(val string: String, val x: Int, val y: Int)
-    private val content = Array(TextScreen.width * TextScreen.height) { 0x20 }
-    private val fontWidth = 10
-    private val fontHeight = 10
-    private val gap = 2
-    private val fullWidth = (fontWidth + gap) * TextScreen.width + 40
-    private val fullHeight = (fontHeight + gap) * TextScreen.height + 40
-
-    init {
-        setBounds(0, 0, fullWidth, fullHeight)
-    }
-
-    override fun paintComponent(g: Graphics) {
-        super.paintComponent(g)
-        g.color = Color.black
-        g.fillRect(0, 0, fullWidth, fullHeight)
-        g.color = Color.green
-        repeat(TextScreen.height) { y ->
-            repeat(TextScreen.width) { x ->
-                val xx = x * (fontWidth + gap)
-                val yy = y * (fontHeight + gap) + 15
-                val c = content[y * TextScreen.width + x].toChar().toString()
-//                println("Drawing at ($x, $y) ($xx,$yy): $character")
-                g.drawString(c, xx, yy)
-            }
-        }
-    }
-
-    fun drawCharacter(x: Int, y: Int, value: Int) {
-        if (value in 0xa0..0xfe) {
-            content[y * TextScreen.width + x] = value and 0x7f
-            repaint()
-        }
-    }
-
-}
 
 class Apple2Frame: JFrame() {
-    val screenPanel: ScreenPanel
-    val hiresPanel: HiResScreen
+    val textScreenPanel: TextScreenPanel
+    val hiresPanel: HiResScreenPanel
 
     init {
         layout = null //using no layout managers
         isVisible = true //making the frame visible
         setSize(1000, 800)
 
-        screenPanel = ScreenPanel().apply {
+        textScreenPanel = TextScreenPanel().apply {
             background = Color.RED
         }
-        add(screenPanel)
-        hiresPanel = HiResScreen().apply {
+        add(textScreenPanel)
+        hiresPanel = HiResScreenPanel().apply {
 //            background = Color.BLUE
         }
         add(hiresPanel)
@@ -99,9 +58,8 @@ fun apple2Computer(debugMem: Boolean): Computer {
             }
         })
     }
-    val textScreen = TextScreen(frame.screenPanel)
 
-    val listener = Apple2MemoryListener(textScreen, frame.hiresPanel) { -> debugMem }
+    val listener = Apple2MemoryListener(frame.textScreenPanel, frame.hiresPanel) { -> debugMem }
 //    val pcListener = Apple2PcListener()
     val interceptor = Apple2MemoryInterceptor()
 
