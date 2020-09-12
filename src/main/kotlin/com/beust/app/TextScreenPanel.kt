@@ -5,20 +5,16 @@ import java.awt.Graphics
 import javax.swing.JPanel
 
 class TextScreenPanel: JPanel() {
-    private val content = Array(TextScreenPanel.width * TextScreenPanel.height) { 0x20 }
-
-    init {
-        setBounds(0, 0, fullWidth, fullHeight)
-    }
+    private val content = Array(WIDTH * HEIGHT) { 0x20 }
 
     companion object {
-        val width = 40
-        val height = 24
+        val WIDTH = 40
+        val HEIGHT = 24
         private val fontWidth = 10
         private val fontHeight = 10
         private val gap = 2
-        val fullWidth = (fontWidth + gap) * TextScreenPanel.width + 20
-        val fullHeight = (fontHeight + gap) * TextScreenPanel.height + 20
+        val fullWidth = (fontWidth + gap) * WIDTH + 20
+        val fullHeight = (fontHeight + gap) * HEIGHT + 20
     }
 
     private val calculator = LineCalculator()
@@ -32,13 +28,13 @@ class TextScreenPanel: JPanel() {
     override fun paintComponent(g: Graphics) {
         super.paintComponent(g)
         g.color = Color.black
-        g.fillRect(0, 0, fullWidth, fullHeight)
+        g.fillRect(0, 0, width, height)
         g.color = Color.green
-        repeat(TextScreenPanel.height) { y ->
-            repeat(TextScreenPanel.width) { x ->
+        repeat(HEIGHT) { y ->
+            repeat(WIDTH) { x ->
                 val xx = x * (fontWidth + gap)
                 val yy = y * (fontHeight + gap) + 15
-                val c = content[y * TextScreenPanel.width + x].toChar().toString()
+                val c = content[y * WIDTH + x].toChar().toString()
 //                println("Drawing at ($x, $y) ($xx,$yy): $character")
                 g.drawString(c, xx, yy)
             }
@@ -47,7 +43,7 @@ class TextScreenPanel: JPanel() {
 
     fun drawCharacter(x: Int, y: Int, value: Int) {
         if (value in 0xa0..0xfe) {
-            content[y * TextScreenPanel.width + x] = value and 0x7f
+            content[y * WIDTH + x] = value and 0x7f
             repaint()
         }
     }
@@ -72,7 +68,7 @@ class LineCalculator {
 
     private fun lineFor(location: Int): Pair<Int, Int>? {
         val result = lineMap.filter { (k, v) ->
-            location in k until k + TextScreenPanel.width
+            location in k until k + TextScreenPanel.WIDTH
         }
         return if (result.isEmpty()) null else  result.iterator().next().let { it.key to it.value }
     }
@@ -81,7 +77,7 @@ class LineCalculator {
         val p = lineFor(location)
         return if (p != null) {
             val y = p.second
-            val x = (location - p.first) % TextScreenPanel.width
+            val x = (location - p.first) % TextScreenPanel.WIDTH
             x to y
         } else {
             null

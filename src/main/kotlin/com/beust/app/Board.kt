@@ -7,7 +7,7 @@ import javax.swing.JPanel
 class Board {
     private val DEFAULT = Color.black
     private val blockWidth = 3
-    private val blockHeight = 2
+    private val blockHeight = 3
     private val gap = 0
     private val WIDTH = 280
     private val HEIGHT = 192
@@ -27,6 +27,9 @@ class Board {
     }
 
     fun draw(x: Int, y: Int, color: Color) {
+        if (index(x,y) >= WIDTH*HEIGHT) {
+            println("ERROR")
+        }
         content[index(x, y)] = color
     }
 }

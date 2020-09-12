@@ -14,10 +14,12 @@ import javax.swing.JPanel
  * AA is first bit, then BB, then CC
  * DD is split over two bytes
  * then EE, FF, GG
- *
- * Hires size: 280 x 192
  */
 class HiResScreenPanel: JPanel() {
+    companion object {
+        const val WIDTH = 280
+        const val HEIGHT = 192
+    }
     private val board = Board()
 
     /**
@@ -78,7 +80,7 @@ class HiResScreenPanel: JPanel() {
             }
         }
         val y = lineMap[key]
-        val x = ((loc - key) / 2) * 7
+        val x = (loc - key) * 7
 
         var i = 0
 //        println("=== Location " + location.toHex() + " at $x, $y")
@@ -87,16 +89,20 @@ class HiResScreenPanel: JPanel() {
 //        }
 
         fun drawPixel(x: Int, y: Int, color: Color) {
-            board.draw(x, y, color)
+            if (x < WIDTH) {
+                board.draw(x, y, color)
+            }
         }
 
-        drawPixel(x + i++, y!!, BitPattern.color(bitPattern.p0, bitPattern.aa, x))
-        drawPixel(x + i++, y, BitPattern.color(bitPattern.p0, bitPattern.bb, x+1))
-        drawPixel(x + i++, y, BitPattern.color(bitPattern.p0, bitPattern.cc, x+2))
-        drawPixel(x + i++, y, BitPattern.color(if (even) bitPattern.p0 else bitPattern.p1, bitPattern.dd, x+3))
-        drawPixel(x + i++, y, BitPattern.color(bitPattern.p1, bitPattern.ee, x+4))
-        drawPixel(x + i++, y, BitPattern.color(bitPattern.p1, bitPattern.ff, x+5))
-        drawPixel(x + i++, y, BitPattern.color(bitPattern.p1, bitPattern.gg, x+6))
+        y!!
+        repeat(2){ drawPixel(x + i++, y, BitPattern.color(bitPattern.p0, bitPattern.aa, x)) }
+        repeat(2){ drawPixel(x + i++, y, BitPattern.color(bitPattern.p0, bitPattern.bb, x + 1)) }
+        repeat(2){ drawPixel(x + i++, y, BitPattern.color(bitPattern.p0, bitPattern.cc, x + 2)) }
+        repeat(2){ drawPixel(x + i++, y, BitPattern.color(if (even) bitPattern.p0 else bitPattern.p1, bitPattern.dd, x + 3)) }
+        repeat(2){ drawPixel(x + i++, y, BitPattern.color(bitPattern.p1, bitPattern.ee, x + 4)) }
+        repeat(2){ drawPixel(x + i++, y, BitPattern.color(bitPattern.p1, bitPattern.ff, x + 5)) }
+        repeat(2){ drawPixel(x + i++, y, BitPattern.color(bitPattern.p1, bitPattern.gg, x + 6)) }
+
         repaint()
     }
 

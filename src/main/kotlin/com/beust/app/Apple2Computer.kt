@@ -5,9 +5,14 @@ package com.beust.app
 import com.beust.sixty.Computer
 import com.beust.sixty.Cpu
 import com.beust.sixty.Memory
+import java.awt.Button
 import java.awt.Color
+import java.awt.Dimension
+import java.awt.Label
 import java.nio.file.Paths
+import javax.swing.GroupLayout
 import javax.swing.JFrame
+import javax.swing.JPanel
 
 
 class Apple2Frame: JFrame() {
@@ -15,21 +20,39 @@ class Apple2Frame: JFrame() {
     val hiresPanel: HiResScreenPanel
 
     init {
-        layout = null //using no layout managers
+        val layout = GroupLayout(contentPane)
+        contentPane.layout = layout
+        title = "Cédric's Apple ][ emulator"
+
         isVisible = true //making the frame visible
         setSize(1000, 1000)
 
-        val w = TextScreenPanel.fullWidth
-        val h = TextScreenPanel.fullHeight
+        val w = HiResScreenPanel.WIDTH * 2
+        val h = HiResScreenPanel.HEIGHT * 2
 
         textScreenPanel = TextScreenPanel().apply {
-            setBounds(0, 0, w, h)
+            preferredSize = Dimension(w, h)
+            setSize(w, h)
         }
-        add(textScreenPanel)
         hiresPanel = HiResScreenPanel().apply {
-            setBounds(w + 10, 0, w, h)
+            preferredSize = Dimension(w, h)
+            setSize(w, h)
         }
-        add(hiresPanel)
+
+        layout.apply {
+            autoCreateGaps = true
+            autoCreateContainerGaps = true
+            setHorizontalGroup(createSequentialGroup()
+                    .addComponent(textScreenPanel, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, Int.MAX_VALUE)
+                    .addComponent(hiresPanel, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, Int.MAX_VALUE)
+            )
+            setVerticalGroup(createParallelGroup()
+                    .addComponent(textScreenPanel, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, Int.MAX_VALUE)
+                    .addComponent(hiresPanel, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, Int.MAX_VALUE)
+            )
+            pack()
+        }
+
     }
 }
 
@@ -77,6 +100,7 @@ fun apple2Computer(debugMem: Boolean): Computer {
 //        memory.interceptor = interceptor
 //            fillScreen(memory)
 //            fillWithNumbers(memory)
+//        memory[0x2027] = 0xdd
             loadPic(memory)
         val start = memory[0xfffc].or(memory[0xfffd].shl(8))
         cpu.PC = start
