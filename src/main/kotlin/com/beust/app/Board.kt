@@ -5,7 +5,7 @@ import java.awt.Graphics
 import javax.swing.JPanel
 
 class Board {
-    private val DEFAULT = Color.white
+    private val DEFAULT = Color.green
     private val blockWidth = 3
     private val blockHeight = 2
     private val gap = 0
@@ -21,6 +21,10 @@ class Board {
                 g.color = content[index(x, y)]
                 val xx = x * (blockWidth + gap)
                 val yy = y * (blockHeight + gap)
+                if (xx > 1010) {
+                    println("PROBLEM")
+                }
+
                 g.fillRect(xx, yy, blockWidth, blockHeight)
             }
         }

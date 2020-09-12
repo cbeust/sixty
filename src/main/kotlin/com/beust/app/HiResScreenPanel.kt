@@ -100,6 +100,9 @@ class HiResScreenPanel: JPanel() {
         drawPixel(x + i++, y, BitPattern.color(bitPattern.p1, bitPattern.gg, x+6))
         repaint()
 
+        if (x + i > 1010) {
+            println("PROBLEM2")
+        }
 //        println("")
     }
 
