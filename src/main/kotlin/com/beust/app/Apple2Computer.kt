@@ -69,7 +69,7 @@ fun apple2Computer(debugMem: Boolean): Computer {
     val appleCpu = Cpu(memory = memory)
     val result = Computer(cpu = appleCpu)
     listener.computer = result
-    interceptor.computer = result
+//    interceptor.computer = result
 //    pcListener.computer = result
 
     result.apply {
