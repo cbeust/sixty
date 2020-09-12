@@ -21,7 +21,7 @@ class HiResScreen: JPanel() {
     private val gap = 2
     private val fullWidth = (blockWidth + gap) * width + 40
     private val fullHeight = (blockHeight + gap) * height + 40
-    private val board = Board(width, height)
+    private val board = Board(400, 300)
 
     /**
      * 2000-2027
@@ -40,6 +40,7 @@ class HiResScreen: JPanel() {
                 lineMap[il + c] = l++
             }
         }
+        setBounds(300, 10, 400, 300)
 //        drawMemoryLocation(0x0000, 0x2a)
 //        (0..0x1fff).forEach {
 //            drawMemoryLocation(it, 1)
@@ -47,6 +48,7 @@ class HiResScreen: JPanel() {
     }
 
     override fun paintComponent(g: Graphics) {
+        super.paintComponent(g)
         board.redraw(g)
     }
 

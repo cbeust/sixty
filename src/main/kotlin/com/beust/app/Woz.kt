@@ -46,7 +46,7 @@ class WozDisk(ins: InputStream,
         block()
         if (t != track) {
             updatePosition(t, track)
-            println("New track: $" + track.h() + " (" + track / 4.0 + ")")
+//            println("New track: $" + track.h() + " (" + track / 4.0 + ")")
         }
     }
 

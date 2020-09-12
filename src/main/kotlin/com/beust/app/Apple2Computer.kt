@@ -53,6 +53,7 @@ class ScreenPanel: JPanel() {
 
 class Apple2Frame: JFrame() {
     val screenPanel: ScreenPanel
+    val hiresPanel: HiResScreen
 
     init {
         layout = null //using no layout managers
@@ -63,6 +64,10 @@ class Apple2Frame: JFrame() {
             background = Color.RED
         }
         add(screenPanel)
+        hiresPanel = HiResScreen().apply {
+//            background = Color.BLUE
+        }
+        add(hiresPanel)
     }
 }
 
@@ -95,9 +100,8 @@ fun apple2Computer(debugMem: Boolean): Computer {
         })
     }
     val textScreen = TextScreen(frame.screenPanel)
-//    val graphicsScreen = HiResScreen(Apple2App.canvas)
 
-    val listener = Apple2MemoryListener(textScreen) { -> debugMem }
+    val listener = Apple2MemoryListener(textScreen, frame.hiresPanel) { -> debugMem }
 //    val pcListener = Apple2PcListener()
     val interceptor = Apple2MemoryInterceptor()
 
@@ -112,7 +116,7 @@ fun apple2Computer(debugMem: Boolean): Computer {
 //        memory.interceptor = interceptor
 //            fillScreen(memory)
 //            fillWithNumbers(memory)
-//            loadPic(memory)
+            loadPic(memory)
         val start = memory[0xfffc].or(memory[0xfffd].shl(8))
 //        disassemble(0, 20)
         cpu.PC = start
