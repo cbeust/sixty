@@ -14,11 +14,10 @@ import javax.swing.JPanel
  * AA is first bit, then BB, then CC
  * DD is split over two bytes
  * then EE, FF, GG
+ *
+ * Hires size: 280 x 192
  */
 class HiResScreenPanel: JPanel() {
-    private val blockWidth = 5
-    private val blockHeight = 5
-    private val gap = 2
     private val board = Board()
 
     /**
@@ -49,7 +48,7 @@ class HiResScreenPanel: JPanel() {
         board.redraw(g)
     }
 
-    fun drawMemoryLocation(memory: Memory, location: Int, value: Int) {
+    fun drawMemoryLocation(memory: Memory, location: Int) {
         val even = location % 2 == 0
         val bitPattern = if (even) {
             val byte0 = memory[location]
@@ -99,11 +98,6 @@ class HiResScreenPanel: JPanel() {
         drawPixel(x + i++, y, BitPattern.color(bitPattern.p1, bitPattern.ff, x+5))
         drawPixel(x + i++, y, BitPattern.color(bitPattern.p1, bitPattern.gg, x+6))
         repaint()
-
-        if (x + i > 1010) {
-            println("PROBLEM2")
-        }
-//        println("")
     }
 
 }

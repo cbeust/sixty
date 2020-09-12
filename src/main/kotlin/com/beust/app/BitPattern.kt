@@ -37,7 +37,7 @@ class BitPattern(private val byte0: Int, private val byte1: Int) {
         //
         fun color(group: Int, bits: Int, x: Int): Color {
             val result = when(bits) {
-                0 -> Color.ORANGE
+                0 -> Color.BLACK
                 3 -> Color.WHITE
                 2 -> /* if (x%2==0) Color.BLACK else */ if (group == 0) Color.GREEN else Color.ORANGE
                 else -> /* if (x%2==1) Color.BLACK else */ if (group == 0) Color.MAGENTA else Color.BLUE

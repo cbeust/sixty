@@ -88,7 +88,7 @@ fun apple2Computer(debugMem: Boolean): Computer {
 
 private fun loadPic(memory: Memory) {
     val bytes = Paths.get("d:", "PD", "Apple disks", "fishgame.pic").toFile().readBytes()
-    (4..bytes.size - 1).forEach {
+    (4..0x2004).forEach {
         memory[0x2000 + it - 4] = bytes[it].toInt()
     }
 }
