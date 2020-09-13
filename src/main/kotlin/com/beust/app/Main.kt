@@ -50,13 +50,13 @@ fun testDisk() {
     getOneTrack(disk)
 }
 
-class Sector(val number: Int, val content: IntArray)
-class Track(val number: Int, val sectors: List<Sector>)
-class DiskContent(val tracks: List<Track>)
+data class Sector(val number: Int, val content: IntArray)
+data class Track(val number: Int, val sectors: Map<Int, Sector>)
+data class DiskContent(val tracks: List<Track>)
 
 fun getOneTrack(byteStream: IByteStream): Track {
     var track = -1
-    val sectors = arrayListOf<Sector>()
+    val sectors = hashMapOf<Int, Sector>()
     val result = arrayListOf<IntArray>()
     fun pair() = byteStream.nextByte().shl(1).or(1).and(byteStream.nextByte()).and(0xff)
     repeat(16) {
@@ -123,7 +123,7 @@ fun getOneTrack(byteStream: IByteStream): Track {
         if (byteStream.nextBytes(3) != listOf(0xde, 0xaa, 0xeb)) {
             TODO("Didn't find closing for data")
         }
-        sectors.add(Sector(sector, sectorData))
+        sectors[sector] = Sector(sector, sectorData)
         println("  Successfully read sector $sector")
     }
 

@@ -71,19 +71,19 @@ class DskDisk(val ins: InputStream): IDisk {
 
     private fun encodeTrack(track: Int, bytes: List<Int>) {
         repeat(16) { sector ->
+            val logicalSector = if (sector == 15) 15 else ((sector * (if (isProdos) 8 else 7)) % 15);
             writeSync(6)
             write8(0xd5, 0xaa, 0x96)
             write4And4(0xfe)
             write4And4(track)
-            write4And4(sector)
-            write4And4(0xfe xor track xor sector)
+            write4And4(logicalSector)
+            write4And4(0xfe xor track xor logicalSector)
             write8(0xde, 0xaa, 0xeb)
 
             writeSync(2)
 
             write8(0xd5, 0xaa, 0xad)
-            val logicalSector = if (sector == 15) 15 else ((sector * (if (isProdos) 8 else 7)) % 15);
-            val start = sector * 256
+            val start = logicalSector * 256
             val encoded = encode6And2(bytes.slice(start until start + 256))
             encoded.forEach {
                 write8(it)

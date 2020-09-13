@@ -101,7 +101,7 @@ fun apple2Computer(debugMem: Boolean): Computer {
 //            fillScreen(memory)
 //            fillWithNumbers(memory)
 //        memory[0x2027] = 0xdd
-            loadPic(memory)
+//            loadPic(memory)
         val start = memory[0xfffc].or(memory[0xfffd].shl(8))
         cpu.PC = start
 //                run()

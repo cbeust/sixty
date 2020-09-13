@@ -28,6 +28,10 @@ class Apple2MemoryListener(private val textScreen: TextScreenPanel,
         } else if (location in 0x2000..0x3fff) {
 //            if (value != 0) println("Graphics: [$" + location.hh() + "]=$" + value.and(0xff).h())
             hiresScreen.drawMemoryLocation(memory, location)
+        } else {
+            if (location == 0x3700) {
+                println("Writing to 3700")
+            }
         }
 
         if (debugMem()) logMem(location, value)
