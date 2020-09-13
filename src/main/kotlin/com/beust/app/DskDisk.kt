@@ -29,7 +29,7 @@ class DskDisk(val ins: InputStream): IDisk {
     private var track: Int = 0
 
     override fun nextBit(): Int {
-        bitBuffers[track].let { bitBuffer ->
+        bitBuffers[track / 2].let { bitBuffer ->
             val result = bitBuffer[positionInTrack]
             positionInTrack = (positionInTrack + 1) % bitBuffer.size
             return result

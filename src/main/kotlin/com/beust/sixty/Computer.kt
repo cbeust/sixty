@@ -68,25 +68,23 @@ class Computer(val cpu: Cpu = Cpu(memory = Memory()),
             if (opCode == 0x60 && cpu.SP.isEmpty()) {
                 done = true
             } else {
-                if (cpu.PC == BREAKPOINT && memory[0x3f] == 0x1b) {
-                    println(this)
-                    println("breakpoint")
-                }
-                if (cpu.PC == 0xc696) {
-                    if  (cpu.Y == 1) {
-                        sector = cpu.A
-                        if (track == 0 && sector == 10) {
-                            println("--- Read track $track sector ${cpu.A}")
-                        }
-                    } else if (cpu.Y == 2) {
-                        track = cpu.A
-                    }
-                } else if (cpu.PC == 0xc6c6 && cpu.Y == 0) {
-                    println("  storing in " + word(memory, 0x26).hh())
-                }
+//                if (cpu.PC == BREAKPOINT && memory[0x3f] == 0x1b) {
+//                    println(this)
+//                    println("breakpoint")
+//                }
+//                if (cpu.PC == 0xc696) {
+//                    if  (cpu.Y == 1) {
+//                        sector = cpu.A
+//                        if (track == 0 && sector == 10) {
+//                            println("--- Read track $track sector ${cpu.A}")
+//                        }
+//                    } else if (cpu.Y == 2) {
+//                        track = cpu.A
+//                    }
+//                }
 
                 try {
-//                    DEBUG = cycles >= 33100000// debugAsm && cycles >= 9950649
+//                    DEBUG = cycles >= 15348000
                     debugAsm = DEBUG
                     if (DEBUG) {
                         val (byte, word) = byteWord()

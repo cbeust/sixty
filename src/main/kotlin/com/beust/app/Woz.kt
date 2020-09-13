@@ -271,7 +271,7 @@ class Woz(bytes: ByteArray) {
 
     fun read(bytes: ByteArray) {
         val stream = Stream(bytes)
-        println("Header: " + readHeader(stream))
+        readHeader(stream)
 
         while (! this::info.isInitialized || ! this::tmap.isInitialized || ! this::trks.isInitialized) {
             val name = stream.read4String()

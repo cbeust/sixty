@@ -33,29 +33,30 @@ class Memory(val size: Int = 0x10000, vararg bytes: Int) {
 //                    val pos = disk.bitPosition
                     // Faster way for unprotected disks
                     val result = DISK.nextByte()
-                    if (d5aa96) {
-                        when (count) {
-                            0 -> byte0 = result
-                            1 -> volume = pair(byte0, result)
-                            2 -> byte0 = result
-                            3 -> track = pair(byte0, result)
-                            4 -> byte0 = result
-                            5 -> {
-                                sector = pair(byte0, result)
-                                println("Read volume $volume, track $track, sector $sector")
-                                count = -1
-                                d5 = false
-                                d5aa = false
-                                d5aa96 = false
-                            }
-                        }
-                        count++
-                    } else if (result == 0xd5) d5 = true
-                    else if (result == 0xaa && d5) d5aa = true
-                    else if (d5aa) {
-                        if (result == 0x96) d5aa96 = true
-                        else d5aa = false
-                    }
+
+//                    if (d5aa96) {
+//                        when (count) {
+//                            0 -> byte0 = result
+//                            1 -> volume = pair(byte0, result)
+//                            2 -> byte0 = result
+//                            3 -> track = pair(byte0, result)
+//                            4 -> byte0 = result
+//                            5 -> {
+//                                sector = pair(byte0, result)
+//                                println("Read volume $volume, track $track, sector $sector")
+//                                count = -1
+//                                d5 = false
+//                                d5aa = false
+//                                d5aa96 = false
+//                            }
+//                        }
+//                        count++
+//                    } else if (result == 0xd5) d5 = true
+//                    else if (result == 0xaa && d5) d5aa = true
+//                    else if (d5aa) {
+//                        if (result == 0x96) d5aa96 = true
+//                        else d5aa = false
+//                    }
 
                     return result
 
@@ -109,9 +110,6 @@ class Memory(val size: Int = 0x10000, vararg bytes: Int) {
         if (i < 0xc000) {
             content[i] = value
             listener?.onWrite(i, value)
-        }
-        if (i == 0x3f && value == 0x1b) {
-            println("New $3f value: " + value.h())
         }
     }
 
