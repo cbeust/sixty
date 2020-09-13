@@ -11,11 +11,24 @@ import org.testng.annotations.Test
 class DskDiskTest {
     private val ins get() = DskDiskTest::class.java.classLoader.getResource("Apple DOS 3.3.dsk")!!.openStream()
 
+    fun sectorsAllDifferent() {
+        val disk = DskDisk(ins)
+        repeat(3) { disk.nextByte() } // d5 aa 96
+        repeat(2) { disk.nextByte() } // volume
+        val (b0, b1) = disk.peekBytes(2)
+        val t0 = SixAndTwo.pair4And4(b0, b1)
+        disk.incTrack()
+        val b2 = disk.nextByte()
+        val b3 = disk.nextByte()
+        val t1 = SixAndTwo.pair4And4(b2, b3)
+        ""
+    }
+
     fun disk() {
         val proDos = false
         val expected = ins.readAllBytes()
         val disk = DskDisk(ins)
-//        SixAndTwo.dump(disk)
+        SixAndTwo.dump(disk)
         repeat(35) { track ->
             val trackContent = getOneTrack(disk, track)
             repeat(16) { sector ->
@@ -30,6 +43,9 @@ class DskDiskTest {
                     val actual = thisSec.content[byte]
                     val index = DskDisk.TRACK_SIZE_BYTES * track + sec * 256 + byte
                     val exp = expected[index].toUByte().toInt()
+                    if (byte == 0) {
+                        println("Comparing $actual with $exp")
+                    }
                     assertThat(actual)
                             .withFailMessage("T:$track S:$sec B:$byte  Expected ${exp.h()} but got ${actual.h()}")
                             .isEqualTo(exp)

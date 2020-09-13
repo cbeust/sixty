@@ -1,30 +1,37 @@
 package com.beust.app
 
+import com.beust.sixty.ERROR
 import com.beust.sixty.h
-import com.beust.sixty.hh
 
 object SixAndTwo {
+    fun pair4And4(b1: Int, b2: Int) = b1.shl(1).or(1).and(b2).and(0xff)
+
     fun dump(disk: IDisk) {
         val sectors = hashMapOf<Int, Sector>()
         val result = arrayListOf<IntArray>()
-        fun pair() = disk.nextByte().shl(1).or(1).and(disk.nextByte()).and(0xff)
-        repeat(35) {
-            repeat(16) {
+        fun pair4And4() = pair4And4(disk.nextByte(), disk.nextByte())
+        repeat(35) { expectedTrack ->
+            repeat(16) { expectedSector ->
                 while (disk.peekBytes(3) != listOf(0xd5, 0xaa, 0x96)) {
                     disk.nextByte()
                 }
-                println("Found d5 aa 96")
-                val s = disk.nextBytes(3)
-                val volume = pair()
-                val track = pair()
-                val sector = pair()
-                val checksumAddress = pair()
+                disk.nextBytes(3)
+                val volume = pair4And4()
+                val track = pair4And4()
+                if (track != expectedTrack) {
+                    ERROR("Expected track $expectedTrack, was $track")
+                }
+                val sector = pair4And4()
+                if (sector != expectedSector) {
+//                    ERROR("Expected sector $expectedSector, was $sector")
+                }
+                val checksumAddress = pair4And4()
                 if (volume.xor(track).xor(sector) != checksumAddress) {
-                    TODO("Checksum doesn't match")
+                    ERROR("Checksum doesn't match")
                 }
                 println("   Volume: $volume Track: $track Sector: $sector checksum: $checksumAddress")
                 if (disk.nextBytes(3) != listOf(0xde, 0xaa, 0xeb)) {
-                    TODO("Didn't find closing for address")
+                    ERROR("Didn't find closing for address")
                 }
 
                 while (disk.peekBytes(3) != listOf(0xd5, 0xaa, 0xad)) {
@@ -75,5 +82,6 @@ object SixAndTwo {
             }
             disk.incTrack()
         }
+        repeat(40) { disk.decTrack() }
     }
 }

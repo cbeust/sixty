@@ -53,3 +53,5 @@ fun List<Int>.b(): String {
     }
     return result.toString()
 }
+
+fun ERROR(reason: String): Nothing = throw Error(reason)
