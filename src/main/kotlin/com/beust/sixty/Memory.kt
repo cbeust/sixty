@@ -131,6 +131,14 @@ class Memory(val size: Int = 0x10000, vararg bytes: Int) {
         if (i < 0xc000) {
             content[i] = value
             listener?.onWrite(i, value)
+        } else {
+            when(i) {
+                0xc000 -> println("Writing to keyboard strobe")
+                0xc00c -> println("Turning 80 columns off")
+                0xc00e -> println("Primary character set")
+                0xe000 -> println("Trying to write in aux ram \$E000")
+                else -> println("Attempting to write in rom: " + i.hh())
+            }
         }
     }
 
