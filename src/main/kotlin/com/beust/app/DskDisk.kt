@@ -1,7 +1,6 @@
 package com.beust.app
 
 import com.beust.sixty.bit
-import com.beust.sixty.h
 import java.io.File
 import java.io.InputStream
 
@@ -72,9 +71,10 @@ class DskDisk(val ins: InputStream): IDisk {
     }
 
     private fun encodeTrack(track: Int, bytes: List<Int>) {
+        // Gap one
+        writeSync(16)
         repeat(16) { s ->
 //            val logicalSector = s
-            writeSync(6)
             write8(0xd5, 0xaa, 0x96)
             write4And4(0xfe)
             write4And4(track)
@@ -82,21 +82,31 @@ class DskDisk(val ins: InputStream): IDisk {
             write4And4(0xfe xor track xor s)
             write8(0xde, 0xaa, 0xeb)
 
-            writeSync(2)
+            writeSync(7)
 
             write8(0xd5, 0xaa, 0xad)
             val logicalSector = LOGICAL_SECTORS[s]
             val start = logicalSector * 256
-            println("ENCODING SECTOR $logicalSector")
+//            println("ENCODING SECTOR $logicalSector")
             val encoded = encode6And2(bytes.slice(start until start + 256))
             encoded.forEach {
                 write8(it)
             }
             write8(0xde, 0xaa, 0xeb)
 
-            writeSync(3)
+            writeSync(16)
         }
 
+        // Add the track suffix.
+        val trackPosition = bitBuffer.size
+        write8((trackPosition + 7).shr(3).and(0xff))
+        write8((trackPosition + 7).shr(11).and(0xff))
+        write8(trackPosition.and(0xff))
+        write8(trackPosition.shr(8).and(0xff))
+        write8(0)
+        write8(0)
+        write8(0xff)
+        write8(10)
     }
 
     private fun writeSync(count: Int) {
@@ -126,7 +136,7 @@ class DskDisk(val ins: InputStream): IDisk {
 
     private fun encode6And2(src: List<Int>): IntArray {
         require(src.size == 256)
-        println("[0] = " + src[0].and(0xff).h())
+//        println("[0] = " + src[0].and(0xff).h())
         val result = IntArray(DEST_SIZE) { 0 }
         val bitReverse = listOf(0, 2, 1, 3)
         repeat(84) { c ->
