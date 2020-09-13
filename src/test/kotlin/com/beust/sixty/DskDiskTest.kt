@@ -18,7 +18,10 @@ class DskDiskTest {
         val trackContent = getOneTrack(bs)
         repeat(1) { track ->
             repeat(16) { sector ->
-                val sec = trackContent.sectors[sector]
+                val sec = DskDisk.LOGICAL_SECTORS[trackContent.sectors[sector][]
+                if (sector == 1) {
+                    println("PROBLEM")
+                }
 //                val logicalSector = if (sector == 15) 15 else ((sector * (if (proDos) 8 else 7)) % 15);
                 assertThat(sec!!.number)
                         .withFailMessage("Expected sector $sector but got ${sec.number}")

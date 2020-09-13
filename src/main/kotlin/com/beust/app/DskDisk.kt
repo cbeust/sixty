@@ -1,6 +1,7 @@
 package com.beust.app
 
 import com.beust.sixty.bit
+import com.beust.sixty.h
 import java.io.File
 import java.io.InputStream
 
@@ -13,6 +14,7 @@ class DskDisk(val ins: InputStream): IDisk {
         private const val TRACK_MAX = 35
         const val DISK_IMAGE_SIZE_BYTES = TRACK_MAX * 16 * 256
         const val TRACK_SIZE_BYTES = 16 * 256
+        val LOGICAL_SECTORS = listOf(0, 7, 14, 6, 13, 5, 12, 4, 11, 3, 10, 2, 9, 1, 8, 15)
     }
     private val WOZ_IMAGE_SIZE = 256 - 12 + 35* 6656
     private val source = arrayListOf<Int>()
@@ -22,6 +24,7 @@ class DskDisk(val ins: InputStream): IDisk {
     private val isProdos = false
     private val TRACK_SIZE_ENCODED = 6028
     private var track: Int = 0
+    private val logicalSectors2 = listOf(0, 13, 14, 12, 7, 5, 12, 4, 11, 3, 10, 2, 9, 1, 8, 15)
 
     override fun nextBit(): Int {
         val result = bitBuffer[bitPosition]
@@ -70,13 +73,14 @@ class DskDisk(val ins: InputStream): IDisk {
     }
 
     private fun encodeTrack(track: Int, bytes: List<Int>) {
-        repeat(16) { sector ->
-            val logicalSector = if (sector == 15) 15 else ((sector * (if (isProdos) 8 else 7)) % 15);
+        repeat(16) { s ->
+            val logicalSector = LOGICAL_SECTORS[s]
+//            val logicalSector = s
             writeSync(6)
             write8(0xd5, 0xaa, 0x96)
             write4And4(0xfe)
             write4And4(track)
-            write4And4(logicalSector)
+            write4And4(s)
             write4And4(0xfe xor track xor logicalSector)
             write8(0xde, 0xaa, 0xeb)
 
@@ -84,6 +88,7 @@ class DskDisk(val ins: InputStream): IDisk {
 
             write8(0xd5, 0xaa, 0xad)
             val start = logicalSector * 256
+            println("ENCODING SECTOR $logicalSector")
             val encoded = encode6And2(bytes.slice(start until start + 256))
             encoded.forEach {
                 write8(it)
@@ -122,13 +127,14 @@ class DskDisk(val ins: InputStream): IDisk {
 
     private fun encode6And2(src: List<Int>): IntArray {
         require(src.size == 256)
+        println("[0] = " + src[0].and(0xff).h())
         val result = IntArray(DEST_SIZE) { 0 }
         val bitReverse = listOf(0, 2, 1, 3)
         repeat(84) { c ->
             val b = bitReverse[src[c] and 3] or
                     (bitReverse[src[c + 86] and 3] shl 2) or
                     (bitReverse[src[c + 172] and 3] shl 4)
-            result[c] =b
+            result[c] = b
         }
 
         result[84] =
