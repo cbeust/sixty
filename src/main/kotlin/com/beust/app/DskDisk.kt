@@ -24,7 +24,6 @@ class DskDisk(val ins: InputStream): IDisk {
     private val isProdos = false
     private val TRACK_SIZE_ENCODED = 6028
     private var track: Int = 0
-    private val logicalSectors2 = listOf(0, 13, 14, 12, 7, 5, 12, 4, 11, 3, 10, 2, 9, 1, 8, 15)
 
     override fun nextBit(): Int {
         val result = bitBuffer[bitPosition]
@@ -74,19 +73,19 @@ class DskDisk(val ins: InputStream): IDisk {
 
     private fun encodeTrack(track: Int, bytes: List<Int>) {
         repeat(16) { s ->
-            val logicalSector = LOGICAL_SECTORS[s]
 //            val logicalSector = s
             writeSync(6)
             write8(0xd5, 0xaa, 0x96)
             write4And4(0xfe)
             write4And4(track)
             write4And4(s)
-            write4And4(0xfe xor track xor logicalSector)
+            write4And4(0xfe xor track xor s)
             write8(0xde, 0xaa, 0xeb)
 
             writeSync(2)
 
             write8(0xd5, 0xaa, 0xad)
+            val logicalSector = LOGICAL_SECTORS[s]
             val start = logicalSector * 256
             println("ENCODING SECTOR $logicalSector")
             val encoded = encode6And2(bytes.slice(start until start + 256))

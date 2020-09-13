@@ -18,20 +18,19 @@ class DskDiskTest {
         val trackContent = getOneTrack(bs)
         repeat(1) { track ->
             repeat(16) { sector ->
-                val sec = DskDisk.LOGICAL_SECTORS[trackContent.sectors[sector][]
-                if (sector == 1) {
-                    println("PROBLEM")
-                }
+                val thisSec = trackContent.sectors[sector]!!//DskDisk.LOGICAL_SECTORS[sector]]!!
+                val sec = thisSec.number
 //                val logicalSector = if (sector == 15) 15 else ((sector * (if (proDos) 8 else 7)) % 15);
-                assertThat(sec!!.number)
-                        .withFailMessage("Expected sector $sector but got ${sec.number}")
-                        .isEqualTo(sector)
+                println("Track $track sector:$sector, logical: $sec")
+                assertThat(sec)
+                        .withFailMessage("Track $track: expected sector ${thisSec.number} but got ${sec}")
+                        .isEqualTo(thisSec.number)
                 repeat(256) { byte ->
-                    val actual = sec.content[byte]
-                    val index = DskDisk.TRACK_SIZE_BYTES * track + sector * 256 + byte
+                    val actual = thisSec.content[byte]
+                    val index = DskDisk.TRACK_SIZE_BYTES * track + sec * 256 + byte
                     val exp = expected[index].toUByte().toInt()
                     assertThat(actual)
-                            .withFailMessage("T:$track S:$sector B:$byte  Expected ${exp.h()} but got ${actual.h()}")
+                            .withFailMessage("T:$track S:$sec B:$byte  Expected ${exp.h()} but got ${actual.h()}")
                             .isEqualTo(exp)
                 }
             }
