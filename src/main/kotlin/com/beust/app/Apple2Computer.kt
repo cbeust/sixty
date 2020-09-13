@@ -61,8 +61,8 @@ fun apple2Computer(debugMem: Boolean): Computer {
 
 //        load("d:\\pd\\Apple Disks\\roms\\APPLE2E.ROM", 0xc000)
 //        load("d:\\pd\\Apple Disks\\roms\\C000.dump", 0xc000)
-//        loadResource("Apple2e.rom", 0xc000)
-        loadResource("Apple2_Plus.rom", 0xd000)
+        loadResource("Apple2e.rom", 0xc000)
+//        loadResource("Apple2_Plus.rom", 0xd000)
         loadResource("DISK2.ROM", 0xc600)
 
         // When restarting, no need to move the head 0x50 tracks
