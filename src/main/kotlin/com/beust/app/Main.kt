@@ -123,8 +123,9 @@ fun getOneTrack(byteStream: IByteStream): Track {
         if (byteStream.nextBytes(3) != listOf(0xde, 0xaa, 0xeb)) {
             TODO("Didn't find closing for data")
         }
-        sectors[sector] = Sector(sector, sectorData)
-        println("  Successfully read sector $sector")
+        val ls = DskDisk.LOGICAL_SECTORS[sector]
+        sectors[ls] = Sector(ls, sectorData)
+        println("  Successfully read sector $sector (logical: $ls)")
     }
 
     repeat(100) {
