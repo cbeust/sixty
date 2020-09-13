@@ -10,7 +10,7 @@ val BREAKPOINT = 0xc6e6
 val DISK1 = WozDisk(Woz::class.java.classLoader.getResource("woz2/DOS 3.3 System Master.woz").openStream())
 val DISK2 = WozDisk(
         File("d:\\pd\\Apple Disks\\woz2\\First Math Adventures - Understanding word problems.woz").inputStream())
-val DISK = DskDisk(File("d:\\pd\\Apple disks\\Apple DOS 3.3.dsk").inputStream())
+val DISK = DskDisk(File("src\\test\\resources\\Apple DOS 3.3.dsk").inputStream())
 
 fun main() {
     val choice = 2
