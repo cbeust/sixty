@@ -26,16 +26,6 @@ object SoftDisk {
                 println("Turning on drive 2")
                 value
             }
-            0xc0ec -> {
-//                    val v = if (value and 0x80 != 0) 0 else value
-//                    val result = v.shl(1).or(disk.nextBit()).and(0xff)
-//                    if (result == 0xd5 || result == 0x96 || result == 0xad) {
-//                        val rh = result.h()
-//                        println("MAGIC: $result")
-//                    }
-                val result = disk.nextByte()
-                result
-            }
             else -> {
                 TODO("Should never happen")
             }
