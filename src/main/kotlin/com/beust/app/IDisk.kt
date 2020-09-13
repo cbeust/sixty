@@ -15,7 +15,8 @@ interface IByteStream {
 
     fun nextByte() = nextBytes(1).first()
 }
-interface IDisk: IByteStream {
+interface IDisk {
+    fun nextBit(): Int
     fun incTrack()
     fun decTrack()
 }

@@ -7,7 +7,7 @@ import java.io.InputStream
 import kotlin.random.Random
 
 class WozDisk(ins: InputStream,
-        val bitStreamFactory: (bytes: List<Byte>) -> IBitStream = { bytes -> BitStream(bytes) }): IDisk {
+        val bitStreamFactory: (bytes: List<Byte>) -> IBitStream = { bytes -> BitStream(bytes) }): IDisk, IByteStream {
     private val MAX_TRACK = 160
 
     override var position: Int = 0
@@ -110,7 +110,7 @@ class WozDisk(ins: InputStream,
 
     private var headWindow = 0
 
-    fun nextBit(): Int {
+    override fun nextBit(): Int {
         bitStream.next(position).let { (newPosition, bit) ->
             position = newPosition
             return bit

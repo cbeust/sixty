@@ -1,11 +1,12 @@
 package com.beust.app
 
 import com.beust.sixty.MemoryInterceptor
+import com.beust.sixty.h
 
 object StepperMotor {
     val RANGE = 0xc0e0 .. 0xc0e7
 
-    fun onRead(location: Int, value: Int, disk: WozDisk): Int {
+    fun onRead(location: Int, value: Int, disk: IDisk): Int {
         val byte = when(location) {
             in RANGE -> {
                 // Seek address: $b9a0
@@ -40,13 +41,13 @@ object StepperMotor {
                 value
             }
             0xc0ec -> {
-//                    val v = if (value and 0x80 != 0) 0 else value
-//                    val result = v.shl(1).or(disk.nextBit()).and(0xff)
-//                    if (result == 0xd5 || result == 0x96 || result == 0xad) {
-//                        val rh = result.h()
-//                        println("MAGIC: $result")
-//                    }
-                val result = disk.nextByte()
+                    val v = if (value and 0x80 != 0) 0 else value
+                    val result = v.shl(1).or(disk.nextBit()).and(0xff)
+                    if (result == 0xd5 || result == 0x96 || result == 0xad) {
+                        val rh = result.h()
+                        println("MAGIC: $result")
+                    }
+//                val result = disk.nextByte()
                 result
             }
             else -> value
@@ -57,7 +58,7 @@ object StepperMotor {
     private var magnets = BooleanArray(4) { _ -> false }
     private var phase = 0
 
-    private fun magnet(disk: WozDisk, index: Int, state: Boolean) {
+    private fun magnet(disk: IDisk, index: Int, state: Boolean) {
         if (state) {
             when(phase) {
                 0 -> {
