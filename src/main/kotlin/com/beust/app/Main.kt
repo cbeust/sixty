@@ -5,7 +5,7 @@ import com.beust.sixty.hh
 import java.io.File
 
 var DEBUG = false
-val BREAKPOINT = 0xc6e6
+val BREAKPOINT = 0x1b00
 
 val DISK1 = WozDisk(Woz::class.java.classLoader.getResource("woz2/DOS 3.3 System Master.woz").openStream())
 val DISK2 = WozDisk(
@@ -23,7 +23,7 @@ fun main() {
             c.run(_debugAsm = false)
         }
         2 -> {
-            val debugMem = DEBUG
+            val debugMem = false
             val debugAsm = DEBUG
 //            frame()
             apple2Computer(debugMem)
@@ -47,15 +47,14 @@ fun testDisk() {
     val ins = Woz::class.java.classLoader.getResource("woz2/DOS 3.3 System Master.woz")!!.openStream()
     val ins2 = File("d:\\pd\\Apple DIsks\\woz2\\The Apple at Play.woz").inputStream()
     val disk: IByteStream = WozDisk(ins)
-    getOneTrack(disk)
+    getOneTrack(disk, 0)
 }
 
 data class Sector(val number: Int, val content: IntArray)
 data class Track(val number: Int, val sectors: Map<Int, Sector>)
 data class DiskContent(val tracks: List<Track>)
 
-fun getOneTrack(byteStream: IByteStream): Track {
-    var track = -1
+fun getOneTrack(byteStream: IByteStream, track: Int): Track {
     val sectors = hashMapOf<Int, Sector>()
     val result = arrayListOf<IntArray>()
     fun pair() = byteStream.nextByte().shl(1).or(1).and(byteStream.nextByte()).and(0xff)
@@ -70,7 +69,6 @@ fun getOneTrack(byteStream: IByteStream): Track {
         if (track != -1 && readTrack != track) {
             TODO("Tracks should match")
         }
-        track = readTrack
         val sector = pair()
         val checksumAddress = pair()
         if (volume.xor(track).xor(sector) != checksumAddress) {
@@ -91,7 +89,7 @@ fun getOneTrack(byteStream: IByteStream): Track {
         for (i in buffer.indices) {
             val b = byteStream.nextByte()
             if (READ_TABLE[b] == null) {
-                println("INVALID NIBBLE")
+                TODO("INVALID NIBBLE")
             }
             checksum = checksum xor READ_TABLE[b]!!
             if (i < 86) {
@@ -125,11 +123,7 @@ fun getOneTrack(byteStream: IByteStream): Track {
         }
         val ls = DskDisk.LOGICAL_SECTORS[sector]
         sectors[ls] = Sector(ls, sectorData)
-        println("  Successfully read sector $sector (logical: $ls)")
-    }
-
-    repeat(100) {
-        print(byteStream.nextByte().h() + " ")
+//        println("  Successfully read sector $sector (logical: $ls)")
     }
     return Track(track, sectors)
 }

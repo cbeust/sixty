@@ -1,6 +1,7 @@
 package com.beust.app
 
 import com.beust.sixty.bit
+import com.beust.sixty.h
 import java.io.File
 import java.io.InputStream
 
@@ -47,7 +48,7 @@ class DskDisk(val ins: InputStream): IDisk {
     init {
         val bytes = ins.readAllBytes()
         bytes.forEach { source.add(it.toInt()) }
-        repeat(34) { track ->
+        repeat(35) { track ->
             val start = track * TRACK_SIZE_BYTES
             encodeTrack(track, source.slice(start until start + TRACK_SIZE_BYTES))
 

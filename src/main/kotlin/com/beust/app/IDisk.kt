@@ -19,5 +19,13 @@ interface IDisk {
     fun nextBit(): Int
     fun incTrack()
     fun decTrack()
+
+    fun nextByte(): Int {
+        var result = 0
+        while (result < 0x80) {
+            result = result.shl(1).or(nextBit()).and(0xff)
+        }
+        return result
+    }
 }
 
