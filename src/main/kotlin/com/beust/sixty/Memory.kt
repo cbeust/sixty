@@ -26,13 +26,28 @@ class Memory(val size: Int = 0x10000, vararg bytes: Int) {
     private fun pair(b1: Int, b2: Int) = b1.shl(1).or(1).and(b2)
 
     operator fun get(i: Int): Int {
-        val result =
+        var result = content[i]
             when(i) {
-                0xc0ec -> {
-                    val disk = DISK
+                0xc0e8 -> {
+                    println("Motor off")
+                }
+                0xc0e9 -> {
+                    println("Motor on")
+                }
+                0xc0ea -> {
+                    println("Drive 1")
+                }
+                0xc0eb -> {
+                    println("Drive 2")
+                }
+                0xc0ed -> {
+                    TODO("Clearing data latch not supported")
+                }
+
+                0xc0ec, 0xc0ee -> {
 //                    val pos = disk.bitPosition
                     // Faster way for unprotected disks
-                    val result = DISK.nextByte()
+                    result = DISK.nextByte()
 
 //                    if (d5aa96) {
 //                        when (count) {
@@ -58,16 +73,13 @@ class Memory(val size: Int = 0x10000, vararg bytes: Int) {
 //                        else d5aa = false
 //                    }
 
-                    return result
+//                    return result
 
                     // More formal way: bit by bit
 //                    if (latch and 0x80 != 0) latch = 0
 //                    latch = latch.shl(1).or(DISK.nextBit()).and(0xff)
 
 //                    return latch
-                }
-                0xc0ed -> {
-                    TODO("Clearing data latch not supported")
                 }
                 0xc010 -> {
                     content[0xc000] = content[0xc000] and 0x7f
@@ -76,7 +88,12 @@ class Memory(val size: Int = 0x10000, vararg bytes: Int) {
                 in StepperMotor.RANGE -> {
                     StepperMotor.onRead(i, content[i], DISK)
                 }
-                else -> content[i]
+                else -> {
+                    if (i >= 0xc080 && i <= 0xc0ff) {
+                        println("READ SOFT SWITCH " + i.hh())
+                    }
+                    content[i]
+                }
             }
 //        val result = if (interceptor != null) {
 //            val response = interceptor!!.onRead(i, content[i])
@@ -107,6 +124,10 @@ class Memory(val size: Int = 0x10000, vararg bytes: Int) {
 //            val v = value.h()
 //            println("Modifying $3F: $value")
 //        }
+        if (i >= 0xc080 && i <= 0xc0ff) {
+            println("         WRITE SOFT SWITCH " + i.hh())
+        }
+
         if (i < 0xc000) {
             content[i] = value
             listener?.onWrite(i, value)
