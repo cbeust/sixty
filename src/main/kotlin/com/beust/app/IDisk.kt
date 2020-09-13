@@ -19,6 +19,7 @@ interface IDisk {
     fun nextBit(): Int
     fun incTrack()
     fun decTrack()
+    fun peekBytes(n: Int): List<Int>
 
     fun nextByte(): Int {
         var result = 0
@@ -27,5 +28,14 @@ interface IDisk {
         }
         return result
     }
+
+    fun nextBytes(n: Int): List<Int> {
+        val result = arrayListOf<Int>()
+        repeat(n) {
+            result.add(nextByte())
+        }
+        return result
+    }
+
 }
 

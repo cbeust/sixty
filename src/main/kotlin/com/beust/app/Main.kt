@@ -1,11 +1,10 @@
 package com.beust.app
 
 import com.beust.sixty.h
-import com.beust.sixty.hh
 import java.io.File
 
 var DEBUG = false
-val BREAKPOINT = 0x1b00
+val BREAKPOINT = 0xbd56
 
 val DISK1 = WozDisk(Woz::class.java.classLoader.getResource("woz2/DOS 3.3 System Master.woz").openStream())
 val DISK2 = WozDisk(
@@ -46,7 +45,7 @@ fun main() {
 fun testDisk() {
     val ins = Woz::class.java.classLoader.getResource("woz2/DOS 3.3 System Master.woz")!!.openStream()
     val ins2 = File("d:\\pd\\Apple DIsks\\woz2\\The Apple at Play.woz").inputStream()
-    val disk: IByteStream = WozDisk(ins)
+    val disk: IDisk = WozDisk(ins)
     getOneTrack(disk, 0)
 }
 
@@ -54,16 +53,15 @@ data class Sector(val number: Int, val content: IntArray)
 data class Track(val number: Int, val sectors: Map<Int, Sector>)
 data class DiskContent(val tracks: List<Track>)
 
-fun getOneTrack(byteStream: IByteStream, track: Int): Track {
+fun getOneTrack(disk: IDisk, track: Int): Track {
     val sectors = hashMapOf<Int, Sector>()
     val result = arrayListOf<IntArray>()
-    fun pair() = byteStream.nextByte().shl(1).or(1).and(byteStream.nextByte()).and(0xff)
+    fun pair() = disk.nextByte().shl(1).or(1).and(disk.nextByte()).and(0xff)
     repeat(16) {
-        while (byteStream.peekBytes(3) != listOf(0xd5, 0xaa, 0x96)) {
-            byteStream.nextByte()
+        while (disk.peekBytes(3) != listOf(0xd5, 0xaa, 0x96)) {
+            disk.nextByte()
         }
-        println("Found d5 aa 96 at position " + (byteStream.position / 8).hh())
-        val s = byteStream.nextBytes(3)
+        val s = disk.nextBytes(3)
         val volume = pair()
         val readTrack = pair()
         if (track != -1 && readTrack != track) {
@@ -75,19 +73,19 @@ fun getOneTrack(byteStream: IByteStream, track: Int): Track {
             TODO("Checksum doesn't match")
         }
         println("Volume: $volume Track: $track Sector: $sector checksum: $checksumAddress")
-        if (byteStream.nextBytes(3) != listOf(0xde, 0xaa, 0xeb)) {
+        if (disk.nextBytes(3) != listOf(0xde, 0xaa, 0xeb)) {
             TODO("Didn't find closing for address")
         }
 
-        while (byteStream.peekBytes(3) != listOf(0xd5, 0xaa, 0xad)) {
-            byteStream.nextByte()
+        while (disk.peekBytes(3) != listOf(0xd5, 0xaa, 0xad)) {
+            disk.nextByte()
         }
-        byteStream.nextBytes(3)
+        disk.nextBytes(3)
 
         val buffer = IntArray(342)
         var checksum = 0
         for (i in buffer.indices) {
-            val b = byteStream.nextByte()
+            val b = disk.nextByte()
             if (READ_TABLE[b] == null) {
                 TODO("INVALID NIBBLE")
             }
@@ -98,8 +96,8 @@ fun getOneTrack(byteStream: IByteStream, track: Int): Track {
                 buffer[i - 86] = checksum
             }
         }
-        val bh = byteStream.peekBytes(1).first().h()
-        checksum = checksum xor READ_TABLE[byteStream.nextByte()]!!
+        val bh = disk.peekBytes(1).first().h()
+        checksum = checksum xor READ_TABLE[disk.nextByte()]!!
         if (checksum != 0) {
             TODO("BAD CHECKSUM")
         }
@@ -118,7 +116,7 @@ fun getOneTrack(byteStream: IByteStream, track: Int): Track {
             sectorData[i] = b
         }
 
-        if (byteStream.nextBytes(3) != listOf(0xde, 0xaa, 0xeb)) {
+        if (disk.nextBytes(3) != listOf(0xde, 0xaa, 0xeb)) {
             TODO("Didn't find closing for data")
         }
         val ls = DskDisk.LOGICAL_SECTORS[sector]

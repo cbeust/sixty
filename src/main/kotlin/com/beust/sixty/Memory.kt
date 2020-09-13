@@ -1,9 +1,6 @@
 package com.beust.sixty
 
-import com.beust.app.DISK
-import com.beust.app.StepperMotor
-import com.beust.app.Woz
-import com.beust.app.WozDisk
+import com.beust.app.*
 import java.io.File
 import java.io.InputStream
 
@@ -17,18 +14,56 @@ class Memory(val size: Int = 0x10000, vararg bytes: Int) {
     }
 
     private var latch = 0
+    private var d5 = false
+    private var d5aa = false
+    private var d5aa96 = false
+    private var count = 0
+    private var byte0 = 0
+    private var volume = 0
+    private var track = 0
+    private var sector = 0
+
+    private fun pair(b1: Int, b2: Int) = b1.shl(1).or(1).and(b2)
 
     operator fun get(i: Int): Int {
         val result =
             when(i) {
                 0xc0ec -> {
+                    val disk = DISK
+//                    val pos = disk.bitPosition
                     // Faster way for unprotected disks
-                    // return disk.nextByte()
+                    val result = DISK.nextByte()
+                    if (d5aa96) {
+                        when (count) {
+                            0 -> byte0 = result
+                            1 -> volume = pair(byte0, result)
+                            2 -> byte0 = result
+                            3 -> track = pair(byte0, result)
+                            4 -> byte0 = result
+                            5 -> {
+                                sector = pair(byte0, result)
+                                println("Read volume $volume, track $track, sector $sector")
+                                count = -1
+                                d5 = false
+                                d5aa = false
+                                d5aa96 = false
+                            }
+                        }
+                        count++
+                    } else if (result == 0xd5) d5 = true
+                    else if (result == 0xaa && d5) d5aa = true
+                    else if (d5aa) {
+                        if (result == 0x96) d5aa96 = true
+                        else d5aa = false
+                    }
+
+                    return result
 
                     // More formal way: bit by bit
-                    if (latch and 0x80 != 0) latch = 0
-                    latch = latch.shl(1).or(DISK.nextBit()).and(0xff)
-                    return latch
+//                    if (latch and 0x80 != 0) latch = 0
+//                    latch = latch.shl(1).or(DISK.nextBit()).and(0xff)
+
+//                    return latch
                 }
                 0xc0ed -> {
                     TODO("Clearing data latch not supported")
@@ -66,9 +101,17 @@ class Memory(val size: Int = 0x10000, vararg bytes: Int) {
 //                // No need to notify the listener, that change was vetoed
 //            }
 //        } else {
+//        if (i == 0x3f && value == 0x1b) {
+//            DEBUG = true
+//            val v = value.h()
+//            println("Modifying $3F: $value")
+//        }
         if (i < 0xc000) {
             content[i] = value
             listener?.onWrite(i, value)
+        }
+        if (i == 0x3f && value == 0x1b) {
+            println("New $3f value: " + value.h())
         }
     }
 

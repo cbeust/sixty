@@ -14,11 +14,10 @@ class DskDiskTest {
     fun disk() {
         val proDos = false
         val expected = ins.readAllBytes()
-        val d = DskDisk(ins)
-        val bs = ByteStream(d.bitBuffer)
-        SixAndTwo.dump(bs)
+        val disk = DskDisk(ins)
+//        SixAndTwo.dump(disk)
         repeat(35) { track ->
-            val trackContent = getOneTrack(bs, track)
+            val trackContent = getOneTrack(disk, track)
             repeat(16) { sector ->
                 val thisSec = trackContent.sectors[sector]!!//DskDisk.LOGICAL_SECTORS[sector]]!!
                 val sec = thisSec.number
@@ -36,6 +35,7 @@ class DskDiskTest {
                             .isEqualTo(exp)
                 }
             }
+            disk.incTrack()
         }
     }
 }

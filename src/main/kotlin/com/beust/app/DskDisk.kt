@@ -15,36 +15,50 @@ class DskDisk(val ins: InputStream): IDisk {
         const val DISK_IMAGE_SIZE_BYTES = TRACK_MAX * 16 * 256
         const val TRACK_SIZE_BYTES = 16 * 256
         val LOGICAL_SECTORS = listOf(0, 7, 14, 6, 13, 5, 12, 4, 11, 3, 10, 2, 9, 1, 8, 15)
+        private val DEST_SIZE = 343
     }
     private val WOZ_IMAGE_SIZE = 256 - 12 + 35* 6656
     private val source = arrayListOf<Int>()
-    private val DEST_SIZE = 343
-    private var bitPosition = 0
-    val bitBuffer = arrayListOf<Int>()
+
+    /** Bit buffers for each track */
+    private val bitBuffers = arrayListOf<List<Int>>()
+    private var positionInTrack = 0
+
     private val isProdos = false
     private val TRACK_SIZE_ENCODED = 6028
     private var track: Int = 0
 
     override fun nextBit(): Int {
-        val result = bitBuffer[bitPosition]
-        bitPosition = (bitPosition + 1) % bitBuffer.size
-        return result
+        bitBuffers[track].let { bitBuffer ->
+            val result = bitBuffer[positionInTrack]
+            positionInTrack = (positionInTrack + 1) % bitBuffer.size
+            return result
+        }
     }
 
     override fun incTrack() {
         if (track < TRACK_MAX - 1) {
             track++
-            bitPosition = (bitPosition + TRACK_SIZE_BYTES * 8) % bitBuffer.size
         }
     }
 
     override fun decTrack() {
         if (track > 0) {
             track--
-            bitPosition = (bitPosition - TRACK_SIZE_BYTES * 8) % bitBuffer.size
         }
     }
 
+    override fun peekBytes(n: Int): List<Int> {
+        var saved = positionInTrack
+        val result = arrayListOf<Int>()
+        repeat(n) {
+            result.add(nextByte())
+        }
+        positionInTrack = saved
+        return result
+    }
+
+//    private val byteStream: IByteStream
     init {
         val bytes = ins.readAllBytes()
         bytes.forEach { source.add(it.toInt()) }
@@ -54,7 +68,7 @@ class DskDisk(val ins: InputStream): IDisk {
 
             val startEncoded = TRACK_SIZE_ENCODED * track
         }
-//        val byteStream = ByteStream(bitBuffer)
+//        byteStream = ByteStream(bitBuffer)
 //        getSectorsFromTrack(byteStream)
 //        var i = 0
 //        while (i < bitBuffer.size) {
@@ -72,56 +86,58 @@ class DskDisk(val ins: InputStream): IDisk {
     }
 
     private fun encodeTrack(track: Int, bytes: List<Int>) {
+        val bb = arrayListOf<Int>()
+        bitBuffers.add(bb)
         // Gap one
-        writeSync(16)
+        writeSync(bb, 16)
         repeat(16) { s ->
 //            val logicalSector = s
-            write8(0xd5, 0xaa, 0x96)
-            write4And4(0xfe)
-            write4And4(track)
-            write4And4(s)
-            write4And4(0xfe xor track xor s)
-            write8(0xde, 0xaa, 0xeb)
+            write8(bb, 0xd5, 0xaa, 0x96)
+            write4And4(bb, 0xfe)
+            write4And4(bb, track)
+            write4And4(bb, s)
+            write4And4(bb, 0xfe xor track xor s)
+            write8(bb, 0xde, 0xaa, 0xeb)
 
-            writeSync(7)
+            writeSync(bb, 7)
 
-            write8(0xd5, 0xaa, 0xad)
+            write8(bb, 0xd5, 0xaa, 0xad)
             val logicalSector = LOGICAL_SECTORS[s]
             val start = logicalSector * 256
 //            println("ENCODING SECTOR $logicalSector")
             val encoded = encode6And2(bytes.slice(start until start + 256))
             encoded.forEach {
-                write8(it)
+                write8(bb, it)
             }
-            write8(0xde, 0xaa, 0xeb)
+            write8(bb, 0xde, 0xaa, 0xeb)
 
-            writeSync(16)
+            writeSync(bb, 16)
         }
 
         // Add the track suffix.
-        val trackPosition = bitBuffer.size
-        write8((trackPosition + 7).shr(3).and(0xff))
-        write8((trackPosition + 7).shr(11).and(0xff))
-        write8(trackPosition.and(0xff))
-        write8(trackPosition.shr(8).and(0xff))
-        write8(0)
-        write8(0)
-        write8(0xff)
-        write8(10)
+        val trackPosition = bb.size
+        write8(bb, (trackPosition + 7).shr(3).and(0xff))
+        write8(bb, (trackPosition + 7).shr(11).and(0xff))
+        write8(bb, trackPosition.and(0xff))
+        write8(bb, trackPosition.shr(8).and(0xff))
+        write8(bb, 0)
+        write8(bb, 0)
+        write8(bb, 0xff)
+        write8(bb, 10)
     }
 
-    private fun writeSync(count: Int) {
+    private fun writeSync(bitBuffer: ArrayList<Int>, count: Int) {
         repeat(count) {
-            write8(0xff)
-            write1(0, 0)
+            write8(bitBuffer, 0xff)
+            write1(bitBuffer, 0, 0)
         }
     }
 
-    private fun write1(vararg v: Int) {
+    private fun write1(bitBuffer: ArrayList<Int>, vararg v: Int) {
         v.forEach { bitBuffer.add(it) }
     }
 
-    private fun write8(vararg values: Int): Int {
+    private fun write8(bitBuffer: ArrayList<Int>, vararg values: Int): Int {
         values.forEach { value ->
             repeat(8) {
                 bitBuffer.add(value.bit(7 - it))
@@ -130,9 +146,9 @@ class DskDisk(val ins: InputStream): IDisk {
         return 8 * values.size
     }
 
-    private fun write4And4(value: Int) {
-        write8(value.shr(1).or(0xaa))
-        write8(value.or(0xaa))
+    private fun write4And4(bitBuffer: ArrayList<Int>, value: Int) {
+        write8(bitBuffer, value.shr(1).or(0xaa))
+        write8(bitBuffer, value.or(0xaa))
     }
 
     private fun encode6And2(src: List<Int>): IntArray {

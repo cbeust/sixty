@@ -53,6 +53,8 @@ class Computer(val cpu: Cpu = Cpu(memory = Memory()),
         return memory[address] to word(memory, address)
     }
 
+    var track = 0
+    var sector = 0
     fun run(debugMemory: Boolean = false, _debugAsm: Boolean = false): RunResult {
         var debugAsm = _debugAsm
         startTime = System.currentTimeMillis()
@@ -66,13 +68,26 @@ class Computer(val cpu: Cpu = Cpu(memory = Memory()),
             if (opCode == 0x60 && cpu.SP.isEmpty()) {
                 done = true
             } else {
-//                if (cpu.PC == BREAKPOINT) {
-//                    println(this)
-//                    println("breakpoint")
-//                }
+                if (cpu.PC == BREAKPOINT && memory[0x3f] == 0x1b) {
+                    println(this)
+                    println("breakpoint")
+                }
+                if (cpu.PC == 0xc696) {
+                    if  (cpu.Y == 1) {
+                        sector = cpu.A
+                        if (track == 0 && sector == 10) {
+                            println("--- Read track $track sector ${cpu.A}")
+                        }
+                    } else if (cpu.Y == 2) {
+                        track = cpu.A
+                    }
+                } else if (cpu.PC == 0xc6c6 && cpu.Y == 0) {
+                    println("  storing in " + word(memory, 0x26).hh())
+                }
 
                 try {
-                    debugAsm = debugAsm || cycles >= 14927866
+//                    DEBUG = cycles >= 33100000// debugAsm && cycles >= 9950649
+                    debugAsm = DEBUG
                     if (DEBUG) {
                         val (byte, word) = byteWord()
                         val debugString = formatPc(cpu.PC, opCode) + formatInstruction(opCode, cpu.PC, byte, word)

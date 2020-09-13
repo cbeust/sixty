@@ -6,6 +6,9 @@ class DebugMemoryListener(private val debugMemory: Boolean = false) : MemoryList
     }
 
     override fun onWrite(location: Int, value: Int) {
+        if (location == 0x3f) {
+            println("3f modified: " + value)
+        }
         if (debugMemory && ! (location in 0x100 .. 0x1ff)) logMem(location, value)
     }
 

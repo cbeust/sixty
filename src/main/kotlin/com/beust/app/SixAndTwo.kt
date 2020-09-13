@@ -4,17 +4,17 @@ import com.beust.sixty.h
 import com.beust.sixty.hh
 
 object SixAndTwo {
-    fun dump(byteStream: IByteStream) {
+    fun dump(disk: IDisk) {
         val sectors = hashMapOf<Int, Sector>()
         val result = arrayListOf<IntArray>()
-        fun pair() = byteStream.nextByte().shl(1).or(1).and(byteStream.nextByte()).and(0xff)
+        fun pair() = disk.nextByte().shl(1).or(1).and(disk.nextByte()).and(0xff)
         repeat(35) {
             repeat(16) {
-                while (byteStream.peekBytes(3) != listOf(0xd5, 0xaa, 0x96)) {
-                    byteStream.nextByte()
+                while (disk.peekBytes(3) != listOf(0xd5, 0xaa, 0x96)) {
+                    disk.nextByte()
                 }
-                println("Found d5 aa 96 at position " + (byteStream.position / 8).hh())
-                val s = byteStream.nextBytes(3)
+                println("Found d5 aa 96")
+                val s = disk.nextBytes(3)
                 val volume = pair()
                 val track = pair()
                 val sector = pair()
@@ -23,19 +23,19 @@ object SixAndTwo {
                     TODO("Checksum doesn't match")
                 }
                 println("   Volume: $volume Track: $track Sector: $sector checksum: $checksumAddress")
-                if (byteStream.nextBytes(3) != listOf(0xde, 0xaa, 0xeb)) {
+                if (disk.nextBytes(3) != listOf(0xde, 0xaa, 0xeb)) {
                     TODO("Didn't find closing for address")
                 }
 
-                while (byteStream.peekBytes(3) != listOf(0xd5, 0xaa, 0xad)) {
-                    byteStream.nextByte()
+                while (disk.peekBytes(3) != listOf(0xd5, 0xaa, 0xad)) {
+                    disk.nextByte()
                 }
-                byteStream.nextBytes(3)
+                disk.nextBytes(3)
 
                 val buffer = IntArray(342)
                 var checksum = 0
                 for (i in buffer.indices) {
-                    val b = byteStream.nextByte()
+                    val b = disk.nextByte()
                     if (READ_TABLE[b] == null) {
                         println("INVALID NIBBLE")
                     }
@@ -46,8 +46,8 @@ object SixAndTwo {
                         buffer[i - 86] = checksum
                     }
                 }
-                val bh = byteStream.peekBytes(1).first().h()
-                checksum = checksum xor READ_TABLE[byteStream.nextByte()]!!
+                val bh = disk.peekBytes(1).first().h()
+                checksum = checksum xor READ_TABLE[disk.nextByte()]!!
                 if (checksum != 0) {
                     TODO("BAD CHECKSUM")
                 }
@@ -66,13 +66,14 @@ object SixAndTwo {
                     sectorData[i] = b
                 }
 
-                if (byteStream.nextBytes(3) != listOf(0xde, 0xaa, 0xeb)) {
+                if (disk.nextBytes(3) != listOf(0xde, 0xaa, 0xeb)) {
                     TODO("Didn't find closing for data")
                 }
                 val ls = DskDisk.LOGICAL_SECTORS[sector]
                 sectors[ls] = Sector(ls, sectorData)
 //                println("  Successfully read sector $sector (logical: $ls)")
             }
+            disk.incTrack()
         }
     }
 }
