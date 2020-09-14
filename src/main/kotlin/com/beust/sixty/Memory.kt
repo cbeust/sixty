@@ -23,11 +23,64 @@ class Memory(val size: Int = 0x10000, vararg bytes: Int) {
     private var track = 0
     private var sector = 0
 
-    private fun pair(b1: Int, b2: Int) = b1.shl(1).or(1).and(b2)
+    private val d000Bank1 = IntArray(0x1000) { 0 }
+    private val d000Bank2 = IntArray(0x1000) { 0 }
+    private var currentD0Bank = 1
+
+    private fun switchToD0Bank1() {
+        content.copyInto(d000Bank2, 0)
+        d000Bank1.copyInto(content, 0xd000)
+        currentD0Bank = 1
+    }
+
+    private fun switchToD0Bank2() {
+        content.copyInto(d000Bank1, 0)
+        d000Bank2.copyInto(content, 0xd000)
+        currentD0Bank = 2
+    }
+
+    private var readRam = false
+    private var writeRam = true
+    private var readRom = true
+    private var writeRom = false
+    private val e000bank = IntArray(0x2000) { 0 }
+
+    private fun switchRamRom() {
+        val tmp = IntArray(0x2000) { 0 }
+        content.copyInto(tmp, 0xe000)
+        e000bank.copyInto(content, 0xd000)
+    }
+
+    private fun switchToRam() {
+        switchRamRom()
+    }
+
+    private fun switchToRom() {
+        switchRamRom()
+    }
+    private var c081Count = 0
+
+//    private fun pair(b1: Int, b2: Int) = b1.shl(1).or(1).and(b2)
 
     operator fun get(i: Int): Int {
         var result = content[i]
             when(i) {
+                0xc080 -> {
+                    switchToD0Bank2()
+                    switchToRam()
+                }
+                0xc081 -> {
+                    if (c081Count == 2) {
+                        c081Count = 0
+                        switchToD0Bank2()
+                        switchToRom()
+                        readRam = true
+                        writeRam = false
+                    } else {
+                        c081Count++
+                    }
+                }
+
                 0xc0e8 -> {
                     println("Motor off")
                 }
@@ -48,6 +101,11 @@ class Memory(val size: Int = 0x10000, vararg bytes: Int) {
 //                    val pos = disk.bitPosition
                     // Faster way for unprotected disks
                     result = DISK.nextByte()
+
+                    // More formal way: bit by bit
+//                    if (latch and 0x80 != 0) latch = 0
+//                    latch = latch.shl(1).or(DISK.nextBit()).and(0xff)
+//                    result = latch
 
 //                    if (d5aa96) {
 //                        when (count) {
@@ -75,9 +133,6 @@ class Memory(val size: Int = 0x10000, vararg bytes: Int) {
 
 //                    return result
 
-                    // More formal way: bit by bit
-//                    if (latch and 0x80 != 0) latch = 0
-//                    latch = latch.shl(1).or(DISK.nextBit()).and(0xff)
 
 //                    return latch
                 }
