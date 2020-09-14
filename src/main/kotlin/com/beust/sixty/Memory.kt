@@ -23,18 +23,20 @@ class Memory(val size: Int = 0x10000, vararg bytes: Int) {
     private var track = 0
     private var sector = 0
 
+    /** $D000-$DFFF */
     private val d000Bank1 = IntArray(0x1000) { 0 }
+    /** $D000-$DFFF */
     private val d000Bank2 = IntArray(0x1000) { 0 }
     private var currentD0Bank = 1
 
     private fun switchToD0Bank1() {
-        content.copyInto(d000Bank2, 0)
+        content.copyInto(d000Bank1, 0, 0xd000, 0xdfff)
         d000Bank1.copyInto(content, 0xd000)
         currentD0Bank = 1
     }
 
     private fun switchToD0Bank2() {
-        content.copyInto(d000Bank1, 0)
+        content.copyInto(d000Bank1, 0, 0xd000, 0xdfff)
         d000Bank2.copyInto(content, 0xd000)
         currentD0Bank = 2
     }
@@ -43,11 +45,12 @@ class Memory(val size: Int = 0x10000, vararg bytes: Int) {
     private var writeRam = true
     private var readRom = true
     private var writeRom = false
+    /** $E000-$FFFFF */
     private val e000bank = IntArray(0x2000) { 0 }
 
     private fun switchRamRom() {
         val tmp = IntArray(0x2000) { 0 }
-        content.copyInto(tmp, 0xe000)
+        content.copyInto(tmp, 0, 0x2000, 0x3fff)
         e000bank.copyInto(content, 0xd000)
     }
 
@@ -60,7 +63,48 @@ class Memory(val size: Int = 0x10000, vararg bytes: Int) {
     }
     private var c081Count = 0
 
-//    private fun pair(b1: Int, b2: Int) = b1.shl(1).or(1).and(b2)
+    /** Aux memory is $200-$BFFF */
+    private val mainMemory = IntArray(0xbdff) { 0 }
+    private val auxMemory = IntArray(0xbdff) { 0 }
+    private var readMainMemory = true
+    private var writeMainMemory = true
+
+    private fun switchBanks(outBank: IntArray, inBank: IntArray) {
+        content.copyInto(outBank, 0, 0x200, 0xbfff)
+        inBank.copyInto(content, 0x200)
+    }
+
+    private fun mainMemoryForRead() {
+        if (! readMainMemory) {
+            readMainMemory = true
+            switchBanks(auxMemory, mainMemory)
+            println("CLRAUXRD read from main 48k (WR=-only")
+        }
+    }
+
+    private fun mainMemoryForWrite() {
+        if (! writeMainMemory) {
+            writeMainMemory = true
+            switchBanks(auxMemory, mainMemory)
+            println("CLRAUXWR write to main 48k (WR-only)")
+        }
+    }
+
+    private fun auxMemoryForRead() {
+        if (readMainMemory) {
+            readMainMemory = false
+            switchBanks(mainMemory, auxMemory)
+            println("SETAUXRD read from aux 48k (WR-only)")
+        }
+    }
+
+    private fun auxMemoryForWrite() {
+        if (writeMainMemory) {
+            writeMainMemory = false
+            switchBanks(mainMemory, auxMemory)
+            println("SETAUXWR write to aux 48k (WR-ONLY")
+        }
+    }
 
     operator fun get(i: Int): Int {
         var result = content[i]
@@ -80,18 +124,33 @@ class Memory(val size: Int = 0x10000, vararg bytes: Int) {
                         c081Count++
                     }
                 }
+                0xc082 -> {
+                    // Read ROM; write RAM; use $D000 bank 2
+                    readRom = true
+                    writeRom = false
+                    switchToD0Bank2()
+                    switchToRom()
+                }
+                0xc088 -> {
+                    // Read RAM; no write; use $D000 bank 1
+                    readRom = true
+                    writeRom = false
+                    writeRam = false
+                    switchToD0Bank1()
+                    switchToRom()
+                }
 
                 0xc0e8 -> {
-                    println("Motor off")
+                    NYI("Motor off")
                 }
                 0xc0e9 -> {
-                    println("Motor on")
+                    NYI("Motor on")
                 }
                 0xc0ea -> {
-                    println("Drive 1")
+                    NYI("Drive 1")
                 }
                 0xc0eb -> {
-                    println("Drive 2")
+                    NYI("Drive 2")
                 }
                 0xc0ed -> {
                     TODO("Clearing data latch not supported")
@@ -179,6 +238,59 @@ class Memory(val size: Int = 0x10000, vararg bytes: Int) {
 //            val v = value.h()
 //            println("Modifying $3F: $value")
 //        }
+        if (i >= 0xc000 && i < 0xc0ff) {
+            println("BREAKPOINT")
+        }
+        when(i) {
+            0xc002 -> {
+                // Select main memory for reading in $0200...$BFFF
+                mainMemoryForRead()
+            }
+            0xc003 -> {
+                // Select aux memory for reading in $0200...$BFFF
+                auxMemoryForRead()
+            }
+            0xc004 -> {
+                // Select main memory for writing in $0200...$BFFF
+                mainMemoryForWrite()
+            }
+            0xc005 -> {
+                // Select aux memory for writing in $0200...$BFFF
+                auxMemoryForWrite()
+            }
+            0xc006 -> {
+                NYI("CLRCXROM use ROM on cards (WR-only")
+            }
+            0xc007 -> {
+                NYI("SETCXROM use internal ROM (WR-only)")
+            }
+            0xc008 -> {
+                // Select main memory for reading & writing in $0000...$01FF & $D000...$FFFF
+                NYI("CLRAUXZP use main zero page, stack, and LC (WR-only)")
+            }
+            0xc009 -> {
+                // Select aux memory for reading & writing in $0000...$01FF & $D000...$FFFF
+                NYI("SETAUXZP use alt zero page, stack, and LC (WR-only)")
+            }
+            0xc00a -> {
+                NYI("CLRC3ROM use internal Slot 3 ROM (WR-only)")
+            }
+            0xc00b -> {
+                NYI("SETC3ROM use external Slot 3 ROM (WR-only)")
+            }
+            0xc00c -> {
+                NYI("CLR80VID = disable 80-column display mode (WR-only)")
+            }
+            0xc00d -> {
+                NYI("SET80VID enable 80-column display mode (WR-only)")
+            }
+            0xc00e -> {
+                NYI("CLRALTCH use main char set- norm LC, Flash UC (WR-only)")
+            }
+            0xc00f -> {
+                NYI("SETALTCH use alt char set- norm inverse, LC; no Flash (WR-only)")
+            }
+        }
         if (i >= 0xc080 && i <= 0xc0ff) {
             println("         WRITE SOFT SWITCH " + i.hh())
         }
@@ -187,13 +299,13 @@ class Memory(val size: Int = 0x10000, vararg bytes: Int) {
             content[i] = value
             listener?.onWrite(i, value)
         } else {
-            when(i) {
-                0xc000 -> println("Writing to keyboard strobe")
-                0xc00c -> println("Turning 80 columns off")
-                0xc00e -> println("Primary character set")
-                0xe000 -> println("Trying to write in aux ram \$E000")
-                else -> println("Attempting to write in rom: " + i.hh())
-            }
+//            when(i) {
+//                0xc000 -> println("Writing to keyboard strobe")
+//                0xc00c -> println("Turning 80 columns off")
+//                0xc00e -> println("Primary character set")
+//                0xe000 -> println("Trying to write in aux ram \$E000")
+//                else -> println("Attempting to write in rom: " + i.hh())
+//            }
         }
     }
 
