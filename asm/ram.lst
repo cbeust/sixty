@@ -1,0 +1,15 @@
+ca65 V2.18 - Git b8ae5c2
+Main file   : ram.s
+Current file: ram.s
+
+000000r 1               start:
+000000r 1  AD 83 C0     	lda $C083		; Read and write bank 2
+000003r 1  AD 83 C0     	lda $C083
+000006r 1  A9 22        	lda #$22
+000008r 1  8D 7B D1     	sta $D17B
+00000Br 1  CD 7B D1     	cmp $D17B
+00000Er 1  F0 01        	beq @ok
+000010r 1  00           	brk
+000011r 1               @ok:
+000011r 1  60               rts
+000011r 1               
