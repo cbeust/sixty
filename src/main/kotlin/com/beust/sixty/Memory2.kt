@@ -153,6 +153,29 @@ class Memory(val size: Int? = null) {
                     }
                 }
             } else {
+                if (!init) when(i) {
+                    0xc002 -> {
+                        // | ACTION | ADDRESS       |
+                        // |de W    | $C002 / 49156 | READ FROM MAIN 48K |
+                        readMain = true
+                    }
+                    0xc003 -> {
+                        // | ACTION | ADDRESS       |
+                        // |de W    | $C003 / 49156 | READ FROM AUX 48K |
+                        readMain = false
+                    }
+                    0xc004 -> {
+                        // | ACTION | ADDRESS       |
+                        // |de W    | $C004 / 49156 | WRITE TO MAIN 48K |
+                        writeMain = true
+                    }
+                    0xc005 -> {
+                        // | ACTION | ADDRESS       |
+                        // |de W    | $C005 / 49156 | WRITE TO AUX 48K |
+                        writeMain = false
+                    }
+
+                }
                 if (init) {
                     c0Memory[i - 0xc000] = value
                 } else {
