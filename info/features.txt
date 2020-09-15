@@ -1,0 +1,5 @@
+- Display cycles
+- Show runtime disassembly
+- WOZ and running heavily protected disks
+- Nibble buffer viewing, including sync bits
+- Fast reload of externally assembled programs
