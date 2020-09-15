@@ -68,11 +68,7 @@ class Computer(val cpu: Cpu = Cpu(memory = Memory()),
             if (opCode == 0x60 && cpu.SP.isEmpty()) {
                 done = true
             } else {
-                if (cycles >= 1182728) {
-                    println(this)
-                    println("breakpoint")
-                }
-                if (cpu.PC == BREAKPOINT) {
+                if (BREAKPOINT != null && cpu.PC == BREAKPOINT) {
                     println(this)
                     println("breakpoint")
                 }

@@ -5,14 +5,10 @@ package com.beust.app
 import com.beust.sixty.Computer
 import com.beust.sixty.Cpu
 import com.beust.sixty.Memory
-import java.awt.Button
-import java.awt.Color
 import java.awt.Dimension
-import java.awt.Label
-import java.nio.file.Paths
+import java.nio.file.*
 import javax.swing.GroupLayout
 import javax.swing.JFrame
-import javax.swing.JPanel
 
 
 class Apple2Frame: JFrame() {
@@ -65,17 +61,21 @@ fun apple2Computer(debugMem: Boolean): Computer {
 //        loadResource("Apple2_Plus.rom", 0xd000)
         loadResource("DISK2.ROM", 0xc600)
 
+        Thread {
+            runWatcher(this)
+        }.start()
+
         // When restarting, no need to move the head 0x50 tracks
         this[0xc63c] = 4
     }
 
     val frame = Apple2Frame().apply {
-        addKeyListener(object: java.awt.event.KeyListener {
+        addKeyListener(object : java.awt.event.KeyListener {
             override fun keyReleased(e: java.awt.event.KeyEvent?) {}
             override fun keyTyped(e: java.awt.event.KeyEvent?) {}
 
             override fun keyPressed(e: java.awt.event.KeyEvent) {
-                val key = when(e.keyCode) {
+                val key = when (e.keyCode) {
                     10 -> 0x8d
                     else -> e.keyCode.or(0x80)
                 }
@@ -110,6 +110,33 @@ fun apple2Computer(debugMem: Boolean): Computer {
     return result
 }
 
+private fun runWatcher(memory: Memory) {
+    val watcher = FileSystems.getDefault().newWatchService()
+
+    val dir = Paths.get("asm")
+    dir.register(watcher, StandardWatchEventKinds.ENTRY_MODIFY)
+    var done = false
+    while(! false) {
+        val key = watcher.take()
+        key.pollEvents().forEach { event ->
+            if (event.kind() != StandardWatchEventKinds.OVERFLOW) {
+                val ev = event as WatchEvent<Path>
+                val filename = ev.context()
+                if (filename.toString() == "a") {
+                    val file = Paths.get(dir.toAbsolutePath().toString(), filename.toString())
+                    println("Reloading $file")
+                    memory.load(file.toFile().inputStream(), 0x300)
+                }
+                println("$filename modified")
+                if (key.isValid) {
+                    key.reset()
+                } else {
+                    done = true
+                }
+            }
+        }
+    }
+}
 private fun loadPic(memory: Memory) {
     val bytes = Paths.get("d:", "PD", "Apple disks", "fishgame.pic").toFile().readBytes()
     (4..0x2004).forEach {

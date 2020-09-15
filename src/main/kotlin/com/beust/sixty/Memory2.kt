@@ -197,7 +197,7 @@ class Memory(val size: Int? = null) {
                 writeMain = false
             }
             0xc006 -> {
-                NYI("Enable slot ROM from \$C100-\$CFFF")
+//                NYI("Enable slot ROM from \$C100-\$CFFF")
             }
             0xc007 -> {
                 NYI("INTCXROMON Enable main ROM from \$C100-\$CFFF")
