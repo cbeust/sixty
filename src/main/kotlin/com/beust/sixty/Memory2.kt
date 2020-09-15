@@ -53,9 +53,17 @@ class Memory(val size: Int? = null) {
         bytes.forEach { set(ii++, it) }
     }
 
+    private val mem = IntArray(0x10000) { 0 }
+
+    private var c083Count = 0
+    private var c08bCount = 0
+
     private fun getOrSet(get: Boolean, i: Int, value: Int = 0): Int? {
         var result: Int? = null
 
+        if (i == 0xd17b) {
+            println("BREAKPOINT")
+        }
         if (i < 0x200) {
             if (get) {
                 if (i < 0) {
@@ -80,28 +88,17 @@ class Memory(val size: Int? = null) {
                         c0Memory[0] = c0Memory[0] and 0x7f
                         c0Memory[0]
                     }
-                    0xc083, 0xc08b -> {
-                        if (c083Count == 0) {
+                    0xc08b -> {
+                        if (c08bCount == 0) {
+                            c08bCount++
+                        }
+                        if (c08bCount == 1) {
                             readRom = false
                             readBank1 = true
-                            readBank2 = false
                             writeBank1 = true
+                            readBank2 = false
                             writeBank2 = false
-                            c083Count++
-                        } else if (c083Count == 1) {
-                            /*
-                            $C083 or $C08B enables the language card RAM in "read/write" mode,
-            with the ROM completely disabled. This is used when exeucting an
-            operating system (e.g. ProDOS or Pascal) from the language card space,
-            where part of the RAM is used as buffering memory, for example. The two
-            locations select different RAM banks in the $D000-$DFFF area.
-                             */
-                            readRom = false
-                            readBank1 = false
-                            readBank2 = true
-                            writeBank1 = false
-                            writeBank2 = true
-                            c083Count = 0
+                            c08bCount = 0
                         }
                         0
                     }
@@ -131,9 +128,6 @@ class Memory(val size: Int? = null) {
                 }
             }
         } else if (i in 0xd000..0xdfff) {
-            if (i == 0xd17b) {
-                println("BREAKPOINT")
-            }
             if (get) {
                 result = when {
                     readRom -> rom[i - 0xd000]
@@ -144,7 +138,7 @@ class Memory(val size: Int? = null) {
                 if (writeBank1) ram1[i - 0xd000] = value
                 else if (writeBank2) ram2[i - 0xd000] = value
             }
-        } else {
+        } else { // $D000-$FFF
             if (get) {
                 result = rom[i - 0xd000]
             } else {
@@ -153,9 +147,8 @@ class Memory(val size: Int? = null) {
         }
 
         if (get && result == null) {
-            TODO("Should never happen")
+            TODO("Should not happen")
         }
-
         return result
     }
 
