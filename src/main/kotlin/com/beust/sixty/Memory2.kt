@@ -67,6 +67,16 @@ class Memory(val size: Int? = null) {
             } else {
                 lowMemory[i] = value
             }
+        } else if (i in 0x200..0xbfff) {
+            if (get) {
+                result = mainMemory[i]
+//                result = if (readMain) mainMemory[i]
+//                    else auxMemory[i]
+            } else {
+                mainMemory[i] = value
+//                if (writeMain) mainMemory[i] = value
+//                else auxMemory[i] = value
+            }
         } else {
             if (get) {
                 result = when(i) {
