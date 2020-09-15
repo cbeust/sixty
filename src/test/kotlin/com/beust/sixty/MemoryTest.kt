@@ -11,7 +11,6 @@ class MemoryTest {
     fun languageCard() {
         val start = 0x300
         val memory = Memory().apply {
-            val ins = this::class.java.classLoader.getResource("6502_functional_test.bin")?.openStream()
             val ins2 = File("asm/ram").inputStream()
             load(ins2, start)
         }
