@@ -36,7 +36,9 @@ class Memory(val size: Int? = null) {
 
     private var readRom = true
     private var readBank1 = true
+    private var readBank2 = false
     private var writeBank1 = true
+    private var writeBank2 = false
 
     private var init = true
 
@@ -78,6 +80,26 @@ class Memory(val size: Int? = null) {
                         c0Memory[0] = c0Memory[0] and 0x7f
                         c0Memory[0]
                     }
+                    0xc083, 0xc08b -> {
+                        if (c083Count == 0) {
+                            c083Count++
+                        } else if (c083Count == 1) {
+                            /*
+                            $C083 or $C08B enables the language card RAM in "read/write" mode,
+            with the ROM completely disabled. This is used when exeucting an
+            operating system (e.g. ProDOS or Pascal) from the language card space,
+            where part of the RAM is used as buffering memory, for example. The two
+            locations select different RAM banks in the $D000-$DFFF area.
+                             */
+                            readRom = false
+                            readBank1 = false
+                            readBank2 = true
+                            writeBank1 = false
+                            writeBank2 = true
+                            c083Count = 0
+                        }
+                        0
+                    }
                     0xc0ec -> {
                         //                    val pos = disk.bitPosition
                         // Faster way for unprotected disks
@@ -111,8 +133,8 @@ class Memory(val size: Int? = null) {
                     else -> ram2[i - 0xd000]
                 }
             } else {
-                val ram = if (writeBank1) ram1 else ram2
-                manageWrite(ram, i, value)
+                if (writeBank1) ram1[i - 0xd000] = value
+                else if (writeBank2) ram2[i - 0xd000] = value
             }
         } else {
             if (get) {
@@ -140,7 +162,7 @@ class Memory(val size: Int? = null) {
         listener?.onWrite(address, value)
     }
 
-    private var c081Count = 0
+    private var c083Count = 0
 
     private fun handleC0(i: Int, value: Int) {
         when(i) {
@@ -220,16 +242,6 @@ class Memory(val size: Int? = null) {
 //                writeRom = false
 //                switchToD0Bank2()
 //                switchToRom()
-            }
-            0xc083, 0xc08b -> {
-                /*
-                $C083 or $C08B enables the language card RAM in "read/write" mode,
-with the ROM completely disabled. This is used when exeucting an
-operating system (e.g. ProDOS or Pascal) from the language card space,
-where part of the RAM is used as buffering memory, for example. The two
-locations select different RAM banks in the $D000-$DFFF area.
-                 */
-                NYI("LANGUAGE CARD")
             }
             0xc088 -> {
                 NYI("\$C088")

@@ -24,6 +24,9 @@ class Apple2MemoryListener(private val textScreen: TextScreenPanel,
     override fun onWrite(location: Int, value: Int) {
         val memory = computer!!.memory
         if (location in 0x400..0x7ff) {
+            if (location == 0x400 && value.and(0x7f) == 0x43) {
+                println("BREAKPOINT")
+            }
             textScreen.drawMemoryLocation(location, value)
         } else if (location in 0x2000..0x3fff) {
 //            if (value != 0) println("Graphics: [$" + location.hh() + "]=$" + value.and(0xff).h())
