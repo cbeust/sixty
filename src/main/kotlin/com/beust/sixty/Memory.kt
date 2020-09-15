@@ -4,7 +4,7 @@ import com.beust.app.*
 import java.io.File
 import java.io.InputStream
 
-class Memory(val size: Int = 0x10000, vararg bytes: Int) {
+class _Memory(val size: Int = 0x10000, vararg bytes: Int) {
     var interceptor: MemoryInterceptor? = null
     var listener: MemoryListener? = null
     val content: IntArray = IntArray(size)
@@ -44,7 +44,7 @@ class Memory(val size: Int = 0x10000, vararg bytes: Int) {
                     TODO("Clearing data latch not supported")
                 }
 
-                0xc0ec, 0xc0ee -> {
+                0xc0ec -> {
 //                    val pos = disk.bitPosition
                     // Faster way for unprotected disks
                     result = DISK.nextByte()
@@ -116,18 +116,22 @@ class Memory(val size: Int = 0x10000, vararg bytes: Int) {
             content[i] = value
             listener?.onWrite(i, value)
         } else {
-//            when(i) {
-//                0xc000 -> println("Writing to keyboard strobe")
-//                0xc00c -> println("Turning 80 columns off")
-//                0xc00e -> println("Primary character set")
-//                0xe000 -> println("Trying to write in aux ram \$E000")
+            when(i) {
+                0xc000 -> println("Writing to keyboard strobe")
+                0xc00c -> println("Turning 80 columns off")
+                0xc00e -> println("Primary character set")
+                0xe000 -> println("Trying to write in aux ram \$E000")
 //                else -> println("Attempting to write in rom: " + i.hh())
-//            }
+            }
         }
     }
 
     fun forceValue(i: Int, value: Int) {
         content[i] = value
+    }
+
+    fun force(block: () -> Unit) {
+        block()
     }
 
     override fun toString(): String {

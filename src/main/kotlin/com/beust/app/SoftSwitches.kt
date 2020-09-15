@@ -18,8 +18,10 @@ object SoftSwitches {
             0xc007 -> {} // SETINTCXROM
             0xC00C -> {} // CLR80COL
             0xC00E -> {} // CLRALTCHAR
-            0xC010 -> {
-                c.cpu.memory.forceValue(0xc000, c.cpu.memory[0xc000].and(0x7f))
+            0xC010 -> with(c.cpu.memory) {
+                force {
+                    this[0xc000] = this[0xc000].and(0x7f)
+                }
             } // KBDSTRB
             0xC015 -> {} // RDCXROM
             0xC018 -> { result = 0x8d } // RD80STORE
