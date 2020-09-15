@@ -57,31 +57,43 @@ class Memory(val size: Int? = null) {
 
     private fun getOrSet(get: Boolean, i: Int, value: Int = 0): Int? {
         var result: Int? = null
-        if (get) {
-            result = when(i) {
-                0xc0ec -> {
-                    //                    val pos = disk.bitPosition
-                    // Faster way for unprotected disks
-                    val r = DISK.nextByte()
-                    r
 
-                    // More formal way: bit by bit
-                    //                    if (latch and 0x80 != 0) latch = 0
-                    //                    latch = latch.shl(1).or(DISK.nextBit()).and(0xff)
-                    //                    result = latch
+        if (i < 0x200) {
+            if (get) {
+                if (i < 0) {
+                    println("PROBLEM")
                 }
-                in StepperMotor.RANGE -> {
-                    StepperMotor.onRead(i, value, DISK)
-                }
-                else -> {
-                    mem[i]
-                }
+                result = lowMemory[i]
+            } else {
+                lowMemory[i] = value
             }
         } else {
-            if (i < 0xc000) {
-                mem[i] = value
-            } else if (init) {
-                mem[i] = value
+            if (get) {
+                result = when(i) {
+                    0xc0ec -> {
+                        //                    val pos = disk.bitPosition
+                        // Faster way for unprotected disks
+                        val r = DISK.nextByte()
+                        r
+
+                        // More formal way: bit by bit
+                        //                    if (latch and 0x80 != 0) latch = 0
+                        //                    latch = latch.shl(1).or(DISK.nextBit()).and(0xff)
+                        //                    result = latch
+                    }
+                    in StepperMotor.RANGE -> {
+                        StepperMotor.onRead(i, value, DISK)
+                    }
+                    else -> {
+                        mem[i]
+                    }
+                }
+            } else {
+                if (i < 0xc000) {
+                    mem[i] = value
+                } else if (init) {
+                    mem[i] = value
+                }
             }
         }
 
