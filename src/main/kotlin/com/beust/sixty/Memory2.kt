@@ -34,6 +34,9 @@ class Memory(val size: Int? = null) {
     /** $D000-$DFFF */
     private val ram2 = IntArray(0x1000) { 0 }
 
+    /** $E000-$FFFF */
+    private val lcRam = IntArray(0x2000) { 0 }
+
     private var readRom = true
     private var readBank1 = true
     private var readBank2 = false
@@ -150,12 +153,40 @@ class Memory(val size: Int? = null) {
 //                    handleC0(i, value)
                 }
             }
-        } else {
-            if (get) {
-                result = mem[i]
-            } else if (init) {
-                mem[i] = value
+        } else if (i in 0xd000..0xdfff) {
+            val ea = i - 0xd000
+            if (i == 0xd17b) {
+                println("BREAKPOINT")
             }
+            if (get) {
+                    result = rom[ea]
+//                result = when {
+//                    readRom -> rom[ea]
+//                    readBank1 -> ram1[ea]
+//                    else -> ram2[ea]
+//                }
+            } else {
+                if (init) rom[ea] = value
+//                if (writeBank1) ram1[ea] = value
+//                else if (writeBank2) ram2[ea] = value
+//                else if (init) rom[ea] = value
+            }
+        } else {  // 0xe000-0xffff
+            if (get) {
+                 result = mem[i]
+            } else {
+                if (init) mem[i] = value
+            }
+//            if (get) {
+//                result = if (readBank1 || readBank2) lcRam[i - 0xe000]
+//                    else mem[i]
+//            } else {
+//                if (writeBank1 || writeBank2) {
+//                    lcRam[i - 0xe000] = value
+//                } else if (init) {
+//                    mem[i] = value
+//                }
+//            }
         }
 
         if (get && result == null) {
