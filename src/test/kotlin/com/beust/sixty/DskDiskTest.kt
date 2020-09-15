@@ -28,7 +28,7 @@ class DskDiskTest {
         val proDos = false
         val expected = ins.readAllBytes()
         val disk = DskDisk(ins)
-        SixAndTwo.dump(disk)
+//        SixAndTwo.dump(disk)
         repeat(35) { track ->
             val trackContent = getOneTrack(disk, track)
             repeat(16) { sector ->

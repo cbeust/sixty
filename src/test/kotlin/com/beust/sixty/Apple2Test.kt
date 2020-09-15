@@ -4,7 +4,9 @@ import com.beust.app.StackPointer
 
 class Apple2Test: BaseTest() {
     override fun createComputer(vararg bytes: Int): Computer {
-        val memory = Memory(bytes = *bytes)
+        val memory = Memory().apply {
+            init(0, *bytes)
+        }
         val stackPointer = StackPointer(memory = memory)
 
         val listener = object: MemoryListener() {
