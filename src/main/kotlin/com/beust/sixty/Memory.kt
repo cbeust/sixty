@@ -4,7 +4,7 @@ import com.beust.app.*
 import java.io.File
 import java.io.InputStream
 
-class Memory(val size: Int = 0x10000, vararg bytes: Int) {
+class Memory_(val size: Int = 0x10000, vararg bytes: Int) {
     var interceptor: MemoryInterceptor? = null
     var listener: MemoryListener? = null
     val content: IntArray = IntArray(size)

@@ -6,7 +6,7 @@ import java.io.File
 import java.io.InputStream
 
 @Suppress("UnnecessaryVariable")
-class _Memory(val size: Int? = null) {
+class Memory(val size: Int? = null) {
     var interceptor: MemoryInterceptor? = null
     var listener: MemoryListener? = null
 
@@ -53,7 +53,45 @@ class _Memory(val size: Int? = null) {
         bytes.forEach { set(ii++, it) }
     }
 
+    private val mem = IntArray(0x10000) { 0 }
+
     private fun getOrSet(get: Boolean, i: Int, value: Int = 0): Int? {
+        var result: Int? = null
+        if (get) {
+            result = when(i) {
+                0xc0ec -> {
+                    //                    val pos = disk.bitPosition
+                    // Faster way for unprotected disks
+                    val r = DISK.nextByte()
+                    r
+
+                    // More formal way: bit by bit
+                    //                    if (latch and 0x80 != 0) latch = 0
+                    //                    latch = latch.shl(1).or(DISK.nextBit()).and(0xff)
+                    //                    result = latch
+                }
+                in StepperMotor.RANGE -> {
+                    StepperMotor.onRead(i, value, DISK)
+                }
+                else -> {
+                    mem[i]
+                }
+            }
+        } else {
+            if (i < 0xc000) {
+                mem[i] = value
+            } else if (init) {
+                mem[i] = value
+            }
+        }
+
+        if (get && result == null) {
+            TODO("Should not happen")
+        }
+        return result
+    }
+
+    private fun _getOrSet(get: Boolean, i: Int, value: Int = 0): Int? {
         var result: Int? = null
 
         if (i < 0x200) {
@@ -67,11 +105,13 @@ class _Memory(val size: Int? = null) {
             }
         } else if (i in 0x200..0xbfff) {
             if (get) {
-                result = if (readMain) mainMemory[i]
-                    else auxMemory[i]
+                result = mainMemory[i]
+//                result = if (readMain) mainMemory[i]
+//                    else auxMemory[i]
             } else {
-                if (writeMain) mainMemory[i] = value
-                else auxMemory[i] = value
+                mainMemory[i] = value
+//                if (writeMain) mainMemory[i] = value
+//                else auxMemory[i] = value
             }
         } else if (i in 0xc000..0xcfff) {
             if (get) {
@@ -81,28 +121,28 @@ class _Memory(val size: Int? = null) {
                         c0Memory[0]
                     }
                     0xc083, 0xc08b -> {
-                        if (c083Count == 0) {
-                            readRom = false
-                            readBank1 = true
-                            readBank2 = false
-                            writeBank1 = true
-                            writeBank2 = false
-                            c083Count++
-                        } else if (c083Count == 1) {
-                            /*
-                            $C083 or $C08B enables the language card RAM in "read/write" mode,
-            with the ROM completely disabled. This is used when exeucting an
-            operating system (e.g. ProDOS or Pascal) from the language card space,
-            where part of the RAM is used as buffering memory, for example. The two
-            locations select different RAM banks in the $D000-$DFFF area.
-                             */
-                            readRom = false
-                            readBank1 = false
-                            readBank2 = true
-                            writeBank1 = false
-                            writeBank2 = true
-                            c083Count = 0
-                        }
+//                        if (c083Count == 0) {
+//                            readRom = false
+//                            readBank1 = true
+//                            readBank2 = false
+//                            writeBank1 = true
+//                            writeBank2 = false
+//                            c083Count++
+//                        } else if (c083Count == 1) {
+//                            /*
+//                            $C083 or $C08B enables the language card RAM in "read/write" mode,
+//            with the ROM completely disabled. This is used when exeucting an
+//            operating system (e.g. ProDOS or Pascal) from the language card space,
+//            where part of the RAM is used as buffering memory, for example. The two
+//            locations select different RAM banks in the $D000-$DFFF area.
+//                             */
+//                            readRom = false
+//                            readBank1 = false
+//                            readBank2 = true
+//                            writeBank1 = false
+//                            writeBank2 = true
+//                            c083Count = 0
+//                        }
                         0
                     }
                     0xc0ec -> {
@@ -127,7 +167,7 @@ class _Memory(val size: Int? = null) {
                 if (init) {
                     c0Memory[i - 0xc000] = value
                 } else {
-                    handleC0(i, value)
+//                    handleC0(i, value)
                 }
             }
         } else if (i in 0xd000..0xdfff) {
@@ -135,20 +175,22 @@ class _Memory(val size: Int? = null) {
                 println("BREAKPOINT")
             }
             if (get) {
-                result = when {
-                    readRom -> rom[i - 0xd000]
-                    readBank1 -> ram1[i - 0xd000]
-                    else -> ram2[i - 0xd000]
-                }
+                result = rom[i - 0xd000]
+//                result = when {
+//                    readRom -> rom[i - 0xd000]
+//                    readBank1 -> ram1[i - 0xd000]
+//                    else -> ram2[i - 0xd000]
+//                }
             } else {
-                if (writeBank1) ram1[i - 0xd000] = value
-                else if (writeBank2) ram2[i - 0xd000] = value
+//                if (writeBank1) ram1[i - 0xd000] = value
+//                else if (writeBank2) ram2[i - 0xd000] = value
             }
         } else {
             if (get) {
                 result = rom[i - 0xd000]
             } else {
-                if (init || ! readRom) rom[i - 0xd000] = value
+//                if (init || ! readRom)
+                    rom[i - 0xd000] = value
             }
         }
 

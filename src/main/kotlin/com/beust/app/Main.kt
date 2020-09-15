@@ -6,10 +6,10 @@ import java.io.File
 var DEBUG = false
 val BREAKPOINT = 0xbd56
 
-val DISKW = WozDisk(Woz::class.java.classLoader.getResource("woz2/DOS 3.3 System Master.woz").openStream())
+val DISK = WozDisk(Woz::class.java.classLoader.getResource("woz2/DOS 3.3 System Master.woz").openStream())
 val DISK2 = WozDisk(
         File("d:\\pd\\Apple Disks\\woz2\\First Math Adventures - Understanding word problems.woz").inputStream())
-val DISK = DskDisk(File("src\\test\\resources\\Apple DOS 3.3.dsk").inputStream())
+val DISK_ = DskDisk(File("src\\test\\resources\\Apple DOS 3.3.dsk").inputStream())
 val DISKA = DskDisk(File("src/test/resources/audit.dsk").inputStream())
 
 fun main() {
