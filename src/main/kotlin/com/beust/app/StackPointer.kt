@@ -15,7 +15,7 @@ class StackPointer(private val memory: Memory) {
     private fun dec() { S = (S - 1) and 0xff }
 
     fun pushByte(a: Byte) {
-        memory[address + S] = a.toInt()
+        memory[address + S] = a.toInt().and(0xff)
         dec()
     }
 

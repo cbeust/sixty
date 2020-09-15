@@ -146,6 +146,10 @@ class Memory(val size: Int = 0x10000, vararg bytes: Int) {
         content[i] = value
     }
 
+    fun force(block: () -> Unit) {
+        block()
+    }
+
     override fun toString(): String {
         return content.slice(0..16).map { it.and(0xff).h()}.joinToString(" ")
     }

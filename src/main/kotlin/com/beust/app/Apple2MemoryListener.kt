@@ -15,7 +15,7 @@ class Apple2MemoryListener(private val textScreen: TextScreenPanel,
     override fun onRead(location: Int, value: Int) {
         when (location) {
             in StepperMotor.RANGE -> StepperMotor.onRead(location, value, disk)
-            in SoftDisk.RANGE -> SoftDisk.onRead(location, value, disk)
+//            in SoftDisk.RANGE -> SoftDisk.onRead(location, value, disk)
             in SoftSwitches.RANGE -> SoftSwitches.onRead(computer, location, value)
             else -> value
         }
