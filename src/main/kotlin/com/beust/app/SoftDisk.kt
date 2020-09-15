@@ -6,7 +6,7 @@ import com.beust.sixty.MemoryInterceptor
  * Soft switches that manipulate the disk drive.
  */
 object SoftDisk {
-    val RANGE = 0xc0e8..0xc0ec
+    val RANGE = 0xc0e8..0xc0eb
 
     fun onRead(location: Int, value: Int, disk: WozDisk): Int {
         val byte = when(location) {

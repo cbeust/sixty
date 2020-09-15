@@ -3,7 +3,7 @@ package com.beust.app
 import com.beust.sixty.h
 import java.io.File
 
-var DEBUG = true
+var DEBUG = false
 val BREAKPOINT = 0xbd56
 
 val DISK1 = WozDisk(Woz::class.java.classLoader.getResource("woz2/DOS 3.3 System Master.woz").openStream())

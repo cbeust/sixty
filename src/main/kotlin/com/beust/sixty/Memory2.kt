@@ -1,11 +1,12 @@
 package com.beust.sixty
 
 import com.beust.app.DISK
+import com.beust.app.StepperMotor
 import java.io.File
 import java.io.InputStream
 
 @Suppress("UnnecessaryVariable")
-class _Memory(val size: Int? = null) {
+class Memory(val size: Int? = null) {
     var interceptor: MemoryInterceptor? = null
     var listener: MemoryListener? = null
 
@@ -64,13 +65,11 @@ class _Memory(val size: Int? = null) {
             }
         } else if (i in 0x200..0xbfff) {
             if (get) {
-                result = mainMemory[i]
-                //                if (readMain) mainMemory[i]
-                //                else auxMemory[i]
+                result = if (readMain) mainMemory[i]
+                    else auxMemory[i]
             } else {
-                mainMemory[i] = value
-//            if (writeMain) mainMemory[i] = value
-//            else auxMemory[i] = value
+                if (writeMain) mainMemory[i] = value
+                else auxMemory[i] = value
             }
         } else if (i in 0xc000..0xcfff) {
             if (get) {
@@ -90,6 +89,9 @@ class _Memory(val size: Int? = null) {
                         //                    latch = latch.shl(1).or(DISK.nextBit()).and(0xff)
                         //                    result = latch
                     }
+                    in StepperMotor.RANGE -> {
+                        StepperMotor.onRead(i, value, DISK)
+                    }
                     else -> {
                         c0Memory[i - 0xc000]
                     }
@@ -104,9 +106,9 @@ class _Memory(val size: Int? = null) {
         } else if (i in 0xd000..0xdfff) {
             if (get) {
                 result = when {
-                    readRom -> rom[i]
-                    readBank1 -> ram1[i]
-                    else -> ram2[i]
+                    readRom -> rom[i - 0xd000]
+                    readBank1 -> ram1[i - 0xd000]
+                    else -> ram2[i - 0xd000]
                 }
             } else {
                 val ram = if (writeBank1) ram1 else ram2
@@ -129,7 +131,7 @@ class _Memory(val size: Int? = null) {
 
     operator fun get(address: Int) : Int {
         val result = getOrSet(true, address)
-        listener?.onRead(address, result!!)
+//        listener?.onRead(address, result!!)
         return result!!.and(0xff)
     }
 
@@ -202,14 +204,14 @@ class _Memory(val size: Int? = null) {
             }
             0xc081 -> {
                 // Read ROM; write RAM bank 2
-                if (c081Count == 2) {
-                    c081Count = 0
-                    writeBank1 = false
-                    readRom = true
-                } else {
-                    readRom = true
-                    c081Count++
-                }
+//                if (c081Count == 2) {
+//                    c081Count = 0
+//                    writeBank1 = false
+//                    readRom = true
+//                } else {
+//                    readRom = true
+//                    c081Count++
+//                }
             }
             0xc082 -> {
                 NYI("\$C082")
