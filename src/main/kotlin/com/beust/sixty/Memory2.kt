@@ -55,9 +55,15 @@ class Memory(val size: Int? = null) {
 
     private val mem = IntArray(0x10000) { 0 }
 
+    private var c083Count = 0
+    private var c08bCount = 0
+
     private fun getOrSet(get: Boolean, i: Int, value: Int = 0): Int? {
         var result: Int? = null
 
+        if (i == 0xd17b) {
+            println("BREAKPOINT")
+        }
         if (i < 0x200) {
             if (get) {
                 if (i < 0) {
@@ -82,21 +88,16 @@ class Memory(val size: Int? = null) {
                         c0Memory[0] = c0Memory[0] and 0x7f
                         c0Memory[0]
                     }
-                    0xc083, 0xc08b -> {
-                        if (c083Count == 0) {
+                    0xc08b -> {
+                        if (c08bCount == 0) {
+                            c08bCount++
+                        } else if (c08bCount == 1) {
                             readRom = false
                             readBank1 = true
-                            readBank2 = false
                             writeBank1 = true
+                            readBank2 = false
                             writeBank2 = false
-                            c083Count++
-                        } else if (c083Count == 1) {
-                            readRom = false
-                            readBank1 = false
-                            readBank2 = true
-                            writeBank1 = false
-                            writeBank2 = true
-                            c083Count = 0
+                            c08bCount = 0
                         }
                         0
                     }
@@ -125,11 +126,22 @@ class Memory(val size: Int? = null) {
                     handleC0(i, value)
                 }
             }
-        } else {
+        } else if (i in 0xd000..0xdfff) {
             if (get) {
-                result = mem[i]
-            } else if (init) {
-                mem[i] = value
+                result = when {
+                    readRom -> rom[i - 0xd000]
+                    readBank1 -> ram1[i - 0xd000]
+                    else -> ram2[i - 0xd000]
+                }
+            } else {
+                if (writeBank1) ram1[i - 0xd000] = value
+                else if (writeBank2) ram2[i - 0xd000] = value
+            }
+        } else { // $D000-$FFF
+            if (get) {
+                result = rom[i - 0xd000]
+            } else {
+                if (init || ! readRom) rom[i - 0xd000] = value
             }
         }
 
@@ -262,8 +274,6 @@ class Memory(val size: Int? = null) {
         getOrSet(false, address, value)
         listener?.onWrite(address, value)
     }
-
-    private var c083Count = 0
 
     private fun handleC0(i: Int, value: Int) {
         when(i) {
