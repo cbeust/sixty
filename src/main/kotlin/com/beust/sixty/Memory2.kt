@@ -69,13 +69,11 @@ class Memory(val size: Int? = null) {
             }
         } else if (i in 0x200..0xbfff) {
             if (get) {
-                result = mainMemory[i]
-//                result = if (readMain) mainMemory[i]
-//                    else auxMemory[i]
+                result = if (readMain) mainMemory[i]
+                    else auxMemory[i]
             } else {
-                mainMemory[i] = value
-//                if (writeMain) mainMemory[i] = value
-//                else auxMemory[i] = value
+                if (writeMain) mainMemory[i] = value
+                else auxMemory[i] = value
             }
         } else if (i in 0xc000..0xcfff) {
             if (get) {
@@ -85,28 +83,21 @@ class Memory(val size: Int? = null) {
                         c0Memory[0]
                     }
                     0xc083, 0xc08b -> {
-//                        if (c083Count == 0) {
-//                            readRom = false
-//                            readBank1 = true
-//                            readBank2 = false
-//                            writeBank1 = true
-//                            writeBank2 = false
-//                            c083Count++
-//                        } else if (c083Count == 1) {
-//                            /*
-//                            $C083 or $C08B enables the language card RAM in "read/write" mode,
-//            with the ROM completely disabled. This is used when exeucting an
-//            operating system (e.g. ProDOS or Pascal) from the language card space,
-//            where part of the RAM is used as buffering memory, for example. The two
-//            locations select different RAM banks in the $D000-$DFFF area.
-//                             */
-//                            readRom = false
-//                            readBank1 = false
-//                            readBank2 = true
-//                            writeBank1 = false
-//                            writeBank2 = true
-//                            c083Count = 0
-//                        }
+                        if (c083Count == 0) {
+                            readRom = false
+                            readBank1 = true
+                            readBank2 = false
+                            writeBank1 = true
+                            writeBank2 = false
+                            c083Count++
+                        } else if (c083Count == 1) {
+                            readRom = false
+                            readBank1 = false
+                            readBank2 = true
+                            writeBank1 = false
+                            writeBank2 = true
+                            c083Count = 0
+                        }
                         0
                     }
                     0xc0ec -> {
