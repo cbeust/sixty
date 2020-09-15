@@ -82,6 +82,11 @@ class Memory(val size: Int? = null) {
                     }
                     0xc083, 0xc08b -> {
                         if (c083Count == 0) {
+                            readRom = false
+                            readBank1 = true
+                            readBank2 = false
+                            writeBank1 = true
+                            writeBank2 = false
                             c083Count++
                         } else if (c083Count == 1) {
                             /*
@@ -126,6 +131,9 @@ class Memory(val size: Int? = null) {
                 }
             }
         } else if (i in 0xd000..0xdfff) {
+            if (i == 0xd17b) {
+                println("BREAKPOINT")
+            }
             if (get) {
                 result = when {
                     readRom -> rom[i - 0xd000]
@@ -140,7 +148,7 @@ class Memory(val size: Int? = null) {
             if (get) {
                 result = rom[i - 0xd000]
             } else {
-                if (init) rom[i - 0xd000] = value
+                if (init || ! readRom) rom[i - 0xd000] = value
             }
         }
 

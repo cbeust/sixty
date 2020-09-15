@@ -68,10 +68,14 @@ class Computer(val cpu: Cpu = Cpu(memory = Memory()),
             if (opCode == 0x60 && cpu.SP.isEmpty()) {
                 done = true
             } else {
-//                if (cpu.PC == BREAKPOINT && memory[0x3f] == 0x1b) {
-//                    println(this)
-//                    println("breakpoint")
-//                }
+                if (cycles >= 1182728) {
+                    println(this)
+                    println("breakpoint")
+                }
+                if (cpu.PC == BREAKPOINT) {
+                    println(this)
+                    println("breakpoint")
+                }
 //                if (cpu.PC == 0xc696) {
 //                    if  (cpu.Y == 1) {
 //                        sector = cpu.A
