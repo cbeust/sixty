@@ -91,7 +91,8 @@ class Memory(val size: Int? = null) {
                     0xc08b -> {
                         if (c08bCount == 0) {
                             c08bCount++
-                        } else if (c08bCount == 1) {
+                        }
+                        if (c08bCount == 1) {
                             readRom = false
                             readBank1 = true
                             writeBank1 = true
@@ -148,119 +149,6 @@ class Memory(val size: Int? = null) {
         if (get && result == null) {
             TODO("Should not happen")
         }
-        return result
-    }
-
-    private fun _getOrSet(get: Boolean, i: Int, value: Int = 0): Int? {
-        var result: Int? = null
-
-        if (i < 0x200) {
-            if (get) {
-                if (i < 0) {
-                    println("PROBLEM")
-                }
-                result = lowMemory[i]
-            } else {
-                lowMemory[i] = value
-            }
-        } else if (i in 0x200..0xbfff) {
-            if (get) {
-                result = mainMemory[i]
-//                result = if (readMain) mainMemory[i]
-//                    else auxMemory[i]
-            } else {
-                mainMemory[i] = value
-//                if (writeMain) mainMemory[i] = value
-//                else auxMemory[i] = value
-            }
-        } else if (i in 0xc000..0xcfff) {
-            if (get) {
-                result = when (i) {
-                    0xc010 -> {
-                        c0Memory[0] = c0Memory[0] and 0x7f
-                        c0Memory[0]
-                    }
-                    0xc083, 0xc08b -> {
-//                        if (c083Count == 0) {
-//                            readRom = false
-//                            readBank1 = true
-//                            readBank2 = false
-//                            writeBank1 = true
-//                            writeBank2 = false
-//                            c083Count++
-//                        } else if (c083Count == 1) {
-//                            /*
-//                            $C083 or $C08B enables the language card RAM in "read/write" mode,
-//            with the ROM completely disabled. This is used when exeucting an
-//            operating system (e.g. ProDOS or Pascal) from the language card space,
-//            where part of the RAM is used as buffering memory, for example. The two
-//            locations select different RAM banks in the $D000-$DFFF area.
-//                             */
-//                            readRom = false
-//                            readBank1 = false
-//                            readBank2 = true
-//                            writeBank1 = false
-//                            writeBank2 = true
-//                            c083Count = 0
-//                        }
-                        0
-                    }
-                    0xc0ec -> {
-                        //                    val pos = disk.bitPosition
-                        // Faster way for unprotected disks
-                        val r = DISK.nextByte()
-                        r
-
-                        // More formal way: bit by bit
-                        //                    if (latch and 0x80 != 0) latch = 0
-                        //                    latch = latch.shl(1).or(DISK.nextBit()).and(0xff)
-                        //                    result = latch
-                    }
-                    in StepperMotor.RANGE -> {
-                        StepperMotor.onRead(i, value, DISK)
-                    }
-                    else -> {
-                        c0Memory[i - 0xc000]
-                    }
-                }
-            } else {
-                if (i == 0xc004) {
-                    println("BREAKPOINT")
-                }
-                if (init) {
-                    c0Memory[i - 0xc000] = value
-                } else {
-                    handleC0(i, value)
-                }
-            }
-        } else if (i in 0xd000..0xdfff) {
-            if (i == 0xd17b) {
-                println("BREAKPOINT")
-            }
-            if (get) {
-                result = rom[i - 0xd000]
-//                result = when {
-//                    readRom -> rom[i - 0xd000]
-//                    readBank1 -> ram1[i - 0xd000]
-//                    else -> ram2[i - 0xd000]
-//                }
-            } else {
-//                if (writeBank1) ram1[i - 0xd000] = value
-//                else if (writeBank2) ram2[i - 0xd000] = value
-            }
-        } else {
-            if (get) {
-                result = rom[i - 0xd000]
-            } else {
-//                if (init || ! readRom)
-                    rom[i - 0xd000] = value
-            }
-        }
-
-        if (get && result == null) {
-            TODO("Should never happen")
-        }
-
         return result
     }
 
