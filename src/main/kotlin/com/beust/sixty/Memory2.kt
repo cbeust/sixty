@@ -92,6 +92,12 @@ class Memory(val size: Int? = null) {
                         c0Memory[0] = c0Memory[0] and 0x7f
                         c0Memory[0]
                     }
+                    0xc081 -> {
+                        //| ACTION | ADDRESS        | READ | WRITE? | $D0 |
+                        //|     RR | $C081 / 49281  | ROM  | YES    | 2 |
+                        memory(true, false, false, true, true)
+                        0
+                    }
                     0xc082 -> {
                         //| ACTION | ADDRESS        | READ | WRITE? | $D0 |
                         //|   de R | $C082 / 49282  | ROM  | NO     | 2 |
@@ -158,15 +164,15 @@ class Memory(val size: Int? = null) {
             if (i == 0xd17b) {
                 println("BREAKPOINT")
             }
-            val bug = false
+            val bug = true
             if (! bug) {
                 if (get) {
                         result = rom[ea]
                 } else {
                     if (init) {
-//                    if (writeBank1 || writeBank2) {
-//                        println("PROBLEM")
-//                    }
+                    if (writeBank1 || writeBank2) {
+                        println("PROBLEM")
+                    }
                         rom[ea] = value
                     }
                 }
