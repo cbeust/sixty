@@ -55,3 +55,4 @@ fun List<Int>.b(): String {
 }
 
 fun ERROR(reason: String): Nothing = throw Error(reason)
+fun NYI(reason: String) { println("@@ $reason") }
