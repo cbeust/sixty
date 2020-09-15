@@ -1,5 +1,6 @@
 package com.beust.sixty
 
+import com.beust.app.DEBUG
 import org.assertj.core.api.Assertions.assertThat
 import org.testng.Assert
 import org.testng.annotations.Test
@@ -15,6 +16,9 @@ class MemoryTest {
             load(ins2, start)
         }
         var success = true
+        var message: String? = null
+
+        DEBUG = true
         val c = Computer(cpu = Cpu(memory = memory),
                 memoryListener = DebugMemoryListener()).apply {
             cpu.PC = start
@@ -22,6 +26,7 @@ class MemoryTest {
                 override fun onPcChanged(c: Computer) {
                     if (memory[c.cpu.PC] == 0) {
                         success = false
+                        message = "Failed at PC " + c.cpu.PC.hh()
                         stop()
                     }
                 }
@@ -29,6 +34,6 @@ class MemoryTest {
         }
         c.run()
 
-        assertThat(success).isTrue()
+        assertThat(success).withFailMessage(message ?: "").isTrue()
     }
 }
