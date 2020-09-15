@@ -122,7 +122,7 @@ class Memory(val size: Int? = null) {
                 if (init) {
                     c0Memory[i - 0xc000] = value
                 } else {
-//                    handleC0(i, value)
+                    handleC0(i, value)
                 }
             }
         } else {
@@ -212,10 +212,13 @@ class Memory(val size: Int? = null) {
                     }
                 }
             } else {
+                if (i == 0xc004) {
+                    println("BREAKPOINT")
+                }
                 if (init) {
                     c0Memory[i - 0xc000] = value
                 } else {
-//                    handleC0(i, value)
+                    handleC0(i, value)
                 }
             }
         } else if (i in 0xd000..0xdfff) {

@@ -6,16 +6,17 @@ import java.io.File
 var DEBUG = false
 val BREAKPOINT = 0xbd56
 
-val woz = false
+val disk = 2
 
-val DISK = if (woz)
+val DISK = if (disk == 0)
     WozDisk(Woz::class.java.classLoader.getResource("woz2/DOS 3.3 System Master.woz").openStream())
-else
+else if (disk == 1)
     DskDisk(File("src\\test\\resources\\Apple DOS 3.3.dsk").inputStream())
+else
+    DskDisk(File("src/test/resources/audit.dsk").inputStream())
 
-val DISK2 = WozDisk(
-        File("d:\\pd\\Apple Disks\\woz2\\First Math Adventures - Understanding word problems.woz").inputStream())
-val DISKA = DskDisk(File("src/test/resources/audit.dsk").inputStream())
+//val DISK2 = WozDisk(
+//        File("d:\\pd\\Apple Disks\\woz2\\First Math Adventures - Understanding word problems.woz").inputStream())
 
 fun main() {
     val choice = 2
