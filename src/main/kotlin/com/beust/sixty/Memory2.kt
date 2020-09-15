@@ -96,48 +96,56 @@ class Memory(val size: Int? = null) {
                         //| ACTION | ADDRESS        | READ | WRITE? | $D0 |
                         //| R      | $C080 / 49280  | RAM  | NO     | 2 |
                         memory(false, false, false, true, false)
+                        println("@@ " + i.hh() + "  read ram2, no write")
                         0
                     }
                     0xc081 -> {
                         //| ACTION | ADDRESS        | READ | WRITE? | $D0 |
                         //|     RR | $C081 / 49281  | ROM  | YES    | 2 |
                         memory(true, false, false, false, true)
+                        println("@@ " + i.hh() + "  read rom, write ram2")
                         0
                     }
                     0xc082 -> {
                         //| ACTION | ADDRESS        | READ | WRITE? | $D0 |
                         //|   de R | $C082 / 49282  | ROM  | NO     | 2 |
                         memory(true, false, false, false, false)
+                        println("@@ " + i.hh() + "  read rom, no write")
                         0
                     }
                     0xc083 -> {
                         //| ACTION | ADDRESS        | READ | WRITE? | $D0 |
                         //      RR | $C083 / 49283  | RAM  | YES    | 2 |
                         memory(false, false, false, true, true)
+                        println("@@ " + i.hh() + "  read ram2, write ram2")
                         0
                     }
                     0xc088 -> {
                         //| ACTION | ADDRESS        | READ | WRITE? | $D0 |
                         //|      R | $C088 / 49288  | RA M | NO     | 1 |
                         memory(false, true, false, false, false)
+                        println("@@ " + i.hh() + "  read ram1, no write")
                         0
                     }
                     0xc089 -> {
                         //| ACTION | ADDRESS        | READ | WRITE? | $D0 |
                         //|     RR | $C089 / 49289  | ROM  | YES    | 1 |
                         memory(true, false, true, false, false)
+                        println("@@ " + i.hh() + "  read rom, write ram 1")
                         0
                     }
                     0xc08a -> {
                         //| ACTION | ADDRESS        | READ | WRITE? | $D0 |
                         //| R      | $C08A / 49290  | ROM | NO      | 1   |
                         memory(true, false, false, false, false)
+                        println("@@ " + i.hh() + "  read rom, no write")
                         0
                     }
                     0xc08b -> {
                         //| ACTION | ADDRESS        | READ | WRITE? | $D0 |
                         //|     RR | $C08B / 49291  | RAM  | YES    | 1   |
                         memory(false, true, true, false, false)
+                        println("@@ " + i.hh() + "  read ram1, write ram1")
                         0
                     }
                     0xc0ec -> {
@@ -191,36 +199,23 @@ class Memory(val size: Int? = null) {
             }
         } else if (i in 0xd000..0xdfff) {
             val ea = i - 0xd000
-            if (i == 0xfe1f) {
-                println("BREAKPOINT")
-            }
-            val bug = true
-            if (! bug) {
-                if (get) {
-                        result = rom[ea]
-                } else {
-                    if (init) {
-                    if (writeBank1 || writeBank2) {
-                        println("PROBLEM")
-                    }
-                        rom[ea] = value
-                    }
+//            if (i == 0xd17b) {
+//                println("BREAKPOINT")
+//            }
+            if (get) {
+                result = when {
+                    readRom -> rom[ea]
+                    readBank1 -> ram1[ea]
+                    else -> ram2[ea]
                 }
             } else {
-                if (get) {
-                    result = when {
-                        readRom -> rom[ea]
-                        readBank1 -> ram1[ea]
-                        else -> ram2[ea]
-                    }
-                } else {
-                    if (writeBank1) ram1[ea] = value
-                    else if (writeBank2) ram2[ea] = value
-                    else if (init) rom[ea] = value
-
+                when {
+                    writeBank1 -> ram1[ea] = value
+                    writeBank2 -> ram2[ea] = value
+                    init -> rom[ea] = value
                 }
-            }
 
+            }
         } else {  // 0xe000-0xffff
             val bug = true
             if (! bug) {
@@ -230,9 +225,9 @@ class Memory(val size: Int? = null) {
                     if (init) mem[i] = value
                 }
             } else {
-                if (! init && i == 0xfe1f) {
-                    println("BREAKPOINT")
-                }
+//                if (! init && i == 0xfe1f) {
+//                    println("BREAKPOINT")
+//                }
                 if (get) {
                     result = if (readBank1 || readBank2) lcRam[i - 0xe000]
                     else mem[i]
