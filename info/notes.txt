@@ -1,6 +1,6 @@
 After sequence of
 LDA $C080
-LDA $C088
+LDA $C081
 INC $D17B
 INC $FE1F
 expected $d17b in bank 2 to contain 22 but got 11
