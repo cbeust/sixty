@@ -77,9 +77,38 @@ class Memory(val size: Int? = null) {
 //                if (writeMain) mainMemory[i] = value
 //                else auxMemory[i] = value
             }
-        } else {
+        } else if (i in 0xc000..0xcfff) {
             if (get) {
-                result = when(i) {
+                result = when (i) {
+                    0xc010 -> {
+                        c0Memory[0] = c0Memory[0] and 0x7f
+                        c0Memory[0]
+                    }
+                    0xc083, 0xc08b -> {
+//                        if (c083Count == 0) {
+//                            readRom = false
+//                            readBank1 = true
+//                            readBank2 = false
+//                            writeBank1 = true
+//                            writeBank2 = false
+//                            c083Count++
+//                        } else if (c083Count == 1) {
+//                            /*
+//                            $C083 or $C08B enables the language card RAM in "read/write" mode,
+//            with the ROM completely disabled. This is used when exeucting an
+//            operating system (e.g. ProDOS or Pascal) from the language card space,
+//            where part of the RAM is used as buffering memory, for example. The two
+//            locations select different RAM banks in the $D000-$DFFF area.
+//                             */
+//                            readRom = false
+//                            readBank1 = false
+//                            readBank2 = true
+//                            writeBank1 = false
+//                            writeBank2 = true
+//                            c083Count = 0
+//                        }
+                        0
+                    }
                     0xc0ec -> {
                         //                    val pos = disk.bitPosition
                         // Faster way for unprotected disks
@@ -95,15 +124,21 @@ class Memory(val size: Int? = null) {
                         StepperMotor.onRead(i, value, DISK)
                     }
                     else -> {
-                        mem[i]
+                        c0Memory[i - 0xc000]
                     }
                 }
             } else {
-                if (i < 0xc000) {
-                    mem[i] = value
-                } else if (init) {
-                    mem[i] = value
+                if (init) {
+                    c0Memory[i - 0xc000] = value
+                } else {
+//                    handleC0(i, value)
                 }
+            }
+        } else {
+            if (get) {
+                result = mem[i]
+            } else if (init) {
+                mem[i] = value
             }
         }
 
