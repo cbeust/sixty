@@ -1,7 +1,9 @@
 package com.beust.sixty
 
 class CpuTest: BaseTest() {
-    override fun createComputer(vararg bytes: Int) = Computer(Cpu(Memory(bytes = *bytes))).apply {
+    override fun createComputer(vararg bytes: Int) = Computer(Cpu(Memory().apply {
+        init(0, *bytes)
+    })).apply {
         pcListener = object: PcListener {
             override fun onPcChanged(c: Computer) {
                 if (memory[c.cpu.PC] == BRK) stop()
