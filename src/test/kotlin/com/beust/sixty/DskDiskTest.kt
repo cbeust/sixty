@@ -24,6 +24,7 @@ class DskDiskTest {
         ""
     }
 
+    @Test(enabled = false)
     fun disk() {
         val proDos = false
         val expected = ins.readAllBytes()
