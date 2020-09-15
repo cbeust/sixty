@@ -92,16 +92,22 @@ class Memory(val size: Int? = null) {
                         c0Memory[0] = c0Memory[0] and 0x7f
                         c0Memory[0]
                     }
+                    0xc080 -> {
+                        //| ACTION | ADDRESS        | READ | WRITE? | $D0 |
+                        //| R      | $C080 / 49280  | RAM  | NO     | 2 |
+                        memory(false, false, false, true, false)
+                        0
+                    }
                     0xc081 -> {
                         //| ACTION | ADDRESS        | READ | WRITE? | $D0 |
                         //|     RR | $C081 / 49281  | ROM  | YES    | 2 |
-                        memory(true, false, false, true, true)
+                        memory(true, false, false, false, true)
                         0
                     }
                     0xc082 -> {
                         //| ACTION | ADDRESS        | READ | WRITE? | $D0 |
                         //|   de R | $C082 / 49282  | ROM  | NO     | 2 |
-                        memory(true, false, false, true, false)
+                        memory(true, false, false, false, false)
                         0
                     }
                     0xc083 -> {
