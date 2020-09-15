@@ -4,7 +4,8 @@ import com.beust.sixty.h
 import java.io.File
 
 var DEBUG = false
-val BREAKPOINT = 0x61e
+// 6164: test failing LC writing
+val BREAKPOINT = 0x6161
 
 val disk = 2
 

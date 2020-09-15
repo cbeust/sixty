@@ -163,6 +163,7 @@ class Memory(val size: Int? = null) {
                         // | ACTION | ADDRESS       |
                         // |de W    | $C003 / 49156 | READ FROM AUX 48K |
                         readMain = false
+//                        c0Memory[0x13] = 0x80
                     }
                     0xc004 -> {
                         // | ACTION | ADDRESS       |
@@ -184,7 +185,7 @@ class Memory(val size: Int? = null) {
             }
         } else if (i in 0xd000..0xdfff) {
             val ea = i - 0xd000
-            if (i == 0xd17b) {
+            if (i == 0xfe1f) {
                 println("BREAKPOINT")
             }
             val bug = true
@@ -215,21 +216,29 @@ class Memory(val size: Int? = null) {
             }
 
         } else {  // 0xe000-0xffff
-            if (get) {
-                 result = mem[i]
+            val bug = true
+            if (! bug) {
+                if (get) {
+                    result = mem[i]
+                } else {
+                    if (init) mem[i] = value
+                }
             } else {
-                if (init) mem[i] = value
+                if (! init && i == 0xfe1f) {
+                    println("BREAKPOINT")
+                }
+                if (get) {
+                    result = if (readBank1 || readBank2) lcRam[i - 0xe000]
+                    else mem[i]
+                } else {
+                    if (writeBank1 || writeBank2) {
+                        lcRam[i - 0xe000] = value
+                    } else if (init) {
+                        lcRam[i - 0xe000] = value
+                        mem[i] = value
+                    }
+                }
             }
-//            if (get) {
-//                result = if (readBank1 || readBank2) lcRam[i - 0xe000]
-//                    else mem[i]
-//            } else {
-//                if (writeBank1 || writeBank2) {
-//                    lcRam[i - 0xe000] = value
-//                } else if (init) {
-//                    mem[i] = value
-//                }
-//            }
         }
 
         if (get && result == null) {
