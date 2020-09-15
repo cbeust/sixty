@@ -68,12 +68,13 @@ class Computer(val cpu: Cpu = Cpu(memory = Memory()),
             if (opCode == 0x60 && cpu.SP.isEmpty()) {
                 done = true
             } else {
-                if (cycles >= 1156500) {
-                    DEBUG = true
-                }
+//                if (cycles >= 1156500) {
+//                    DEBUG = true
+//                }
                 if (BREAKPOINT != null && cpu.PC == BREAKPOINT) {
                     println(this)
                     println("breakpoint")
+                    DEBUG = true
                 }
 //                if (cpu.PC == 0xc696) {
 //                    if  (cpu.Y == 1) {
