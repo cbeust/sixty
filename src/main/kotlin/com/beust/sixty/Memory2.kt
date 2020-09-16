@@ -8,7 +8,12 @@ import java.io.InputStream
 @Suppress("UnnecessaryVariable")
 class Memory(val size: Int? = null) {
     var interceptor: MemoryInterceptor? = null
-    var listener: MemoryListener? = null
+    val listeners = arrayListOf<MemoryListener>()
+    val lastMemDebug = arrayListOf<String>()
+
+    fun logMem(i: Int, value: Int, extra: String = "") {
+        lastMemDebug.add("mem[${i.hh()}] = ${(value.and(0xff)).h()} $extra")
+    }
 
     private var readMain = true
     private var writeMain = true
@@ -250,13 +255,17 @@ class Memory(val size: Int? = null) {
 
     operator fun get(address: Int) : Int {
         val result = getOrSet(true, address)
-//        listener?.onRead(address, result!!)
+        listeners.forEach {
+            if (it.isInRange(address)) it.onRead(address, result!!)
+        }
         return result!!.and(0xff)
     }
 
     operator fun set(address: Int, value: Int) {
         getOrSet(false, address, value)
-        listener?.onWrite(address, value)
+        listeners.forEach {
+            if (it.isInRange(address)) it.onWrite(address, value)
+        }
     }
 
     /**

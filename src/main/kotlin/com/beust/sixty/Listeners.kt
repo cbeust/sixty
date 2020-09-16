@@ -5,6 +5,8 @@ class DebugMemoryListener(private val debugMemory: Boolean = false) : MemoryList
         lastMemDebug.add("mem[${i.hh()}] = ${(value.and(0xff)).h()} $extra")
     }
 
+    override fun isInRange(address: Int) = true
+
     override fun onWrite(location: Int, value: Int) {
         if (location == 0x3f) {
             println("3f modified: " + value)

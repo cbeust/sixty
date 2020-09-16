@@ -19,8 +19,7 @@ class MemoryTest {
         var message: String? = null
 
         DEBUG = true
-        val c = Computer(cpu = Cpu(memory = memory),
-                memoryListener = DebugMemoryListener()).apply {
+        val c = Computer(cpu = Cpu(memory = memory)).apply {
             cpu.PC = start
             pcListener = object: PcListener {
                 override fun onPcChanged(c: Computer) {

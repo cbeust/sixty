@@ -22,14 +22,7 @@ object TestComputer {
             )
         }
 
-        val result = Computer(Cpu(memory),
-                memoryListener = object: MemoryListener() {
-                    override fun onWrite(location: Int, value: Int) {
-                        if (location == 0x300) {
-                            print(value.toChar())
-                        }
-                    }
-                })
+        val result = Computer(Cpu(memory))
 
         return result
     }
