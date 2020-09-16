@@ -6,9 +6,9 @@ import java.io.File
 
 var DEBUG = false
 // 6164: test failing LC writing
-val BREAKPOINT = 0x6161
+val BREAKPOINT = null // 0xc667
 
-val disk = 0
+val disk = 1
 
 val DISK_DOS_3_3 = DskDisk(File("src\\test\\resources\\Apple DOS 3.3.dsk").inputStream())
 
@@ -32,36 +32,39 @@ fun main() {
             println("Running the following 6502 program which will display HELLO")
             val c = TestComputer.createComputer()
             c.disassemble(start = 0, length = 15)
-            c.run(_debugAsm = false)
+            pulseListeners.add(c)
         }
         2 -> {
             val debugMem = false
             val debugAsm = DEBUG
 //            frame()
-            val p: IPulse = apple2Computer(debugMem)
+            val dc = DiskController(6, DISK)
+            pulseListeners.add(dc)
+            val p: IPulse = apple2Computer(debugMem, dc)
             pulseListeners.add(p)
 //                    .run(debugMemory = debugMem, _debugAsm = debugAsm)//true, true)
-
-            var stop = false
-            while (! stop) {
-                pulseListeners.forEach {
-                    val r = it.onPulse()
-                    if (r.stop) stop = true
-                }
-            }
         }
         3 -> {
             testDisk()
         }
         else -> {
-            val result = functionalTestComputer(false).run()//true, true)
-            with(result) {
-                val sec = durationMillis / 1000
-                val mhz = String.format("%.2f", cycles / sec / 1_000_000.0)
-                println("Computer stopping after $cycles cycles, $sec seconds, $mhz MHz")
-            }
+            pulseListeners.add(functionalTestComputer(false))
+//            with(result) {
+//                val sec = durationMillis / 1000
+//                val mhz = String.format("%.2f", cycles / sec / 1_000_000.0)
+//                println("Computer stopping after $cycles cycles, $sec seconds, $mhz MHz")
+//            }
         }
     }
+
+    var stop = false
+    while (! stop) {
+        pulseListeners.forEach {
+            val r = it.onPulse()
+            if (r.stop) stop = true
+        }
+    }
+
 }
 
 fun testDisk() {

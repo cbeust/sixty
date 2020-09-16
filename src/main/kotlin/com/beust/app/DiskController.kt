@@ -1,9 +1,6 @@
 package com.beust.app
 
-import com.beust.sixty.ERROR
-import com.beust.sixty.IPulse
-import com.beust.sixty.MemoryListener
-import com.beust.sixty.PulseResult
+import com.beust.sixty.*
 
 class DiskController(val slot: Int = 6, val disk: IDisk): IPulse, MemoryListener() {
     private val slot16 = slot * 16
@@ -13,11 +10,14 @@ class DiskController(val slot: Int = 6, val disk: IDisk): IPulse, MemoryListener
 
     override fun onPulse(): PulseResult {
         // Faster way for unprotected disks
-//        latch disk.nextByte()
+//        latch = disk.nextByte()
 
 //     More formal way: bit by bit on every pulse
-        if (latch and 0x80 != 0) latch = 0
-        latch = latch.shl(1).or(disk.nextBit()).and(0xff)
+//        if (latch and 0x80 != 0) latch = 0
+        while (latch.and(0x80) == 0) {
+            latch = latch.shl(1).or(disk.nextBit()).and(0xff)
+        }
+//        println("@@@   latch: ${latch.h()}")
         return PulseResult()
     }
 
@@ -59,8 +59,10 @@ class DiskController(val slot: Int = 6, val disk: IDisk): IPulse, MemoryListener
                 value
             }
             0xc08c -> {
-                latch = disk.nextByte()
-                latch
+//                latch = disk.nextByte()
+                val result = latch
+                latch = 0  // probably not correct
+                result
             }
             else -> value
         }

@@ -68,7 +68,8 @@ class Computer(val cpu: Cpu = Cpu(memory = Memory()),
         startTime = System.currentTimeMillis()
         while (!stop) {
             cycles++
-            step(debugMemory, _debugAsm)
+            val done = step(debugMemory, _debugAsm)
+            if (done) stop = true
         }
 
         return RunResult(System.currentTimeMillis() - startTime, cycles)
