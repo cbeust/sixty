@@ -1,5 +1,6 @@
 package com.beust.app
 
+import com.beust.sixty.ERROR
 import com.beust.sixty.MemoryListener
 
 class DiskController(val slot: Int = 6, val disk: IDisk): IPulse, MemoryListener() {
@@ -10,7 +11,7 @@ class DiskController(val slot: Int = 6, val disk: IDisk): IPulse, MemoryListener
 
     override fun onPulse() {
         // Faster way for unprotected disks
-//        latch = DISK.nextByte()
+//        latch disk.nextByte()
 
 //     More formal way: bit by bit on every pulse
         if (latch and 0x80 != 0) latch = 0
@@ -19,12 +20,11 @@ class DiskController(val slot: Int = 6, val disk: IDisk): IPulse, MemoryListener
 
     private fun c(address: Int) = address + slot16
 
-    override fun onRead(i: Int, value: Int) {
-        val location = c(i)
-        when(c(i)) {
+    override fun onRead(i: Int, value: Int): Int? {
+        val result = when(i) {
             in (c(0xc080)..c(0xc087)) -> {
                 // Seek address: $b9a0
-                val (phase, state) = when (location) {
+                val (phase, state) = when (i) {
                     c(0xc080) -> 0 to false
                     c(0xc081) -> 0 to true
                     c(0xc082) -> 1 to false
@@ -33,7 +33,7 @@ class DiskController(val slot: Int = 6, val disk: IDisk): IPulse, MemoryListener
                     c(0xc085) -> 2 to true
                     c(0xc086) -> 3 to false
                     c(0xc087) -> 3 to true
-                    else -> Pair(-1, false)
+                    else -> ERROR("SHOULD NEVER HAPPEN")
                 }
                 magnet(disk, phase, state)
                 value
@@ -55,11 +55,13 @@ class DiskController(val slot: Int = 6, val disk: IDisk): IPulse, MemoryListener
                 value
             }
             c(0xc08c) -> {
-                latch = DISK.nextByte()
+                latch = disk.nextByte()
                 latch
             }
             else -> value
         }
+
+        return result
     }
 
     private var magnets = BooleanArray(4) { _ -> false }
@@ -108,6 +110,9 @@ class DiskController(val slot: Int = 6, val disk: IDisk): IPulse, MemoryListener
         }
 
 //        println("=== Track: "+ disk.track + " magnet $index=$state")
+        if (index == -1) {
+            println("PROBLEM")
+        }
         magnets[index] = state
     }
 }

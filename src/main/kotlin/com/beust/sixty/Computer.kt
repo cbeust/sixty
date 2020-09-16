@@ -18,7 +18,7 @@ interface MemoryInterceptor {
 
 abstract class MemoryListener: BaseMemoryListener() {
     abstract fun isInRange(address: Int): Boolean
-    open fun onRead(location: Int, value: Int) {}
+    open fun onRead(location: Int, value: Int): Int? = null
     open fun onWrite(location: Int, value: Int){}
 }
 

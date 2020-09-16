@@ -54,8 +54,6 @@ class Apple2Frame: JFrame() {
 }
 
 fun apple2Computer(debugMem: Boolean): Computer {
-    val diskController = DiskController(6, DISK)
-
     val memory = Memory(65536).apply {
 
 //        load("d:\\pd\\Apple Disks\\roms\\APPLE2E.ROM", 0xc000)
@@ -63,6 +61,7 @@ fun apple2Computer(debugMem: Boolean): Computer {
         loadResource("Apple2e.rom", 0xc000)
 //        loadResource("Apple2_Plus.rom", 0xd000)
         loadResource("DISK2.ROM", 0xc600)
+        loadResource("DISK2.ROM", 0xc500)
 
         Thread {
             runWatcher(this)
@@ -99,7 +98,8 @@ fun apple2Computer(debugMem: Boolean): Computer {
 //    pcListener.computer = result
 
     with(memory) {
-        listeners.add(diskController)
+        listeners.add(DiskController(6, DISK))
+        listeners.add(DiskController(5, DISK_DOS_3_3))
         listeners.add(DebugMemoryListener())
         listeners.add(ScreenListener(this, frame.textScreenPanel, frame.hiresPanel))
     }

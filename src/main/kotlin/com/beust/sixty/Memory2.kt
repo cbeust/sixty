@@ -5,7 +5,7 @@ import com.beust.app.StepperMotor
 import java.io.File
 import java.io.InputStream
 
-@Suppress("UnnecessaryVariable")
+@Suppress("UnnecessaryVariable", "BooleanLiteralArgument")
 class Memory(val size: Int? = null) {
     var interceptor: MemoryInterceptor? = null
     val listeners = arrayListOf<MemoryListener>()
@@ -153,20 +153,6 @@ class Memory(val size: Int? = null) {
                         println("@@ " + i.hh() + "  read ram1, write ram1")
                         0
                     }
-                    0xc0ec -> {
-                        //                    val pos = disk.bitPosition
-                        // Faster way for unprotected disks
-                        val r = DISK.nextByte()
-                        r
-
-                        // More formal way: bit by bit
-                        //                    if (latch and 0x80 != 0) latch = 0
-                        //                    latch = latch.shl(1).or(DISK.nextBit()).and(0xff)
-                        //                    result = latch
-                    }
-                    in StepperMotor.RANGE -> {
-                        StepperMotor.onRead(i, value, DISK)
-                    }
                     else -> {
                         c0Memory[i - 0xc000]
                     }
@@ -254,11 +240,15 @@ class Memory(val size: Int? = null) {
     }
 
     operator fun get(address: Int) : Int {
-        val result = getOrSet(true, address)
+        var result = getOrSet(true, address)
+        var actual: Int? = null
         listeners.forEach {
-            if (it.isInRange(address)) it.onRead(address, result!!)
+            if (it.isInRange(address)) actual = it.onRead(address, result!!)
+            if (actual != null) {
+                result = actual
+            }
         }
-        return result!!.and(0xff)
+        return actual ?: result!!.and(0xff)
     }
 
     operator fun set(address: Int, value: Int) {

@@ -7,12 +7,14 @@ var DEBUG = false
 // 6164: test failing LC writing
 val BREAKPOINT = 0x6161
 
-val disk = 2
+val disk = 0
+
+val DISK_DOS_3_3 = DskDisk(File("src\\test\\resources\\Apple DOS 3.3.dsk").inputStream())
 
 val DISK = if (disk == 0)
     WozDisk(Woz::class.java.classLoader.getResource("woz2/DOS 3.3 System Master.woz").openStream())
 else if (disk == 1)
-    DskDisk(File("src\\test\\resources\\Apple DOS 3.3.dsk").inputStream())
+    DISK_DOS_3_3
 else
     DskDisk(File("src/test/resources/audit.dsk").inputStream())
 
