@@ -7,7 +7,7 @@ var DEBUG = false
 // 6164: test failing LC writing
 val BREAKPOINT = 0x6161
 
-val disk = 0
+val disk = 1
 
 val DISK_DOS_3_3 = DskDisk(File("src\\test\\resources\\Apple DOS 3.3.dsk").inputStream())
 
