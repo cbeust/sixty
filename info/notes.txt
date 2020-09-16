@@ -4,3 +4,24 @@ LDA $C081
 INC $D17B
 INC $FE1F
 expected $d17b in bank 2 to contain 22 but got 11
+
+	Bank2       Bank1       First Access, Second Access
+	-----------------------------------------------
+	C080        C088        Read RAM,     Write protect    MF_HIGHRAM   ~MF_WRITERAM
+	C081        C089        Read ROM,     Write enable    ~MF_HIGHRAM    MF_WRITERAM
+	C082        C08A        Read ROM,     Write protect   ~MF_HIGHRAM   ~MF_WRITERAM
+	C083        C08B        Read RAM,     Write enable     MF_HIGHRAM    MF_WRITERAM
+	c084        C08C        same as C080/C088
+	c085        C08D        same as C081/C089
+	c086        C08E        same as C082/C08A
+	c087        C08F        same as C083/C08B
+	MF_BANK2   ~MF_BANK2
+
+
+Hello everyone, new on this Slack. I have a question about latch timing, in particular:
+```
+LDA $C08C,X
+BPL *
+```
+LDA takes 4 cycles (no page crossing)
+BPL takes 3 cycles (2 + branch taken)
