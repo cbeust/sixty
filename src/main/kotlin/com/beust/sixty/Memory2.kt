@@ -1,7 +1,5 @@
 package com.beust.sixty
 
-import com.beust.app.DISK
-import com.beust.app.StepperMotor
 import java.io.File
 import java.io.InputStream
 

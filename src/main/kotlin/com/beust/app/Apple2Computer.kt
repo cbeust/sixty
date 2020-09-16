@@ -89,7 +89,7 @@ fun apple2Computer(debugMem: Boolean): Computer {
 
 //    val listener = Apple2MemoryListener(frame.textScreenPanel, frame.hiresPanel) { -> debugMem }
 //    val pcListener = Apple2PcListener()
-    val interceptor = Apple2MemoryInterceptor()
+//    val interceptor = Apple2MemoryInterceptor()
 
     val appleCpu = Cpu(memory = memory)
     val result = Computer(cpu = appleCpu)
