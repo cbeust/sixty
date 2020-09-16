@@ -30,7 +30,7 @@ class Computer(val cpu: Cpu = Cpu(memory = Memory()),
 //        memoryListener: MemoryListener? = null,
         memoryInterceptor: MemoryInterceptor? = null,
         var pcListener: PcListener? = null
-) {
+): IPulse {
     val pc get() = cpu.PC
     val memory = cpu.memory
 
@@ -57,6 +57,11 @@ class Computer(val cpu: Cpu = Cpu(memory = Memory()),
     var cycles = 0
     var track = 0
     var sector = 0
+
+    override fun onPulse(): PulseResult {
+        step()
+        return PulseResult(stop)
+    }
 
     fun run(debugMemory: Boolean = false, _debugAsm: Boolean = false): RunResult {
         var done = false
