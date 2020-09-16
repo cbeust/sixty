@@ -60,6 +60,10 @@ class Memory(val size: Int? = null) {
     }
 
     private val mem = IntArray(0x10000) { 0 }
+    private var c081Count = 0
+    private var c083Count = 0
+    private var c089Count = 0
+    private var c08bCount = 0
 
     private fun getOrSet(get: Boolean, i: Int, value: Int = 0): Int? {
         var result: Int? = null
@@ -89,6 +93,9 @@ class Memory(val size: Int? = null) {
                     writeBank1 = wb1
                     readBank2 = rb2
                     writeBank2 = wb2
+                    println("@@ readRom:$readRom readBank1:$readBank1 writeBank1:$writeBank1" +
+                            " readBank2:$readBank2 writeBank2:$writeBank2")
+
                 }
                 result = when (i) {
                     0xc010 -> {
@@ -99,56 +106,75 @@ class Memory(val size: Int? = null) {
                         //| ACTION | ADDRESS        | READ | WRITE? | $D0 |
                         //| R      | $C080 / 49280  | RAM  | NO     | 2 |
                         memory(false, false, false, true, false)
-                        println("@@ " + i.hh() + "  read ram2, no write")
                         0
                     }
                     0xc081 -> {
-                        //| ACTION | ADDRESS        | READ | WRITE? | $D0 |
-                        //|     RR | $C081 / 49281  | ROM  | YES    | 2 |
-                        memory(true, false, false, false, true)
-                        println("@@ " + i.hh() + "  read rom, write ram2")
+                        if (c081Count == 0) {
+                            //| ACTION | ADDRESS        | READ | WRITE? | $D0 |
+                            //|     RR | $C081 / 49281  | ROM  | NO    | 2 |
+                            memory(true, false, false, false, false)
+                            c081Count++
+                        } else if (c081Count == 1) {
+                            //| ACTION | ADDRESS        | READ | WRITE? | $D0 |
+                            //|     RR | $C081 / 49281  | ROM  | YES    | 2 |
+                            memory(true, false, false, false, true)
+                            c081Count = 0
+                        }
                         0
                     }
-                    0xc082 -> {
+                    0xc082, 0xc08a -> {
                         //| ACTION | ADDRESS        | READ | WRITE? | $D0 |
-                        //|   de R | $C082 / 49282  | ROM  | NO     | 2 |
+                        //|   de R | $C082 / 49282  | ROM  | NO     | 2   |
+                        //| R      | $C08A / 49290  | ROM  | NO     | 1   |
                         memory(true, false, false, false, false)
-                        println("@@ " + i.hh() + "  read rom, no write")
                         0
                     }
                     0xc083 -> {
-                        //| ACTION | ADDRESS        | READ | WRITE? | $D0 |
-                        //      RR | $C083 / 49283  | RAM  | YES    | 2 |
-                        memory(false, false, false, true, true)
-                        println("@@ " + i.hh() + "  read ram2, write ram2")
+                        if (c083Count == 0) {
+                            //| ACTION | ADDRESS        | READ | WRITE? | $D0 |
+                            //       R | $C083 / 49283  | RAM  | NO     | 2 |
+                            memory(false, false, false, true, false)
+                            c083Count++
+                        } else if (c083Count == 1) {
+                            //| ACTION | ADDRESS        | READ | WRITE? | $D0 |
+                            //      RR | $C083 / 49283  | RAM  | YES    | 2 |
+                            memory(false, false, false, true, true)
+                            c083Count = 0
+                        }
                         0
                     }
                     0xc088 -> {
                         //| ACTION | ADDRESS        | READ | WRITE? | $D0 |
-                        //|      R | $C088 / 49288  | RA M | NO     | 1 |
+                        //|      R | $C088 / 49288  | RAM  | NO     | 1 |
                         memory(false, true, false, false, false)
-                        println("@@ " + i.hh() + "  read ram1, no write")
                         0
                     }
                     0xc089 -> {
-                        //| ACTION | ADDRESS        | READ | WRITE? | $D0 |
-                        //|     RR | $C089 / 49289  | ROM  | YES    | 1 |
-                        memory(true, false, true, false, false)
-                        println("@@ " + i.hh() + "  read rom, write ram 1")
-                        0
-                    }
-                    0xc08a -> {
-                        //| ACTION | ADDRESS        | READ | WRITE? | $D0 |
-                        //| R      | $C08A / 49290  | ROM | NO      | 1   |
-                        memory(true, false, false, false, false)
-                        println("@@ " + i.hh() + "  read rom, no write")
+                        if (c089Count == 0) {
+                            //| ACTION | ADDRESS        | READ | WRITE? | $D0 |
+                            //|     RR | $C089 / 49289  | ROM  | NO    | 1 |
+                            memory(true, false, false, false, false)
+                            c089Count = 0
+                        } else if (c089Count == 1) {
+                            //| ACTION | ADDRESS        | READ | WRITE? | $D0 |
+                            //|     RR | $C089 / 49289  | ROM  | YES    | 1 |
+                            memory(true, false, true, false, false)
+                            c089Count = 0
+                        }
                         0
                     }
                     0xc08b -> {
-                        //| ACTION | ADDRESS        | READ | WRITE? | $D0 |
-                        //|     RR | $C08B / 49291  | RAM  | YES    | 1   |
-                        memory(false, true, true, false, false)
-                        println("@@ " + i.hh() + "  read ram1, write ram1")
+                        if (c08bCount == 0) {
+                            //| ACTION | ADDRESS        | READ | WRITE? | $D0 |
+                            //|      R | $C08B / 49291  | RAM  | NO     | 1   |
+                            memory(false, true, false, false, false)
+                            c08bCount++
+                        } else if (c08bCount == 1) {
+                            //| ACTION | ADDRESS        | READ | WRITE? | $D0 |
+                            //|     RR | $C08B / 49291  | RAM  | YES    | 1   |
+                            memory(false, true, true, false, false)
+                            c08bCount = 0
+                        }
                         0
                     }
                     else -> {

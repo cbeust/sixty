@@ -12,6 +12,7 @@ class MemoryTest {
     fun languageCard() {
         val start = 0x300
         val memory = Memory().apply {
+            loadResource("Apple2e.rom", 0xc000)
             val ins2 = File("asm/ram").inputStream()
             load(ins2, start)
         }
