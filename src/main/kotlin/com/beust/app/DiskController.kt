@@ -6,22 +6,32 @@ class DiskController(val slot: Int = 6, val disk: IDisk): IPulse, MemoryListener
     private val slot16 = slot * 16
     private var latch: Int = 0
 
+    private var motorOn = false
+    private var drive1 = true
+    private var drive2 = false
+
+    private fun c(address: Int) = address + slot16
     override fun isInRange(address:Int) = address in (c(0xc080)..c(0xc08c))
 
     override fun onPulse(): PulseResult {
         // Faster way for unprotected disks
 //        latch = disk.nextByte()
 
+        if (motorOn) {
 //     More formal way: bit by bit on every pulse
-//        if (latch and 0x80 != 0) latch = 0
-        while (latch.and(0x80) == 0) {
-            latch = latch.shl(1).or(disk.nextBit()).and(0xff)
+            if (latch and 0x80 == 0) {
+                repeat(8) {
+                    latch = latch.shl(1).or(disk.nextBit()).and(0xff)
+                }
+                while (latch and 0x80 == 0) {
+                    latch = latch.shl(1).or(disk.nextBit()).and(0xff)
+                }
+            }
         }
 //        println("@@@   latch: ${latch.h()}")
         return PulseResult()
     }
 
-    private fun c(address: Int) = address + slot16
 
     override fun onRead(i: Int, value: Int): Int? {
         val a = i - slot16
@@ -44,24 +54,28 @@ class DiskController(val slot: Int = 6, val disk: IDisk): IPulse, MemoryListener
             }
             0xc088 -> {
                 println("Turning motor off")
+                motorOn = false
                 value
             }
             0xc089 -> {
                 println("Turning motor on")
+                motorOn = true
                 value
             }
             0xc08a -> {
                 println("Turning on drive 1")
+                drive1 = true
                 value
             }
             0xc08b -> {
                 println("Turning on drive 2")
+                drive2 = true
                 value
             }
             0xc08c -> {
 //                latch = disk.nextByte()
                 val result = latch
-                latch = 0  // probably not correct
+                if (latch.and(0x80) != 0) latch = latch.and(0x7f) // clear bit 7
                 result
             }
             else -> value
