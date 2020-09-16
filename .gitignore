@@ -11,5 +11,7 @@ target/*
 out/*
 
 asm/*
+!asm/*.s
+!asm/*.lst
 !asm/ram
-!asm/ram.lst
+!asm/ram2

@@ -1,0 +1,7 @@
+ca65 V2.18 - Git b8ae5c2
+Main file   : a.s
+Current file: a.s
+
+000000r 1  A9 43        lda #$43
+000002r 1  60           rts
+000002r 1               

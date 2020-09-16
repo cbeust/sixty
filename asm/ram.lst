@@ -15,70 +15,75 @@ Current file: ram.s
 00000Cr 1  EE 7B D1         inc D1
 00000Fr 1  EE 1F FE         inc FE
 000012r 1  AD 7B D1         lda D1
-000015r 1  C9 16            cmp #22   ; a2audit says #$22
-000017r 1  F0 01            beq @next
-000019r 1  00               brk
-00001Ar 1               
-00001Ar 1               @next:
-00001Ar 1               test02:
-00001Ar 1  20 rr rr         jsr reset
-00001Dr 1  AD 1F FE         lda FE
-000020r 1  C9 33            cmp #$33
-000022r 1  F0 01            beq @next
-000024r 1  00               brk
-000025r 1               
-000025r 1               @next:
-000025r 1               test03:
-000025r 1  20 rr rr         jsr reset
-000028r 1  AD 80 C0         lda $c080 ; read ram2
-00002Br 1  AD 7B D1         lda D1
-00002Er 1  C9 22            cmp #$22
-000030r 1  F0 01            beq @next
-000032r 1  00               brk
-000033r 1               
-000033r 1               @next:
-000033r 1               test04:
-000033r 1  20 rr rr         jsr reset
-000036r 1  AD 88 C0         lda $c088 ; read ram1
-000039r 1  AD 7B D1         lda D1
-00003Cr 1  C9 11            cmp #$11
-00003Er 1  F0 01            beq @next
-000040r 1  00               brk
-000041r 1               
-000041r 1               @next:
-000041r 1               test05:
-000041r 1  AD 83 C0     	lda $C083		; Read and write bank 2
-000044r 1  AD 83 C0     	lda $C083
-000047r 1  A9 22        	lda #$22
-000049r 1  8D 7B D1     	sta $D17B
-00004Cr 1  CD 7B D1     	cmp $D17B
-00004Fr 1  F0 01        	beq @next
-000051r 1  00           	brk
-000052r 1               
-000052r 1               @next:
-000052r 1               test06:
-000052r 1               
-000052r 1               end:
-000052r 1  60               rts
-000053r 1               
-000053r 1               
-000053r 1               reset:
-000053r 1               	;; Initialize to known state:
-000053r 1               	;; - $11 in $D17B bank 1 (ROM: $53)
-000053r 1               	;; - $22 in $D17B bank 2 (ROM: $53)
-000053r 1               	;; - $33 in $FE1F        (ROM: $60)
-000053r 1  AD 8B C0     	lda $C08B		; Read and write bank 1
-000056r 1  AD 8B C0     	lda $C08B
-000059r 1  A9 11        	lda #$11
-00005Br 1  8D 7B D1     	sta D1
-00005Er 1  A9 33        	lda #$33
-000060r 1  8D 1F FE     	sta FE
-000063r 1  AD 83 C0     	lda $C083		; Read and write bank 2
-000066r 1  AD 83 C0     	lda $C083
-000069r 1  A9 22        	lda #$22
-00006Br 1  8D 7B D1     	sta D1
-00006Er 1  AD 80 C0     	lda $C080
-000071r 1  AD 7B D1     	lda D1
-000074r 1  60           	rts
-000075r 1               
-000075r 1               
+000015r 1  C9 53            cmp #$53
+000017r 1  D0 0A            bne @fail
+000019r 1  AD 80 C0         lda $c080 ; read bank2
+00001Cr 1  AD 7B D1         lda D1
+00001Fr 1  C9 22            cmp #$22
+000021r 1  F0 01            beq @next
+000023r 1               @fail:
+000023r 1  00               brk
+000024r 1               
+000024r 1               @next:
+000024r 1               test02:
+000024r 1  20 rr rr         jsr reset
+000027r 1  AD 1F FE         lda FE
+00002Ar 1  C9 33            cmp #$33
+00002Cr 1  F0 01            beq @next
+00002Er 1  00               brk
+00002Fr 1               
+00002Fr 1               @next:
+00002Fr 1               test03:
+00002Fr 1  20 rr rr         jsr reset
+000032r 1  AD 80 C0         lda $c080 ; read ram2
+000035r 1  AD 7B D1         lda D1
+000038r 1  C9 22            cmp #$22
+00003Ar 1  F0 01            beq @next
+00003Cr 1  00               brk
+00003Dr 1               
+00003Dr 1               @next:
+00003Dr 1               test04:
+00003Dr 1  20 rr rr         jsr reset
+000040r 1  AD 88 C0         lda $c088 ; read ram1
+000043r 1  AD 7B D1         lda D1
+000046r 1  C9 11            cmp #$11
+000048r 1  F0 01            beq @next
+00004Ar 1  00               brk
+00004Br 1               
+00004Br 1               @next:
+00004Br 1               test05:
+00004Br 1  AD 83 C0     	lda $C083		; Read and write bank 2
+00004Er 1  AD 83 C0     	lda $C083
+000051r 1  A9 22        	lda #$22
+000053r 1  8D 7B D1     	sta $D17B
+000056r 1  CD 7B D1     	cmp $D17B
+000059r 1  F0 01        	beq @next
+00005Br 1  00           	brk
+00005Cr 1               
+00005Cr 1               @next:
+00005Cr 1               test06:
+00005Cr 1               
+00005Cr 1               end:
+00005Cr 1  60               rts
+00005Dr 1               
+00005Dr 1               
+00005Dr 1               reset:
+00005Dr 1               	;; Initialize to known state:
+00005Dr 1               	;; - $11 in $D17B bank 1 (ROM: $53)
+00005Dr 1               	;; - $22 in $D17B bank 2 (ROM: $53)
+00005Dr 1               	;; - $33 in $FE1F        (ROM: $60)
+00005Dr 1  AD 8B C0     	lda $C08B		; Read and write bank 1
+000060r 1  AD 8B C0     	lda $C08B
+000063r 1  A9 11        	lda #$11
+000065r 1  8D 7B D1     	sta D1
+000068r 1  A9 33        	lda #$33
+00006Ar 1  8D 1F FE     	sta FE
+00006Dr 1  AD 83 C0     	lda $C083		; Read and write bank 2
+000070r 1  AD 83 C0     	lda $C083
+000073r 1  A9 22        	lda #$22
+000075r 1  8D 7B D1     	sta D1
+000078r 1  AD 80 C0     	lda $C080
+00007Br 1  AD 7B D1     	lda D1
+00007Er 1  60           	rts
+00007Fr 1               
+00007Fr 1               

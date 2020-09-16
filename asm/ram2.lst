@@ -1,0 +1,76 @@
+ca65 V2.18 - Git b8ae5c2
+Main file   : ram2.s
+Current file: ram2.s
+
+000000r 1               D1 := $d17b
+000000r 1               FE := $fe1f
+000000r 1               checkdata := $3f
+000000r 1               
+000000r 1  20 rr rr         jsr @reset
+000003r 1               	;; Format:
+000003r 1               	;; Sequence of test instructions, finishing with `jsr .test`.
+000003r 1               	;; - quint: expected current $d17b and fe1f, then d17b in bank1, d17b in bank 2, and fe1f
+000003r 1               	;; (All sequences start with lda $C080, just to reset things to a known state.)
+000003r 1               	;; 0-byte to terminate tests.
+000003r 1  AD 88 C0     	lda $C088				; Read $C088 (RAM read, write protected)
+000006r 1  20 rr rr     	jsr @test				;
+000009r 1  11 33 11 22  	.BYTE $11, $33, $11, $22, $33
+00000Dr 1  33           
+00000Er 1  60           	rts
+00000Fr 1               
+00000Fr 1               .macro verify address
+00000Fr 1                   ldx address
+00000Fr 1                   iny
+00000Fr 1                   lda (checkdata),Y
+00000Fr 1                   cmp address
+00000Fr 1                   bne @fail
+00000Fr 1               .endmacro
+00000Fr 1               
+00000Fr 1               @test:
+00000Fr 1               	;; pull address off of stack: it points just below check data for this test.
+00000Fr 1  68           	pla
+000010r 1  85 3F        	sta checkdata
+000012r 1  68           	pla
+000013r 1  85 40        	sta checkdata+1
+000015r 1               
+000015r 1  AE 7B D1 C8      verify D1 ; Test $D17B
+000019r 1  B1 3F CD 7B  
+00001Dr 1  D1 D0 55     
+000020r 1  AE 1F FE C8      verify FE ; Test $FE1F
+000024r 1  B1 3F CD 1F  
+000028r 1  FE D0 4A     
+00002Br 1  AD 88 C0         lda $c088 ; Test $D17B in bank 1
+00002Er 1  AE 7B D1 C8      verify D1
+000032r 1  B1 3F CD 7B  
+000036r 1  D1 D0 3C     
+000039r 1  AD 80 C0         lda $c080 ; Test $D17B in bank 2
+00003Cr 1  AE 7B D1 C8      verify D1
+000040r 1  B1 3F CD 7B  
+000044r 1  D1 D0 2E     
+000047r 1  AE 1F FE C8      verify FE ; Test $FE1F
+00004Br 1  B1 3F CD 1F  
+00004Fr 1  FE D0 23     
+000052r 1               
+000052r 1  60               rts
+000053r 1               @reset:
+000053r 1               	;; Initialize to known state:
+000053r 1               	;; - $11 in $D17B bank 1 (ROM: $53)
+000053r 1               	;; - $22 in $D17B bank 2 (ROM: $53)
+000053r 1               	;; - $33 in $FE1F        (ROM: $60)
+000053r 1  AD 8B C0     	lda $C08B		; Read and write bank 1
+000056r 1  AD 8B C0     	lda $C08B
+000059r 1  A9 11        	lda #$11
+00005Br 1  8D 7B D1     	sta D1
+00005Er 1  A9 33        	lda #$33
+000060r 1  8D 1F FE     	sta FE
+000063r 1  AD 83 C0     	lda $C083		; Read and write bank 2
+000066r 1  AD 83 C0     	lda $C083
+000069r 1  A9 22        	lda #$22
+00006Br 1  8D 7B D1     	sta D1
+00006Er 1  AD 80 C0     	lda $C080
+000071r 1  AD 7B D1     	lda D1
+000074r 1  60           	rts
+000075r 1               
+000075r 1               @fail:
+000075r 1  00               brk
+000075r 1               
