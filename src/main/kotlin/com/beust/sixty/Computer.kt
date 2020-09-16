@@ -16,8 +16,9 @@ interface MemoryInterceptor {
     fun onWrite(location: Int, value: Int): Response
 }
 
-open class MemoryListener: BaseMemoryListener() {
-    open fun onRead(location: Int, value: Int) {}
+abstract class MemoryListener: BaseMemoryListener() {
+    abstract fun isInRange(address: Int): Boolean
+    open fun onRead(location: Int, value: Int): Int? = null
     open fun onWrite(location: Int, value: Int){}
 }
 
@@ -26,7 +27,7 @@ interface PcListener {
 }
 
 class Computer(val cpu: Cpu = Cpu(memory = Memory()),
-        memoryListener: MemoryListener? = null,
+//        memoryListener: MemoryListener? = null,
         memoryInterceptor: MemoryInterceptor? = null,
         var pcListener: PcListener? = null
 ) {
@@ -36,7 +37,7 @@ class Computer(val cpu: Cpu = Cpu(memory = Memory()),
     private var startTime: Long = 0
 
     init {
-        memory.listener = memoryListener
+//        memory.listener = memoryListener
         memory.interceptor = memoryInterceptor
     }
 
@@ -68,9 +69,13 @@ class Computer(val cpu: Cpu = Cpu(memory = Memory()),
             if (opCode == 0x60 && cpu.SP.isEmpty()) {
                 done = true
             } else {
+//                if (cycles >= 1156500) {
+//                    DEBUG = true
+//                }
                 if (BREAKPOINT != null && cpu.PC == BREAKPOINT) {
                     println(this)
                     println("breakpoint")
+                    DEBUG = true
                 }
 //                if (cpu.PC == 0xc696) {
 //                    if  (cpu.Y == 1) {
@@ -114,10 +119,10 @@ class Computer(val cpu: Cpu = Cpu(memory = Memory()),
                     previousPc = cpu.PC
                 }
 
-                memory.listener?.lastMemDebug?.forEach {
+                memory.lastMemDebug?.forEach {
                     println("  $it")
                 }
-                memory.listener?.lastMemDebug?.clear()
+                memory.lastMemDebug?.clear()
             }
             pcListener?.onPcChanged(this)
         }

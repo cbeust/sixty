@@ -25,7 +25,6 @@ abstract class BaseTest {
 
     fun computer(vararg bytes: Int): Computer {
         with(createComputer(*bytes, BRK)) {
-            memory.listener = DebugMemoryListener()
             return this
         }
     }

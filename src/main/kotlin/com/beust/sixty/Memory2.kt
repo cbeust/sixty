@@ -5,10 +5,15 @@ import com.beust.app.StepperMotor
 import java.io.File
 import java.io.InputStream
 
-@Suppress("UnnecessaryVariable")
+@Suppress("UnnecessaryVariable", "BooleanLiteralArgument")
 class Memory(val size: Int? = null) {
     var interceptor: MemoryInterceptor? = null
-    var listener: MemoryListener? = null
+    val listeners = arrayListOf<MemoryListener>()
+    val lastMemDebug = arrayListOf<String>()
+
+    fun logMem(i: Int, value: Int, extra: String = "") {
+        lastMemDebug.add("mem[${i.hh()}] = ${(value.and(0xff)).h()} $extra")
+    }
 
     private var readMain = true
     private var writeMain = true
@@ -34,10 +39,13 @@ class Memory(val size: Int? = null) {
     /** $D000-$DFFF */
     private val ram2 = IntArray(0x1000) { 0 }
 
+    /** $E000-$FFFF */
+    private val lcRam = IntArray(0x2000) { 0 }
+
     private var readRom = true
-    private var readBank1 = true
+    private var readBank1 = false
     private var readBank2 = false
-    private var writeBank1 = true
+    private var writeBank1 = false
     private var writeBank2 = false
 
     private var init = true
@@ -55,15 +63,9 @@ class Memory(val size: Int? = null) {
 
     private val mem = IntArray(0x10000) { 0 }
 
-    private var c083Count = 0
-    private var c08bCount = 0
-
     private fun getOrSet(get: Boolean, i: Int, value: Int = 0): Int? {
         var result: Int? = null
 
-        if (i == 0xd17b) {
-            println("BREAKPOINT")
-        }
         if (i < 0x200) {
             if (get) {
                 if (i < 0) {
@@ -83,66 +85,151 @@ class Memory(val size: Int? = null) {
             }
         } else if (i in 0xc000..0xcfff) {
             if (get) {
+                fun memory(rom: Boolean, rb1: Boolean, wb1: Boolean, rb2: Boolean, wb2: Boolean) {
+                    readRom = rom
+                    readBank1 = rb1
+                    writeBank1 = wb1
+                    readBank2 = rb2
+                    writeBank2 = wb2
+                }
                 result = when (i) {
                     0xc010 -> {
                         c0Memory[0] = c0Memory[0] and 0x7f
                         c0Memory[0]
                     }
-                    0xc08b -> {
-                        if (c08bCount == 0) {
-                            c08bCount++
-                        }
-                        if (c08bCount == 1) {
-                            readRom = false
-                            readBank1 = true
-                            writeBank1 = true
-                            readBank2 = false
-                            writeBank2 = false
-                            c08bCount = 0
-                        }
+                    0xc080 -> {
+                        //| ACTION | ADDRESS        | READ | WRITE? | $D0 |
+                        //| R      | $C080 / 49280  | RAM  | NO     | 2 |
+                        memory(false, false, false, true, false)
+                        println("@@ " + i.hh() + "  read ram2, no write")
                         0
                     }
-                    0xc0ec -> {
-                        //                    val pos = disk.bitPosition
-                        // Faster way for unprotected disks
-                        val r = DISK.nextByte()
-                        r
-
-                        // More formal way: bit by bit
-                        //                    if (latch and 0x80 != 0) latch = 0
-                        //                    latch = latch.shl(1).or(DISK.nextBit()).and(0xff)
-                        //                    result = latch
+                    0xc081 -> {
+                        //| ACTION | ADDRESS        | READ | WRITE? | $D0 |
+                        //|     RR | $C081 / 49281  | ROM  | YES    | 2 |
+                        memory(true, false, false, false, true)
+                        println("@@ " + i.hh() + "  read rom, write ram2")
+                        0
                     }
-                    in StepperMotor.RANGE -> {
-                        StepperMotor.onRead(i, value, DISK)
+                    0xc082 -> {
+                        //| ACTION | ADDRESS        | READ | WRITE? | $D0 |
+                        //|   de R | $C082 / 49282  | ROM  | NO     | 2 |
+                        memory(true, false, false, false, false)
+                        println("@@ " + i.hh() + "  read rom, no write")
+                        0
+                    }
+                    0xc083 -> {
+                        //| ACTION | ADDRESS        | READ | WRITE? | $D0 |
+                        //      RR | $C083 / 49283  | RAM  | YES    | 2 |
+                        memory(false, false, false, true, true)
+                        println("@@ " + i.hh() + "  read ram2, write ram2")
+                        0
+                    }
+                    0xc088 -> {
+                        //| ACTION | ADDRESS        | READ | WRITE? | $D0 |
+                        //|      R | $C088 / 49288  | RA M | NO     | 1 |
+                        memory(false, true, false, false, false)
+                        println("@@ " + i.hh() + "  read ram1, no write")
+                        0
+                    }
+                    0xc089 -> {
+                        //| ACTION | ADDRESS        | READ | WRITE? | $D0 |
+                        //|     RR | $C089 / 49289  | ROM  | YES    | 1 |
+                        memory(true, false, true, false, false)
+                        println("@@ " + i.hh() + "  read rom, write ram 1")
+                        0
+                    }
+                    0xc08a -> {
+                        //| ACTION | ADDRESS        | READ | WRITE? | $D0 |
+                        //| R      | $C08A / 49290  | ROM | NO      | 1   |
+                        memory(true, false, false, false, false)
+                        println("@@ " + i.hh() + "  read rom, no write")
+                        0
+                    }
+                    0xc08b -> {
+                        //| ACTION | ADDRESS        | READ | WRITE? | $D0 |
+                        //|     RR | $C08B / 49291  | RAM  | YES    | 1   |
+                        memory(false, true, true, false, false)
+                        println("@@ " + i.hh() + "  read ram1, write ram1")
+                        0
                     }
                     else -> {
                         c0Memory[i - 0xc000]
                     }
                 }
             } else {
+                if (!init) when(i) {
+                    0xc002 -> {
+                        // | ACTION | ADDRESS       |
+                        // |de W    | $C002 / 49156 | READ FROM MAIN 48K |
+                        readMain = true
+                    }
+                    0xc003 -> {
+                        // | ACTION | ADDRESS       |
+                        // |de W    | $C003 / 49156 | READ FROM AUX 48K |
+                        readMain = false
+//                        c0Memory[0x13] = 0x80
+                    }
+                    0xc004 -> {
+                        // | ACTION | ADDRESS       |
+                        // |de W    | $C004 / 49156 | WRITE TO MAIN 48K |
+                        writeMain = true
+                    }
+                    0xc005 -> {
+                        // | ACTION | ADDRESS       |
+                        // |de W    | $C005 / 49156 | WRITE TO AUX 48K |
+                        writeMain = false
+                    }
+
+                }
                 if (init) {
                     c0Memory[i - 0xc000] = value
                 } else {
-                    handleC0(i, value)
+//                    handleC0(i, value)
                 }
             }
         } else if (i in 0xd000..0xdfff) {
+            val ea = i - 0xd000
+//            if (i == 0xd17b) {
+//                println("BREAKPOINT")
+//            }
             if (get) {
                 result = when {
-                    readRom -> rom[i - 0xd000]
-                    readBank1 -> ram1[i - 0xd000]
-                    else -> ram2[i - 0xd000]
+                    readRom -> rom[ea]
+                    readBank1 -> ram1[ea]
+                    else -> ram2[ea]
                 }
             } else {
-                if (writeBank1) ram1[i - 0xd000] = value
-                else if (writeBank2) ram2[i - 0xd000] = value
+                when {
+                    writeBank1 -> ram1[ea] = value
+                    writeBank2 -> ram2[ea] = value
+                    init -> rom[ea] = value
+                }
+
             }
-        } else { // $D000-$FFF
-            if (get) {
-                result = rom[i - 0xd000]
+        } else {  // 0xe000-0xffff
+            val bug = true
+            if (! bug) {
+                if (get) {
+                    result = mem[i]
+                } else {
+                    if (init) mem[i] = value
+                }
             } else {
-                if (init || ! readRom) rom[i - 0xd000] = value
+//                if (! init && i == 0xfe1f) {
+//                    println("BREAKPOINT")
+//                }
+                if (get) {
+                    result = if (readBank1 || readBank2) lcRam[i - 0xe000]
+                    else mem[i]
+                } else {
+                    if (writeBank1 || writeBank2) {
+                        lcRam[i - 0xe000] = value
+                    } else if (init) {
+                        lcRam[i - 0xe000] = value
+                        mem[i] = value
+                    }
+                }
             }
         }
 
@@ -153,113 +240,21 @@ class Memory(val size: Int? = null) {
     }
 
     operator fun get(address: Int) : Int {
-        val result = getOrSet(true, address)
-//        listener?.onRead(address, result!!)
-        return result!!.and(0xff)
+        var result = getOrSet(true, address)
+        var actual: Int? = null
+        listeners.forEach {
+            if (it.isInRange(address)) actual = it.onRead(address, result!!)
+            if (actual != null) {
+                result = actual
+            }
+        }
+        return actual ?: result!!.and(0xff)
     }
 
     operator fun set(address: Int, value: Int) {
         getOrSet(false, address, value)
-        listener?.onWrite(address, value)
-    }
-
-    private var c083Count = 0
-
-    private fun handleC0(i: Int, value: Int) {
-        when(i) {
-            0xc000 -> {
-                // ignore
-            }
-            0xc001 -> {
-                NYI("80STORE ON")
-            }
-            0xc002 -> {
-                // Select main memory for reading in $0200...$BFFF
-                readMain = true
-            }
-            0xc003 -> {
-                // Select aux memory for reading in $0200...$BFFF
-                readMain = false
-            }
-            0xc004 -> {
-                // Select main memory for writing in $0200...$BFFF
-                writeMain = true
-            }
-            0xc005 -> {
-                // Select aux memory for writing in $0200...$BFFF
-                writeMain = false
-            }
-            0xc006 -> {
-//                NYI("Enable slot ROM from \$C100-\$CFFF")
-            }
-            0xc007 -> {
-                NYI("INTCXROMON Enable main ROM from \$C100-\$CFFF")
-            }
-            0xc008 -> {
-                // Select main memory for reading & writing in $0000...$01FF & $D000...$FFFF
-                NYI("CLRAUXZP use main zero page, stack, and LC (WR-only)")
-            }
-            0xc009 -> {
-                // Select aux memory for reading & writing in $0000...$01FF & $D000...$FFFF
-                NYI("SETAUXZP use alt zero page, stack, and LC (WR-only)")
-            }
-            0xc00a -> {
-                NYI("CLRC3ROM use internal Slot 3 ROM (WR-only)")
-            }
-            0xc00b -> {
-                NYI("SETC3ROM use external Slot 3 ROM (WR-only)")
-            }
-            0xc00c -> {
-                NYI("CLR80VID = disable 80-column display mode (WR-only)")
-            }
-            0xc00d -> {
-                NYI("SET80VID enable 80-column display mode (WR-only)")
-            }
-            0xc00e -> {
-                NYI("CLRALTCH use main char set- norm LC, Flash UC (WR-only)")
-            }
-            0xc00f -> {
-                NYI("SETALTCH use alt char set- norm inverse, LC; no Flash (WR-only)")
-            }
-            0xc080 -> {
-                // Read RAM bank 2; no write
-                readBank1 = false
-            }
-            0xc081 -> {
-                // Read ROM; write RAM bank 2
-//                if (c081Count == 2) {
-//                    c081Count = 0
-//                    writeBank1 = false
-//                    readRom = true
-//                } else {
-//                    readRom = true
-//                    c081Count++
-//                }
-            }
-            0xc082 -> {
-                NYI("\$C082")
-                // Read ROM; write RAM; use $D000 bank 2
-//                readRom = true
-//                writeRom = false
-//                switchToD0Bank2()
-//                switchToRom()
-            }
-            0xc088 -> {
-                NYI("\$C088")
-                // Read RAM; no write; use $D000 bank 1
-//                readRom = true
-//                writeRom = false
-//                writeRam = false
-//                switchToD0Bank1()
-//                switchToRom()
-            }
-            0xc08a -> {
-                NYI("0xc08a")
-            }
-            else -> {
-                val ah = i.hh()
-//                NYI("UNEXPECTED LOCATION: ${i.hh()}")
-            }
+        listeners.forEach {
+            if (it.isInRange(address)) it.onWrite(address, value)
         }
     }
 

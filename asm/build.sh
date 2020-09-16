@@ -1,3 +1,4 @@
-ca65 -o a.o a.s -l a.lst
-ld65 -C apple2.cfg a.o -o a
-cat a.lst
+for i in ram
+do
+  ca65 -o $i.o $i.s -l $i.lst && ld65 -C apple2.cfg $i.o -o $i && cat $i.lst
+done

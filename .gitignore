@@ -10,3 +10,6 @@ lib/kotlin-*
 target/*
 out/*
 
+asm/*
+!asm/ram
+!asm/ram.lst

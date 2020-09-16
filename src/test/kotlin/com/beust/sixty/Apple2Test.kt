@@ -9,19 +9,6 @@ class Apple2Test: BaseTest() {
         }
         val stackPointer = StackPointer(memory = memory)
 
-        val listener = object: MemoryListener() {
-            override fun onRead(location: Int, value: Int) {
-            }
-
-            override fun onWrite(location: Int, value: Int) {
-                if (location >= 0x400 && location < 0x7ff) {
-                    lastMemDebug.add("Writing on the text screen: $" + location.hh() + "=$" + value.h())
-                } else if (location >= 0x2000 && location <= 0x3fff) {
-                    lastMemDebug.add("Writing in graphics")
-                }
-            }
-
-        }
         return Computer(Cpu(memory)).apply {
             pcListener = object: PcListener {
                 override fun onPcChanged(c: Computer) {

@@ -10,8 +10,7 @@ class FunctionalTest {
             val ins = this::class.java.classLoader.getResource("6502_functional_test.bin")?.openStream()
             load(ins!!, 0)
         }
-        Computer(cpu = Cpu(memory = memory),
-                memoryListener = DebugMemoryListener()).apply {
+        Computer(cpu = Cpu(memory = memory)).apply {
             pcListener = object : PcListener {
                 override fun onPcChanged(c: Computer) {
                     val newValue = c.cpu.PC

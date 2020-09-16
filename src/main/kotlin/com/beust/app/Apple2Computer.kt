@@ -4,6 +4,7 @@ package com.beust.app
 
 import com.beust.sixty.Computer
 import com.beust.sixty.Cpu
+import com.beust.sixty.DebugMemoryListener
 import com.beust.sixty.Memory
 import java.awt.Dimension
 import java.nio.file.*
@@ -60,6 +61,7 @@ fun apple2Computer(debugMem: Boolean): Computer {
         loadResource("Apple2e.rom", 0xc000)
 //        loadResource("Apple2_Plus.rom", 0xd000)
         loadResource("DISK2.ROM", 0xc600)
+        loadResource("DISK2.ROM", 0xc500)
 
         Thread {
             runWatcher(this)
@@ -85,18 +87,25 @@ fun apple2Computer(debugMem: Boolean): Computer {
         })
     }
 
-    val listener = Apple2MemoryListener(frame.textScreenPanel, frame.hiresPanel) { -> debugMem }
+//    val listener = Apple2MemoryListener(frame.textScreenPanel, frame.hiresPanel) { -> debugMem }
 //    val pcListener = Apple2PcListener()
     val interceptor = Apple2MemoryInterceptor()
 
     val appleCpu = Cpu(memory = memory)
     val result = Computer(cpu = appleCpu)
-    listener.computer = result
+//    listener.computer = result
 //    interceptor.computer = result
 //    pcListener.computer = result
 
+    with(memory) {
+        listeners.add(DiskController(6, DISK))
+        listeners.add(DiskController(5, DISK_DOS_3_3))
+        listeners.add(DebugMemoryListener())
+        listeners.add(ScreenListener(this, frame.textScreenPanel, frame.hiresPanel))
+    }
+
     result.apply {
-        memory.listener = listener
+//        memory.listener = listener
 //        memory.interceptor = interceptor
 //            fillScreen(memory)
 //            fillWithNumbers(memory)
