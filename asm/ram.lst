@@ -15,7 +15,7 @@ Current file: ram.s
 00000Cr 1  EE 7B D1         inc D1
 00000Fr 1  EE 1F FE         inc FE
 000012r 1  AD 7B D1         lda D1
-000015r 1  C9 00            cmp #$0   ; a2audit says #$22
+000015r 1  C9 16            cmp #22   ; a2audit says #$22
 000017r 1  F0 01            beq @next
 000019r 1  00               brk
 00001Ar 1               
