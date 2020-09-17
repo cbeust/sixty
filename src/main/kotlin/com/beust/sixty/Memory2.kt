@@ -314,4 +314,23 @@ class Memory(val size: Int? = null) {
         init = false
 
     }
+
+
+    fun dump(address: Int, length: Int = 80) {
+        val lineLength = 8
+        repeat(length / lineLength) { line ->
+            val sb = StringBuffer(String.format("%04x", address + (line * lineLength)) + ": ")
+            repeat(8) { byte ->
+                sb.append(String.format("%02x ", this[address + line * lineLength + byte]))
+            }
+            sb.append(" ")
+            repeat(8) { byte ->
+                val c = (this[address + line * lineLength + byte] and 0x7f).toChar()
+                sb.append(String.format("%c", c))
+            }
+            println(sb.toString())
+        }
+        println("===")
+    }
+
 }
