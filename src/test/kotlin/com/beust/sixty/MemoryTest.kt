@@ -12,7 +12,8 @@ class MemoryTest {
     fun languageCard() {
         val start = 0x300
         val memory = Memory().apply {
-            val ins2 = File("asm/ram").inputStream()
+            loadResource("Apple2e.rom", 0xc000)
+            val ins2 = File("asm/ram2").inputStream()
             load(ins2, start)
         }
         var success = true
@@ -25,7 +26,7 @@ class MemoryTest {
                 override fun onPcChanged(c: Computer) {
                     if (memory[c.cpu.PC] == 0) {
                         success = false
-                        message = "Failed at PC " + c.cpu.PC.hh()
+                        message = "Failed after " + memory[0x3d] + " tests, at PC " + c.cpu.PC.hh()
                         stop()
                     }
                 }
@@ -33,6 +34,11 @@ class MemoryTest {
         }
         c.run()
 
-        assertThat(success).withFailMessage(message ?: "").isTrue()
+        assertThat(success)
+                .withFailMessage(message ?: "")
+                .isTrue()
+//        assertThat(c.cpu.P.C)
+//                .withFailMessage("Failed after " + memory[0x3d] + " tests")
+//                .isFalse()
     }
 }
