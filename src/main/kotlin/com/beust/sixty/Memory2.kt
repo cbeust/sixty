@@ -111,7 +111,7 @@ class Memory(val size: Int? = null) {
                     0xc081 -> {
                         if (c081Count == 0) {
                             //| ACTION | ADDRESS        | READ | WRITE? | $D0 |
-                            //|     RR | $C081 / 49281  | ROM  | NO    | 2 |
+                            //|      R | $C081 / 49281  | ROM  | NO    | 2 |
                             memory(true, false, false, false, false)
                             c081Count++
                         } else if (c081Count == 1) {
