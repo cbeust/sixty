@@ -43,6 +43,36 @@ TEST_COUNT := $3d
 	jsr @test				;
 	.byte $53, $60, $11, $54, $61		;
 
+	lda $C081				; Read $C081, $C081, write $C081 (read ROM, write RAM bank bank 2)
+	lda $C081				; See https://github.com/zellyn/a2audit/issues/3
+	sta $C081				;
+	jsr @test				;
+	.byte $53, $60, $11, $54, $61		;
+
+	lda $C081				; Read $C081, $C081; write $C081, $C081
+	lda $C081				; See https://github.com/zellyn/a2audit/issues/4
+	sta $C081				;
+	sta $C081				;
+	jsr @test				;
+	.byte $53, $60, $11, $54, $61		;
+
+	lda $C08B				; Read $C08B (read RAM bank 1, no write)
+	jsr @test				;
+	.byte $11, $33, $11, $22, $33		;
+
+	lda $C083				; Read $C083 (read RAM bank 2, no write)
+	jsr @test				;
+	.byte $22, $33, $11, $22, $33		;
+
+	lda $C08B				; Read $C08B, $C08B (read/write RAM bank 1)
+	lda $C08B				;
+	jsr @test				;
+	.byte $12, $34, $12, $22, $34		;
+
+	lda $C08F				; Read $C08F, $C087 (read/write RAM bank 2)
+	lda $C087				;
+	jsr @test				;
+	.byte $23, $34, $11, $23, $34		;
 
 	rts
 
