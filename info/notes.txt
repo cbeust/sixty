@@ -25,3 +25,12 @@ BPL *
 ```
 LDA takes 4 cycles (no page crossing)
 BPL takes 3 cycles (2 + branch taken)
+
+0312 : AD 7B D1   LDA  $D17B       A=53 X=22 Y=00 S=FF P=00 PC=$315 P=$00 {---- ----} SP={$FF stack:[]} 20
+0315 : C9 53      CMP  #$53        A=53 X=22 Y=00 S=FF P=03 PC=$317 P=$03 {---- --ZC} SP={$FF stack:[]} 21
+0317 : D0 0A      BNE  $0323       A=53 X=22 Y=00 S=FF P=03 PC=$319 P=$03 {---- --ZC} SP={$FF stack:[]} 22
+0319 : AD 80 C0   LDA  $C080       A=00 X=22 Y=00 S=FF P=03 PC=$31C P=$03 {---- --ZC} SP={$FF stack:[]} 23
+@@ readRom:false readBank1:false writeBank1:false readBank2:true writeBank2:false
+031C : AD 7B D1   LDA  $D17B       A=22 X=22 Y=00 S=FF P=01 PC=$31F P=$01 {---- ---C} SP={$FF stack:[]} 24
+031F : C9 22      CMP  #$22        A=22 X=22 Y=00 S=FF P=03 PC=$321 P=$03 {---- --ZC} SP={$FF stack:[]} 25
+0321 : F0 01      BEQ  $0324       A=22 X=22 Y=00 S=FF P=03 PC=$324 P=$03 {---- --ZC} SP={$FF stack:[]} 26

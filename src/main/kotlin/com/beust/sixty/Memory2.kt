@@ -63,10 +63,7 @@ class Memory(val size: Int? = null) {
     }
 
     private val mem = IntArray(0x10000) { 0 }
-    private var c081Count = 0
-    private var c083Count = 0
-    private var c089Count = 0
-    private var c08bCount = 0
+    private var writeCount = 0
 
     private fun getOrSet(get: Boolean, i: Int, value: Int = 0): Int? {
         var result: Int? = null
@@ -109,19 +106,20 @@ class Memory(val size: Int? = null) {
                         //| ACTION | ADDRESS        | READ | WRITE? | $D0 |
                         //| R      | $C080 / 49280  | RAM  | NO     | 2 |
                         memory(false, false, false, true, false)
+                        writeCount = 0
                         0
                     }
                     0xc081 -> {
-                        if (c081Count == 0) {
+                        if (writeCount == 0) {
                             //| ACTION | ADDRESS        | READ | WRITE? | $D0 |
                             //|      R | $C081 / 49281  | ROM  | NO    | 2 |
                             memory(true, false, false, false, false)
-                            c081Count++
-                        } else if (c081Count == 1) {
+                            writeCount++
+                        } else if (writeCount == 1) {
                             //| ACTION | ADDRESS        | READ | WRITE? | $D0 |
                             //|     RR | $C081 / 49281  | ROM  | YES    | 2 |
                             memory(true, false, false, false, true)
-                            c081Count = 0
+                            writeCount = 0
                         }
                         0
                     }
@@ -133,51 +131,60 @@ class Memory(val size: Int? = null) {
                         0
                     }
                     0xc083 -> {
-                        if (c083Count == 0) {
+                        if (writeCount == 0) {
                             //| ACTION | ADDRESS        | READ | WRITE? | $D0 |
                             //       R | $C083 / 49283  | RAM  | NO     | 2 |
                             memory(false, false, false, true, false)
-                            c083Count++
-                        } else if (c083Count == 1) {
+                            writeCount++
+                        } else if (writeCount == 1) {
                             //| ACTION | ADDRESS        | READ | WRITE? | $D0 |
                             //      RR | $C083 / 49283  | RAM  | YES    | 2 |
                             memory(false, false, false, true, true)
-                            c083Count = 0
+                            writeCount = 0
                         }
+                        0
+                    }
+                    0xc084 -> {
+                        writeCount = 0
                         0
                     }
                     0xc088 -> {
                         //| ACTION | ADDRESS        | READ | WRITE? | $D0 |
                         //|      R | $C088 / 49288  | RAM  | NO     | 1 |
                         memory(false, true, false, false, false)
+                        writeCount = 0
                         0
                     }
                     0xc089 -> {
-                        if (c089Count == 0) {
+                        if (writeCount == 0) {
                             //| ACTION | ADDRESS        | READ | WRITE? | $D0 |
                             //|     RR | $C089 / 49289  | ROM  | NO    | 1 |
                             memory(true, false, false, false, false)
-                            c089Count = 0
-                        } else if (c089Count == 1) {
+                            writeCount++
+                        } else if (writeCount == 1) {
                             //| ACTION | ADDRESS        | READ | WRITE? | $D0 |
                             //|     RR | $C089 / 49289  | ROM  | YES    | 1 |
                             memory(true, false, true, false, false)
-                            c089Count = 0
+                            writeCount = 0
                         }
                         0
                     }
                     0xc08b -> {
-                        if (c08bCount == 0) {
+                        if (writeCount == 0) {
                             //| ACTION | ADDRESS        | READ | WRITE? | $D0 |
                             //|      R | $C08B / 49291  | RAM  | NO     | 1   |
                             memory(false, true, false, false, false)
-                            c08bCount++
-                        } else if (c08bCount == 1) {
+                            writeCount++
+                        } else if (writeCount == 1) {
                             //| ACTION | ADDRESS        | READ | WRITE? | $D0 |
                             //|     RR | $C08B / 49291  | RAM  | YES    | 1   |
                             memory(false, true, true, false, false)
-                            c08bCount = 0
+                            writeCount = 0
                         }
+                        0
+                    }
+                    0xc08c -> {
+                        writeCount = 0
                         0
                     }
                     else -> {
