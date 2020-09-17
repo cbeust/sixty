@@ -1,10 +1,13 @@
 package com.beust.sixty
 
+import org.slf4j.LoggerFactory
 import java.io.File
 import java.io.InputStream
 
 @Suppress("UnnecessaryVariable", "BooleanLiteralArgument")
 class Memory(val size: Int? = null) {
+    private val log = LoggerFactory.getLogger("Memory")
+
     var interceptor: MemoryInterceptor? = null
     val listeners = arrayListOf<MemoryListener>()
     val lastMemDebug = arrayListOf<String>()
@@ -93,7 +96,7 @@ class Memory(val size: Int? = null) {
                     writeBank1 = wb1
                     readBank2 = rb2
                     writeBank2 = wb2
-                    println("@@ readRom:$readRom readBank1:$readBank1 writeBank1:$writeBank1" +
+                    log.debug("readRom:$readRom readBank1:$readBank1 writeBank1:$writeBank1" +
                             " readBank2:$readBank2 writeBank2:$writeBank2")
 
                 }

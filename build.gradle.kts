@@ -22,7 +22,7 @@ object This {
 }
 
 dependencies {
-    impl(kotlin("stdlib"), "com.beust:jcommander:1.72")
+    impl(kotlin("stdlib"), "com.beust:jcommander:1.72", "ch.qos.logback:logback-classic:1.2.3")
     testImpl(kotlin("test"), "org.testng:testng:7.0.0", "org.assertj:assertj-core:3.10.0")
 }
 

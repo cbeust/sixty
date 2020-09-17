@@ -2,6 +2,7 @@ package com.beust.sixty
 
 import com.beust.app.BREAKPOINT
 import com.beust.app.DEBUG
+import org.slf4j.LoggerFactory
 
 open class BaseMemoryListener {
     val lastMemDebug = arrayListOf<String>()
@@ -31,6 +32,7 @@ class Computer(val cpu: Cpu = Cpu(memory = Memory()),
         memoryInterceptor: MemoryInterceptor? = null,
         var pcListener: PcListener? = null
 ): IPulse {
+    private val log = LoggerFactory.getLogger("Breakpoint")
     val pc get() = cpu.PC
     val memory = cpu.memory
 
@@ -88,8 +90,8 @@ class Computer(val cpu: Cpu = Cpu(memory = Memory()),
 //                    DEBUG = true
 //                }
             if (BREAKPOINT != null && cpu.PC == BREAKPOINT) {
-                println(this)
-                println("breakpoint")
+                log.debug(this.toString())
+                log.debug("breakpoint")
                 DEBUG = true
             }
 //                if (cpu.PC == 0xc696) {

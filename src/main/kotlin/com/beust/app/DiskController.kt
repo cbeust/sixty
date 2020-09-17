@@ -1,8 +1,10 @@
 package com.beust.app
 
 import com.beust.sixty.*
+import org.slf4j.LoggerFactory
 
 class DiskController(val slot: Int = 6, val disk: IDisk): IPulse, MemoryListener() {
+    private val log = LoggerFactory.getLogger("Disk")
     private val slot16 = slot * 16
     private var latch: Int = 0
 
@@ -53,22 +55,22 @@ class DiskController(val slot: Int = 6, val disk: IDisk): IPulse, MemoryListener
                 value
             }
             0xc088 -> {
-                println("Turning motor off")
+                log.debug("Turning motor off")
                 motorOn = false
                 value
             }
             0xc089 -> {
-                println("Turning motor on")
+                log.debug("Turning motor on")
                 motorOn = true
                 value
             }
             0xc08a -> {
-                println("Turning on drive 1")
+                log.debug("Turning on drive 1")
                 drive1 = true
                 value
             }
             0xc08b -> {
-                println("Turning on drive 2")
+                log.debug("Turning on drive 2")
                 drive2 = true
                 value
             }
