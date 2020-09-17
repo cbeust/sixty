@@ -177,6 +177,9 @@ class Memory(val size: Int? = null) {
     }
 
     operator fun get(address: Int) : Int {
+        if (address == 0xc08f) {
+            println("BREAKPOINT")
+        }
         var result = getOrSet(true, address)
         var actual: Int? = null
         listeners.forEach {
@@ -196,65 +199,119 @@ class Memory(val size: Int? = null) {
     }
 
     private fun handleRam(get: Boolean, i: Int) : Int {
-        fun memory(address: Int, rom: Boolean, rb1: Boolean, wb1: Boolean, rb2: Boolean, wb2: Boolean) {
-            readRom = rom
-            readBank1 = rb1
-            writeBank1 = wb1
-            readBank2 = rb2
-            writeBank2 = wb2
+        fun log(address: Int) {
             log.debug(address.hh() + " writeCount:$writeCount" +
                     " Read:" + (if (readRom) "rom" else if (readBank1) "ram1" else "ram2") +
-                    " Write:" + (if (writeBank1) "ram1" else if (writeBank2) "ram2" else "rom"))
+                    " Write:" + (if (writeBank1) "ram1" else if (writeBank2) "ram2" else "no write"))
+        }
+        fun enableRomRead(address: Int) {
+            readRom = true
+            readBank1 = false
+            readBank2 = false
+            log(address)
+        }
+        fun enableRam1Read(address: Int) {
+            readRom = false
+            readBank1 = true
+            readBank2 = false
+            log(address)
+        }
+        fun enableRam2Read(address: Int) {
+            readRom = false
+            readBank1 = false
+            readBank2 = true
+            log(address)
+        }
+        fun enableRam1Write(address: Int) {
+            writeBank1 = true
+            writeBank2 = false
+            log(address)
+        }
+        fun enableRam2Write(address: Int) {
+            writeBank1 = false
+            writeBank2 = true
+            log(address)
+        }
+        fun disableWrite(address: Int) {
+            writeBank1 = false
+            writeBank2 = false
+            log(address)
         }
 
         if (get) {
             when(i) {
                 0xc080, 0xc084 -> {
                     writeCount = 0
-                    memory(i, false, false, false, true, false) // read 2
+                    enableRam2Read(i)
+                    disableWrite(i)
                 }
                 0xc088, 0xc08c -> {
                     writeCount = 0
-                    memory(i, false, true, false, false, false) // read 1
+                    enableRam1Read(i)
+                    disableWrite(i)
                 }
                 0xc081, 0xc085 -> {
                     if (writeCount < 2) writeCount++
-                    if (writeCount == 1) {
-                        memory(i, true, false, false, false, false) // read rom
-                    } else if (writeCount == 2) {
-                        memory(i, true, false, false, false, true) // read rom, write ram 2
+                    enableRomRead(i)
+                    if (writeCount == 2) {
+                        enableRam2Write(i)
                     }
                 }
                 0xc089, 0xc08d -> {
                     if (writeCount < 2) writeCount++
-                    if (writeCount == 1) {
-                        memory(i, true, false, false, false, false) // read rom
-                    } else if (writeCount == 2) {
-                        memory(i, true, false, true, false, false) // read rom, write ram 1
+                    enableRomRead(i)
+                    if (writeCount == 2) {
+                        enableRam1Write(i)
                     }
                 }
                 0xc082, 0xc086, 0xc08a, 0xc08e -> {
                     writeCount = 0
-                    memory(i, true, false, false, false, false) // read rom
+                    enableRomRead(i)
+                    disableWrite(i)
                 }
                 0xc083, 0xc087 -> {
                     if (writeCount < 2) writeCount++
-                    if (writeCount == 1) {
-                        memory(i, false, false, false, true, false) // read ram 2
-                    } else if (writeCount == 2) {
-                        memory(i, false, false, false, true, true) // read/write ram 2
+                    enableRam2Read(i)
+                    if (writeCount == 2) {
+                        enableRam2Write(i)
                     }
                 }
                 0xc08b, 0xc08f -> {
                     if (writeCount < 2) writeCount++
-                    if (writeCount == 1) {
-                        memory(i, false, true, false, false, false) // read ram 1
-                    } else if (writeCount == 2) {
-                        memory(i, false, true, true, false, false) // read/write ram 1
+                    enableRam1Read(i)
+                    if (writeCount == 2) {
+                        enableRam1Write(i)
                     }
                 }
             }
         } else {
+            when(i) {
+                0xc080, 0xc084 -> {
+                    writeCount = 0
+                    enableRam2Read(i)
+                }
+                0xc088, 0xc08c -> {
+                    writeCount = 0
+                    enableRam1Read(i)
+                }
+                0xc081, 0xc085, 0xc089, 0xc08d -> {
+                    writeCount = 0
+                    enableRomRead(i)
+                }
+                0xc082, 0xc086, 0xc08a, 0xc08e -> {
+                    writeCount = 0
+                    enableRomRead(i)
+                    disableWrite(i)
+                }
+                0xc083, 0xc087 -> {
+                    writeCount = 0
+                    enableRam2Read(i)
+                }
+                0xc08b, 0xc08f -> {
+                    writeCount = 0
+                    enableRam1Read(i)
+                }
+            }
 
         }
         return 0

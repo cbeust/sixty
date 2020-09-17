@@ -25,75 +25,132 @@ Current file: ram2.s
 000007r 1               	;; (All sequences start with lda $C080, just to reset things to a known state.)
 000007r 1               	;; 0-byte to terminate tests.
 000007r 1               
-000007r 1               
-000007r 1  AD 8F C0     	lda $C08F				; Read $C08F, $C087 (read/write RAM bank 2)
-00000Ar 1  AD 87 C0     	lda $C087				;
-00000Dr 1  20 rr rr     	jsr @test				;
-000010r 1  23 34 11 23  	.byte $23, $34, $11, $23, $34		;
-000014r 1  34           
-000015r 1               
-000015r 1  60           	rts
-000016r 1               
-000016r 1               @test:
-000016r 1  EE 7B D1         inc D1
-000019r 1  EE 1F FE         inc FE
-00001Cr 1               	;; pull address off of stack: it points just below check data for this test.
-00001Cr 1  68           	pla
-00001Dr 1  85 3F        	sta checkdata
-00001Fr 1  AA           	tax
-000020r 1  68           	pla
-000021r 1  85 40        	sta checkdata+1
-000023r 1  48           	pha
-000024r 1  8A           	txa
-000025r 1  18           	clc
-000026r 1  69 05        	adc #5
-000028r 1  48           	pha
-000029r 1  A0 00        	ldy #0
-00002Br 1               
-00002Br 1  AE 7B D1 C8      verify D1
-00002Fr 1  B1 3F CD 7B  
-000033r 1  D1 D0 3A     
-000036r 1  AE 1F FE C8      verify FE
-00003Ar 1  B1 3F CD 1F  
-00003Er 1  FE D0 2F     
-000041r 1  AD 88 C0         lda $c088 ; $D17B in bank 1
-000044r 1  AE 7B D1 C8      verify D1
-000048r 1  B1 3F CD 7B  
-00004Cr 1  D1 D0 21     
-00004Fr 1  AD 80 C0         lda $c080 ; $D17B in bank 2
-000052r 1  AE 7B D1 C8      verify D1
-000056r 1  B1 3F CD 7B  
-00005Ar 1  D1 D0 13     
-00005Dr 1  AE 1F FE C8      verify FE
-000061r 1  B1 3F CD 1F  
-000065r 1  FE D0 08     
-000068r 1  E6 3D            inc TEST_COUNT
-00006Ar 1  20 rr rr         jsr @reset
-00006Dr 1  60               rts
-00006Er 1               
-00006Er 1               @success:
-00006Er 1  18               clc
-00006Fr 1  60               rts
-000070r 1               
-000070r 1               @fail:
-000070r 1  00               brk
-000071r 1               
-000071r 1               @reset:
-000071r 1               	;; Initialize to known state:
-000071r 1               	;; - $11 in $D17B bank 1 (ROM: $53)
-000071r 1               	;; - $22 in $D17B bank 2 (ROM: $53)
-000071r 1               	;; - $33 in $FE1F        (ROM: $60)
-000071r 1  AD 8B C0     	lda $C08B		; Read and write bank 1
-000074r 1  AD 8B C0     	lda $C08B
-000077r 1  A9 11        	lda #$11
-000079r 1  8D 7B D1     	sta D1
-00007Cr 1  A9 33        	lda #$33
-00007Er 1  8D 1F FE     	sta FE
-000081r 1  AD 83 C0     	lda $C083		; Read and write bank 2
-000084r 1  AD 83 C0     	lda $C083
-000087r 1  A9 22        	lda #$22
-000089r 1  8D 7B D1     	sta D1
-00008Cr 1  AD 80 C0     	lda $C080
-00008Fr 1  AD 7B D1     	lda D1
-000092r 1  60           	rts
-000092r 1               
+000007r 1  AD 88 C0     	lda $C088				; Read $C088 (read bank 1, no write)
+00000Ar 1  20 rr rr     	jsr @test				;
+00000Dr 1  11 33 11 22  	.byte $11, $33, $11, $22, $33
+000011r 1  33           
+000012r 1               
+000012r 1  AD 80 C0     	lda $C080				; Read $C080 (read bank 2, no write)
+000015r 1  20 rr rr     	jsr @test				;
+000018r 1  22 33 11 22  	.byte $22, $33, $11, $22, $33		;
+00001Cr 1  33           
+00001Dr 1               
+00001Dr 1  AD 81 C0     	lda $C081				; Read $C081 (ROM read, write disabled)
+000020r 1  20 rr rr     	jsr @test				;
+000023r 1  53 60 11 22  	.byte $53, $60, $11, $22, $33		;
+000027r 1  33           
+000028r 1               
+000028r 1  AD 81 C0     	lda $C081				; Read $C081 (rom read, all else false)
+00002Br 1  AD 89 C0     	lda $C089				; Read $C089 (ROM read, all else false)
+00002Er 1  20 rr rr     	jsr @test				;
+000031r 1  53 60 54 22  	.byte $53, $60, $54, $22, $61		;
+000035r 1  61           
+000036r 1               
+000036r 1  AD 81 C0         lda $C081				; Read $C081, $C081 (read ROM, write RAM bank 2)
+000039r 1  AD 81 C0     	lda $C081				;
+00003Cr 1  20 rr rr     	jsr @test				;
+00003Fr 1  53 60 11 54  	.byte $53, $60, $11, $54, $61		;
+000043r 1  61           
+000044r 1               
+000044r 1  AD 81 C0     	lda $C081				; Read $C081, $C081, write $C081 (read ROM, write RAM bank bank 2)
+000047r 1  AD 81 C0     	lda $C081				; See https://github.com/zellyn/a2audit/issues/3
+00004Ar 1  8D 81 C0     	sta $C081				;
+00004Dr 1  20 rr rr     	jsr @test				;
+000050r 1  53 60 11 54  	.byte $53, $60, $11, $54, $61		;
+000054r 1  61           
+000055r 1               
+000055r 1  AD 81 C0     	lda $C081				; Read $C081, $C081; write $C081, $C081
+000058r 1  AD 81 C0     	lda $C081				; See https://github.com/zellyn/a2audit/issues/4
+00005Br 1  8D 81 C0     	sta $C081				;
+00005Er 1  8D 81 C0     	sta $C081				;
+000061r 1  20 rr rr     	jsr @test				;
+000064r 1  53 60 11 54  	.byte $53, $60, $11, $54, $61		;
+000068r 1  61           
+000069r 1               
+000069r 1  AD 8B C0     	lda $C08B				; Read $C08B (read RAM bank 1, no write)
+00006Cr 1  20 rr rr     	jsr @test				;
+00006Fr 1  11 33 11 22  	.byte $11, $33, $11, $22, $33		;
+000073r 1  33           
+000074r 1               
+000074r 1  AD 83 C0     	lda $C083				; Read $C083 (read RAM bank 2, no write)
+000077r 1  20 rr rr     	jsr @test				;
+00007Ar 1  22 33 11 22  	.byte $22, $33, $11, $22, $33		;
+00007Er 1  33           
+00007Fr 1               
+00007Fr 1  AD 8B C0     	lda $C08B				; Read $C08B, $C08B (read/write RAM bank 1)
+000082r 1  AD 8B C0     	lda $C08B				;
+000085r 1  20 rr rr     	jsr @test				;
+000088r 1  12 34 12 22  	.byte $12, $34, $12, $22, $34		;
+00008Cr 1  34           
+00008Dr 1               
+00008Dr 1  AD 8F C0     	lda $C08F				; Read $C08F, $C087 (read/write RAM bank 2)
+000090r 1  AD 87 C0     	lda $C087				;
+000093r 1  20 rr rr     	jsr @test				;
+000096r 1  23 34 11 23  	.byte $23, $34, $11, $23, $34		;
+00009Ar 1  34           
+00009Br 1               
+00009Br 1  60           	rts
+00009Cr 1               
+00009Cr 1               @test:
+00009Cr 1  EE 7B D1         inc D1
+00009Fr 1  EE 1F FE         inc FE
+0000A2r 1               	;; pull address off of stack: it points just below check data for this test.
+0000A2r 1  68           	pla
+0000A3r 1  85 3F        	sta checkdata
+0000A5r 1  AA           	tax
+0000A6r 1  68           	pla
+0000A7r 1  85 40        	sta checkdata+1
+0000A9r 1  48           	pha
+0000AAr 1  8A           	txa
+0000ABr 1  18           	clc
+0000ACr 1  69 05        	adc #5
+0000AEr 1  48           	pha
+0000AFr 1  A0 00        	ldy #0
+0000B1r 1               
+0000B1r 1  AE 7B D1 C8      verify D1
+0000B5r 1  B1 3F CD 7B  
+0000B9r 1  D1 D0 3A     
+0000BCr 1  AE 1F FE C8      verify FE
+0000C0r 1  B1 3F CD 1F  
+0000C4r 1  FE D0 2F     
+0000C7r 1  AD 88 C0         lda $c088 ; $D17B in bank 1
+0000CAr 1  AE 7B D1 C8      verify D1
+0000CEr 1  B1 3F CD 7B  
+0000D2r 1  D1 D0 21     
+0000D5r 1  AD 80 C0         lda $c080 ; $D17B in bank 2
+0000D8r 1  AE 7B D1 C8      verify D1
+0000DCr 1  B1 3F CD 7B  
+0000E0r 1  D1 D0 13     
+0000E3r 1  AE 1F FE C8      verify FE
+0000E7r 1  B1 3F CD 1F  
+0000EBr 1  FE D0 08     
+0000EEr 1  E6 3D            inc TEST_COUNT
+0000F0r 1  20 rr rr         jsr @reset
+0000F3r 1  60               rts
+0000F4r 1               
+0000F4r 1               @success:
+0000F4r 1  18               clc
+0000F5r 1  60               rts
+0000F6r 1               
+0000F6r 1               @fail:
+0000F6r 1  00               brk
+0000F7r 1               
+0000F7r 1               @reset:
+0000F7r 1               	;; Initialize to known state:
+0000F7r 1               	;; - $11 in $D17B bank 1 (ROM: $53)
+0000F7r 1               	;; - $22 in $D17B bank 2 (ROM: $53)
+0000F7r 1               	;; - $33 in $FE1F        (ROM: $60)
+0000F7r 1  AD 8B C0     	lda $C08B		; Read and write bank 1
+0000FAr 1  AD 8B C0     	lda $C08B
+0000FDr 1  A9 11        	lda #$11
+0000FFr 1  8D 7B D1     	sta D1
+000102r 1  A9 33        	lda #$33
+000104r 1  8D 1F FE     	sta FE
+000107r 1  AD 83 C0     	lda $C083		; Read and write bank 2
+00010Ar 1  AD 83 C0     	lda $C083
+00010Dr 1  A9 22        	lda #$22
+00010Fr 1  8D 7B D1     	sta D1
+000112r 1  AD 80 C0     	lda $C080
+000115r 1  AD 7B D1     	lda D1
+000118r 1  60           	rts
+000118r 1               
