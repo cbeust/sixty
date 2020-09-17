@@ -1,7 +1,6 @@
 package com.beust.app
 
-import com.beust.sixty.ERROR
-import com.beust.sixty.MemoryListener
+import com.beust.sixty.*
 
 class DiskController(val slot: Int = 6, val disk: IDisk): IPulse, MemoryListener() {
     private val slot16 = slot * 16
@@ -9,54 +8,61 @@ class DiskController(val slot: Int = 6, val disk: IDisk): IPulse, MemoryListener
 
     override fun isInRange(address:Int) = address in (c(0xc080)..c(0xc08c))
 
-    override fun onPulse() {
+    override fun onPulse(): PulseResult {
         // Faster way for unprotected disks
-//        latch disk.nextByte()
+//        latch = disk.nextByte()
 
 //     More formal way: bit by bit on every pulse
-        if (latch and 0x80 != 0) latch = 0
-        latch = latch.shl(1).or(disk.nextBit()).and(0xff)
+//        if (latch and 0x80 != 0) latch = 0
+        while (latch.and(0x80) == 0) {
+            latch = latch.shl(1).or(disk.nextBit()).and(0xff)
+        }
+//        println("@@@   latch: ${latch.h()}")
+        return PulseResult()
     }
 
     private fun c(address: Int) = address + slot16
 
     override fun onRead(i: Int, value: Int): Int? {
-        val result = when(i) {
-            in (c(0xc080)..c(0xc087)) -> {
+        val a = i - slot16
+        val result = when(a) {
+            in (0xc080..0xc087) -> {
                 // Seek address: $b9a0
-                val (phase, state) = when (i) {
-                    c(0xc080) -> 0 to false
-                    c(0xc081) -> 0 to true
-                    c(0xc082) -> 1 to false
-                    c(0xc083) -> 1 to true
-                    c(0xc084) -> 2 to false
-                    c(0xc085) -> 2 to true
-                    c(0xc086) -> 3 to false
-                    c(0xc087) -> 3 to true
+                val (phase, state) = when (a) {
+                   0xc080 -> 0 to false
+                   0xc081 -> 0 to true
+                   0xc082 -> 1 to false
+                   0xc083 -> 1 to true
+                   0xc084 -> 2 to false
+                   0xc085 -> 2 to true
+                   0xc086 -> 3 to false
+                   0xc087 -> 3 to true
                     else -> ERROR("SHOULD NEVER HAPPEN")
                 }
                 magnet(disk, phase, state)
                 value
             }
-            c(0xc088) -> {
+            0xc088 -> {
                 println("Turning motor off")
                 value
             }
-            c(0xc089) -> {
+            0xc089 -> {
                 println("Turning motor on")
                 value
             }
-            c(0xc08a) -> {
+            0xc08a -> {
                 println("Turning on drive 1")
                 value
             }
-            c(0xc08b) -> {
+            0xc08b -> {
                 println("Turning on drive 2")
                 value
             }
-            c(0xc08c) -> {
-                latch = disk.nextByte()
-                latch
+            0xc08c -> {
+//                latch = disk.nextByte()
+                val result = latch
+                latch = 0  // probably not correct
+                result
             }
             else -> value
         }

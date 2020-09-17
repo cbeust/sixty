@@ -30,7 +30,7 @@ class Computer(val cpu: Cpu = Cpu(memory = Memory()),
 //        memoryListener: MemoryListener? = null,
         memoryInterceptor: MemoryInterceptor? = null,
         var pcListener: PcListener? = null
-) {
+): IPulse {
     val pc get() = cpu.PC
     val memory = cpu.memory
 
@@ -54,29 +54,44 @@ class Computer(val cpu: Cpu = Cpu(memory = Memory()),
         return memory[address] to word(memory, address)
     }
 
+    var cycles = 0
     var track = 0
     var sector = 0
-    fun run(debugMemory: Boolean = false, _debugAsm: Boolean = false): RunResult {
-        var debugAsm = _debugAsm
-        startTime = System.currentTimeMillis()
-        var cycles = 0
-        var done = false
-        var previousPc = 0
-        while (! done && ! stop) {
-            cycles++
-            val opCode = memory[cpu.PC]
 
-            if (opCode == 0x60 && cpu.SP.isEmpty()) {
-                done = true
-            } else {
+    override fun onPulse(): PulseResult {
+        step()
+        return PulseResult(stop)
+    }
+
+    fun run(debugMemory: Boolean = false, _debugAsm: Boolean = false): RunResult {
+        var done = false
+        startTime = System.currentTimeMillis()
+        while (!stop) {
+            cycles++
+            val done = step(debugMemory, _debugAsm)
+            if (done) stop = true
+        }
+
+        return RunResult(System.currentTimeMillis() - startTime, cycles)
+    }
+
+    fun step(debugMemory: Boolean = false, _debugAsm: Boolean = false): Boolean {
+        var debugAsm = _debugAsm
+        var previousPc = 0
+        val opCode = memory[cpu.PC]
+        var done = false
+
+        if (opCode == 0x60 && cpu.SP.isEmpty()) {
+            done = true
+        } else {
 //                if (cycles >= 1156500) {
 //                    DEBUG = true
 //                }
-                if (BREAKPOINT != null && cpu.PC == BREAKPOINT) {
-                    println(this)
-                    println("breakpoint")
-                    DEBUG = true
-                }
+            if (BREAKPOINT != null && cpu.PC == BREAKPOINT) {
+                println(this)
+                println("breakpoint")
+                DEBUG = true
+            }
 //                if (cpu.PC == 0xc696) {
 //                    if  (cpu.Y == 1) {
 //                        sector = cpu.A
@@ -88,45 +103,44 @@ class Computer(val cpu: Cpu = Cpu(memory = Memory()),
 //                    }
 //                }
 
-                try {
+            try {
 //                    DEBUG = cycles >= 15348000
-                    debugAsm = DEBUG
-                    if (DEBUG) {
-                        val (byte, word) = byteWord()
-                        val debugString = formatPc(cpu.PC, opCode) + formatInstruction(opCode, cpu.PC, byte, word)
-                        previousPc = cpu.PC
-                        cpu.PC += SIZES[opCode]
-                        cpu.nextInstruction(previousPc)
-                        if (debugAsm) println(debugString + " " + cpu.toString() + " " + cycles)
-                        ""
-                    } else {
-                        previousPc = cpu.PC
-                        cpu.PC += SIZES[opCode]
-                        cpu.nextInstruction(previousPc)
-                    }
-                } catch(ex: Throwable) {
-                    ex.printStackTrace()
-                    println("Failed at cycle $cycles")
-                    throw ex
-                }
-
-            if (previousPc == cpu.PC) {
-                    // Current functional tests highest score: 158489
-                    println(this)
-                    println("Forever loop after $cycles cycles")
-                    println("")
+                debugAsm = DEBUG
+                if (DEBUG) {
+                    val (byte, word) = byteWord()
+                    val debugString = formatPc(cpu.PC, opCode) + formatInstruction(opCode, cpu.PC, byte, word)
+                    previousPc = cpu.PC
+                    cpu.PC += SIZES[opCode]
+                    cpu.nextInstruction(previousPc)
+                    if (debugAsm) println(debugString + " " + cpu.toString() + " " + cycles)
+                    ""
                 } else {
                     previousPc = cpu.PC
+                    cpu.PC += SIZES[opCode]
+                    cpu.nextInstruction(previousPc)
                 }
-
-                memory.lastMemDebug?.forEach {
-                    println("  $it")
-                }
-                memory.lastMemDebug?.clear()
+            } catch(ex: Throwable) {
+                ex.printStackTrace()
+                println("Failed at cycle $cycles")
+                throw ex
             }
-            pcListener?.onPcChanged(this)
+
+        if (previousPc == cpu.PC) {
+                // Current functional tests highest score: 158489
+                println(this)
+                println("Forever loop after $cycles cycles")
+                println("")
+            } else {
+                previousPc = cpu.PC
+            }
+
+            memory.lastMemDebug?.forEach {
+                println("  $it")
+            }
+            memory.lastMemDebug?.clear()
         }
-        return RunResult(System.currentTimeMillis() - startTime, cycles)
+        pcListener?.onPcChanged(this)
+        return done
     }
 
     class RunResult(val durationMillis: Long, val cycles: Int)
