@@ -88,13 +88,13 @@ class Memory(val size: Int? = null) {
         } else if (i in 0xc000..0xcfff) {
             if (get) {
                 result = when (i) {
-                    in 0xc080..0xc08d -> handleRam(get, i)
+                    in 0xc080..0xc08f -> handleRam(get, i)
                     else -> {
                         c0Memory[i - 0xc000]
                     }
                 }
             } else {
-                if (i in 0xc080..0xc08d) handleRam(get, i)
+                if (i in 0xc080..0xc08f) handleRam(get, i)
                 else if (!init) when(i) {
                     0xc002 -> {
                         // | ACTION | ADDRESS       |
