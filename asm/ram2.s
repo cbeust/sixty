@@ -74,6 +74,30 @@ TEST_COUNT := $3d
 	jsr @test				;
 	.byte $23, $34, $11, $23, $34		;
 
+	lda $C087				; Read $C087, read $C08D (read ROM, write bank 1)
+	lda $C08D				;
+	jsr @test				;
+	.byte $53, $60, $54, $22, $61		;
+
+	lda $C08B				; Read $C08B, write $C08B, read $C08B (read RAM bank 1, no write)
+	sta $C08B				; (this one is tricky: reset WRTCOUNT by writing halfway)
+	lda $C08B				;
+	jsr @test				;
+	.byte $11, $33, $11, $22, $33		;
+
+	sta $C08B				; Write $C08B, write $C08B, read $C08B (read RAM bank 1, no write)
+	sta $C08B				;
+	lda $C08B				;
+	jsr @test				;
+	.byte $11, $33, $11, $22, $33		;
+
+	clc					    ; Read $C083, $C083 (read/write RAM bank 2)
+	ldx #0					; Uses "6502 false read"
+	inc $C083,x				;
+	jsr @test				;
+	.byte $23, $34, $11, $23, $34		;
+						;
+
 	rts
 
 @test:
