@@ -37,6 +37,7 @@ class MemoryTest {
         assertThat(success)
                 .withFailMessage(message ?: "")
                 .isTrue()
+        println(memory[0x3d].toString() + " memory tests passed")
 //        assertThat(c.cpu.P.C)
 //                .withFailMessage("Failed after " + memory[0x3d] + " tests")
 //                .isFalse()
