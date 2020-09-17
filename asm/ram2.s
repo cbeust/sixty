@@ -25,11 +25,6 @@ TEST_COUNT := $3d
 	jsr @test				;
 	.byte $11, $33, $11, $22, $33
 
-	lda $C081				; Read $C081 (rom read, all else false)
-	lda $C089				; Read $C089 (ROM read, all else false)
-	jsr @test				;
-	.byte $53, $60, $54, $22, $61		;
-
 	lda $C080				; Read $C080 (read bank 2, no write)
 	jsr @test				;
 	.byte $22, $33, $11, $22, $33		;
@@ -37,6 +32,11 @@ TEST_COUNT := $3d
 	lda $C081				; Read $C081 (ROM read, write disabled)
 	jsr @test				;
 	.byte $53, $60, $11, $22, $33		;
+
+	lda $C081				; Read $C081 (rom read, all else false)
+	lda $C089				; Read $C089 (ROM read, all else false)
+	jsr @test				;
+	.byte $53, $60, $54, $22, $61		;
 
     lda $C081				; Read $C081, $C081 (read ROM, write RAM bank 2)
 	lda $C081				;

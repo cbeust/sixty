@@ -29,7 +29,7 @@ class MemoryTest {
                         val word = word(address = 0x3d + c.cpu.Y)
                         val expected = memory[word]
                         message = "Failed at test #" + (memory[0x3d] + 1) + " at comparison #" + c.cpu.Y +
-                            " expected ${expected.h()} but got " + c.cpu.A
+                            " got " + c.cpu.A
                             ", PC=" + c.cpu.PC.hh()
                         stop()
                     }

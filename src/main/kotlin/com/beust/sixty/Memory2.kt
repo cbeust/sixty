@@ -87,112 +87,15 @@ class Memory(val size: Int? = null) {
             }
         } else if (i in 0xc000..0xcfff) {
             if (get) {
-                fun memory(rom: Boolean, rb1: Boolean, wb1: Boolean, rb2: Boolean, wb2: Boolean) {
-                    readRom = rom
-                    readBank1 = rb1
-                    writeBank1 = wb1
-                    readBank2 = rb2
-                    writeBank2 = wb2
-                    log.debug("readRom:$readRom readBank1:$readBank1 writeBank1:$writeBank1" +
-                            " readBank2:$readBank2 writeBank2:$writeBank2")
-
-                }
                 result = when (i) {
-                    0xc010 -> {
-                        c0Memory[0] = c0Memory[0] and 0x7f
-                        c0Memory[0]
-                    }
-                    0xc080 -> {
-                        //| ACTION | ADDRESS        | READ | WRITE? | $D0 |
-                        //| R      | $C080 / 49280  | RAM  | NO     | 2 |
-                        memory(false, false, false, true, false)
-                        writeCount = 0
-                        0
-                    }
-                    0xc081 -> {
-                        if (writeCount == 0) {
-                            //| ACTION | ADDRESS        | READ | WRITE? | $D0 |
-                            //|      R | $C081 / 49281  | ROM  | NO    | 2 |
-                            memory(true, false, false, false, false)
-                            writeCount++
-                        } else if (writeCount == 1) {
-                            //| ACTION | ADDRESS        | READ | WRITE? | $D0 |
-                            //|     RR | $C081 / 49281  | ROM  | YES    | 2 |
-                            memory(true, false, false, false, true)
-                            writeCount = 0
-                        }
-                        0
-                    }
-                    0xc082, 0xc08a -> {
-                        //| ACTION | ADDRESS        | READ | WRITE? | $D0 |
-                        //|   de R | $C082 / 49282  | ROM  | NO     | 2   |
-                        //| R      | $C08A / 49290  | ROM  | NO     | 1   |
-                        memory(true, false, false, false, false)
-                        0
-                    }
-                    0xc083 -> {
-                        if (writeCount == 0) {
-                            //| ACTION | ADDRESS        | READ | WRITE? | $D0 |
-                            //       R | $C083 / 49283  | RAM  | NO     | 2 |
-                            memory(false, false, false, true, false)
-                            writeCount++
-                        } else if (writeCount == 1) {
-                            //| ACTION | ADDRESS        | READ | WRITE? | $D0 |
-                            //      RR | $C083 / 49283  | RAM  | YES    | 2 |
-                            memory(false, false, false, true, true)
-                            writeCount = 0
-                        }
-                        0
-                    }
-                    0xc084 -> {
-                        writeCount = 0
-                        0
-                    }
-                    0xc088 -> {
-                        //| ACTION | ADDRESS        | READ | WRITE? | $D0 |
-                        //|      R | $C088 / 49288  | RAM  | NO     | 1 |
-                        memory(false, true, false, false, false)
-                        writeCount = 0
-                        0
-                    }
-                    0xc089 -> {
-                        if (writeCount == 0) {
-                            //| ACTION | ADDRESS        | READ | WRITE? | $D0 |
-                            //|     RR | $C089 / 49289  | ROM  | NO    | 1 |
-                            memory(true, false, false, false, false)
-                            writeCount++
-                        } else if (writeCount == 1) {
-                            //| ACTION | ADDRESS        | READ | WRITE? | $D0 |
-                            //|     RR | $C089 / 49289  | ROM  | YES    | 1 |
-                            memory(true, false, true, false, false)
-                            writeCount = 0
-                        }
-                        0
-                    }
-                    0xc08b -> {
-                        if (writeCount == 0) {
-                            //| ACTION | ADDRESS        | READ | WRITE? | $D0 |
-                            //|      R | $C08B / 49291  | RAM  | NO     | 1   |
-                            memory(false, true, false, false, false)
-                            writeCount++
-                        } else if (writeCount == 1) {
-                            //| ACTION | ADDRESS        | READ | WRITE? | $D0 |
-                            //|     RR | $C08B / 49291  | RAM  | YES    | 1   |
-                            memory(false, true, true, false, false)
-                            writeCount = 0
-                        }
-                        0
-                    }
-                    0xc08c -> {
-                        writeCount = 0
-                        0
-                    }
+                    in 0xc080..0xc08d -> handleRam(get, i)
                     else -> {
                         c0Memory[i - 0xc000]
                     }
                 }
             } else {
-                if (!init) when(i) {
+                if (i in 0xc080..0xc08d) handleRam(get, i)
+                else if (!init) when(i) {
                     0xc002 -> {
                         // | ACTION | ADDRESS       |
                         // |de W    | $C002 / 49156 | READ FROM MAIN 48K |
@@ -224,9 +127,9 @@ class Memory(val size: Int? = null) {
             }
         } else if (i in 0xd000..0xdfff) {
             val ea = i - 0xd000
-//            if (i == 0xd17b) {
-//                println("BREAKPOINT")
-//            }
+            if (i == 0xd17b) {
+                println("BREAKPOINT")
+            }
             if (get) {
                 result = when {
                     readRom -> rom[ea]
@@ -292,6 +195,71 @@ class Memory(val size: Int? = null) {
         }
     }
 
+    private fun handleRam(get: Boolean, i: Int) : Int {
+        fun memory(address: Int, rom: Boolean, rb1: Boolean, wb1: Boolean, rb2: Boolean, wb2: Boolean) {
+            readRom = rom
+            readBank1 = rb1
+            writeBank1 = wb1
+            readBank2 = rb2
+            writeBank2 = wb2
+            log.debug(address.hh() + " writeCount:$writeCount" +
+                    " Read:" + (if (readRom) "rom" else if (readBank1) "ram1" else "ram2") +
+                    " Write:" + (if (writeBank1) "ram1" else if (writeBank2) "ram2" else "rom"))
+        }
+
+        if (get) {
+            when(i) {
+                0xc080, 0xc084 -> {
+                    writeCount = 0
+                    memory(i, false, false, false, true, false) // read 2
+                }
+                0xc088, 0xc08c -> {
+                    writeCount = 0
+                    memory(i, false, true, false, false, false) // read 1
+                }
+                0xc081, 0xc085 -> {
+                    if (writeCount < 2) writeCount++
+                    if (writeCount == 1) {
+                        memory(i, true, false, false, false, false) // read rom
+                    } else if (writeCount == 2) {
+                        memory(i, true, false, false, false, true) // read rom, write ram 2
+                    }
+                }
+                0xc089, 0xc08d -> {
+                    if (writeCount < 2) writeCount++
+                    if (writeCount == 1) {
+                        memory(i, true, false, false, false, false) // read rom
+                    } else if (writeCount == 2) {
+                        memory(i, true, false, true, false, false) // read rom, write ram 1
+                    }
+                }
+                0xc082, 0xc086, 0xc08a, 0xc08e -> {
+                    writeCount = 0
+                    memory(i, true, false, false, false, false) // read rom
+                }
+                0xc083, 0xc087 -> {
+                    if (writeCount < 2) writeCount++
+                    if (writeCount == 1) {
+                        memory(i, false, false, false, true, false) // read ram 2
+                    } else if (writeCount == 2) {
+                        memory(i, false, false, false, true, true) // read/write ram 2
+                    }
+                }
+                0xc08b, 0xc08f -> {
+                    if (writeCount < 2) writeCount++
+                    if (writeCount == 1) {
+                        memory(i, false, true, false, false, false) // read ram 1
+                    } else if (writeCount == 2) {
+                        memory(i, false, true, true, false, false) // read/write ram 1
+                    }
+                }
+            }
+        } else {
+
+        }
+        return 0
+    }
+
     /**
      * Write from $C000-$DFFF
      */
@@ -312,6 +280,9 @@ class Memory(val size: Int? = null) {
         init = true
         ins.readBytes().forEachIndexed { index, v ->
             if (index + address < 0x10000) {
+                if (index+address == 0xd000) {
+                    println("BREAKPOINT")
+                }
                 this[index + address] = v.toInt()
             }
         }

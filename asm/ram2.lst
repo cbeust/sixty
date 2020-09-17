@@ -30,21 +30,21 @@ Current file: ram2.s
 00000Dr 1  11 33 11 22  	.byte $11, $33, $11, $22, $33
 000011r 1  33           
 000012r 1               
-000012r 1  AD 81 C0     	lda $C081				; Read $C081 (rom read, all else false)
-000015r 1  AD 89 C0     	lda $C089				; Read $C089 (ROM read, all else false)
-000018r 1  20 rr rr     	jsr @test				;
-00001Br 1  53 60 54 22  	.byte $53, $60, $54, $22, $61		;
-00001Fr 1  61           
-000020r 1               
-000020r 1  AD 80 C0     	lda $C080				; Read $C080 (read bank 2, no write)
-000023r 1  20 rr rr     	jsr @test				;
-000026r 1  22 33 11 22  	.byte $22, $33, $11, $22, $33		;
-00002Ar 1  33           
-00002Br 1               
-00002Br 1  AD 81 C0     	lda $C081				; Read $C081 (ROM read, write disabled)
+000012r 1  AD 80 C0     	lda $C080				; Read $C080 (read bank 2, no write)
+000015r 1  20 rr rr     	jsr @test				;
+000018r 1  22 33 11 22  	.byte $22, $33, $11, $22, $33		;
+00001Cr 1  33           
+00001Dr 1               
+00001Dr 1  AD 81 C0     	lda $C081				; Read $C081 (ROM read, write disabled)
+000020r 1  20 rr rr     	jsr @test				;
+000023r 1  53 60 11 22  	.byte $53, $60, $11, $22, $33		;
+000027r 1  33           
+000028r 1               
+000028r 1  AD 81 C0     	lda $C081				; Read $C081 (rom read, all else false)
+00002Br 1  AD 89 C0     	lda $C089				; Read $C089 (ROM read, all else false)
 00002Er 1  20 rr rr     	jsr @test				;
-000031r 1  53 60 11 22  	.byte $53, $60, $11, $22, $33		;
-000035r 1  33           
+000031r 1  53 60 54 22  	.byte $53, $60, $54, $22, $61		;
+000035r 1  61           
 000036r 1               
 000036r 1  AD 81 C0         lda $C081				; Read $C081, $C081 (read ROM, write RAM bank 2)
 000039r 1  AD 81 C0     	lda $C081				;
