@@ -1,6 +1,6 @@
 ; Test access to the memory card ($D000 and above).
 ; This is an adaptation of Zellyn's a2audit tests made to be run headlessly:  https://github.com/zellyn/a2audit
-; If the tests succed, $3D contains the number of successful tests
+; If the tests succeed, $3D contains the number of successful tests
 ; If a test fails, the code lands on a BRK, $3D contains the number of passed tests,
 ; and Y is the index of the comparison that failed (1-5)
 ;
@@ -9,13 +9,13 @@
 
 D1 := $d17b
 FE := $fe1f
-checkdata := $3f
+CHECK_DATA := $3f
 TEST_COUNT := $3d
 
 .macro verify address
-    ldx address
+    ldx address  ; Used to visually inspect the expected value
     iny
-    lda (checkdata),Y
+    lda (CHECK_DATA),Y
     cmp address
     bne @fail
 .endmacro
@@ -28,7 +28,6 @@ TEST_COUNT := $3d
 	;; Sequence of test instructions, finishing with `jsr .test`.
 	;; - quint: expected current $d17b and fe1f, then d17b in bank1, d17b in bank 2, and fe1f
 	;; (All sequences start with lda $C080, just to reset things to a known state.)
-	;; 0-byte to terminate tests.
 
 	lda $C088				; Read $C088 (read bank 1, no write)
 	jsr @test				;
@@ -114,14 +113,14 @@ TEST_COUNT := $3d
     inc FE
 	;; pull address off of stack: it points just below check data for this test.
 	pla
-	sta checkdata
+	sta CHECK_DATA
 	tax
 	pla
-	sta checkdata+1
-	pha
+	sta CHECK_DATA+1
+	pha     ; Restore the stack so that returning will go to the next test
 	txa
 	clc
-	adc #5
+	adc #5  ; add 5 since there are five values to skip
 	pha
 	ldy #0
 
