@@ -9,11 +9,21 @@ import java.io.File
 @Test
 class MemoryTest {
 
+
     fun languageCard() {
+        runTest("language-card.bin")
+    }
+
+    @Test(enabled = false)
+    fun bankMemory() {
+        runTest("bank-memory.bin")
+    }
+
+    private fun runTest(fileName: String) {
         val start = 0x300
         val memory = Memory().apply {
             loadResource("Apple2e.rom", 0xc000)
-            val ins2 = File("asm/ram2").inputStream()
+            val ins2 = File("asm/$fileName").inputStream()
             load(ins2, start)
         }
         var success = true

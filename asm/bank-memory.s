@@ -1,3 +1,12 @@
+; Test access to the memory card ($D000 and above).
+; This is an adaptation of Zellyn's a2audit tests made to be run headlessly:  https://github.com/zellyn/a2audit
+; If the tests succed, $3D contains the number of successful tests
+; If a test fails, the code lands on a BRK, $3D contains the number of passed tests,
+; and Y is the index of the comparison that failed (1-5)
+;
+; Cedric Beust, cedric@beust.com, 9/17/2020
+;
+
 D1 := $d17b
 FE := $fe1f
 checkdata := $3f
@@ -91,11 +100,11 @@ TEST_COUNT := $3d
 	jsr @test				;
 	.byte $11, $33, $11, $22, $33		;
 
-	clc					    ; Read $C083, $C083 (read/write RAM bank 2)
-	ldx #0					; Uses "6502 false read"
-	inc $C083,x				;
-	jsr @test				;
-	.byte $23, $34, $11, $23, $34		;
+;	clc					    ; Read $C083, $C083 (read/write RAM bank 2)
+;	ldx #0					; Uses "6502 false read"
+;	inc $C083,x				; Actually reads $c083 twice (same as bit $c083 x 2)
+;	jsr @test				;
+;	.byte $23, $34, $11, $23, $34		;
 						;
 
 	rts

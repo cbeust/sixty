@@ -2,6 +2,15 @@ ca65 V2.18 - Git b8ae5c2
 Main file   : ram2.s
 Current file: ram2.s
 
+000000r 1               ; Test access to the memory card ($D000 and above).
+000000r 1               ; This is an adaptation of Zellyn's a2audit tests made to be run headlessly:  https://github.com/zellyn/a2audit
+000000r 1               ; If the tests succed, $3D contains the number of successful tests
+000000r 1               ; If a test fails, the code lands on a BRK, $3D contains the number of passed tests,
+000000r 1               ; and Y is the index of the comparison that failed (1-5)
+000000r 1               ;
+000000r 1               ; Cedric Beust, cedric@beust.com, 9/17/2020
+000000r 1               ;
+000000r 1               
 000000r 1               D1 := $d17b
 000000r 1               FE := $fe1f
 000000r 1               checkdata := $3f
@@ -109,76 +118,75 @@ Current file: ram2.s
 0000C6r 1  11 33 11 22  	.byte $11, $33, $11, $22, $33		;
 0000CAr 1  33           
 0000CBr 1               
-0000CBr 1  18           	clc					; Read $C083, $C083 (read/write RAM bank 2)
-0000CCr 1  A2 00        	ldx #0					; Uses "6502 false read"
-0000CEr 1  FE 83 C0     	inc $C083,x				;
-0000D1r 1  20 rr rr     	jsr @test				;
-0000D4r 1  23 34 11 23  	.byte $23, $34, $11, $23, $34		;
-0000D8r 1  34           
-0000D9r 1               						;
-0000D9r 1               
-0000D9r 1  60           	rts
-0000DAr 1               
-0000DAr 1               @test:
-0000DAr 1  EE 7B D1         inc D1
-0000DDr 1  EE 1F FE         inc FE
-0000E0r 1               	;; pull address off of stack: it points just below check data for this test.
-0000E0r 1  68           	pla
-0000E1r 1  85 3F        	sta checkdata
-0000E3r 1  AA           	tax
-0000E4r 1  68           	pla
-0000E5r 1  85 40        	sta checkdata+1
-0000E7r 1  48           	pha
-0000E8r 1  8A           	txa
-0000E9r 1  18           	clc
-0000EAr 1  69 05        	adc #5
-0000ECr 1  48           	pha
-0000EDr 1  A0 00        	ldy #0
-0000EFr 1               
-0000EFr 1  AE 7B D1 C8      verify D1
-0000F3r 1  B1 3F CD 7B  
-0000F7r 1  D1 D0 3A     
-0000FAr 1  AE 1F FE C8      verify FE
-0000FEr 1  B1 3F CD 1F  
-000102r 1  FE D0 2F     
-000105r 1  AD 88 C0         lda $c088 ; $D17B in bank 1
+0000CBr 1               ;	clc					    ; Read $C083, $C083 (read/write RAM bank 2)
+0000CBr 1               ;	ldx #0					; Uses "6502 false read"
+0000CBr 1               ;	inc $C083,x				; Actually reads $c083 twice (same as bit $c083 x 2)
+0000CBr 1               ;	jsr @test				;
+0000CBr 1               ;	.byte $23, $34, $11, $23, $34		;
+0000CBr 1               						;
+0000CBr 1               
+0000CBr 1  60           	rts
+0000CCr 1               
+0000CCr 1               @test:
+0000CCr 1  EE 7B D1         inc D1
+0000CFr 1  EE 1F FE         inc FE
+0000D2r 1               	;; pull address off of stack: it points just below check data for this test.
+0000D2r 1  68           	pla
+0000D3r 1  85 3F        	sta checkdata
+0000D5r 1  AA           	tax
+0000D6r 1  68           	pla
+0000D7r 1  85 40        	sta checkdata+1
+0000D9r 1  48           	pha
+0000DAr 1  8A           	txa
+0000DBr 1  18           	clc
+0000DCr 1  69 05        	adc #5
+0000DEr 1  48           	pha
+0000DFr 1  A0 00        	ldy #0
+0000E1r 1               
+0000E1r 1  AE 7B D1 C8      verify D1
+0000E5r 1  B1 3F CD 7B  
+0000E9r 1  D1 D0 3A     
+0000ECr 1  AE 1F FE C8      verify FE
+0000F0r 1  B1 3F CD 1F  
+0000F4r 1  FE D0 2F     
+0000F7r 1  AD 88 C0         lda $c088 ; $D17B in bank 1
+0000FAr 1  AE 7B D1 C8      verify D1
+0000FEr 1  B1 3F CD 7B  
+000102r 1  D1 D0 21     
+000105r 1  AD 80 C0         lda $c080 ; $D17B in bank 2
 000108r 1  AE 7B D1 C8      verify D1
 00010Cr 1  B1 3F CD 7B  
-000110r 1  D1 D0 21     
-000113r 1  AD 80 C0         lda $c080 ; $D17B in bank 2
-000116r 1  AE 7B D1 C8      verify D1
-00011Ar 1  B1 3F CD 7B  
-00011Er 1  D1 D0 13     
-000121r 1  AE 1F FE C8      verify FE
-000125r 1  B1 3F CD 1F  
-000129r 1  FE D0 08     
-00012Cr 1  E6 3D            inc TEST_COUNT
-00012Er 1  20 rr rr         jsr @reset
-000131r 1  60               rts
-000132r 1               
-000132r 1               @success:
-000132r 1  18               clc
-000133r 1  60               rts
-000134r 1               
-000134r 1               @fail:
-000134r 1  00               brk
-000135r 1               
-000135r 1               @reset:
-000135r 1               	;; Initialize to known state:
-000135r 1               	;; - $11 in $D17B bank 1 (ROM: $53)
-000135r 1               	;; - $22 in $D17B bank 2 (ROM: $53)
-000135r 1               	;; - $33 in $FE1F        (ROM: $60)
-000135r 1  AD 8B C0     	lda $C08B		; Read and write bank 1
-000138r 1  AD 8B C0     	lda $C08B
-00013Br 1  A9 11        	lda #$11
-00013Dr 1  8D 7B D1     	sta D1
-000140r 1  A9 33        	lda #$33
-000142r 1  8D 1F FE     	sta FE
-000145r 1  AD 83 C0     	lda $C083		; Read and write bank 2
-000148r 1  AD 83 C0     	lda $C083
-00014Br 1  A9 22        	lda #$22
-00014Dr 1  8D 7B D1     	sta D1
-000150r 1  AD 80 C0     	lda $C080
-000153r 1  AD 7B D1     	lda D1
-000156r 1  60           	rts
-000156r 1               
+000110r 1  D1 D0 13     
+000113r 1  AE 1F FE C8      verify FE
+000117r 1  B1 3F CD 1F  
+00011Br 1  FE D0 08     
+00011Er 1  E6 3D            inc TEST_COUNT
+000120r 1  20 rr rr         jsr @reset
+000123r 1  60               rts
+000124r 1               
+000124r 1               @success:
+000124r 1  18               clc
+000125r 1  60               rts
+000126r 1               
+000126r 1               @fail:
+000126r 1  00               brk
+000127r 1               
+000127r 1               @reset:
+000127r 1               	;; Initialize to known state:
+000127r 1               	;; - $11 in $D17B bank 1 (ROM: $53)
+000127r 1               	;; - $22 in $D17B bank 2 (ROM: $53)
+000127r 1               	;; - $33 in $FE1F        (ROM: $60)
+000127r 1  AD 8B C0     	lda $C08B		; Read and write bank 1
+00012Ar 1  AD 8B C0     	lda $C08B
+00012Dr 1  A9 11        	lda #$11
+00012Fr 1  8D 7B D1     	sta D1
+000132r 1  A9 33        	lda #$33
+000134r 1  8D 1F FE     	sta FE
+000137r 1  AD 83 C0     	lda $C083		; Read and write bank 2
+00013Ar 1  AD 83 C0     	lda $C083
+00013Dr 1  A9 22        	lda #$22
+00013Fr 1  8D 7B D1     	sta D1
+000142r 1  AD 80 C0     	lda $C080
+000145r 1  AD 7B D1     	lda D1
+000148r 1  60           	rts
+000148r 1               
