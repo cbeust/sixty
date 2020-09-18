@@ -14,6 +14,7 @@ class Memory(val size: Int? = null) {
     }
 
     private var store80On = false
+    private var hires = false
 
     /** $0-$1FF */
     private var zpMain = true
@@ -26,7 +27,19 @@ class Memory(val size: Int? = null) {
 
     /** $200 - $BFFF */
     private var readMain = true
+        set(f) {
+            if (! init) logMem("readMan: $f")
+            field = f
+        }
     private var writeMain = true
+        set(f) {
+            if (! init) logMem("writeMain: $f")
+            field = f
+        }
+
+    enum class VideoMemory { MAIN, AUX, PAGE_2 }
+    private var videoMemory = VideoMemory.MAIN
+
     private val mainMemory = IntArray(0xc000) { 0 }
     private val auxMemory = IntArray(0xc000) { 0 }
 
@@ -86,12 +99,27 @@ class Memory(val size: Int? = null) {
                 if (zpMain) mainZp[i] = value else auxZp[i] = value
             }
         } else if (i in 0x200..0xbfff) {
-            if (get) {
-                result = if (readMain) mainMemory[i]
+            var done = false
+            when(i) {
+                in 0x400..0x7ff -> {
+                    if (store80On) done = true
+                    if (get) result = mainMemory[i]
+                }
+                in 0x2000..0x3fff -> {
+                    if (store80On && hires) done = true
+                    if (get) result = mainMemory[i]
+                }
+            }
+            if (! done) {
+                if (get) {
+                    result = if (readMain) mainMemory[i]
                     else auxMemory[i]
-            } else {
-                if (writeMain) mainMemory[i] = value
-                else auxMemory[i] = value
+                } else {
+                    if (writeMain)
+                        mainMemory[i] = value
+                    else
+                        auxMemory[i] = value
+                }
             }
         } else if (i in 0xc000..0xcfff) {
             if (get) {
@@ -120,7 +148,10 @@ class Memory(val size: Int? = null) {
                         }
                         updateSoftSwitch(address, 0x54, 0x55, 0x1c)
                     }
-                    0xc056, 0xc057 -> updateSoftSwitch(address, 0x56, 0x57, 0x1d)
+                    0xc056, 0xc057 -> {
+                        hires = i == 0xc057
+                        updateSoftSwitch(address, 0x56, 0x57, 0x1d)
+                    }
                     else -> {
 //                        println("Reading from unhandled " + i.hh())
                         c0Memory[address]
@@ -134,12 +165,18 @@ class Memory(val size: Int? = null) {
                         store80On = i == 0xc001
                         updateSoftSwitch(address, 0, 1, 0x18)
                     }
-                    0xc002, 0xc003 -> updateSoftSwitch(address, 2, 3, 0x13)
+                    0xc002, 0xc003 -> {
+                        if (! store80On) {
+                            updateSoftSwitch(address, 2, 3, 0x13)
+                        }
+                    }
                     0xc004, 0xc005 -> {
                         // | ACTION | ADDRESS       |
                         // |de W    | $C004 / 49156 | WRITE TO MAIN 48K |
-                        writeMain = i == 0xc004
-                        updateSoftSwitch(address, 4, 5, 0x14, true)
+                        if (! store80On) {
+                            writeMain = i == 0xc004
+                            updateSoftSwitch(address, 4, 5, 0x14, true)
+                        }
                     }
                     0xc006, 0xc007 -> updateSoftSwitch(address, 6, 7, 0x15)
                     0xc008, 0xc009 -> {
@@ -156,13 +193,22 @@ class Memory(val size: Int? = null) {
                     }
                     0xc050, 0xc051 -> updateSoftSwitch(address, 0x50, 0x51, 0x1a)
                     0xc052, 0xc053 -> updateSoftSwitch(address, 0x52, 0x53, 0x1b)
-                    0xc054, 0xc055 -> {
+                    0xc054 -> NYI("\$C054")
+                    0xc055 -> {  // page2
                         if (store80On) {
-                            NYI("Switch main and aux video memory")
+                            NYI("page2 switches main and aux video memory")
+                            if (videoMemory == VideoMemory.MAIN)
+                                videoMemory == VideoMemory.AUX
+                            else
+                                videoMemory = VideoMemory.MAIN
                         } else{
-                            NYI("Switch video page1/page2")
+                            if (videoMemory == VideoMemory.MAIN)
+                                videoMemory == VideoMemory.PAGE_2
+                            else
+                                videoMemory = VideoMemory.MAIN
                         }
-                        updateSoftSwitch(address, 0x54, 0x55, 0x1c)
+                        logMem("New video memory: $videoMemory")
+//                        updateSoftSwitch(address, 0x54, 0x55, 0x1c)
                     }
 //                    else -> {
 //                        println("Writing to unhandled " + i.hh())
@@ -234,6 +280,9 @@ class Memory(val size: Int? = null) {
     }
 
     operator fun set(address: Int, value: Int) {
+        if (address == 0x6040 && value == 0) {
+            println("mem breakpoint")
+        }
         getOrSet(false, address, value)
         listeners.forEach {
             if (it.isInRange(address)) it.onWrite(address, value)
