@@ -127,9 +127,6 @@ class Memory(val size: Int? = null) {
             }
         } else if (i in 0xd000..0xdfff) {
             val ea = i - 0xd000
-            if (i == 0xd17b) {
-                println("BREAKPOINT")
-            }
             if (get) {
                 result = when {
                     readRom -> rom[ea]
@@ -177,9 +174,6 @@ class Memory(val size: Int? = null) {
     }
 
     operator fun get(address: Int) : Int {
-        if (address == 0xc08f) {
-            println("BREAKPOINT")
-        }
         var result = getOrSet(true, address)
         var actual: Int? = null
         listeners.forEach {
@@ -337,9 +331,6 @@ class Memory(val size: Int? = null) {
         init = true
         ins.readBytes().forEachIndexed { index, v ->
             if (index + address < 0x10000) {
-                if (index+address == 0xd000) {
-                    println("BREAKPOINT")
-                }
                 this[index + address] = v.toInt()
             }
         }
