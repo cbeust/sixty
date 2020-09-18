@@ -1,0 +1,47 @@
+APPLE IIe Auxiliary Memory Softswitches
+
+MEMORY MANAGEMENT SOFT SWITCHES
+$C000 W 80STOREOFF Allow page2 to switch video page1 page2
+$C001 W 80STOREON Allow page2 to switch main & aux video memory
+$C002 W RAMRDOFF Read enable main memory from $0200-$BFFF
+$C003 W RAMDRON Read enable aux memory from $0200-$BFFF
+$C004 W RAMWRTOFF Write enable main memory from $0200-$BFFF
+$C005 W RAMWRTON Write enable aux memory from $0200-$BFFF
+$C006 W INTCXROMOFF Enable slot ROM from $C100-$CFFF
+$C007 W INTCXROMON Enable main ROM from $C100-$CFFF
+$C008 W ALZTPOFF Enable main memory from $0000-$01FF & avl BSR
+$C009 W ALTZPON Enable aux memory from $0000-$01FF & avl BSR
+$C00A W SLOTC3ROMOFF Enable main ROM from $C300-$C3FF
+$C00B W SLOTC3ROMON Enable slot ROM from $C300-$C3FF
+
+VIDEO SOFT SWITCHES
+$C00C W 80COLOFF Turn off 80 column display
+$C00D W 80COLON Turn on 80 column display
+$C00E W ALTCHARSETOFF Turn off alternate characters
+$C00F W ALTCHARSETON Turn on alternate characters
+$C050 R/W TEXTOFF Select graphics mode
+$C051 R/W TEXTON Select text mode
+$C052 R/W MIXEDOFF Use full screen for graphics
+$C053 R/W MIXEDON Use graphics with 4 lines of text
+$C054 R/W PAGE2OFF Select panel display (or main video memory)
+$C055 R/W PAGE2ON Select page2 display (or aux video memory)
+$C056 R/W HIRESOFF Select low resolution graphics
+$C057 R/W HIRESON Select high resolution graphics
+
+SOFT SWITCH STATUS FLAGS
+$C010 R7 AKD 1=key pressed 0=keys free (clears strobe)
+$C011 R7 BSRBANK2 1=bank2 available 0=bank1 available
+$C012 R7 BSRREADRAM 1=BSR active for read 0=$D000-$FFFF active
+$C013 R7 RAMRD 0=main $0200-$BFFF active reads 1=aux active
+$C014 R7 RAMWRT 0=main $0200-$BFFF active writes 1=aux writes
+$C015 R7 INTCXROM 1=main $C100-$CFFF ROM active 0=slot active
+$C016 R7 ALTZP 1=aux $0000-$1FF+auxBSR 0=main available
+$C017 R7 SLOTC3ROM 1=slot $C3 ROM active 0=main $C3 ROM active
+$C018 R7 80STORE 1=page2 switches main/aux 0=page2 video
+$C019 R7 VERTBLANK 1=vertical retrace on 0=vertical retrace off
+$C01A R7 TEXT 1=text mode is active 0=graphics mode active
+$C01B R7 MIXED 1=mixed graphics & text 0=full screen
+$C01C R7 PAGE2 1=video page2 selected or aux
+$C01D R7 HIRES 1=high resolution graphics 0=low resolution
+$C01E R7 ALTCHARSET 1=alt character set on 0=alt char set off
+$C01F R7 80COL 1=80 col display on0=80 col display off
