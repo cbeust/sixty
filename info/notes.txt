@@ -1,9 +1,3 @@
-After sequence of
-LDA $C080
-LDA $C081
-INC $D17B
-INC $FE1F
-expected $d17b in bank 2 to contain 22 but got 11
 
 	Bank2       Bank1       First Access, Second Access
 	-----------------------------------------------
@@ -18,19 +12,14 @@ expected $d17b in bank 2 to contain 22 but got 11
 	MF_BANK2   ~MF_BANK2
 
 
-Hello everyone, new on this Slack. I have a question about latch timing, in particular:
-```
-LDA $C08C,X
-BPL *
-```
-LDA takes 4 cycles (no page crossing)
-BPL takes 3 cycles (2 + branch taken)
+Stepper motor:  http://www.hackzapple.com/DISKII/DISKIITECH09D.HTM
 
-0312 : AD 7B D1   LDA  $D17B       A=53 X=22 Y=00 S=FF P=00 PC=$315 P=$00 {---- ----} SP={$FF stack:[]} 20
-0315 : C9 53      CMP  #$53        A=53 X=22 Y=00 S=FF P=03 PC=$317 P=$03 {---- --ZC} SP={$FF stack:[]} 21
-0317 : D0 0A      BNE  $0323       A=53 X=22 Y=00 S=FF P=03 PC=$319 P=$03 {---- --ZC} SP={$FF stack:[]} 22
-0319 : AD 80 C0   LDA  $C080       A=00 X=22 Y=00 S=FF P=03 PC=$31C P=$03 {---- --ZC} SP={$FF stack:[]} 23
-@@ readRom:false readBank1:false writeBank1:false readBank2:true writeBank2:false
-031C : AD 7B D1   LDA  $D17B       A=22 X=22 Y=00 S=FF P=01 PC=$31F P=$01 {---- ---C} SP={$FF stack:[]} 24
-031F : C9 22      CMP  #$22        A=22 X=22 Y=00 S=FF P=03 PC=$321 P=$03 {---- --ZC} SP={$FF stack:[]} 25
-0321 : F0 01      BEQ  $0324       A=22 X=22 Y=00 S=FF P=03 PC=$324 P=$03 {---- --ZC} SP={$FF stack:[]} 26
+0001 = T
+0011 = T+0.25
+0010 = T+0.5
+0110 = T+0.75
+0100 = T+1
+1100 = T+1.25
+1000 = T+1.5
+1001 = T+1.75
+0001 = T+2
