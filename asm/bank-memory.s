@@ -12,7 +12,7 @@ FE = $FE1F
 CHECK_DATA = $3f
 TEST_COUNT = $3d
 
-* = $300
+* = $6000
 
 !macro verify .address {
     ldx .address  ; Used to visually inspect the expected value
@@ -101,11 +101,11 @@ TEST_COUNT = $3d
 	jsr test				;
 	!byte $11, $33, $11, $22, $33		;
 
-;	clc					    ; Read $C083, $C083 (read/write RAM bank 2)
-;	ldx #0					; Uses "6502 false read"
-;	inc $C083,x				; Actually reads $c083 twice (same as bit $c083 x 2)
-;	jsr @test				;
-;	!byte $23, $34, $11, $23, $34		;
+	clc					    ; Read $C083, $C083 (read/write RAM bank 2)
+	ldx #0					; Uses "6502 false read"
+	inc $C083,x				; Actually reads $c083 twice (same as bit $c083 x 2)
+	jsr test				;
+	!byte $23, $34, $11, $23, $34		;
 						;
 
 	rts

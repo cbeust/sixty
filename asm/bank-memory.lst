@@ -14,7 +14,7 @@
     12                          CHECK_DATA = $3f
     13                          TEST_COUNT = $3d
     14                          
-    15                          * = $300
+    15                          * = $6000
     16                          
     17                          !macro verify .address {
     18                              ldx .address  ; Used to visually inspect the expected value
@@ -24,143 +24,143 @@
     22                              bne fail
     23                          }
     24                          
-    25  0300 202704                 jsr reset
-    26  0303 a900                   lda #0
-    27  0305 853d                   sta TEST_COUNT
+    25  6000 203561                 jsr reset
+    26  6003 a900                   lda #0
+    27  6005 853d                   sta TEST_COUNT
     28                          
     29                          	;; Format:
     30                          	;; Sequence of test instructions, finishing with `jsr .test`.
     31                          	;; - quint: expected current $d17b and fe1f, then d17b in bank1, d17b in bank 2, and fe1f
     32                          	;; (All sequences start with lda $C080, just to reset things to a known state.)
     33                          
-    34  0307 ad88c0             	lda $C088				; Read $C088 (read bank 1, no write)
-    35  030a 20cc03             	jsr test				;
-    36  030d 1133112233         	!byte $11, $33, $11, $22, $33
+    34  6007 ad88c0             	lda $C088				; Read $C088 (read bank 1, no write)
+    35  600a 20da60             	jsr test				;
+    36  600d 1133112233         	!byte $11, $33, $11, $22, $33
     37                          
-    38  0312 ad80c0             	lda $C080				; Read $C080 (read bank 2, no write)
-    39  0315 20cc03             	jsr test				;
-    40  0318 2233112233         	!byte $22, $33, $11, $22, $33		;
+    38  6012 ad80c0             	lda $C080				; Read $C080 (read bank 2, no write)
+    39  6015 20da60             	jsr test				;
+    40  6018 2233112233         	!byte $22, $33, $11, $22, $33		;
     41                          
-    42  031d ad81c0             	lda $C081				; Read $C081 (ROM read, write disabled)
-    43  0320 20cc03             	jsr test				;
-    44  0323 5360112233         	!byte $53, $60, $11, $22, $33		;
+    42  601d ad81c0             	lda $C081				; Read $C081 (ROM read, write disabled)
+    43  6020 20da60             	jsr test				;
+    44  6023 5360112233         	!byte $53, $60, $11, $22, $33		;
     45                          
-    46  0328 ad81c0             	lda $C081				; Read $C081 (rom read, all else false)
-    47  032b ad89c0             	lda $C089				; Read $C089 (ROM read, all else false)
-    48  032e 20cc03             	jsr test				;
-    49  0331 5360542261         	!byte $53, $60, $54, $22, $61		;
+    46  6028 ad81c0             	lda $C081				; Read $C081 (rom read, all else false)
+    47  602b ad89c0             	lda $C089				; Read $C089 (ROM read, all else false)
+    48  602e 20da60             	jsr test				;
+    49  6031 5360542261         	!byte $53, $60, $54, $22, $61		;
     50                          
-    51  0336 ad81c0                 lda $C081				; Read $C081, $C081 (read ROM, write RAM bank 2)
-    52  0339 ad81c0             	lda $C081				;
-    53  033c 20cc03             	jsr test				;
-    54  033f 5360115461         	!byte $53, $60, $11, $54, $61		;
+    51  6036 ad81c0                 lda $C081				; Read $C081, $C081 (read ROM, write RAM bank 2)
+    52  6039 ad81c0             	lda $C081				;
+    53  603c 20da60             	jsr test				;
+    54  603f 5360115461         	!byte $53, $60, $11, $54, $61		;
     55                          
-    56  0344 ad81c0             	lda $C081				; Read $C081, $C081, write $C081 (read ROM, write RAM bank bank 2)
-    57  0347 ad81c0             	lda $C081				; See https://github.com/zellyn/a2audit/issues/3
-    58  034a 8d81c0             	sta $C081				;
-    59  034d 20cc03             	jsr test				;
-    60  0350 5360115461         	!byte $53, $60, $11, $54, $61		;
+    56  6044 ad81c0             	lda $C081				; Read $C081, $C081, write $C081 (read ROM, write RAM bank bank 2)
+    57  6047 ad81c0             	lda $C081				; See https://github.com/zellyn/a2audit/issues/3
+    58  604a 8d81c0             	sta $C081				;
+    59  604d 20da60             	jsr test				;
+    60  6050 5360115461         	!byte $53, $60, $11, $54, $61		;
     61                          
-    62  0355 ad81c0             	lda $C081				; Read $C081, $C081; write $C081, $C081
-    63  0358 ad81c0             	lda $C081				; See https://github.com/zellyn/a2audit/issues/4
-    64  035b 8d81c0             	sta $C081				;
-    65  035e 8d81c0             	sta $C081				;
-    66  0361 20cc03             	jsr test				;
-    67  0364 5360115461         	!byte $53, $60, $11, $54, $61		;
+    62  6055 ad81c0             	lda $C081				; Read $C081, $C081; write $C081, $C081
+    63  6058 ad81c0             	lda $C081				; See https://github.com/zellyn/a2audit/issues/4
+    64  605b 8d81c0             	sta $C081				;
+    65  605e 8d81c0             	sta $C081				;
+    66  6061 20da60             	jsr test				;
+    67  6064 5360115461         	!byte $53, $60, $11, $54, $61		;
     68                          
-    69  0369 ad8bc0             	lda $C08B				; Read $C08B (read RAM bank 1, no write)
-    70  036c 20cc03             	jsr test				;
-    71  036f 1133112233         	!byte $11, $33, $11, $22, $33		;
+    69  6069 ad8bc0             	lda $C08B				; Read $C08B (read RAM bank 1, no write)
+    70  606c 20da60             	jsr test				;
+    71  606f 1133112233         	!byte $11, $33, $11, $22, $33		;
     72                          
-    73  0374 ad83c0             	lda $C083				; Read $C083 (read RAM bank 2, no write)
-    74  0377 20cc03             	jsr test				;
-    75  037a 2233112233         	!byte $22, $33, $11, $22, $33		;
+    73  6074 ad83c0             	lda $C083				; Read $C083 (read RAM bank 2, no write)
+    74  6077 20da60             	jsr test				;
+    75  607a 2233112233         	!byte $22, $33, $11, $22, $33		;
     76                          
-    77  037f ad8bc0             	lda $C08B				; Read $C08B, $C08B (read/write RAM bank 1)
-    78  0382 ad8bc0             	lda $C08B				;
-    79  0385 20cc03             	jsr test				;
-    80  0388 1234122234         	!byte $12, $34, $12, $22, $34		;
+    77  607f ad8bc0             	lda $C08B				; Read $C08B, $C08B (read/write RAM bank 1)
+    78  6082 ad8bc0             	lda $C08B				;
+    79  6085 20da60             	jsr test				;
+    80  6088 1234122234         	!byte $12, $34, $12, $22, $34		;
     81                          
-    82  038d ad8fc0             	lda $C08F				; Read $C08F, $C087 (read/write RAM bank 2)
-    83  0390 ad87c0             	lda $C087				;
-    84  0393 20cc03             	jsr test				;
-    85  0396 2334112334         	!byte $23, $34, $11, $23, $34		;
+    82  608d ad8fc0             	lda $C08F				; Read $C08F, $C087 (read/write RAM bank 2)
+    83  6090 ad87c0             	lda $C087				;
+    84  6093 20da60             	jsr test				;
+    85  6096 2334112334         	!byte $23, $34, $11, $23, $34		;
     86                          
-    87  039b ad87c0             	lda $C087				; Read $C087, read $C08D (read ROM, write bank 1)
-    88  039e ad8dc0             	lda $C08D				;
-    89  03a1 20cc03             	jsr test				;
-    90  03a4 5360542261         	!byte $53, $60, $54, $22, $61		;
+    87  609b ad87c0             	lda $C087				; Read $C087, read $C08D (read ROM, write bank 1)
+    88  609e ad8dc0             	lda $C08D				;
+    89  60a1 20da60             	jsr test				;
+    90  60a4 5360542261         	!byte $53, $60, $54, $22, $61		;
     91                          
-    92  03a9 ad8bc0             	lda $C08B				; Read $C08B, write $C08B, read $C08B (read RAM bank 1, no write)
-    93  03ac 8d8bc0             	sta $C08B				; (this one is tricky: reset WRTCOUNT by writing halfway)
-    94  03af ad8bc0             	lda $C08B				;
-    95  03b2 20cc03             	jsr test				;
-    96  03b5 1133112233         	!byte $11, $33, $11, $22, $33		;
+    92  60a9 ad8bc0             	lda $C08B				; Read $C08B, write $C08B, read $C08B (read RAM bank 1, no write)
+    93  60ac 8d8bc0             	sta $C08B				; (this one is tricky: reset WRTCOUNT by writing halfway)
+    94  60af ad8bc0             	lda $C08B				;
+    95  60b2 20da60             	jsr test				;
+    96  60b5 1133112233         	!byte $11, $33, $11, $22, $33		;
     97                          
-    98  03ba 8d8bc0             	sta $C08B				; Write $C08B, write $C08B, read $C08B (read RAM bank 1, no write)
-    99  03bd 8d8bc0             	sta $C08B				;
-   100  03c0 ad8bc0             	lda $C08B				;
-   101  03c3 20cc03             	jsr test				;
-   102  03c6 1133112233         	!byte $11, $33, $11, $22, $33		;
+    98  60ba 8d8bc0             	sta $C08B				; Write $C08B, write $C08B, read $C08B (read RAM bank 1, no write)
+    99  60bd 8d8bc0             	sta $C08B				;
+   100  60c0 ad8bc0             	lda $C08B				;
+   101  60c3 20da60             	jsr test				;
+   102  60c6 1133112233         	!byte $11, $33, $11, $22, $33		;
    103                          
-   104                          ;	clc					    ; Read $C083, $C083 (read/write RAM bank 2)
-   105                          ;	ldx #0					; Uses "6502 false read"
-   106                          ;	inc $C083,x				; Actually reads $c083 twice (same as bit $c083 x 2)
-   107                          ;	jsr @test				;
-   108                          ;	!byte $23, $34, $11, $23, $34		;
+   104  60cb 18                 	clc					    ; Read $C083, $C083 (read/write RAM bank 2)
+   105  60cc a200               	ldx #0					; Uses "6502 false read"
+   106  60ce fe83c0             	inc $C083,x				; Actually reads $c083 twice (same as bit $c083 x 2)
+   107  60d1 20da60             	jsr test				;
+   108  60d4 2334112334         	!byte $23, $34, $11, $23, $34		;
    109                          						;
    110                          
-   111  03cb 60                 	rts
+   111  60d9 60                 	rts
    112                          
    113                          test:
-   114  03cc ee7bd1                 inc D1
-   115  03cf ee1ffe                 inc FE
+   114  60da ee7bd1                 inc D1
+   115  60dd ee1ffe                 inc FE
    116                          	;; pull address off of stack: it points just below check data for this test.
-   117  03d2 68                 	pla
-   118  03d3 853f               	sta CHECK_DATA
-   119  03d5 aa                 	tax
-   120  03d6 68                 	pla
-   121  03d7 8540               	sta CHECK_DATA+1
-   122  03d9 48                 	pha     ; Restore the stack so that returning will go to the next test
-   123  03da 8a                 	txa
-   124  03db 18                 	clc
-   125  03dc 6905               	adc #5  ; add 5 since there are five values to skip
-   126  03de 48                 	pha
-   127  03df a000               	ldy #0
+   117  60e0 68                 	pla
+   118  60e1 853f               	sta CHECK_DATA
+   119  60e3 aa                 	tax
+   120  60e4 68                 	pla
+   121  60e5 8540               	sta CHECK_DATA+1
+   122  60e7 48                 	pha     ; Restore the stack so that returning will go to the next test
+   123  60e8 8a                 	txa
+   124  60e9 18                 	clc
+   125  60ea 6905               	adc #5  ; add 5 since there are five values to skip
+   126  60ec 48                 	pha
+   127  60ed a000               	ldy #0
    128                          
-   129  03e1 ae7bd1c8b13fcd7b...    +verify D1
-   130  03ec ae1ffec8b13fcd1f...    +verify FE
-   131  03f7 ad88c0                 lda $c088 ; $D17B in bank 1
-   132  03fa ae7bd1c8b13fcd7b...    +verify D1
-   133  0405 ad80c0                 lda $c080 ; $D17B in bank 2
-   134  0408 ae7bd1c8b13fcd7b...    +verify D1
-   135  0413 ae1ffec8b13fcd1f...    +verify FE
-   136  041e e63d                   inc TEST_COUNT
-   137  0420 202704                 jsr reset
-   138  0423 60                     rts
+   129  60ef ae7bd1c8b13fcd7b...    +verify D1
+   130  60fa ae1ffec8b13fcd1f...    +verify FE
+   131  6105 ad88c0                 lda $c088 ; $D17B in bank 1
+   132  6108 ae7bd1c8b13fcd7b...    +verify D1
+   133  6113 ad80c0                 lda $c080 ; $D17B in bank 2
+   134  6116 ae7bd1c8b13fcd7b...    +verify D1
+   135  6121 ae1ffec8b13fcd1f...    +verify FE
+   136  612c e63d                   inc TEST_COUNT
+   137  612e 203561                 jsr reset
+   138  6131 60                     rts
    139                          
    140                          success:
-   141  0424 18                     clc
-   142  0425 60                     rts
+   141  6132 18                     clc
+   142  6133 60                     rts
    143                          
    144                          fail:
-   145  0426 00                     brk
+   145  6134 00                     brk
    146                          
    147                          reset:
    148                          	;; Initialize to known state:
    149                          	;; - $11 in $D17B bank 1 (ROM: $53)
    150                          	;; - $22 in $D17B bank 2 (ROM: $53)
    151                          	;; - $33 in $FE1F        (ROM: $60)
-   152  0427 ad8bc0             	lda $C08B		; Read and write bank 1
-   153  042a ad8bc0             	lda $C08B
-   154  042d a911               	lda #$11
-   155  042f 8d7bd1             	sta D1
-   156  0432 a933               	lda #$33
-   157  0434 8d1ffe             	sta FE
-   158  0437 ad83c0             	lda $C083		; Read and write bank 2
-   159  043a ad83c0             	lda $C083
-   160  043d a922               	lda #$22
-   161  043f 8d7bd1             	sta D1
-   162  0442 ad80c0             	lda $C080
-   163  0445 ad7bd1             	lda D1
-   164  0448 60                 	rts
+   152  6135 ad8bc0             	lda $C08B		; Read and write bank 1
+   153  6138 ad8bc0             	lda $C08B
+   154  613b a911               	lda #$11
+   155  613d 8d7bd1             	sta D1
+   156  6140 a933               	lda #$33
+   157  6142 8d1ffe             	sta FE
+   158  6145 ad83c0             	lda $C083		; Read and write bank 2
+   159  6148 ad83c0             	lda $C083
+   160  614b a922               	lda #$22
+   161  614d 8d7bd1             	sta D1
+   162  6150 ad80c0             	lda $C080
+   163  6153 ad7bd1             	lda D1
+   164  6156 60                 	rts

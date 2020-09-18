@@ -26,6 +26,12 @@ data class Cpu(val memory: Memory,
         var byte = memory[pc + 1]
         var word = byte.or(memory[pc + 2].shl(8))
         var timing = TIMINGS[opCode]
+        // Return a pair of (effective address, content of this adddress)
+        // Note that the second parameter is actually lazy, { -> mea } instead of just mea
+        // since not all opcodes will read the content of that memory. We want to avoid unnecessary
+        // reads both for performances and also because the Apple 2 has soft switches that perform
+        // side effects when read.
+        // Note one glaring exception for the INC opcode, where I hardcoded a solution to the "false read" bug.
         val (effectiveAddress, mea) = when(ADDRESSING_TYPES[opCode]) {
             AddressingType.ABSOLUTE -> word to { -> memory[word] }
             AddressingType.ZP -> byte to { -> memory[byte] }
@@ -134,6 +140,11 @@ data class Cpu(val memory: Memory,
             SED -> P.D = true
             CLV -> P.V = false
             INC_ZP, INC_ZP_X, INC_ABS, INC_ABS_X -> {
+                if (opCode == INC_ABS_X && word == 0xc083) {
+                    // Special case to support "false reads": https://github.com/AppleWin/AppleWin/issues/404
+                    // inc $c083,x will actually cause an additional read on $c083
+                    mea()
+                }
                 (mea() + 1).and(0xff).let {
                     memory[effectiveAddress] = it
                     P.setNZFlags(it)
