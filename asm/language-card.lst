@@ -1,20 +1,54 @@
-ca65 V2.18 - Git b8ae5c2
-Main file   : langcard.s
-Current file: langcard.s
 
-000000r 1               start:
-000000r 1               	;; Setup - store differing values in bank first and second banked areas.
-000000r 1  AD 8B C0     	lda $C08B		; Read and write bank 1
-000003r 1  AD 8B C0     	lda $C08B
-000006r 1  A9 11        	lda #$11
-000008r 1  8D 7B D1     	sta $D17B		; $D17B is $53 in Apple II/plus/e/enhanced
-00000Br 1  CD 7B D1     	cmp $D17B
-00000Er 1  F0 01        	beq @ok
-000010r 1               	;; E0004: We tried to put the language card into read bank 1, write bank 1, but failed to write.
-000010r 1               	;;.text "CANNOT WRITE TO LC BANK 1 RAM"
-000010r 1  00           	brk
-000011r 1               
-000011r 1               @ok:
-000011r 1  60               rts
-000012r 1               
-000012r 1               
+; ******** Source: language-card.s
+     1                          D1 = $D17B
+     2                          FE = $FE1F
+     3                          
+     4                          * = $300
+     5                          
+     6                          start:
+     7                          	;; Setup - store differing values in bank first and second banked areas.
+     8  0300 ad8bc0             	lda $C08B		; Read and write bank 1
+     9  0303 ad8bc0             	lda $C08B
+    10  0306 a911               	lda #$11
+    11  0308 8d7bd1             	sta D1		; $D17B is $53 in Apple II/plus/e/enhanced
+    12  030b cd7bd1             	cmp D1
+    13  030e f001               	beq +
+    14                          	;; E0004: We tried to put the language card into read bank 1, write bank 1, but failed to write.
+    15                          	;;.text "CANNOT WRITE TO LC BANK 1 RAM"
+    16  0310 00                 	brk
+    17                          
+    18                          +
+    19                          
+    20                          testBanks:
+    21                          	;; Setup - store differing values in bank first and second banked areas.
+    22  0311 ad8bc0             	lda $C08B		; Read and write bank 1
+    23  0314 ad8bc0             	lda $C08B
+    24  0317 a911               	lda #$11
+    25  0319 8d7bd1             	sta D1		; $D17B is $53 in Apple II/plus/e/enhanced
+    26  031c cd7bd1             	cmp D1
+    27  031f f001               	beq +
+    28                          
+    29                          	;; +prerr $0004 ;; E0004: We tried to put the language card into read bank 1, write bank 1, but failed to write.
+    30                          	;; !text "CANNOT WRITE TO LC BANK 1 RAM"
+    31  0321 00                 	brk
+    32                          
+    33                          +
+    34  0322 a933                   lda #$33
+    35  0324 8d1ffe             	sta FE		; FE1F is $60 in Apple II/plus/e/enhanced
+    36  0327 cd1ffe             	cmp FE
+    37  032a f001               	beq +
+    38  032c 00                 	brk
+    39                          
+    40                          +
+    41  032d ad83c0             	lda $C083		; Read and write bank 2
+    42  0330 ad83c0             	lda $C083
+    43  0333 a922               	lda #$22
+    44  0335 8d7bd1             	sta D1
+    45  0338 cd7bd1             	cmp D1
+    46  033b f000               	beq @ok
+    47                          
+    48                          @ok:
+    49                          
+    50                          end:
+    51  033d 60                     rts
+    52                          

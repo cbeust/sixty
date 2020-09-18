@@ -1,7 +1,9 @@
-for i in ram2 langcard
+
+for i in bank-memory language-card
 do
-  ca65 -o $i.o $i.s -l $i.lst && ld65 -C apple2.cfg $i.o -o $i.bin
+   /d/pd/acme0.97win/acme  -o $i.bin -r $i.lst -f plain $i.s
 done
 
-cat langcard.lst
+#cat bank-memory.lst
+cat language-card.lst
 

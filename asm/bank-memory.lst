@@ -1,192 +1,166 @@
-ca65 V2.18 - Git b8ae5c2
-Main file   : ram2.s
-Current file: ram2.s
 
-000000r 1               ; Test access to the memory card ($D000 and above).
-000000r 1               ; This is an adaptation of Zellyn's a2audit tests made to be run headlessly:  https://github.com/zellyn/a2audit
-000000r 1               ; If the tests succed, $3D contains the number of successful tests
-000000r 1               ; If a test fails, the code lands on a BRK, $3D contains the number of passed tests,
-000000r 1               ; and Y is the index of the comparison that failed (1-5)
-000000r 1               ;
-000000r 1               ; Cedric Beust, cedric@beust.com, 9/17/2020
-000000r 1               ;
-000000r 1               
-000000r 1               D1 := $d17b
-000000r 1               FE := $fe1f
-000000r 1               checkdata := $3f
-000000r 1               TEST_COUNT := $3d
-000000r 1               
-000000r 1               .macro verify address
-000000r 1                   ldx address
-000000r 1                   iny
-000000r 1                   lda (checkdata),Y
-000000r 1                   cmp address
-000000r 1                   bne @fail
-000000r 1               .endmacro
-000000r 1               
-000000r 1  20 rr rr         jsr @reset
-000003r 1  A9 00            lda #0
-000005r 1  85 3D            sta TEST_COUNT
-000007r 1               
-000007r 1               	;; Format:
-000007r 1               	;; Sequence of test instructions, finishing with `jsr .test`.
-000007r 1               	;; - quint: expected current $d17b and fe1f, then d17b in bank1, d17b in bank 2, and fe1f
-000007r 1               	;; (All sequences start with lda $C080, just to reset things to a known state.)
-000007r 1               	;; 0-byte to terminate tests.
-000007r 1               
-000007r 1  AD 88 C0     	lda $C088				; Read $C088 (read bank 1, no write)
-00000Ar 1  20 rr rr     	jsr @test				;
-00000Dr 1  11 33 11 22  	.byte $11, $33, $11, $22, $33
-000011r 1  33           
-000012r 1               
-000012r 1  AD 80 C0     	lda $C080				; Read $C080 (read bank 2, no write)
-000015r 1  20 rr rr     	jsr @test				;
-000018r 1  22 33 11 22  	.byte $22, $33, $11, $22, $33		;
-00001Cr 1  33           
-00001Dr 1               
-00001Dr 1  AD 81 C0     	lda $C081				; Read $C081 (ROM read, write disabled)
-000020r 1  20 rr rr     	jsr @test				;
-000023r 1  53 60 11 22  	.byte $53, $60, $11, $22, $33		;
-000027r 1  33           
-000028r 1               
-000028r 1  AD 81 C0     	lda $C081				; Read $C081 (rom read, all else false)
-00002Br 1  AD 89 C0     	lda $C089				; Read $C089 (ROM read, all else false)
-00002Er 1  20 rr rr     	jsr @test				;
-000031r 1  53 60 54 22  	.byte $53, $60, $54, $22, $61		;
-000035r 1  61           
-000036r 1               
-000036r 1  AD 81 C0         lda $C081				; Read $C081, $C081 (read ROM, write RAM bank 2)
-000039r 1  AD 81 C0     	lda $C081				;
-00003Cr 1  20 rr rr     	jsr @test				;
-00003Fr 1  53 60 11 54  	.byte $53, $60, $11, $54, $61		;
-000043r 1  61           
-000044r 1               
-000044r 1  AD 81 C0     	lda $C081				; Read $C081, $C081, write $C081 (read ROM, write RAM bank bank 2)
-000047r 1  AD 81 C0     	lda $C081				; See https://github.com/zellyn/a2audit/issues/3
-00004Ar 1  8D 81 C0     	sta $C081				;
-00004Dr 1  20 rr rr     	jsr @test				;
-000050r 1  53 60 11 54  	.byte $53, $60, $11, $54, $61		;
-000054r 1  61           
-000055r 1               
-000055r 1  AD 81 C0     	lda $C081				; Read $C081, $C081; write $C081, $C081
-000058r 1  AD 81 C0     	lda $C081				; See https://github.com/zellyn/a2audit/issues/4
-00005Br 1  8D 81 C0     	sta $C081				;
-00005Er 1  8D 81 C0     	sta $C081				;
-000061r 1  20 rr rr     	jsr @test				;
-000064r 1  53 60 11 54  	.byte $53, $60, $11, $54, $61		;
-000068r 1  61           
-000069r 1               
-000069r 1  AD 8B C0     	lda $C08B				; Read $C08B (read RAM bank 1, no write)
-00006Cr 1  20 rr rr     	jsr @test				;
-00006Fr 1  11 33 11 22  	.byte $11, $33, $11, $22, $33		;
-000073r 1  33           
-000074r 1               
-000074r 1  AD 83 C0     	lda $C083				; Read $C083 (read RAM bank 2, no write)
-000077r 1  20 rr rr     	jsr @test				;
-00007Ar 1  22 33 11 22  	.byte $22, $33, $11, $22, $33		;
-00007Er 1  33           
-00007Fr 1               
-00007Fr 1  AD 8B C0     	lda $C08B				; Read $C08B, $C08B (read/write RAM bank 1)
-000082r 1  AD 8B C0     	lda $C08B				;
-000085r 1  20 rr rr     	jsr @test				;
-000088r 1  12 34 12 22  	.byte $12, $34, $12, $22, $34		;
-00008Cr 1  34           
-00008Dr 1               
-00008Dr 1  AD 8F C0     	lda $C08F				; Read $C08F, $C087 (read/write RAM bank 2)
-000090r 1  AD 87 C0     	lda $C087				;
-000093r 1  20 rr rr     	jsr @test				;
-000096r 1  23 34 11 23  	.byte $23, $34, $11, $23, $34		;
-00009Ar 1  34           
-00009Br 1               
-00009Br 1  AD 87 C0     	lda $C087				; Read $C087, read $C08D (read ROM, write bank 1)
-00009Er 1  AD 8D C0     	lda $C08D				;
-0000A1r 1  20 rr rr     	jsr @test				;
-0000A4r 1  53 60 54 22  	.byte $53, $60, $54, $22, $61		;
-0000A8r 1  61           
-0000A9r 1               
-0000A9r 1  AD 8B C0     	lda $C08B				; Read $C08B, write $C08B, read $C08B (read RAM bank 1, no write)
-0000ACr 1  8D 8B C0     	sta $C08B				; (this one is tricky: reset WRTCOUNT by writing halfway)
-0000AFr 1  AD 8B C0     	lda $C08B				;
-0000B2r 1  20 rr rr     	jsr @test				;
-0000B5r 1  11 33 11 22  	.byte $11, $33, $11, $22, $33		;
-0000B9r 1  33           
-0000BAr 1               
-0000BAr 1  8D 8B C0     	sta $C08B				; Write $C08B, write $C08B, read $C08B (read RAM bank 1, no write)
-0000BDr 1  8D 8B C0     	sta $C08B				;
-0000C0r 1  AD 8B C0     	lda $C08B				;
-0000C3r 1  20 rr rr     	jsr @test				;
-0000C6r 1  11 33 11 22  	.byte $11, $33, $11, $22, $33		;
-0000CAr 1  33           
-0000CBr 1               
-0000CBr 1               ;	clc					    ; Read $C083, $C083 (read/write RAM bank 2)
-0000CBr 1               ;	ldx #0					; Uses "6502 false read"
-0000CBr 1               ;	inc $C083,x				; Actually reads $c083 twice (same as bit $c083 x 2)
-0000CBr 1               ;	jsr @test				;
-0000CBr 1               ;	.byte $23, $34, $11, $23, $34		;
-0000CBr 1               						;
-0000CBr 1               
-0000CBr 1  60           	rts
-0000CCr 1               
-0000CCr 1               @test:
-0000CCr 1  EE 7B D1         inc D1
-0000CFr 1  EE 1F FE         inc FE
-0000D2r 1               	;; pull address off of stack: it points just below check data for this test.
-0000D2r 1  68           	pla
-0000D3r 1  85 3F        	sta checkdata
-0000D5r 1  AA           	tax
-0000D6r 1  68           	pla
-0000D7r 1  85 40        	sta checkdata+1
-0000D9r 1  48           	pha
-0000DAr 1  8A           	txa
-0000DBr 1  18           	clc
-0000DCr 1  69 05        	adc #5
-0000DEr 1  48           	pha
-0000DFr 1  A0 00        	ldy #0
-0000E1r 1               
-0000E1r 1  AE 7B D1 C8      verify D1
-0000E5r 1  B1 3F CD 7B  
-0000E9r 1  D1 D0 3A     
-0000ECr 1  AE 1F FE C8      verify FE
-0000F0r 1  B1 3F CD 1F  
-0000F4r 1  FE D0 2F     
-0000F7r 1  AD 88 C0         lda $c088 ; $D17B in bank 1
-0000FAr 1  AE 7B D1 C8      verify D1
-0000FEr 1  B1 3F CD 7B  
-000102r 1  D1 D0 21     
-000105r 1  AD 80 C0         lda $c080 ; $D17B in bank 2
-000108r 1  AE 7B D1 C8      verify D1
-00010Cr 1  B1 3F CD 7B  
-000110r 1  D1 D0 13     
-000113r 1  AE 1F FE C8      verify FE
-000117r 1  B1 3F CD 1F  
-00011Br 1  FE D0 08     
-00011Er 1  E6 3D            inc TEST_COUNT
-000120r 1  20 rr rr         jsr @reset
-000123r 1  60               rts
-000124r 1               
-000124r 1               @success:
-000124r 1  18               clc
-000125r 1  60               rts
-000126r 1               
-000126r 1               @fail:
-000126r 1  00               brk
-000127r 1               
-000127r 1               @reset:
-000127r 1               	;; Initialize to known state:
-000127r 1               	;; - $11 in $D17B bank 1 (ROM: $53)
-000127r 1               	;; - $22 in $D17B bank 2 (ROM: $53)
-000127r 1               	;; - $33 in $FE1F        (ROM: $60)
-000127r 1  AD 8B C0     	lda $C08B		; Read and write bank 1
-00012Ar 1  AD 8B C0     	lda $C08B
-00012Dr 1  A9 11        	lda #$11
-00012Fr 1  8D 7B D1     	sta D1
-000132r 1  A9 33        	lda #$33
-000134r 1  8D 1F FE     	sta FE
-000137r 1  AD 83 C0     	lda $C083		; Read and write bank 2
-00013Ar 1  AD 83 C0     	lda $C083
-00013Dr 1  A9 22        	lda #$22
-00013Fr 1  8D 7B D1     	sta D1
-000142r 1  AD 80 C0     	lda $C080
-000145r 1  AD 7B D1     	lda D1
-000148r 1  60           	rts
-000148r 1               
+; ******** Source: bank-memory.s
+     1                          ; Test access to the memory card ($D000 and above).
+     2                          ; This is an adaptation of Zellyn's a2audit tests made to be run headlessly:  https://github.com/zellyn/a2audit
+     3                          ; If the tests succeed, $3D contains the number of successful tests
+     4                          ; If a test fails, the code lands on a BRK, $3D contains the number of passed tests,
+     5                          ; and Y is the index of the comparison that failed (1-5)
+     6                          ;
+     7                          ; Cedric Beust, cedric@beust.com, 9/17/2020
+     8                          ;
+     9                          
+    10                          D1 = $D17B
+    11                          FE = $FE1F
+    12                          CHECK_DATA = $3f
+    13                          TEST_COUNT = $3d
+    14                          
+    15                          * = $300
+    16                          
+    17                          !macro verify .address {
+    18                              ldx .address  ; Used to visually inspect the expected value
+    19                              iny
+    20                              lda (CHECK_DATA),Y
+    21                              cmp .address
+    22                              bne fail
+    23                          }
+    24                          
+    25  0300 202704                 jsr reset
+    26  0303 a900                   lda #0
+    27  0305 853d                   sta TEST_COUNT
+    28                          
+    29                          	;; Format:
+    30                          	;; Sequence of test instructions, finishing with `jsr .test`.
+    31                          	;; - quint: expected current $d17b and fe1f, then d17b in bank1, d17b in bank 2, and fe1f
+    32                          	;; (All sequences start with lda $C080, just to reset things to a known state.)
+    33                          
+    34  0307 ad88c0             	lda $C088				; Read $C088 (read bank 1, no write)
+    35  030a 20cc03             	jsr test				;
+    36  030d 1133112233         	!byte $11, $33, $11, $22, $33
+    37                          
+    38  0312 ad80c0             	lda $C080				; Read $C080 (read bank 2, no write)
+    39  0315 20cc03             	jsr test				;
+    40  0318 2233112233         	!byte $22, $33, $11, $22, $33		;
+    41                          
+    42  031d ad81c0             	lda $C081				; Read $C081 (ROM read, write disabled)
+    43  0320 20cc03             	jsr test				;
+    44  0323 5360112233         	!byte $53, $60, $11, $22, $33		;
+    45                          
+    46  0328 ad81c0             	lda $C081				; Read $C081 (rom read, all else false)
+    47  032b ad89c0             	lda $C089				; Read $C089 (ROM read, all else false)
+    48  032e 20cc03             	jsr test				;
+    49  0331 5360542261         	!byte $53, $60, $54, $22, $61		;
+    50                          
+    51  0336 ad81c0                 lda $C081				; Read $C081, $C081 (read ROM, write RAM bank 2)
+    52  0339 ad81c0             	lda $C081				;
+    53  033c 20cc03             	jsr test				;
+    54  033f 5360115461         	!byte $53, $60, $11, $54, $61		;
+    55                          
+    56  0344 ad81c0             	lda $C081				; Read $C081, $C081, write $C081 (read ROM, write RAM bank bank 2)
+    57  0347 ad81c0             	lda $C081				; See https://github.com/zellyn/a2audit/issues/3
+    58  034a 8d81c0             	sta $C081				;
+    59  034d 20cc03             	jsr test				;
+    60  0350 5360115461         	!byte $53, $60, $11, $54, $61		;
+    61                          
+    62  0355 ad81c0             	lda $C081				; Read $C081, $C081; write $C081, $C081
+    63  0358 ad81c0             	lda $C081				; See https://github.com/zellyn/a2audit/issues/4
+    64  035b 8d81c0             	sta $C081				;
+    65  035e 8d81c0             	sta $C081				;
+    66  0361 20cc03             	jsr test				;
+    67  0364 5360115461         	!byte $53, $60, $11, $54, $61		;
+    68                          
+    69  0369 ad8bc0             	lda $C08B				; Read $C08B (read RAM bank 1, no write)
+    70  036c 20cc03             	jsr test				;
+    71  036f 1133112233         	!byte $11, $33, $11, $22, $33		;
+    72                          
+    73  0374 ad83c0             	lda $C083				; Read $C083 (read RAM bank 2, no write)
+    74  0377 20cc03             	jsr test				;
+    75  037a 2233112233         	!byte $22, $33, $11, $22, $33		;
+    76                          
+    77  037f ad8bc0             	lda $C08B				; Read $C08B, $C08B (read/write RAM bank 1)
+    78  0382 ad8bc0             	lda $C08B				;
+    79  0385 20cc03             	jsr test				;
+    80  0388 1234122234         	!byte $12, $34, $12, $22, $34		;
+    81                          
+    82  038d ad8fc0             	lda $C08F				; Read $C08F, $C087 (read/write RAM bank 2)
+    83  0390 ad87c0             	lda $C087				;
+    84  0393 20cc03             	jsr test				;
+    85  0396 2334112334         	!byte $23, $34, $11, $23, $34		;
+    86                          
+    87  039b ad87c0             	lda $C087				; Read $C087, read $C08D (read ROM, write bank 1)
+    88  039e ad8dc0             	lda $C08D				;
+    89  03a1 20cc03             	jsr test				;
+    90  03a4 5360542261         	!byte $53, $60, $54, $22, $61		;
+    91                          
+    92  03a9 ad8bc0             	lda $C08B				; Read $C08B, write $C08B, read $C08B (read RAM bank 1, no write)
+    93  03ac 8d8bc0             	sta $C08B				; (this one is tricky: reset WRTCOUNT by writing halfway)
+    94  03af ad8bc0             	lda $C08B				;
+    95  03b2 20cc03             	jsr test				;
+    96  03b5 1133112233         	!byte $11, $33, $11, $22, $33		;
+    97                          
+    98  03ba 8d8bc0             	sta $C08B				; Write $C08B, write $C08B, read $C08B (read RAM bank 1, no write)
+    99  03bd 8d8bc0             	sta $C08B				;
+   100  03c0 ad8bc0             	lda $C08B				;
+   101  03c3 20cc03             	jsr test				;
+   102  03c6 1133112233         	!byte $11, $33, $11, $22, $33		;
+   103                          
+   104                          ;	clc					    ; Read $C083, $C083 (read/write RAM bank 2)
+   105                          ;	ldx #0					; Uses "6502 false read"
+   106                          ;	inc $C083,x				; Actually reads $c083 twice (same as bit $c083 x 2)
+   107                          ;	jsr @test				;
+   108                          ;	!byte $23, $34, $11, $23, $34		;
+   109                          						;
+   110                          
+   111  03cb 60                 	rts
+   112                          
+   113                          test:
+   114  03cc ee7bd1                 inc D1
+   115  03cf ee1ffe                 inc FE
+   116                          	;; pull address off of stack: it points just below check data for this test.
+   117  03d2 68                 	pla
+   118  03d3 853f               	sta CHECK_DATA
+   119  03d5 aa                 	tax
+   120  03d6 68                 	pla
+   121  03d7 8540               	sta CHECK_DATA+1
+   122  03d9 48                 	pha     ; Restore the stack so that returning will go to the next test
+   123  03da 8a                 	txa
+   124  03db 18                 	clc
+   125  03dc 6905               	adc #5  ; add 5 since there are five values to skip
+   126  03de 48                 	pha
+   127  03df a000               	ldy #0
+   128                          
+   129  03e1 ae7bd1c8b13fcd7b...    +verify D1
+   130  03ec ae1ffec8b13fcd1f...    +verify FE
+   131  03f7 ad88c0                 lda $c088 ; $D17B in bank 1
+   132  03fa ae7bd1c8b13fcd7b...    +verify D1
+   133  0405 ad80c0                 lda $c080 ; $D17B in bank 2
+   134  0408 ae7bd1c8b13fcd7b...    +verify D1
+   135  0413 ae1ffec8b13fcd1f...    +verify FE
+   136  041e e63d                   inc TEST_COUNT
+   137  0420 202704                 jsr reset
+   138  0423 60                     rts
+   139                          
+   140                          success:
+   141  0424 18                     clc
+   142  0425 60                     rts
+   143                          
+   144                          fail:
+   145  0426 00                     brk
+   146                          
+   147                          reset:
+   148                          	;; Initialize to known state:
+   149                          	;; - $11 in $D17B bank 1 (ROM: $53)
+   150                          	;; - $22 in $D17B bank 2 (ROM: $53)
+   151                          	;; - $33 in $FE1F        (ROM: $60)
+   152  0427 ad8bc0             	lda $C08B		; Read and write bank 1
+   153  042a ad8bc0             	lda $C08B
+   154  042d a911               	lda #$11
+   155  042f 8d7bd1             	sta D1
+   156  0432 a933               	lda #$33
+   157  0434 8d1ffe             	sta FE
+   158  0437 ad83c0             	lda $C083		; Read and write bank 2
+   159  043a ad83c0             	lda $C083
+   160  043d a922               	lda #$22
+   161  043f 8d7bd1             	sta D1
+   162  0442 ad80c0             	lda $C080
+   163  0445 ad7bd1             	lda D1
+   164  0448 60                 	rts
