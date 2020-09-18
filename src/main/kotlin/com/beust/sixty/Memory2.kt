@@ -97,45 +97,99 @@ class Memory(val size: Int? = null) {
                     }
                     in 0xc080..0xc08f -> handleRam(get, i)
                     else -> {
-                        println("Reading from unhandled " + i.hh())
+//                        println("Reading from unhandled " + i.hh())
                         c0Memory[address]
                     }
                 }
             } else { // set
                 if (i in 0xc080..0xc08f) handleRam(get, i)
                 else if (!init) when(i) {
+                    0xc000 -> {
+                        NYI("Write at " + i.hh())
+                        force { c0Memory[0x18] = 0 }
+                    }
+                    0xc001 -> {
+                        NYI("Write at " + i.hh())
+                        force { c0Memory[0x18] = 0x80 }
+                    }
                     0xc002 -> {
                         // | ACTION | ADDRESS       |
                         // |de W    | $C002 / 49156 | READ FROM MAIN 48K |
                         readMain = true
+                        force { c0Memory[0x13] = 0 }
                     }
                     0xc003 -> {
                         // | ACTION | ADDRESS       |
                         // |de W    | $C003 / 49156 | READ FROM AUX 48K |
                         readMain = false
-//                        c0Memory[0x13] = 0x80
+                        force { c0Memory[0x13] = 0x80 }
                     }
                     0xc004 -> {
                         // | ACTION | ADDRESS       |
                         // |de W    | $C004 / 49156 | WRITE TO MAIN 48K |
                         writeMain = true
+                        force {
+                            c0Memory[0x14] = 0
+                        }
                     }
                     0xc005 -> {
                         // | ACTION | ADDRESS       |
                         // |de W    | $C005 / 49156 | WRITE TO AUX 48K |
                         writeMain = false
+                        c0Memory[0x14] = 0x80
                     }
-                    0xc008 -> { zpMain = true }
-                    0xc009 -> { zpMain = false }
+                    0xc006 -> {
+                        NYI("Write at " + i.hh())
+                        force { c0Memory[0x15] = 0 }
+                    }
+                    0xc007 -> {
+                        NYI("Write at " + i.hh())
+                        force { c0Memory[0x15] = 0x80 }
+                    }
+                    0xc008 -> {
+                        zpMain = true
+                        force { c0Memory[0x18] = 0 }
+                    }
+                    0xc009 -> {
+                        zpMain = false
+                        force { c0Memory[0x18] = 0x80 }
+                    }
+                    0xc00a -> {
+                        NYI("Write at " + i.hh())
+                        force { c0Memory[0x17] = 0 }
+                    }
+                    0xc00b -> {
+                        NYI("Write at " + i.hh())
+                        force { c0Memory[0x17] = 0x80 }
+                    }
+                    0xc00c -> {
+                        NYI("Write at " + i.hh())
+                        force { c0Memory[0x1f] = 0 }
+                    }
+                    0xc00d -> {
+                        NYI("Write at " + i.hh())
+                        force { c0Memory[0x1f] = 0x80 }
+                    }
+                    0xc00e -> {
+                        NYI("Write at " + i.hh())
+                        force { c0Memory[0x1e] = 0 }
+                    }
+                    0xc00f -> {
+                        NYI("Write at " + i.hh())
+                        force { c0Memory[0x1e] = 0x80 }
+                    }
                     0xc010 -> {
                         // KBDSTRB
                         c0Memory[0] = c0Memory[0].and(0x7f)
                         c0Memory[0]
                     }
-                    else -> {
-                        println("Writing to unhandled " + i.hh())
-                        c0Memory[i - 0xc000] = value
-                    }
+//                    else -> {
+//                        println("Writing to unhandled " + i.hh())
+//                        c0Memory[i - 0xc000] = value
+//                    }
+                } else {
+                    // init is true
+                    c0Memory[i - 0xc000] = value
                 }
             }
         } else if (i in 0xd000..0xdfff) {
