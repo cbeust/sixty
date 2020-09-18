@@ -2,10 +2,7 @@
 
 package com.beust.app
 
-import com.beust.sixty.Computer
-import com.beust.sixty.Cpu
-import com.beust.sixty.DebugMemoryListener
-import com.beust.sixty.Memory
+import com.beust.sixty.*
 import java.awt.Dimension
 import java.nio.file.*
 import javax.swing.GroupLayout
@@ -79,7 +76,11 @@ fun apple2Computer(debugMem: Boolean, diskController: DiskController): Computer 
             override fun keyPressed(e: java.awt.event.KeyEvent) {
                 val key = when (e.keyCode) {
                     10 -> 0x8d
-                    else -> e.keyCode.or(0x80)
+                    else -> {
+                        val result = e.keyCode.or(0x80)
+                        println("Result: " + result.h() + " " + result.toChar())
+                        result
+                    }
                 }
                 memory.forceValue(0xc000, key)
                 memory.forceValue(0xc010, 0x80)
