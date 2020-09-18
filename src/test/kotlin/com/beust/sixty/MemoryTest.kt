@@ -14,7 +14,7 @@ class MemoryTest {
         runTest("auxmem.bin")
     }
 
-    @Test(enabled = false)
+    @Test(enabled = true)
     fun bankMemory() {
         runTest("bank-memory.bin")
     }
