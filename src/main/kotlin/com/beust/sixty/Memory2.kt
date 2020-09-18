@@ -87,10 +87,23 @@ class Memory(val size: Int? = null) {
             }
         } else if (i in 0xc000..0xcfff) {
             if (get) {
+                val address = i - 0xc000
                 result = when (i) {
+                    0xC000 -> {
+                        // KBD/CLR80STORE
+                        c0Memory[address]
+                    }
+                    0xc010 -> {
+                        // KBDSTRB
+                        c0Memory[0] = c0Memory[0].and(0x7f)
+                        c0Memory[0]
+                    }
+                    in 0xc001..0xc00f -> {
+                        c0Memory[0]
+                    }
                     in 0xc080..0xc08f -> handleRam(get, i)
                     else -> {
-                        c0Memory[i - 0xc000]
+                        c0Memory[address]
                     }
                 }
             } else {
@@ -117,7 +130,11 @@ class Memory(val size: Int? = null) {
                         // |de W    | $C005 / 49156 | WRITE TO AUX 48K |
                         writeMain = false
                     }
-
+                    0xc010 -> {
+                        // KBDSTRB
+                        c0Memory[0] = c0Memory[0].and(0x7f)
+                        c0Memory[0]
+                    }
                 }
                 if (init) {
                     c0Memory[i - 0xc000] = value
