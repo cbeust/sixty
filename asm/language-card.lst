@@ -45,10 +45,15 @@
     43  0333 a922               	lda #$22
     44  0335 8d7bd1             	sta D1
     45  0338 cd7bd1             	cmp D1
-    46  033b f000               	beq @ok
+    46  033b f000               	beq +
     47                          
-    48                          @ok:
-    49                          
-    50                          end:
-    51  033d 60                     rts
-    52                          
+    48                          +
+    49  033d ad8bc0             	lda $C08B		; Read and write bank 1 with single access (only one needed if banked in already)
+    50  0340 a911               	lda #$11
+    51  0342 cd7bd1             	cmp D1
+    52  0345 f000               	beq +
+    53                          
+    54                          +
+    55                          end:
+    56  0347 60                     rts
+    57                          

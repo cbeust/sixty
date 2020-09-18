@@ -1,3 +1,5 @@
+https://github.com/cmosher01/Epple-II
+
 
 	Bank2       Bank1       First Access, Second Access
 	-----------------------------------------------
@@ -23,3 +25,6 @@ Stepper motor:  http://www.hackzapple.com/DISKII/DISKIITECH09D.HTM
 1000 = T+1.5
 1001 = T+1.75
 0001 = T+2
+
+If 80STORE is set, RAMRD and RAMWRT do not affect $400-$7ff
+If 80STORE and HIRES are both set, RAMRD and RAMWRT do not affect $400-$7ff or $2000$-3fff

@@ -3,29 +3,81 @@
      1                          SET_ALTZP = $c009
      2                          RESET_ALTZP = $c008
      3                          
-     4                          * = $300
-     5                          
-     6                          reset:
-     7  0300 8d08c0                 sta RESET_ALTZP
-     8  0303 a901                   lda #$1  ; 1 in main mem
-     9  0305 85ff                   sta $ff
-    10  0307 8d09c0                 sta SET_ALTZP
-    11  030a a902                   lda #$2  ; 2 in aux mem
-    12  030c 85ff                   sta $ff
-    13                          
-    14                          test:
-    15  030e 8d08c0                 sta RESET_ALTZP
-    16  0311 a5ff                   lda $ff
-    17  0313 c901                   cmp #$1    ; main page should contain 2
-    18  0315 f001                   beq +
-    19  0317 00                     brk
-    20                          
-    21                          +
-    22  0318 8d09c0                 sta SET_ALTZP
-    23  031b a5ff                   lda $ff
-    24  031d c902                   cmp #2   ; aix page should contain 2
-    25  031f f001                   beq +
-    26  0321 00                     brk
-    27                          
-    28                          +
-    29  0322 60                     rts
+     4                          RESET_RAMWRT = $C004
+     5                          SET_RAMWRT = $C005
+     6                          READ_RAMWRT = $C014
+     7                          
+     8                          RESET_RAMRD = $C002
+     9                          SET_RAMRD = $C003
+    10                          READ_RAMRD = $C013
+    11                          
+    12                          
+    13                          * = $6000
+    14                          
+    15                          reset:
+    16  6000 202660                 jsr init
+    17  6003 8d08c0                 sta RESET_ALTZP
+    18  6006 a901                   lda #$1  ; 1 in main mem
+    19  6008 85ff                   sta $ff
+    20  600a 8d09c0                 sta SET_ALTZP
+    21  600d a902                   lda #$2  ; 2 in aux mem
+    22  600f 85ff                   sta $ff
+    23                          
+    24                          test:
+    25  6011 8d08c0                 sta RESET_ALTZP
+    26  6014 a5ff                   lda $ff
+    27  6016 c901                   cmp #$1    ; main page should contain 2
+    28  6018 f001                   beq +
+    29  601a 00                     brk
+    30                          
+    31                          +
+    32  601b 8d09c0                 sta SET_ALTZP
+    33  601e a5ff                   lda $ff
+    34  6020 c902                   cmp #2   ; aux page should contain 2
+    35  6022 f001                   beq +
+    36  6024 00                     brk
+    37                          
+    38                          +
+    39  6025 60                     rts
+    40                          
+    41                          init:
+    42  6026 a903                   lda #3
+    43  6028 8d09c0                 sta SET_ALTZP
+    44  602b 8d05c0                 sta SET_RAMWRT
+    45  602e 8d03c0                 sta SET_RAMRD
+    46                          
+    47                          .initloop			; Loop twice: initialize aux to $3 and main to $1.
+    48  6031 a020                   ldy #.memorylen
+    49                          -
+    50  6033 be5560             	ldx .memorylocs,y
+    51  6036 8e4060                 stx + +1
+    52  6039 be5660                 ldx .memorylocs+1,y
+    53  603c 8e4160                 stx + +2
+    54                          +
+    55  603f 8dffff             	sta $ffff ;; this address gets replaced
+    56  6042 88                     dey
+    57  6043 88                     dey
+    58  6044 10ed                   bpl -
+    59                          
+    60  6046 8d08c0                 sta RESET_ALTZP
+    61  6049 8d04c0                 sta RESET_RAMWRT
+    62  604c 8d02c0                 sta RESET_RAMRD
+    63                          
+    64  604f 38                     sec
+    65  6050 e902                   sbc #2
+    66  6052 b0dd                   bcs .initloop
+    67  6054 60                     rts
+    68                          
+    69                          
+    70                          .memorylocs
+    71                          	;; zero page locations
+    72  6055 ff0000010000       	!word $ff, $100, 0
+    73                          	;; main memory locations
+    74  605b 0002ff030008ff1f...	!word $200, $3ff, $800, $1fff, $4000, $5fff, $bfff, 0
+    75                          	;; text locations
+    76  606b 2704ff070000       	!word $427, $7ff, 0
+    77                          	;; hires locations
+    78  6071 0020ff3f0000       	!word $2000, $3fff, 0
+    79                          	;; end
+    80                          .memorylen = * - .memorylocs - 2
+    81  6077 0000               	!word 0
