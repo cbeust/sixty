@@ -62,6 +62,18 @@ class Memory(val size: Int? = null) {
     private val mem = IntArray(0x10000) { 0 }
     private var writeCount = 0
 
+    private fun updateSoftSwitch(value: Int, reset: Int, set: Int, status: Int, handled: Boolean = false): Int {
+        when (value) {
+            reset -> force { c0Memory[status] = 0 }
+            set -> force { c0Memory[status] = 0x80 }
+            else -> ERROR("Should never happen")
+        }
+        if (! handled) {
+            NYI("Write at " + (0xc000 + value).hh() + " new status[" + status + "]=" + c0Memory[status].h())
+        }
+        return c0Memory[0]
+    }
+
     private fun getOrSet(get: Boolean, i: Int, value: Int = 0): Int? {
         var result: Int? = null
 
@@ -96,93 +108,41 @@ class Memory(val size: Int? = null) {
                         c0Memory[0]
                     }
                     in 0xc080..0xc08f -> handleRam(get, i)
+                    0xc050, 0xc051 -> updateSoftSwitch(address, 0x50, 0x51, 0x1a)
+                    0xc052, 0xc053 -> updateSoftSwitch(address, 0x52, 0x53, 0x1b)
+                    0xc054, 0xc055 -> updateSoftSwitch(address, 0x54, 0x55, 0x1c)
+                    0xc056, 0xc057 -> updateSoftSwitch(address, 0x56, 0x57, 0x1d)
                     else -> {
 //                        println("Reading from unhandled " + i.hh())
                         c0Memory[address]
                     }
                 }
             } else { // set
+                val address = i - 0xc000
                 if (i in 0xc080..0xc08f) handleRam(get, i)
                 else if (!init) when(i) {
-                    0xc000 -> {
-                        NYI("Write at " + i.hh())
-                        force { c0Memory[0x18] = 0 }
-                    }
-                    0xc001 -> {
-                        NYI("Write at " + i.hh())
-                        force { c0Memory[0x18] = 0x80 }
-                    }
-                    0xc002 -> {
-                        // | ACTION | ADDRESS       |
-                        // |de W    | $C002 / 49156 | READ FROM MAIN 48K |
-                        readMain = true
-                        force { c0Memory[0x13] = 0 }
-                    }
-                    0xc003 -> {
-                        // | ACTION | ADDRESS       |
-                        // |de W    | $C003 / 49156 | READ FROM AUX 48K |
-                        readMain = false
-                        force { c0Memory[0x13] = 0x80 }
-                    }
-                    0xc004 -> {
+                    0xc000, 0xc001 -> updateSoftSwitch(address, 0, 1, 0x18)
+                    0xc002, 0xc003 -> updateSoftSwitch(address, 2, 3, 0x13)
+                    0xc004, 0xc005 -> {
                         // | ACTION | ADDRESS       |
                         // |de W    | $C004 / 49156 | WRITE TO MAIN 48K |
-                        writeMain = true
-                        force {
-                            c0Memory[0x14] = 0
-                        }
+                        writeMain = i == 0xc004
+                        updateSoftSwitch(address, 4, 5, 0x14, true)
                     }
-                    0xc005 -> {
-                        // | ACTION | ADDRESS       |
-                        // |de W    | $C005 / 49156 | WRITE TO AUX 48K |
-                        writeMain = false
-                        c0Memory[0x14] = 0x80
+                    0xc006, 0xc007 -> updateSoftSwitch(address, 6, 7, 0x15)
+                    0xc008, 0xc009 -> {
+                        zpMain = i == 0xc008
+                        updateSoftSwitch(address, 8, 9, 0x16, true)
                     }
-                    0xc006 -> {
-                        NYI("Write at " + i.hh())
-                        force { c0Memory[0x15] = 0 }
-                    }
-                    0xc007 -> {
-                        NYI("Write at " + i.hh())
-                        force { c0Memory[0x15] = 0x80 }
-                    }
-                    0xc008 -> {
-                        zpMain = true
-                        force { c0Memory[0x18] = 0 }
-                    }
-                    0xc009 -> {
-                        zpMain = false
-                        force { c0Memory[0x18] = 0x80 }
-                    }
-                    0xc00a -> {
-                        NYI("Write at " + i.hh())
-                        force { c0Memory[0x17] = 0 }
-                    }
-                    0xc00b -> {
-                        NYI("Write at " + i.hh())
-                        force { c0Memory[0x17] = 0x80 }
-                    }
-                    0xc00c -> {
-                        NYI("Write at " + i.hh())
-                        force { c0Memory[0x1f] = 0 }
-                    }
-                    0xc00d -> {
-                        NYI("Write at " + i.hh())
-                        force { c0Memory[0x1f] = 0x80 }
-                    }
-                    0xc00e -> {
-                        NYI("Write at " + i.hh())
-                        force { c0Memory[0x1e] = 0 }
-                    }
-                    0xc00f -> {
-                        NYI("Write at " + i.hh())
-                        force { c0Memory[0x1e] = 0x80 }
-                    }
+                    0xc00a, 0xc00b -> updateSoftSwitch(address, 0xa, 0xb, 0x17)
+                    0xc00c, 0xc00d -> updateSoftSwitch(address, 0xc, 0xd, 0x1f)
+                    0xc00e, 0xc00f -> updateSoftSwitch(address, 0xe, 0xf, 0x1e)
                     0xc010 -> {
                         // KBDSTRB
                         c0Memory[0] = c0Memory[0].and(0x7f)
                         c0Memory[0]
                     }
+                    0xc050, 0xc051 -> updateSoftSwitch(address, 0x50, 0x51, 0x1a)
 //                    else -> {
 //                        println("Writing to unhandled " + i.hh())
 //                        c0Memory[i - 0xc000] = value
