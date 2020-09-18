@@ -13,6 +13,8 @@ class Memory(val size: Int? = null) {
         lastMemDebug.add("mem[${i.hh()}] = ${(value.and(0xff)).h()} $extra")
     }
 
+    private var store80On = false
+
     /** $0-$1FF */
     private var zpMain = true
         set(f) {
@@ -110,7 +112,14 @@ class Memory(val size: Int? = null) {
                     in 0xc080..0xc08f -> handleRam(get, i)
                     0xc050, 0xc051 -> updateSoftSwitch(address, 0x50, 0x51, 0x1a)
                     0xc052, 0xc053 -> updateSoftSwitch(address, 0x52, 0x53, 0x1b)
-                    0xc054, 0xc055 -> updateSoftSwitch(address, 0x54, 0x55, 0x1c)
+                    0xc054, 0xc055 -> {
+                        if (store80On) {
+                            NYI("Switch main and aux video memory")
+                        } else{
+                            NYI("Switch video page1/page2")
+                        }
+                        updateSoftSwitch(address, 0x54, 0x55, 0x1c)
+                    }
                     0xc056, 0xc057 -> updateSoftSwitch(address, 0x56, 0x57, 0x1d)
                     else -> {
 //                        println("Reading from unhandled " + i.hh())
@@ -121,7 +130,10 @@ class Memory(val size: Int? = null) {
                 val address = i - 0xc000
                 if (i in 0xc080..0xc08f) handleRam(get, i)
                 else if (!init) when(i) {
-                    0xc000, 0xc001 -> updateSoftSwitch(address, 0, 1, 0x18)
+                    0xc000, 0xc001 -> {
+                        store80On = i == 0xc001
+                        updateSoftSwitch(address, 0, 1, 0x18)
+                    }
                     0xc002, 0xc003 -> updateSoftSwitch(address, 2, 3, 0x13)
                     0xc004, 0xc005 -> {
                         // | ACTION | ADDRESS       |
@@ -143,6 +155,15 @@ class Memory(val size: Int? = null) {
                         c0Memory[0]
                     }
                     0xc050, 0xc051 -> updateSoftSwitch(address, 0x50, 0x51, 0x1a)
+                    0xc052, 0xc053 -> updateSoftSwitch(address, 0x52, 0x53, 0x1b)
+                    0xc054, 0xc055 -> {
+                        if (store80On) {
+                            NYI("Switch main and aux video memory")
+                        } else{
+                            NYI("Switch video page1/page2")
+                        }
+                        updateSoftSwitch(address, 0x54, 0x55, 0x1c)
+                    }
 //                    else -> {
 //                        println("Writing to unhandled " + i.hh())
 //                        c0Memory[i - 0xc000] = value
