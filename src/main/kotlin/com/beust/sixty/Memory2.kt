@@ -1,53 +1,50 @@
 package com.beust.sixty
 
-import org.slf4j.LoggerFactory
 import java.io.File
 import java.io.InputStream
 
 @Suppress("UnnecessaryVariable", "BooleanLiteralArgument")
 class Memory(val size: Int? = null) {
-    private val log = LoggerFactory.getLogger("Memory")
-
     var interceptor: MemoryInterceptor? = null
     val listeners = arrayListOf<MemoryListener>()
     val lastMemDebug = arrayListOf<String>()
 
-    fun logMem(i: Int, value: Int, extra: String = "") {
+    fun logMemSet(i: Int, value: Int, extra: String = "") {
         lastMemDebug.add("mem[${i.hh()}] = ${(value.and(0xff)).h()} $extra")
     }
 
+    /** $0-$1FF */
+    private var zpMain = true
+        set(f) {
+            if (! init) logMem("zpMain: $f")
+            field = f
+        }
+    private val mainZp = IntArray(0x200) { 0 }
+    private val auxZp = IntArray(0x200) { 0 }
+
+    /** $200 - $BFFF */
     private var readMain = true
     private var writeMain = true
-
-    /** $0-$1FF */
-    private val lowMemory = IntArray(0x200) { 0 }
-
-    /** $200 - $BFFF */
     private val mainMemory = IntArray(0xc000) { 0 }
-
-    /** $200 - $BFFF */
     private val auxMemory = IntArray(0xc000) { 0 }
 
     /** $C000-$CFFF */
     private val c0Memory = IntArray(0x1000) { 0 }
 
     /** $D000-$FFFF */
+    private var readRom = true
     private val rom = IntArray(0x3000) { 0 }
 
     /** $D000-$DFFF */
-    private val ram1 = IntArray(0x1000) { 0 }
-
-    /** $D000-$DFFF */
-    private val ram2 = IntArray(0x1000) { 0 }
-
-    /** $E000-$FFFF */
-    private val lcRam = IntArray(0x2000) { 0 }
-
-    private var readRom = true
     private var readBank1 = false
     private var readBank2 = false
     private var writeBank1 = false
     private var writeBank2 = false
+    private val ram1 = IntArray(0x1000) { 0 }
+    private val ram2 = IntArray(0x1000) { 0 }
+
+    /** $E000-$FFFF */
+    private val lcRam = IntArray(0x2000) { 0 }
 
     private var init = true
 
@@ -70,12 +67,9 @@ class Memory(val size: Int? = null) {
 
         if (i < 0x200) {
             if (get) {
-                if (i < 0) {
-                    println("PROBLEM")
-                }
-                result = lowMemory[i]
+                result = if (zpMain) mainZp[i] else auxZp[i]
             } else {
-                lowMemory[i] = value
+                if (zpMain) mainZp[i] = value else auxZp[i] = value
             }
         } else if (i in 0x200..0xbfff) {
             if (get) {
@@ -103,10 +97,11 @@ class Memory(val size: Int? = null) {
                     }
                     in 0xc080..0xc08f -> handleRam(get, i)
                     else -> {
+                        println("Reading from unhandled " + i.hh())
                         c0Memory[address]
                     }
                 }
-            } else {
+            } else { // set
                 if (i in 0xc080..0xc08f) handleRam(get, i)
                 else if (!init) when(i) {
                     0xc002 -> {
@@ -130,16 +125,17 @@ class Memory(val size: Int? = null) {
                         // |de W    | $C005 / 49156 | WRITE TO AUX 48K |
                         writeMain = false
                     }
+                    0xc008 -> { zpMain = true }
+                    0xc009 -> { zpMain = false }
                     0xc010 -> {
                         // KBDSTRB
                         c0Memory[0] = c0Memory[0].and(0x7f)
                         c0Memory[0]
                     }
-                }
-                if (init) {
-                    c0Memory[i - 0xc000] = value
-                } else {
-//                    handleC0(i, value)
+                    else -> {
+                        println("Writing to unhandled " + i.hh())
+                        c0Memory[i - 0xc000] = value
+                    }
                 }
             }
         } else if (i in 0xd000..0xdfff) {
@@ -211,7 +207,7 @@ class Memory(val size: Int? = null) {
 
     private fun handleRam(get: Boolean, i: Int) : Int {
         fun log(address: Int) {
-            log.debug(address.hh() + " writeCount:$writeCount" +
+            if (! init) logMem(address.hh() + " writeCount:$writeCount" +
                     " Read:" + (if (readRom) "rom" else if (readBank1) "ram1" else "ram2") +
                     " Write:" + (if (writeBank1) "ram1" else if (writeBank2) "ram2" else "no write"))
         }

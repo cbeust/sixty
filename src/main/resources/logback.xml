@@ -10,7 +10,7 @@
 
     <!-- set to debug to display -->
     <logger name="Disk" level="info" />
-    <logger name="Memory" level="info" />
+    <logger name="Memory" level="debug" />
     <logger name="Breakpoint" level="debug" />
 
     <root level="warn">

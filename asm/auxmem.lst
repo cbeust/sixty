@@ -1,0 +1,31 @@
+
+; ******** Source: auxmem.s
+     1                          SET_ALTZP = $c009
+     2                          RESET_ALTZP = $c008
+     3                          
+     4                          * = $300
+     5                          
+     6                          reset:
+     7  0300 8d08c0                 sta RESET_ALTZP
+     8  0303 a901                   lda #$1  ; 1 in main mem
+     9  0305 85ff                   sta $ff
+    10  0307 8d09c0                 sta SET_ALTZP
+    11  030a a902                   lda #$2  ; 2 in aux mem
+    12  030c 85ff                   sta $ff
+    13                          
+    14                          test:
+    15  030e 8d08c0                 sta RESET_ALTZP
+    16  0311 a5ff                   lda $ff
+    17  0313 c901                   cmp #$1    ; main page should contain 2
+    18  0315 f001                   beq +
+    19  0317 00                     brk
+    20                          
+    21                          +
+    22  0318 8d09c0                 sta SET_ALTZP
+    23  031b a5ff                   lda $ff
+    24  031d c902                   cmp #2   ; aix page should contain 2
+    25  031f f001                   beq +
+    26  0321 00                     brk
+    27                          
+    28                          +
+    29  0322 60                     rts

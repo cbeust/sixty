@@ -11,7 +11,7 @@ class MemoryTest {
 
 
     fun languageCard() {
-        runTest("language-card.bin")
+        runTest("auxmem.bin")
     }
 
     @Test(enabled = false)
