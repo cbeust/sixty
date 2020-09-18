@@ -4,10 +4,6 @@ import com.beust.app.BREAKPOINT
 import com.beust.app.DEBUG
 import org.slf4j.LoggerFactory
 
-open class BaseMemoryListener {
-    val lastMemDebug = arrayListOf<String>()
-}
-
 interface MemoryInterceptor {
     /** If override is true, the returned value should be used instead of the one initially provided */
     data class Response(val allow: Boolean, val value: Int)
@@ -17,7 +13,8 @@ interface MemoryInterceptor {
     fun onWrite(location: Int, value: Int): Response
 }
 
-abstract class MemoryListener: BaseMemoryListener() {
+abstract class MemoryListener {
+    val logLines = arrayListOf<String>()
     abstract fun isInRange(address: Int): Boolean
     open fun onRead(location: Int, value: Int): Int? = null
     open fun onWrite(location: Int, value: Int){}
@@ -89,6 +86,9 @@ class Computer(val cpu: Cpu = Cpu(memory = Memory()),
 //                if (cycles >= 1156500) {
 //                    DEBUG = true
 //                }
+            if (cpu.PC  == 0x6000) {
+                DEBUG = true
+            }
             if (BREAKPOINT != null && cpu.PC == BREAKPOINT) {
                 log.debug(this.toString())
                 log.debug("breakpoint")
@@ -115,6 +115,12 @@ class Computer(val cpu: Cpu = Cpu(memory = Memory()),
                     cpu.PC += SIZES[opCode]
                     cpu.nextInstruction(previousPc)
                     if (debugAsm) println(debugString + " " + cpu.toString() + " " + cycles)
+                    if (true) { // debugMemory) {
+                        memory.listeners.forEach {
+                            it.logLines.forEach { println(it) }
+                            it.logLines.clear()
+                        }
+                    }
                     ""
                 } else {
                     previousPc = cpu.PC

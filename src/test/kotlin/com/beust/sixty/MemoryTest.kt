@@ -20,11 +20,12 @@ class MemoryTest {
     }
 
     private fun runTest(fileName: String) {
-        val start = 0x300
+        val start = 0x6000
         val memory = Memory().apply {
             loadResource("Apple2e.rom", 0xc000)
             val ins2 = File("asm/$fileName").inputStream()
             load(ins2, start)
+            listeners.add(DebugMemoryListener())
         }
         var success = true
         var message: String? = null
