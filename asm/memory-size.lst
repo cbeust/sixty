@@ -1,0 +1,95 @@
+
+; ******** Source: memory-size.s
+
+; ******** Source: symbols.s
+     1                          	;; Ports to read
+     2                          	KBD      =   $C000
+     3                          	KBDSTRB  =   $C010
+     4                          
+     5                          	;; Softswitch locations.
+     6                          	RESET_80STORE = $C000
+     7                          	SET_80STORE = $C001
+     8                          	READ_80STORE = $C018
+     9                          
+    10                          	RESET_RAMRD = $C002
+    11                          	SET_RAMRD = $C003
+    12                          	READ_RAMRD = $C013
+    13                          
+    14                          	RESET_RAMWRT = $C004
+    15                          	SET_RAMWRT = $C005
+    16                          	READ_RAMWRT = $C014
+    17                          
+    18                          	RESET_INTCXROM = $C006
+    19                          	SET_INTCXROM = $C007
+    20                          	READ_INTCXROM = $C015
+    21                          
+    22                          	RESET_ALTZP = $C008
+    23                          	SET_ALTZP = $C009
+    24                          	READ_ALTZP = $C016
+    25                          
+    26                          	RESET_SLOTC3ROM = $C00A
+    27                          	SET_SLOTC3ROM = $C00B
+    28                          	READ_SLOTC3ROM = $C017
+    29                          
+    30                          	RESET_80COL = $C00C
+    31                          	SET_80COL = $C00D
+    32                          	READ_80COL = $C01F
+    33                          
+    34                          	RESET_ALTCHRSET = $C00E
+    35                          	SET_ALTCHRSET = $C00F
+    36                          	READ_ALTCHRSET = $C01E
+    37                          
+    38                          	RESET_TEXT = $C050
+    39                          	SET_TEXT = $C051
+    40                          	READ_TEXT = $C01A
+    41                          
+    42                          	RESET_MIXED = $C052
+    43                          	SET_MIXED = $C053
+    44                          	READ_MIXED = $C01B
+    45                          
+    46                          	RESET_PAGE2 = $C054
+    47                          	SET_PAGE2 = $C055
+    48                          	READ_PAGE2 = $C01C
+    49                          
+    50                          	RESET_HIRES = $C056
+    51                          	SET_HIRES = $C057
+    52                          	READ_HIRES = $C01D
+    53                          
+    54                          	RESET_AN3 = $C05E
+    55                          	SET_AN3 = $C05F
+    56                          
+    57                          	RESET_INTC8ROM = $CFFF
+
+; ******** Source: memory-size.s
+     1                          
+     2                          
+     3                          * = $6000
+     4                          
+     5  6000 8d01c0             	sta SET_80STORE
+     6  6003 ad57c0             	lda SET_HIRES
+     7  6006 ad55c0             	lda SET_PAGE2
+     8  6009 a900               	lda #$00
+     9  600b 8d0004             	sta $400
+    10  600e a988               	lda #$88
+    11  6010 8d0020             	sta $2000
+    12  6013 cd0004             	cmp $400
+    13  6016 f016               	beq .has65k
+    14  6018 cd0020             	cmp $2000
+    15  601b d00b               	bne .has64k
+    16  601d cd0020             	cmp $2000
+    17  6020 d006               	bne .has64k
+    18  6022 a903               	lda #$3
+    19  6024 8d0003             	sta $300
+    20  6027 60                 	rts
+    21                          
+    22                          .has64k:
+    23  6028 a901                   lda #$1
+    24  602a 8d0003                 sta $300
+    25  602d 60                     rts
+    26                          .has65k:
+    27  602e a902                   lda #$2
+    28  6030 8d0003                 sta $300
+    29  6033 60                     rts
+    30                          
+    31                          
+    32                          

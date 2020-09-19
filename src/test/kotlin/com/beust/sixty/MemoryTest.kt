@@ -9,12 +9,17 @@ import java.io.File
 @Test
 class MemoryTest {
 
+    @Test
+    fun memorySize() {
+        runTest("memory-size.bin")
+    }
 
+    @Test(enabled = false)
     fun languageCard() {
         runTest("auxmem.bin")
     }
 
-    @Test(enabled = true)
+    @Test(enabled = false)
     fun bankMemory() {
         runTest("bank-memory.bin")
     }
