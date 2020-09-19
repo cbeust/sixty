@@ -176,6 +176,7 @@ class Memory(val size: Int? = null) {
                     }
                     0xc002, 0xc003 -> {
                         if (! store80On) {
+                            readMain = i == 0xc002
                             updateSoftSwitch(address, 2, 3, 0x13)
                         }
                     }
