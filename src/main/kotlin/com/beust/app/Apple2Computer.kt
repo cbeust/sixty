@@ -101,7 +101,7 @@ fun apple2Computer(debugMem: Boolean, diskController: DiskController): Computer 
     with(memory) {
         listeners.add(diskController)
 //        listeners.add(DiskController(5, DISK_DOS_3_3))
-        listeners.add(DebugMemoryListener())
+        listeners.add(DebugMemoryListener(memory))
         listeners.add(ScreenListener(this, frame.textScreenPanel, frame.hiresPanel))
     }
 

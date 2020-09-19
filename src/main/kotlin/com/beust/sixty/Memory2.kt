@@ -9,14 +9,11 @@ class Memory(val size: Int? = null) {
     val listeners = arrayListOf<MemoryListener>()
     val lastMemDebug = arrayListOf<String>()
 
-    fun logMemSet(i: Int, value: Int, extra: String = "") {
-        lastMemDebug.add("mem[${i.hh()}] = ${(value.and(0xff)).h()} $extra")
-    }
-
+    var lastMem: String? = null
     private var store80On = false
     private var hires = false
 
-    /** $0-$1FF */
+    /** Affects $0-$1FF and $D000-$FFFF */
     private var zpMain = true
         set(f) {
             if (! init) logMem("zpMain: $f")
@@ -28,7 +25,7 @@ class Memory(val size: Int? = null) {
     /** $200 - $BFFF */
     private var readMain = true
         set(f) {
-            if (! init) logMem("readMan: $f")
+            if (! init) logMem("readMain: $f")
             field = f
         }
     private var writeMain = true
@@ -56,6 +53,8 @@ class Memory(val size: Int? = null) {
     private var writeBank2 = false
     private val ram1 = IntArray(0x1000) { 0 }
     private val ram2 = IntArray(0x1000) { 0 }
+    private val auxRam1 = IntArray(0x1000) { 0 }
+    private val auxRam2 = IntArray(0x1000) { 0 }
 
     /** $E000-$FFFF */
     private val lcRam = IntArray(0x2000) { 0 }
@@ -96,6 +95,16 @@ class Memory(val size: Int? = null) {
     private fun getOrSet(get: Boolean, i: Int, value: Int = 0): Int? {
         var result: Int? = null
 
+        fun correctMem(condition: Boolean) = if (condition) {
+            if (page2) auxMemory else mainMemory
+        } else {
+            if (get) {
+                if (readMain) mainMemory else auxMemory
+            } else {
+                if (writeMain) mainMemory else auxMemory
+            }
+        }
+
         if (i < 0x200) {
             if (get) {
                 result = if (zpMain) mainZp[i] else auxZp[i]
@@ -104,31 +113,9 @@ class Memory(val size: Int? = null) {
             }
         } else if (i in 0x200..0xbfff) {
             val mem = when(i) {
-                in 0x400..0x7ff -> {
-                    if (store80On) {
-                        if (page2) auxMemory else mainMemory
-                    } else {
-                        if (get) {
-                            if (readMain) mainMemory else auxMemory
-                        } else {
-                            if (writeMain) mainMemory else auxMemory
-                        }
-                    }
-                }
-                in 0x2000..0x3fff -> {
-                    if (store80On && hires) {
-                        if (page2) auxMemory else mainMemory
-                    } else {
-                        if (get) {
-                            if (readMain) mainMemory else auxMemory
-                        } else {
-                            if (writeMain) mainMemory else auxMemory
-                        }
-                    }
-                }
-                else -> {
-                    if (readMain) mainMemory else auxMemory
-                }
+                in 0x400..0x7ff -> correctMem(store80On)
+                in 0x2000..0x3fff -> correctMem(store80On && hires)
+                else -> if (readMain) mainMemory else auxMemory
             }
             if (get) result = mem[i]
                 else mem[i] = value
@@ -214,20 +201,44 @@ class Memory(val size: Int? = null) {
             }
         } else if (i in 0xd000..0xdfff) {
             val ea = i - 0xd000
-            if (get) {
-                result = when {
-                    readRom -> rom[ea]
-                    readBank1 -> ram1[ea]
-                    else -> ram2[ea]
+            val mem: IntArray? = if (get) {
+                when {
+                    readRom -> rom
+                    readBank1 -> if (zpMain) ram1 else auxRam1
+                    readBank2 -> if (zpMain) ram2 else auxRam2
+                    else -> TODO("Should never happen")
                 }
             } else {
                 when {
-                    writeBank1 -> ram1[ea] = value
-                    writeBank2 -> ram2[ea] = value
-                    init -> rom[ea] = value
+                    writeBank1 -> if (zpMain) ram1 else auxRam1
+                    writeBank2 -> if (zpMain) ram2 else auxRam2
+                    init -> rom
+                    else -> null
                 }
-
             }
+
+            fun memName(mem: IntArray?): String = when (mem) {
+                rom -> "rom"
+                auxRam1 -> "auxram1"
+                auxRam2 -> "auxram2"
+                ram1 -> "ram1"
+                ram2 -> "ram2"
+                else -> "denied"
+            }
+            if (! init && i == 0xd17b && (! writeMain || ! readMain)) {
+                println("Breakpoint")
+            }
+            lastMem = memName(mem)
+            if (mem != null) {
+                if (get) {
+                    result = mem[ea]
+                } else {
+                    mem[ea] = value
+                }
+            } else{
+                println("null mem")
+            }
+            result
         } else {  // 0xe000-0xffff
             val bug = true
             if (! bug) {
@@ -322,81 +333,71 @@ class Memory(val size: Int? = null) {
             log(address)
         }
 
-        if (get) {
-            when(i) {
-                0xc080, 0xc084 -> {
-                    writeCount = 0
-                    enableRam2Read(i)
-                    disableWrite(i)
-                }
-                0xc088, 0xc08c -> {
-                    writeCount = 0
-                    enableRam1Read(i)
-                    disableWrite(i)
-                }
-                0xc081, 0xc085 -> {
-                    if (writeCount < 2) writeCount++
-                    enableRomRead(i)
-                    if (writeCount == 2) {
-                        enableRam2Write(i)
+        when(i) {
+            0xc080, 0xc084 -> {
+                writeCount = 0
+                enableRam2Read(i)
+                disableWrite(i)
+            }
+            0xc088, 0xc08c -> {
+                writeCount = 0
+                enableRam1Read(i)
+                disableWrite(i)
+            }
+            0xc082, 0xc086, 0xc08a, 0xc08e -> {
+                writeCount = 0
+                enableRomRead(i)
+                disableWrite(i)
+            }
+            else -> {
+                if (get) {
+                    when(i) {
+                        0xc081, 0xc085 -> {
+                            if (writeCount < 2) writeCount++
+                            enableRomRead(i)
+                            if (writeCount == 2) {
+                                enableRam2Write(i)
+                            }
+                        }
+                        0xc089, 0xc08d -> {
+                            if (writeCount < 2) writeCount++
+                            enableRomRead(i)
+                            if (writeCount == 2) {
+                                enableRam1Write(i)
+                            }
+                        }
+                        0xc083, 0xc087 -> {
+                            if (writeCount < 2) writeCount++
+                            enableRam2Read(i)
+                            if (writeCount == 2) {
+                                enableRam2Write(i)
+                            }
+                        }
+                        0xc08b, 0xc08f -> {
+                            if (writeCount < 2) writeCount++
+                            enableRam1Read(i)
+                            if (writeCount == 2) {
+                                enableRam1Write(i)
+                            }
+                        }
                     }
-                }
-                0xc089, 0xc08d -> {
-                    if (writeCount < 2) writeCount++
-                    enableRomRead(i)
-                    if (writeCount == 2) {
-                        enableRam1Write(i)
-                    }
-                }
-                0xc082, 0xc086, 0xc08a, 0xc08e -> {
-                    writeCount = 0
-                    enableRomRead(i)
-                    disableWrite(i)
-                }
-                0xc083, 0xc087 -> {
-                    if (writeCount < 2) writeCount++
-                    enableRam2Read(i)
-                    if (writeCount == 2) {
-                        enableRam2Write(i)
-                    }
-                }
-                0xc08b, 0xc08f -> {
-                    if (writeCount < 2) writeCount++
-                    enableRam1Read(i)
-                    if (writeCount == 2) {
-                        enableRam1Write(i)
+                } else { // write
+                    when(i) {
+                        0xc081, 0xc085, 0xc089, 0xc08d -> {
+                            writeCount = 0
+                            enableRomRead(i)
+                        }
+                        0xc083, 0xc087 -> {
+                            writeCount = 0
+                            enableRam2Read(i)
+                        }
+                        0xc08b, 0xc08f -> {
+                            writeCount = 0
+                            enableRam1Read(i)
+                        }
                     }
                 }
             }
-        } else {
-            when(i) {
-                0xc080, 0xc084 -> {
-                    writeCount = 0
-                    enableRam2Read(i)
-                }
-                0xc088, 0xc08c -> {
-                    writeCount = 0
-                    enableRam1Read(i)
-                }
-                0xc081, 0xc085, 0xc089, 0xc08d -> {
-                    writeCount = 0
-                    enableRomRead(i)
-                }
-                0xc082, 0xc086, 0xc08a, 0xc08e -> {
-                    writeCount = 0
-                    enableRomRead(i)
-                    disableWrite(i)
-                }
-                0xc083, 0xc087 -> {
-                    writeCount = 0
-                    enableRam2Read(i)
-                }
-                0xc08b, 0xc08f -> {
-                    writeCount = 0
-                    enableRam1Read(i)
-                }
-            }
-
         }
         return 0
     }
