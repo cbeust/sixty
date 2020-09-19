@@ -79,6 +79,7 @@ class Computer(val cpu: Cpu = Cpu(memory = Memory()),
         var previousPc = 0
         val opCode = memory[cpu.PC]
         var done = false
+        cycles++
 
         if (opCode == 0x60 && cpu.SP.isEmpty()) {
             done = true
