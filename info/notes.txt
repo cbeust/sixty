@@ -28,3 +28,9 @@ Stepper motor:  http://www.hackzapple.com/DISKII/DISKIITECH09D.HTM
 
 If 80STORE is set, RAMRD and RAMWRT do not affect $400-$7ff
 If 80STORE and HIRES are both set, RAMRD and RAMWRT do not affect $400-$7ff or $2000$-3fff
+
+80STORE switch functions as an enabling switch: with it on, the PAGE2 switch selects main memory or auxiliary memory. With the HIRES switch off, the memory space switched by PAGE2 is the text Page 1, from $400-$7ff; with HIRES on, PAGE2 switches both text Page 1 and high resolution graphics Page 1, $2000-$3fff
+
+If you are using both the auxiliary RAM control swithces and the auxiliary-display page control switches, the display page control switches take pririty: if 80STORE is off, RAMRD and RAMWRT work for the entire memory space from $200 to $BFFF, but if 80STORE is on, RAMRD and RAMWRT have no effect on the display page.
+
+Specifically, if 80STORE is on and HIRES is off, PAGE2 controls text Page 1, regardless of the settings of RAMRD and RAMWRT. Likewise, if 80STORE and HIRES are both on, Page2 controls both text Page 1 and high resolution graphics Page 1, again regardless of RAMRD and RAMWRT.
