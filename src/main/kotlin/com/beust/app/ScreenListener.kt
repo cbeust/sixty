@@ -29,10 +29,10 @@ class ScreenListener(private val memory: Memory, private val textScreen: TextScr
     override fun onWrite(location: Int, value: Int) {
         if (location in 0x400..0x7ff) {
             textScreen.drawMemoryLocation(location, value)
-            logLines.add("Writing on the text screen: $" + location.hh() + "=$" + value.h())
+//            logLines.add("Writing on the text screen: $" + location.hh() + "=$" + value.h())
         } else if (location in 0x2000..0x4000) {
             hiresScreen.drawMemoryLocation(memory, location)
-            logLines.add("Writing in graphics")
+//            logLines.add("Writing in graphics")
         }
     }
 
