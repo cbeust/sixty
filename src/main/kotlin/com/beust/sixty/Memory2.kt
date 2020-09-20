@@ -13,30 +13,24 @@ class Memory(val size: Int? = null) {
 
     var lastMem: String? = null
     private var store80On = false
+    private var readAux = false
+    private var writeAux = false
     private var hires = false
+    private var page2 = false
+    private var cxRom = false
+    private var c3Rom = false
+    private var video80 = false
+    private var altChar = false
+    private var textSet = true
+    private var mixed = false
+
+    override fun toString() =
+            "{Memory readAux:$readAux writeAux:$writeAux altZp:$altZp store80:$store80On page2: $page2"
 
     /** Affects $0-$1FF and $D000-$FFFF */
-    private var zpMain = true
-        set(f) {
-            if (! init) logMem("zpMain: $f")
-            field = f
-        }
+    private var altZp = false
     private val mainZp = IntArray(0x200) { 0 }
     private val auxZp = IntArray(0x200) { 0 }
-
-    /** $200 - $BFFF */
-    private var readMain = true
-        set(f) {
-            if (! init) logMem("readMain: $f")
-            field = f
-        }
-    var writeMain = true
-        set(f) {
-            if (! init) logMem("writeMain: $f")
-            field = f
-        }
-
-    var page2 = false
 
     private val mainMemory = IntArray(0xc000) { 0 }
     private val auxMemory = IntArray(0xc000) { 0 }
@@ -100,13 +94,7 @@ class Memory(val size: Int? = null) {
     private val rom = IntArray(0x3000) { 0 }
     private val mainHighRam = HighRam("Main")
     private val auxHighRam = HighRam("Aux")
-    private fun currentHighRam() = if (zpMain) {
-//        println("Selecting main high ram")
-        mainHighRam
-    } else {
-//        println("Selecting aux high ram")
-        auxHighRam
-    }
+    private fun currentHighRam() = if (altZp) auxHighRam else mainHighRam
 
 //    private val ram1 = IntArray(0x1000) { 0 }
 //    private val ram2 = IntArray(0x1000) { 0 }
@@ -132,23 +120,6 @@ class Memory(val size: Int? = null) {
     private val mem = IntArray(0x10000) { 0 }
     private var writeCount = 0
 
-    private fun updateSoftSwitch(value: Int, reset: Int, set: Int, status: Int, handled: Boolean = false,
-        message: String? = null): Int {
-        when (value) {
-            reset -> force { c0Memory[status] = 0 }
-            set -> force { c0Memory[status] = 0x80 }
-            else -> ERROR("Should never happen")
-        }
-        if (! handled) {
-            if (message != null) {
-                logMem(message)
-            } else {
-                NYI("Write at " + (0xc000 + value).hh() + " new status[" + status.h() + "]=" + c0Memory[status].h())
-            }
-        }
-        return c0Memory[0]
-    }
-
     private fun getOrSet(get: Boolean, i: Int, value: Int = 0): Int? {
         var result: Int? = null
 
@@ -157,27 +128,27 @@ class Memory(val size: Int? = null) {
                 if (page2) auxMemory else mainMemory
             } else {
                 if (get) {
-                    if (readMain) mainMemory else auxMemory
+                    if (readAux) auxMemory else mainMemory
                 } else {
-                    if (writeMain) mainMemory else auxMemory
+                    if (writeAux) auxMemory else mainMemory
                 }
             }
         }
 
         if (i < 0x200) {
             if (get) {
-                result = if (zpMain) mainZp[i] else auxZp[i]
+                result = if (altZp) auxZp[i] else mainZp[i]
             } else {
-                if (zpMain) mainZp[i] = value else auxZp[i] = value
+                if (altZp) auxZp[i] = value else mainZp[i] = value
             }
         } else if (i in 0x200..0xbfff) {
             val mem = when(i) {
                 in 0x400..0x7ff -> correctMem(store80On)
                 in 0x2000..0x3fff -> correctMem(store80On && hires)
                 else -> if (get) {
-                    if (readMain) mainMemory else auxMemory
+                    if (readAux) auxMemory else mainMemory
                 } else {
-                    if (writeMain) mainMemory else auxMemory
+                    if (writeAux) auxMemory else mainMemory
                 }
             }
             if (get)
@@ -185,7 +156,20 @@ class Memory(val size: Int? = null) {
             else
                 mem[i] = value
         } else if (i in 0xc000..0xcfff) {
+            fun status(b: Boolean) = if (b) 0x80 else 0
+
+            // Switches that are both read and write
+            when(i) {
+                0xc050 -> textSet = false
+                0xc051 -> textSet = true
+                0xc052 -> mixed = false
+                0xc053 -> mixed = true
+                0xc054 -> page2 = false
+                0xc055 -> page2 = true
+            }
+
             if (get) {
+                // Read switches
                 val address = i - 0xc000
                 result = when (i) {
                     0xC000 -> {
@@ -200,66 +184,47 @@ class Memory(val size: Int? = null) {
                     in 0xc001..0xc00f -> {
                         c0Memory[0]
                     }
+                    0xc013 -> status(readAux)
+                    0xc014 -> status(writeAux)
+                    0xc015 -> status(cxRom)
+                    0xc016 -> status(altZp)
+                    0xc017 -> status(c3Rom)
+                    0xc018 -> status(store80On)
+                    0xc01a -> status(textSet)
+                    0xc01b -> status(mixed)
+                    0xc01c -> status(page2)
+                    0xc01e -> status(altChar)
+                    0xc01f -> status(video80)
                     in 0xc080..0xc08f -> handleRam(get, i)
-                    0xc050, 0xc051 -> updateSoftSwitch(address, 0x50, 0x51, 0x1a)
-                    0xc052, 0xc053 -> updateSoftSwitch(address, 0x52, 0x53, 0x1b)
-                    0xc054, 0xc055 -> {
-                        page2 = i == 0xc055
-                        updateSoftSwitch(address, 0x54, 0x55, 0x1c, message = "Page2 is $page2")
-                    }
-                    0xc056, 0xc057 -> {
-                        hires = i == 0xc057
-                        updateSoftSwitch(address, 0x56, 0x57, 0x1d, message = "Hires is $hires")
-                    }
                     else -> {
 //                        println("Reading from unhandled " + i.hh())
                         c0Memory[address]
                     }
                 }
-            } else { // set
-                val address = i - 0xc000
+            } else {
+                // Write switches
                 if (i in 0xc080..0xc08f) handleRam(get, i)
                 else if (!init) when(i) {
-                    0xc000, 0xc001 -> {
-                        store80On = i == 0xc001
-                        logMem("store80n: $store80On")
-                        updateSoftSwitch(address, 0, 1, 0x18, handled = true)
-                    }
-                    0xc002, 0xc003 -> {
-                        if (! store80On) {
-                            readMain = i == 0xc002
-                            updateSoftSwitch(address, 2, 3, 0x13)
-                        }
-                    }
-                    0xc004, 0xc005 -> {
-                        // | ACTION | ADDRESS       |
-                        // |de W    | $C004 / 49156 | WRITE TO MAIN 48K |
-                        if (! store80On) {
-                            writeMain = i == 0xc004
-                            updateSoftSwitch(address, 4, 5, 0x14, true)
-                        }
-                    }
-                    0xc006, 0xc007 -> updateSoftSwitch(address, 6, 7, 0x15)
-                    0xc008, 0xc009 -> {
-                        if (i == 0xc009) {
-                            println("BREAKPOINT SET ZP")
-                        }
-                        zpMain = i == 0xc008
-                        updateSoftSwitch(address, 8, 9, 0x16, true)
-                    }
-                    0xc00a, 0xc00b -> updateSoftSwitch(address, 0xa, 0xb, 0x17)
-                    0xc00c, 0xc00d -> updateSoftSwitch(address, 0xc, 0xd, 0x1f)
-                    0xc00e, 0xc00f -> updateSoftSwitch(address, 0xe, 0xf, 0x1e)
+                    0xc000 -> store80On = false
+                    0xc001 -> store80On = true
+                    0xc002 -> readAux = false
+                    0xc003 -> readAux = true
+                    0xc004 -> writeAux = false
+                    0xc005 -> writeAux = true
+                    0xc006 -> cxRom = false
+                    0xc007 -> cxRom = true
+                    0xc008 -> altZp = false
+                    0xc009 -> altZp = true
+                    0xc00a -> c3Rom = false
+                    0xc010 -> c3Rom = true
+                    0xc00c -> video80 = false
+                    0xc00d -> video80 = true
+                    0xc00e -> altChar = false
+                    0xc00f -> altChar = true
                     0xc010 -> {
                         // KBDSTRB
                         c0Memory[0] = c0Memory[0].and(0x7f)
                         c0Memory[0]
-                    }
-                    0xc050, 0xc051 -> updateSoftSwitch(address, 0x50, 0x51, 0x1a)
-                    0xc052, 0xc053 -> updateSoftSwitch(address, 0x52, 0x53, 0x1b)
-                    0xc054, 0xc055 -> {
-                        page2 = i == 0xc055
-                        updateSoftSwitch(address, 0x54, 0x55, 0x1c)
                     }
                 } else {
                     // init is true
