@@ -90,10 +90,11 @@ class Computer(val cpu: Cpu = Cpu(memory = Memory()),
             if (memory[cpu.PC + 1] == 0x44) {
                 println("BREAKPOINT")
             }
-//            if (BREAKPOINT != null) {
-//                if (cpu.PC in BREAKPOINT - 100 .. BREAKPOINT) {
-//                    DEBUG = true
-//                }
+            if (BREAKPOINT != null) {
+                if (cpu.PC in BREAKPOINT - 100..BREAKPOINT) {
+                    DEBUG = true
+                }
+            }
 ////                if (cycles > 1180035) {
 ////                    println("cycle breakpoint")
 ////                }
@@ -120,6 +121,10 @@ class Computer(val cpu: Cpu = Cpu(memory = Memory()),
                     val (byte, word) = byteWord()
                     val debugString = formatPc(cpu.PC, opCode) + formatInstruction(opCode, cpu.PC, byte, word)
                     previousPc = cpu.PC
+                    if (cpu.PC == BREAKPOINT && ! cpu.P.Z) {
+                        println("BREAKPOINT " + memory.toString())
+                        ""
+                    }
                     cpu.PC += SIZES[opCode]
                     cpu.nextInstruction(previousPc)
                     if (debugAsm) println(debugString + " " + cpu.toString() + " " + cycles)
