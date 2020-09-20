@@ -90,18 +90,18 @@ class Computer(val cpu: Cpu = Cpu(memory = Memory()),
             if (memory[cpu.PC + 1] == 0x44) {
                 println("BREAKPOINT")
             }
-            if (BREAKPOINT != null) {
-                if (cpu.PC in BREAKPOINT - 100 .. BREAKPOINT) {
-                    DEBUG = true
-                }
-//                if (cycles > 1180035) {
-//                    println("cycle breakpoint")
+//            if (BREAKPOINT != null) {
+//                if (cpu.PC in BREAKPOINT - 100 .. BREAKPOINT) {
+//                    DEBUG = true
 //                }
-                if (cpu.PC == BREAKPOINT) {
-                    log.debug(this.toString())
-                    log.debug("breakpoint")
-                }
-            }
+////                if (cycles > 1180035) {
+////                    println("cycle breakpoint")
+////                }
+//                if (cpu.PC == BREAKPOINT) {
+//                    log.debug(this.toString())
+//                    log.debug("breakpoint")
+//                }
+//            }
 //                if (cpu.PC == 0xc696) {
 //                    if  (cpu.Y == 1) {
 //                        sector = cpu.A
