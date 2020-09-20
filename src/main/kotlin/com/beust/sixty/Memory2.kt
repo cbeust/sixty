@@ -166,6 +166,8 @@ class Memory(val size: Int? = null) {
                 0xc053 -> mixed = true
                 0xc054 -> page2 = false
                 0xc055 -> page2 = true
+                0xc056 -> hires = false
+                0xc057 -> hires = true
             }
 
             if (get) {
@@ -190,9 +192,11 @@ class Memory(val size: Int? = null) {
                     0xc016 -> status(altZp)
                     0xc017 -> status(c3Rom)
                     0xc018 -> status(store80On)
+                    // 0xc019: VBL
                     0xc01a -> status(textSet)
                     0xc01b -> status(mixed)
                     0xc01c -> status(page2)
+                    0xc01d -> status(hires)
                     0xc01e -> status(altChar)
                     0xc01f -> status(video80)
                     in 0xc080..0xc08f -> handleRam(get, i)
