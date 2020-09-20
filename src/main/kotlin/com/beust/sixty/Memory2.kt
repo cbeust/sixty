@@ -10,7 +10,7 @@ class Memory(val size: Int? = null) {
     val listeners = arrayListOf<MemoryListener>()
     val lastMemDebug = arrayListOf<String>()
 
-    private var init = true
+    var init = true
 
     var lastMem: String? = null
     private var store80On = false
@@ -18,8 +18,8 @@ class Memory(val size: Int? = null) {
     private var writeAux = false
     private var hires = false
     private var page2 = false
-    private var internalCxRom : Boolean by LoggedProp(true)
-    private var internalC3Rom  : Boolean by LoggedProp(true)
+    var internalCxRom : Boolean by LoggedProp(false)
+    var slotC3Rom  : Boolean by LoggedProp(false)
     private var video80 = false
     private var altChar = false
     private var textSet = true
@@ -27,7 +27,7 @@ class Memory(val size: Int? = null) {
 
     override fun toString() =
             "{Memory readAux:$readAux writeAux:$writeAux altZp:$altZp store80:$store80On page2: $page2" +
-                    " c3Rom:$internalC3Rom cxRom:$internalCxRom"
+                    " slotC3Rom:$slotC3Rom cxRom:$internalCxRom"
 
     /** Affects $0-$1FF and $D000-$FFFF */
     private var altZp = false
@@ -41,18 +41,20 @@ class Memory(val size: Int? = null) {
         private val slot = IntArray(0x1000) { 0 }
         private val internal = IntArray(0x1000) { 0 }
 
-//        fun current(address: Int): String = "Current C0 memory: " + (if (mem(address) == slot) "slot" else "internal")
+        fun current(address: Int): String = if (mem(address) == slot) "slot" else "internal"
 
         private fun mem(address: Int): IntArray {
+//            if (init) return internal
+
             val result = when {
                 address in 0xc000..0xc0ff -> internal
-                ! internalCxRom && ! internalC3Rom -> {
+                ! internalCxRom && ! slotC3Rom -> {
                     when(address) {
                         in 0xc300..0xc3ff -> internal
                         else -> slot
                     }
                 }
-                ! internalCxRom && internalC3Rom -> slot
+                ! internalCxRom && slotC3Rom -> slot
                 else -> internal
             }
 //            if (! init) println("Current: " + if (result == slot) "slot" else "internal")
@@ -61,26 +63,30 @@ class Memory(val size: Int? = null) {
         }
 
         operator fun get(address: Int): Int {
-            if (! init && address == 0xc300) {
-                println("Request for c300")
-                ""
-            }
+//            if (init) return internal[address - 0xc000]
+//            if (! init) {
+//                val result = when (address) {
+//                    0xc2ff -> 1
+////                    0xceb5 -> 0xfe
+//                    else -> null
+//                }
+//                if (result != null) return result
+//            }
             return (address - 0xc000).let { mem(it)[it] }
         }
 
         operator fun set(address: Int, value: Int) {
-            val m = mem(address)
-            if (init || m != internal) {
-                (address - 0xc000).let {
-                    if (! init) {
-                        println("BREAKPOINT INTERNAL")
-                    }
-                    mem(it)[it] = value
-                }
-            } else {
-                println("Declining write to ${address.hh()}=${value.h()}")
-                ""
+            if (init && address % 256 == 0) {
+                println("Loading bank ${address.hh()} in " + current(address))
             }
+//            if (init) {
+//                internal[address - 0xc000] = value
+////                slot[address - 0xc000] = value
+//            } else {
+                (address - 0xc000).let {
+                    mem(address)[it] = value
+                }
+//            }
         }
     }
 
@@ -237,7 +243,7 @@ class Memory(val size: Int? = null) {
                     0xc014 -> status(writeAux)
                     0xc015 -> status(internalCxRom)
                     0xc016 -> status(altZp)
-                    0xc017 -> status(internalC3Rom)
+                    0xc017 -> status(slotC3Rom)
                     0xc018 -> status(store80On)
                     // 0xc019: VBL
                     0xc01a -> status(textSet)
@@ -255,34 +261,33 @@ class Memory(val size: Int? = null) {
                     }
                 }
             } else {
-                // Write switches
-                if (i in 0xc080..0xc08f) handleRam(get, i)
-                else if (!init) when(i) {
-                    0xc000 -> store80On = false
-                    0xc001 -> store80On = true
-                    0xc002 -> readAux = false
-                    0xc003 -> readAux = true
-                    0xc004 -> writeAux = false
-                    0xc005 -> writeAux = true
-                    0xc006 -> internalCxRom = false
-                    0xc007 -> internalCxRom = true
-                    0xc008 -> altZp = false
-                    0xc009 -> altZp = true
-                    0xc00a -> internalC3Rom = false
-                    0xc00b -> internalC3Rom = true
-                    0xc00c -> video80 = false
-                    0xc00d -> video80 = true
-                    0xc00e -> altChar = false
-                    0xc00f -> altChar = true
-                    0xc010 -> {
-                        // KBDSTRB
-                        c0Memory[0] = c0Memory[0].and(0x7f)
-                        c0Memory[0]
+                if (init) c0Memory[i] = value
+                else {
+                    // Write switches
+                    if (i in 0xc080..0xc08f) handleRam(get, i)
+                    else if (!init) when (i) {
+                        0xc000 -> store80On = false
+                        0xc001 -> store80On = true
+                        0xc002 -> readAux = false
+                        0xc003 -> readAux = true
+                        0xc004 -> writeAux = false
+                        0xc005 -> writeAux = true
+                        0xc006 -> internalCxRom = false
+                        0xc007 -> internalCxRom = true
+                        0xc008 -> altZp = false
+                        0xc009 -> altZp = true
+                        0xc00a -> slotC3Rom = false
+                        0xc00b -> slotC3Rom = true
+                        0xc00c -> video80 = false
+                        0xc00d -> video80 = true
+                        0xc00e -> altChar = false
+                        0xc00f -> altChar = true
+                        0xc010 -> {
+                            // KBDSTRB
+                            c0Memory[0xc000] = c0Memory[0xc000].and(0x7f)
+                            c0Memory[0xc000]
+                        }
                     }
-                } else {
-                    // init is true
-//                    println("Initializing C0 memory with " + c0Memory.current(i))
-                    c0Memory[i] = value
                 }
             }
         } else if (i in 0xd000..0xffff) {
@@ -505,19 +510,22 @@ class Memory(val size: Int? = null) {
         return 0
     }
 
-    fun loadResource(name: String, address: Int) {
-        load(this::class.java.classLoader.getResource(name).openStream(), address)
+    fun loadResource(name: String, address: Int, fileOffset: Int = 0, size: Int = -1) {
+        load(this::class.java.classLoader.getResource(name).openStream(), address, fileOffset, size)
     }
 
-    fun load(file: String, address: Int = 0) {
+    fun load(file: String, address: Int = 0, fileOffset: Int = 0, size: Int = -1) {
         File(file).inputStream().use { ins ->
-            load(ins, address)
+            load(ins, address, fileOffset, size)
         }
     }
 
-    fun load(ins: InputStream, address: Int = 0) {
+    fun load(ins: InputStream, address: Int = 0, fileOffset: Int = 0, size: Int = -1) {
         init = true
-        ins.readBytes().forEachIndexed { index, v ->
+        val allBytes = ins.readBytes()
+        val max = if (size == -1) allBytes.size else size
+        repeat(max) { index ->
+            val v = allBytes[index + fileOffset]
             if (index + address < 0x10000) {
                 this[index + address] = v.toInt()
             }

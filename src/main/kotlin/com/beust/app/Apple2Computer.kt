@@ -55,7 +55,17 @@ fun apple2Computer(debugMem: Boolean, diskController: DiskController): Computer 
 
 //        load("d:\\pd\\Apple Disks\\roms\\APPLE2E.ROM", 0xc000)
 //        load("d:\\pd\\Apple Disks\\roms\\C000.dump", 0xc000)
-        loadResource("Apple2e.rom", 0xc000)
+        loadResource("Apple2e.rom", 0xd000, 0x1000, 0x3000)
+        internalCxRom = true
+        // Load C100-C2FF in internal rom
+        loadResource("Apple2e.rom", 0xc100, 0x100, 0x200)
+        // Load C800-CFFF in internal rom
+        loadResource("Apple2e.rom", 0xc800, 0x800, 0x800)
+        internalCxRom = false
+        slotC3Rom = true
+        // Load C300-C3FF in slot rom
+        loadResource("Apple2e.rom", 0xc300, 0x300, 0x100)
+        slotC3Rom = false
 //        loadResource("Apple2_Plus.rom", 0xd000)
         loadResource("DISK2.ROM", 0xc600)
 //        loadResource("DISK2.ROM", 0xc500)
