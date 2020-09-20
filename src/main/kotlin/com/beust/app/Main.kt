@@ -6,9 +6,10 @@ import java.io.File
 
 var DEBUG = false
 // 6164: test failing LC writing
-val BREAKPOINT = null // 0xc667
+// check failing at 0x64f9
+val BREAKPOINT = 0x64f9
 
-val disk = 1
+val disk = 2
 
 val DISK_DOS_3_3 = DskDisk(File("src\\test\\resources\\Apple DOS 3.3.dsk").inputStream())
 
