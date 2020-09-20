@@ -2,6 +2,7 @@ package com.beust.sixty
 
 import java.io.File
 import java.io.InputStream
+import kotlin.reflect.KProperty
 
 @Suppress("UnnecessaryVariable", "BooleanLiteralArgument")
 class Memory(val size: Int? = null) {
@@ -17,15 +18,16 @@ class Memory(val size: Int? = null) {
     private var writeAux = false
     private var hires = false
     private var page2 = false
-    private var cxRom = false
-    private var c3Rom = false
+    private var internalCxRom : Boolean by LoggedProp(true)
+    private var internalC3Rom  : Boolean by LoggedProp(true)
     private var video80 = false
     private var altChar = false
     private var textSet = true
     private var mixed = false
 
     override fun toString() =
-            "{Memory readAux:$readAux writeAux:$writeAux altZp:$altZp store80:$store80On page2: $page2"
+            "{Memory readAux:$readAux writeAux:$writeAux altZp:$altZp store80:$store80On page2: $page2" +
+                    " c3Rom:$internalC3Rom cxRom:$internalCxRom"
 
     /** Affects $0-$1FF and $D000-$FFFF */
     private var altZp = false
@@ -35,8 +37,54 @@ class Memory(val size: Int? = null) {
     private val mainMemory = IntArray(0xc000) { 0 }
     private val auxMemory = IntArray(0xc000) { 0 }
 
-    /** $C000-$CFFF */
-    private val c0Memory = IntArray(0x1000) { 0 }
+    inner class C0Page {
+        private val slot = IntArray(0x1000) { 0 }
+        private val internal = IntArray(0x1000) { 0 }
+
+//        fun current(address: Int): String = "Current C0 memory: " + (if (mem(address) == slot) "slot" else "internal")
+
+        private fun mem(address: Int): IntArray {
+            val result = when {
+                address in 0xc000..0xc0ff -> internal
+                ! internalCxRom && ! internalC3Rom -> {
+                    when(address) {
+                        in 0xc300..0xc3ff -> internal
+                        else -> slot
+                    }
+                }
+                ! internalCxRom && internalC3Rom -> slot
+                else -> internal
+            }
+//            if (! init) println("Current: " + if (result == slot) "slot" else "internal")
+
+            return result
+        }
+
+        operator fun get(address: Int): Int {
+            if (! init && address == 0xc300) {
+                println("Request for c300")
+                ""
+            }
+            return (address - 0xc000).let { mem(it)[it] }
+        }
+
+        operator fun set(address: Int, value: Int) {
+            val m = mem(address)
+            if (init || m != internal) {
+                (address - 0xc000).let {
+                    if (! init) {
+                        println("BREAKPOINT INTERNAL")
+                    }
+                    mem(it)[it] = value
+                }
+            } else {
+                println("Declining write to ${address.hh()}=${value.h()}")
+                ""
+            }
+        }
+    }
+
+    private val c0Memory = C0Page()
 
     inner class HighRam(val name: String) {
         /** d000-dfff */
@@ -172,25 +220,24 @@ class Memory(val size: Int? = null) {
 
             if (get) {
                 // Read switches
-                val address = i - 0xc000
                 result = when (i) {
                     0xC000 -> {
                         // KBD/CLR80STORE
-                        c0Memory[address]
+                        c0Memory[i]
                     }
                     0xc010 -> {
                         // KBDSTRB
-                        c0Memory[0] = c0Memory[0].and(0x7f)
-                        c0Memory[0]
+                        c0Memory[0xc000] = c0Memory[0xc000].and(0x7f)
+                        c0Memory[0xc000]
                     }
                     in 0xc001..0xc00f -> {
-                        c0Memory[0]
+                        c0Memory[0xc000]
                     }
                     0xc013 -> status(readAux)
                     0xc014 -> status(writeAux)
-                    0xc015 -> status(cxRom)
+                    0xc015 -> status(internalCxRom)
                     0xc016 -> status(altZp)
-                    0xc017 -> status(c3Rom)
+                    0xc017 -> status(internalC3Rom)
                     0xc018 -> status(store80On)
                     // 0xc019: VBL
                     0xc01a -> status(textSet)
@@ -200,9 +247,11 @@ class Memory(val size: Int? = null) {
                     0xc01e -> status(altChar)
                     0xc01f -> status(video80)
                     in 0xc080..0xc08f -> handleRam(get, i)
+                    // Understanding the Apple IIe, 5-28
+                    in 0xc100..0xcfff -> c0Memory[i]
                     else -> {
 //                        println("Reading from unhandled " + i.hh())
-                        c0Memory[address]
+                        c0Memory[i]
                     }
                 }
             } else {
@@ -215,12 +264,12 @@ class Memory(val size: Int? = null) {
                     0xc003 -> readAux = true
                     0xc004 -> writeAux = false
                     0xc005 -> writeAux = true
-                    0xc006 -> cxRom = false
-                    0xc007 -> cxRom = true
+                    0xc006 -> internalCxRom = false
+                    0xc007 -> internalCxRom = true
                     0xc008 -> altZp = false
                     0xc009 -> altZp = true
-                    0xc00a -> c3Rom = false
-                    0xc010 -> c3Rom = true
+                    0xc00a -> internalC3Rom = false
+                    0xc00b -> internalC3Rom = true
                     0xc00c -> video80 = false
                     0xc00d -> video80 = true
                     0xc00e -> altChar = false
@@ -232,7 +281,8 @@ class Memory(val size: Int? = null) {
                     }
                 } else {
                     // init is true
-                    c0Memory[i - 0xc000] = value
+//                    println("Initializing C0 memory with " + c0Memory.current(i))
+                    c0Memory[i] = value
                 }
             }
         } else if (i in 0xd000..0xffff) {
