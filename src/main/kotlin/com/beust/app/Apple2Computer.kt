@@ -58,7 +58,7 @@ fun apple2Computer(debugMem: Boolean, diskController: DiskController): Computer 
         loadResource("Apple2e.rom", 0xc000)
 //        loadResource("Apple2_Plus.rom", 0xd000)
         loadResource("DISK2.ROM", 0xc600)
-        loadResource("DISK2.ROM", 0xc500)
+//        loadResource("DISK2.ROM", 0xc500)
 
         Thread {
             runWatcher(this)
