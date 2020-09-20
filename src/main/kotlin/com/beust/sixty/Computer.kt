@@ -91,7 +91,7 @@ class Computer(val cpu: Cpu = Cpu(memory = Memory()),
                 println("BREAKPOINT")
             }
             if (BREAKPOINT != null) {
-                if (cpu.PC in BREAKPOINT - 100..BREAKPOINT) {
+                if (cpu.PC in (BREAKPOINT - 100)..BREAKPOINT) {
                     DEBUG = true
                 }
             }
@@ -122,7 +122,7 @@ class Computer(val cpu: Cpu = Cpu(memory = Memory()),
                     val debugString = formatPc(cpu.PC, opCode) + formatInstruction(opCode, cpu.PC, byte, word)
                     previousPc = cpu.PC
                     if (cpu.PC == BREAKPOINT && ! cpu.P.Z) {
-                        println("BREAKPOINT " + memory.toString())
+                        println("BREAKPOINT $memory")
                         ""
                     }
                     cpu.PC += SIZES[opCode]
