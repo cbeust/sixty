@@ -36,7 +36,7 @@ class Memory(val size: Int? = null) {
         }
     var slotC3WasReset : Boolean = false
         set(f) {
-            println("SETTING RESET TO $f")
+//            println("SETTING RESET TO $f")
             field = f
         }
     private var video80 = false
@@ -164,18 +164,12 @@ class Memory(val size: Int? = null) {
                 readBank2 -> bank2[ea]
                 else -> ERROR("Should never happen")
             }
-            if (result == 0x11 && i == 0xd17b) {
-                println("BREAKPOINT D1")
-            }
             println("Highram $name [" + i.hh() + "] returning ${result.h()}")
             return result
         }
 
         operator fun set(i: Int, value: Int) {
             val ea = i - 0xd000
-            if (i == 0xd17b && ! init) {
-                println("BREAKPOINT")
-            }
             when {
                 i in 0xe000..0xffff -> rom[i - 0xe000] = value
                 writeBank1 -> bank1[ea] = value
