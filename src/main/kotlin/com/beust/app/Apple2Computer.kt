@@ -50,13 +50,15 @@ class Apple2Frame: JFrame() {
     }
 }
 
-fun apple2Computer(debugMem: Boolean, diskController: DiskController): Computer {
-    val memory = Memory(65536).apply {
+fun createApple2Memory(): Memory {
+    val result = Memory(65536).apply {
 
 //        load("d:\\pd\\Apple Disks\\roms\\APPLE2E.ROM", 0xc000)
 //        load("d:\\pd\\Apple Disks\\roms\\C000.dump", 0xc000)
         loadResource("Apple2e.rom", 0xd000, 0x1000, 0x3000)
+
         internalCxRom = true
+        slotC3Rom = false
         // Load C100-C2FF in internal rom
         loadResource("Apple2e.rom", 0xc100, 0x100, 0x200)
         // Load C800-CFFF in internal rom
@@ -65,11 +67,14 @@ fun apple2Computer(debugMem: Boolean, diskController: DiskController): Computer 
         slotC3Rom = true
         // Load C300-C3FF in slot rom
         loadResource("Apple2e.rom", 0xc300, 0x300, 0x100)
-        slotC3Rom = false
+//        slotC3Rom = false
 //        loadResource("Apple2_Plus.rom", 0xd000)
         loadResource("DISK2.ROM", 0xc600)
 //        loadResource("DISK2.ROM", 0xc500)
 
+        // Reset
+        internalCxRom = false
+        slotC3Rom = false
         Thread {
             runWatcher(this)
         }.start()
@@ -78,6 +83,11 @@ fun apple2Computer(debugMem: Boolean, diskController: DiskController): Computer 
         this[0xc63c] = 4
     }
 
+    return result
+}
+
+fun apple2Computer(debugMem: Boolean, diskController: DiskController): Computer {
+    val memory = createApple2Memory()
     val frame = Apple2Frame().apply {
         addKeyListener(object : java.awt.event.KeyListener {
             override fun keyReleased(e: java.awt.event.KeyEvent?) {}

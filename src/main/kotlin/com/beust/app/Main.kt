@@ -7,7 +7,8 @@ import java.io.File
 var DEBUG = false
 // 6164: test failing LC writing
 // check failing at 0x64f9
-val BREAKPOINT: Int? = 0x65f8 // 0x65c3 // 0x658d
+//val BREAKPOINT: Int? = 0x65f8 // 0x65c3 // 0x658d
+val BREAKPOINT: Int? = 0x6036 // test break
 
 val disk = 2
 

@@ -1,0 +1,117 @@
+
+; ******** Source: cxxx.s
+     1                          * = $6000
+     2                          currentTest = $03
+     3                          add = $04
+     4                          expected = $06
+     5                          
+     6                          
+     7                          start:
+     8                              ;; Test 15
+     9  6000 a915                   lda #$15
+    10  6002 8503                   sta currentTest
+    11  6004 205460                 jsr c8rom
+    12  6007 b02d                   bcs fail
+    13  6009 203960                 jsr c1rom
+    14  600c b028                   bcs fail
+    15  600e 204260                 jsr c4rom
+    16  6011 b023                   bcs fail
+    17  6013 204b60                 jsr c3rom
+    18  6016 901e                   bcc fail
+    19                          
+    20                              ;; Test 16
+    21  6018 a916                   lda #$16
+    22  601a 8503                   sta currentTest
+    23  601c 8d0bc0                 sta $c00b
+    24  601f 205460                 jsr c8rom
+    25  6022 b012                   bcs fail
+    26  6024 203960                 jsr c1rom
+    27  6027 b00d                   bcs fail
+    28  6029 204260                 jsr c4rom
+    29  602c b008                   bcs fail
+    30  602e 204b60                 jsr c3rom
+    31  6031 b003                   bcs fail
+    32                          
+    33  6033 a503                   lda currentTest
+    34  6035 60                     rts
+    35                          
+    36                          fail:
+    37  6036 a503                   lda currentTest
+    38  6038 00                     brk
+    39                          
+    40                          ; if Carry is set, C1 is ROM
+    41                          c1rom:
+    42  6039 ad4dc1                 lda $c14d
+    43  603c c9a5                   cmp #$a5
+    44  603e f001                   beq +
+    45  6040 18                     clc
+    46                          +
+    47  6041 60                     rts
+    48                          
+    49                          c4rom:
+    50  6042 ad36c4                 lda $c436
+    51  6045 c98d                   cmp #$8d
+    52  6047 f001                   beq +
+    53  6049 18                     clc
+    54                          +
+    55  604a 60                     rts
+    56                          
+    57                          c3rom:
+    58  604b ad00c3                 lda $c300
+    59  604e c92c                   cmp #$2c
+    60  6050 f001                   beq +
+    61  6052 18                     clc
+    62                          +
+    63  6053 60                     rts
+    64                          
+    65                          c8rom:
+    66  6054 ad00c8                 lda $c800
+    67  6057 c94c                   cmp #$4c
+    68  6059 f001                   beq +
+    69  605b 18                     clc
+    70                          +
+    71  605c 60                     rts
+    72                          
+    73                          
+    74                          
+    75                          test:
+    76  605d a000                   ldy #$0
+    77  605f ad7a60                 lda .cxtestdata
+    78  6062 8504                   sta add
+    79  6064 ad7b60                 lda .cxtestdata+1
+    80  6067 8505                   sta add+1
+    81  6069 ad7c60                 lda .cxtestdata+2
+    82  606c 8506                   sta expected
+    83                          
+    84                          loop:
+    85  606e b104                   lda (add),Y
+    86  6070 c506                   cmp expected
+    87  6072 d0c2                   bne fail
+    88  6074 c8                     iny
+    89  6075 c005                   cpy #5
+    90  6077 90f5                   bcc loop
+    91  6079 60                     rts
+    92                          
+    93                          .cxtestdata
+    94                          	;; C800-Cffe
+    95  607a 00c84c             	!byte $00, $c8, $4c
+    96  607d 21ca8d             	!byte $21, $ca, $8d
+    97  6080 43ccf0             	!byte $43, $cc, $f0
+    98  6083 b5ce7b             	!byte $b5, $ce, $7b
+    99                          
+   100                          	;; C100-C2ff
+   101  6086 4dc1a5             	!byte $4d, $c1, $a5
+   102  6089 6cc12a             	!byte $6c, $c1, $2a
+   103  608c b5c2ad             	!byte $b5, $c2, $ad
+   104  608f ffc200             	!byte $ff, $c2, $00
+   105                          
+   106                          	;; C400-C7ff
+   107  6092 36c48d             	!byte $36, $c4, $8d
+   108  6095 48c518             	!byte $48, $c5, $18
+   109  6098 80c68b             	!byte $80, $c6, $8b
+   110  609b 6ec7cb             	!byte $6e, $c7, $cb
+   111                          
+   112                          	;; C300-C3ff
+   113  609e 00c32c             	!byte $00, $c3, $2c
+   114  60a1 0ac30c             	!byte $0a, $c3, $0c
+   115  60a4 2bc304             	!byte $2b, $c3, $04

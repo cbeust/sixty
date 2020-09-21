@@ -121,7 +121,7 @@ class Computer(val cpu: Cpu = Cpu(memory = Memory()),
                     val (byte, word) = byteWord()
                     val debugString = formatPc(cpu.PC, opCode) + formatInstruction(opCode, cpu.PC, byte, word)
                     previousPc = cpu.PC
-                    if (cpu.PC == BREAKPOINT && ! cpu.P.Z) {
+                    if (cpu.PC == BREAKPOINT) {
                         println("BREAKPOINT $memory")
                         ""
                     }

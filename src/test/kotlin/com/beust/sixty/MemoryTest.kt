@@ -1,6 +1,7 @@
 package com.beust.sixty
 
 import com.beust.app.DEBUG
+import com.beust.app.createApple2Memory
 import org.assertj.core.api.Assertions.assertThat
 import org.testng.Assert
 import org.testng.annotations.Test
@@ -10,6 +11,11 @@ import java.io.File
 class MemoryTest {
 
     @Test
+    fun cxxx() {
+        runTest("cxxx.bin")
+    }
+
+    @Test(enabled = false)
     fun memorySize() {
         runTest("memory-size.bin")
     }
@@ -26,11 +32,10 @@ class MemoryTest {
 
     private fun runTest(fileName: String) {
         val start = 0x6000
-        val memory = Memory().apply {
-            loadResource("Apple2e.rom", 0xc000)
+        val memory = createApple2Memory().apply {
             val ins2 = File("asm/$fileName").inputStream()
             load(ins2, start)
-            listeners.add(DebugMemoryListener())
+            listeners.add(DebugMemoryListener(this))
         }
         var success = true
         var message: String? = null
