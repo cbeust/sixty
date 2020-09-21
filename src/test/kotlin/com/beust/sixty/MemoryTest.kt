@@ -10,22 +10,19 @@ import java.io.File
 @Test
 class MemoryTest {
 
-    @Test(enabled = false)
     fun memorySize() {
         runTest("memory-size.bin")
     }
 
     @Test(enabled = false)
-    fun languageCard() {
+    fun auxmem() {
         runTest("auxmem.bin")
     }
 
-    @Test(enabled = false)
     fun bankMemory() {
         runTest("bank-memory.bin")
     }
 
-    @Test
     fun cxxx() {
         runTest("cxxx.bin")
     }

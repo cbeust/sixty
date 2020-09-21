@@ -72,11 +72,11 @@ start:
 tests:
     ;; test 19
     ;; expect C3 and C8 rom
-    +START $19
-    +C1_UNKNOWN
-    +C3_ROM
-    +C4_UNKNOWN
-    +C8_ROM
+;    +START $19
+;    +C1_UNKNOWN
+;    +C3_ROM
+;    +C4_UNKNOWN
+;    +C8_ROM
 
     ;; Test 15
     +START $15

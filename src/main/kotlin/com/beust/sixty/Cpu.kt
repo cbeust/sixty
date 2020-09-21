@@ -1,6 +1,7 @@
 package com.beust.sixty
 
 import com.beust.app.StackPointer
+import java.lang.IllegalArgumentException
 
 /**
  * Specs used:
@@ -96,6 +97,7 @@ data class Cpu(val memory: Memory,
             BVC -> timing += branch(byte) { ! P.V }
             BVS -> timing += branch(byte) { P.V }
             BRK -> {
+//                throw IllegalArgumentException("BRK")
                 handleInterrupt(true, IRQ_VECTOR_H, IRQ_VECTOR_L)
             }
             CMP_IMM -> cmp(A, byte)

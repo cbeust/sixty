@@ -74,113 +74,113 @@
     72                          tests:
     73                              ;; test 19
     74                              ;; expect C3 and C8 rom
-    75  6000 20d260a2198603         +START $19
-    76  6007 20de609003a50300       +C1_UNKNOWN
-    77  600f 20f060b003a50300       +C3_ROM
-    78  6017 20e7609003a50300       +C4_UNKNOWN
-    79  601f 20f960b003a50300       +C8_ROM
+    75                          ;    +START $19
+    76                          ;    +C1_UNKNOWN
+    77                          ;    +C3_ROM
+    78                          ;    +C4_UNKNOWN
+    79                          ;    +C8_ROM
     80                          
     81                              ;; Test 15
-    82  6027 20d260a2158603         +START $15
-    83  602e 20f9609003a50300       +C8_UNKNOWN
-    84  6036 20de609003a50300       +C1_UNKNOWN
-    85  603e 20e7609003a50300       +C4_UNKNOWN
-    86  6046 20f060b003a50300       +C3_ROM
+    82  6000 20ab60a2158603         +START $15
+    83  6007 20d2609003a50300       +C8_UNKNOWN
+    84  600f 20b7609003a50300       +C1_UNKNOWN
+    85  6017 20c0609003a50300       +C4_UNKNOWN
+    86  601f 20c960b003a50300       +C3_ROM
     87                          
     88                              ;; Test 16
-    89  604e 20d260a2168603         +START $16
-    90  6055 8d0bc0                 sta $c00b  ;; set slotC3Rom
-    91  6058 20de609003a50300       +C1_UNKNOWN
-    92  6060 20f0609003a50300       +C3_UNKNOWN
-    93  6068 20e7609003a50300       +C4_UNKNOWN
-    94  6070 20f9609003a50300       +C8_UNKNOWN
+    89  6027 20ab60a2168603         +START $16
+    90  602e 8d0bc0                 sta $c00b  ;; set slotC3Rom
+    91  6031 20b7609003a50300       +C1_UNKNOWN
+    92  6039 20c9609003a50300       +C3_UNKNOWN
+    93  6041 20c0609003a50300       +C4_UNKNOWN
+    94  6049 20d2609003a50300       +C8_UNKNOWN
     95                          
     96                              ;; test 17
     97                              ;; expect all ROM
-    98  6078 20d260a2178603         +START $17
-    99  607f 8d07c0                 sta $c007  ;; set intCxRom -> everything should go to internal
-   100  6082 20de60b003a50300       +C1_ROM
-   101  608a 20f060b003a50300       +C3_ROM
-   102  6092 20e760b003a50300       +C4_ROM
-   103  609a 20f960b003a50300       +C8_ROM
+    98  6051 20ab60a2178603         +START $17
+    99  6058 8d07c0                 sta $c007  ;; set intCxRom -> everything should go to internal
+   100  605b 20b760b003a50300       +C1_ROM
+   101  6063 20c960b003a50300       +C3_ROM
+   102  606b 20c060b003a50300       +C4_ROM
+   103  6073 20d260b003a50300       +C8_ROM
    104                          
    105                              ;; test 18
    106                              ;; expect all ROM
-   107  60a2 20d260a2188603         +START $18
-   108  60a9 8d07c0                 sta $c007  ;; set intCxRom
-   109  60ac 8d0bc0                 sta $c00b  ;; set slotc3
-   110  60af 20de60b003a50300       +C1_ROM
-   111  60b7 20f060b003a50300       +C3_ROM
-   112  60bf 20e760b003a50300       +C4_ROM
-   113  60c7 20f960b003a50300       +C8_ROM
+   107  607b 20ab60a2188603         +START $18
+   108  6082 8d07c0                 sta $c007  ;; set intCxRom
+   109  6085 8d0bc0                 sta $c00b  ;; set slotc3
+   110  6088 20b760b003a50300       +C1_ROM
+   111  6090 20c960b003a50300       +C3_ROM
+   112  6098 20c060b003a50300       +C4_ROM
+   113  60a0 20d260b003a50300       +C8_ROM
    114                          
    115                          
-   116  60cf a503                   lda currentTest
-   117  60d1 60                     rts
+   116  60a8 a503                   lda currentTest
+   117  60aa 60                     rts
    118                          
    119                          reset:
-   120  60d2 ea                     nop
-   121  60d3 ea                     nop
-   122  60d4 8d06c0                 sta $c006
-   123  60d7 8d0ac0                 sta $c00a
-   124  60da 60                     rts
+   120  60ab ea                     nop
+   121  60ac ea                     nop
+   122  60ad 8d06c0                 sta $c006
+   123  60b0 8d0ac0                 sta $c00a
+   124  60b3 60                     rts
    125                          
    126                          fail:
-   127  60db a503                   lda currentTest
-   128  60dd 00                     brk
+   127  60b4 a503                   lda currentTest
+   128  60b6 00                     brk
    129                          
    130                          ; if Carry is set, C1 is ROM
    131                          c1rom:
-   132  60de ad4dc1                 lda $c14d
-   133  60e1 c9a5                   cmp #$a5
-   134  60e3 f001                   beq +
-   135  60e5 18                     clc
+   132  60b7 ad4dc1                 lda $c14d
+   133  60ba c9a5                   cmp #$a5
+   134  60bc f001                   beq +
+   135  60be 18                     clc
    136                          +
-   137  60e6 60                     rts
+   137  60bf 60                     rts
    138                          
    139                          c4rom:
-   140  60e7 ad36c4                 lda $c436
-   141  60ea c98d                   cmp #$8d
-   142  60ec f001                   beq +
-   143  60ee 18                     clc
+   140  60c0 ad36c4                 lda $c436
+   141  60c3 c98d                   cmp #$8d
+   142  60c5 f001                   beq +
+   143  60c7 18                     clc
    144                          +
-   145  60ef 60                     rts
+   145  60c8 60                     rts
    146                          
    147                          c3rom:
-   148  60f0 ad00c3                 lda $c300
-   149  60f3 c92c                   cmp #$2c
-   150  60f5 f001                   beq +
-   151  60f7 18                     clc
+   148  60c9 ad00c3                 lda $c300
+   149  60cc c92c                   cmp #$2c
+   150  60ce f001                   beq +
+   151  60d0 18                     clc
    152                          +
-   153  60f8 60                     rts
+   153  60d1 60                     rts
    154                          
    155                          c8rom:
-   156  60f9 ad00c8                 lda $c800
-   157  60fc c94c                   cmp #$4c
-   158  60fe f001                   beq +
-   159  6100 18                     clc
+   156  60d2 ad00c8                 lda $c800
+   157  60d5 c94c                   cmp #$4c
+   158  60d7 f001                   beq +
+   159  60d9 18                     clc
    160                          +
-   161  6101 60                     rts
+   161  60da 60                     rts
    162                          
    163                          
    164                          
    165                          test:
-   166  6102 a000                   ldy #$0
-   167  6104 ad1f61                 lda .cxtestdata
-   168  6107 8504                   sta add
-   169  6109 ad2061                 lda .cxtestdata+1
-   170  610c 8505                   sta add+1
-   171  610e ad2161                 lda .cxtestdata+2
-   172  6111 8506                   sta expected
+   166  60db a000                   ldy #$0
+   167  60dd adf860                 lda .cxtestdata
+   168  60e0 8504                   sta add
+   169  60e2 adf960                 lda .cxtestdata+1
+   170  60e5 8505                   sta add+1
+   171  60e7 adfa60                 lda .cxtestdata+2
+   172  60ea 8506                   sta expected
    173                          
    174                          loop:
-   175  6113 b104                   lda (add),Y
-   176  6115 c506                   cmp expected
-   177  6117 d0c2                   bne fail
-   178  6119 c8                     iny
-   179  611a c005                   cpy #5
-   180  611c 90f5                   bcc loop
-   181  611e 60                     rts
+   175  60ec b104                   lda (add),Y
+   176  60ee c506                   cmp expected
+   177  60f0 d0c2                   bne fail
+   178  60f2 c8                     iny
+   179  60f3 c005                   cpy #5
+   180  60f5 90f5                   bcc loop
+   181  60f7 60                     rts
    182                          
    183                          .cxtestdata
    184                          	;; C800-Cffe
