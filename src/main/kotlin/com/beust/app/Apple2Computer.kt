@@ -61,19 +61,17 @@ fun createApple2Memory(): Memory {
         slotC3Rom = false
         // Load C100-C2FF in internal rom
         loadResource("Apple2e.rom", 0xc100, 0x100, 0x200)
-        // Load C800-CFFF in internal rom
-        loadResource("Apple2e.rom", 0xc800, 0x800, 0x800)
         // Load C300-C3FF in internal rom
         loadResource("Apple2e.rom", 0xc300, 0x300, 0x100)
-//        internalCxRom = false
+        // C400 internal
+        loadResource("Apple2e.rom", 0xc400, 0x400, 0x400)
+        // Load C800-CFFF in internal
+        loadResource("Apple2e.rom", 0xc800, 0x800, 0x800)
 
-        // C600 in slot
         internalCxRom = false
         slotC3Rom = true
-//        slotC3Rom = false
-//        loadResource("Apple2_Plus.rom", 0xd000)
+        // C600 in slot
         loadResource("DISK2.ROM", 0xc600)
-//        loadResource("DISK2.ROM", 0xc500)
 
         // Reset
         internalCxRom = false
