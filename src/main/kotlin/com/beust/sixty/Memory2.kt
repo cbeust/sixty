@@ -44,13 +44,16 @@ class Memory(val size: Int? = null) {
         fun current(address: Int): String = if (mem(address) == slot) "slot" else "internal"
 
         private fun mem(address: Int): IntArray {
+            if (address >= 0x1000) {
+                TODO("SHOULD NEVER HAPPEN")
+            }
 //            if (init) return internal
 
             val result = when {
-                address in 0xc000..0xc0ff -> internal
+                address in 0x000..0xff -> internal
                 ! internalCxRom && ! slotC3Rom -> {
                     when(address) {
-                        in 0xc300..0xc3ff -> internal
+                        in 0x300..0x3ff -> internal
                         else -> slot
                     }
                 }
@@ -77,14 +80,14 @@ class Memory(val size: Int? = null) {
 
         operator fun set(address: Int, value: Int) {
             if (init && address % 256 == 0) {
-                println("Loading bank ${address.hh()} in " + current(address))
+                println("Loading bank ${address.hh()} in " + current(address - 0xc000))
             }
 //            if (init) {
 //                internal[address - 0xc000] = value
 ////                slot[address - 0xc000] = value
 //            } else {
                 (address - 0xc000).let {
-                    mem(address)[it] = value
+                    mem(it)[it] = value
                 }
 //            }
         }
