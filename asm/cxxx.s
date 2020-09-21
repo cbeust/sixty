@@ -8,6 +8,7 @@ start:
     ;; Test 15
     lda #$15
     sta currentTest
+    jsr reset
     jsr c8rom
     bcs fail
     jsr c1rom
@@ -20,7 +21,8 @@ start:
     ;; Test 16
     lda #$16
     sta currentTest
-    sta $c00b
+    jsr reset
+    sta $c00b  ;; set slotC3Rom
     jsr c8rom
     bcs fail
     jsr c1rom
@@ -30,7 +32,27 @@ start:
     jsr c3rom
     bcs fail
 
+    ;; test 17
+    ;; expect all ROM
+    lda #$17
+    sta currentTest
+    jsr reset
+    sta $c007  ;; set intCxRom -> everything should go to internal
+    jsr c8rom
+    bcc fail
+    jsr c1rom
+    bcc fail
+    jsr c4rom
+    bcc fail
+    jsr c3rom
+    bcc fail
+
     lda currentTest
+    rts
+
+reset:
+    sta $c006
+    sta $c00a
     rts
 
 fail:

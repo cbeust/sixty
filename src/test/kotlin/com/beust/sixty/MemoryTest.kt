@@ -10,11 +10,6 @@ import java.io.File
 @Test
 class MemoryTest {
 
-    @Test
-    fun cxxx() {
-        runTest("cxxx.bin")
-    }
-
     @Test(enabled = false)
     fun memorySize() {
         runTest("memory-size.bin")
@@ -28,6 +23,11 @@ class MemoryTest {
     @Test(enabled = false)
     fun bankMemory() {
         runTest("bank-memory.bin")
+    }
+
+    @Test
+    fun cxxx() {
+        runTest("cxxx.bin")
     }
 
     private fun runTest(fileName: String) {
