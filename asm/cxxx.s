@@ -70,20 +70,12 @@ expected = $06
 start:
 
 tests:
-    ;; test 19
-    ;; expect C3 and C8 rom
-;    +START $19
-;    +C1_UNKNOWN
-;    +C3_ROM
-;    +C4_UNKNOWN
-;    +C8_ROM
-
     ;; Test 15
     +START $15
-    +C8_UNKNOWN
     +C1_UNKNOWN
-    +C4_UNKNOWN
     +C3_ROM
+    +C4_UNKNOWN
+    +C8_UNKNOWN
 
     ;; Test 16
     +START $16
@@ -112,6 +104,17 @@ tests:
     +C4_ROM
     +C8_ROM
 
+    ;; test 19
+    ;; expect C3 and C8 rom
+    +START $19
+    lda $c300
+    +C1_UNKNOWN
+    +C3_ROM
+    +C4_UNKNOWN
+    +C8_ROM
+
+
+
 
     lda currentTest
     rts
@@ -121,6 +124,7 @@ reset:
     nop
     sta $c006
     sta $c00a
+    sta $cfff
     rts
 
 fail:
