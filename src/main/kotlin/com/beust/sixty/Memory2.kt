@@ -2,7 +2,6 @@ package com.beust.sixty
 
 import java.io.File
 import java.io.InputStream
-import kotlin.reflect.KProperty
 
 @Suppress("UnnecessaryVariable", "BooleanLiteralArgument")
 class Memory(val size: Int? = null) {
@@ -23,15 +22,23 @@ class Memory(val size: Int? = null) {
             slotC3WasReset = false
             field = f
         }
-    var internalCxRom : Boolean by LoggedProp(false)
-    var slotC3Rom  : Boolean = false
-        get() = field
+    var internalCxRom : Boolean = false
         set(f) {
-            slotC3WasReset = ! f
-            println("New slotC3WasReset: " + slotC3WasReset)
+            internalC8Rom = false
             field = f
         }
-    var slotC3WasReset = false
+    var slotC3Rom  : Boolean = false
+        set(f) {
+            internalC8Rom = false
+            slotC3WasReset = ! f
+            println("New slotC3WasReset: $slotC3WasReset")
+            field = f
+        }
+    var slotC3WasReset : Boolean = false
+        set(f) {
+            println("SETTING RESET TO $f")
+            field = f
+        }
     private var video80 = false
     private var altChar = false
     private var textSet = true
@@ -39,7 +46,7 @@ class Memory(val size: Int? = null) {
 
     override fun toString() =
             "{Memory readAux:$readAux writeAux:$writeAux altZp:$altZp store80:$store80On page2: $page2" +
-                    " intCxRom:$internalCxRom slotC3Rom:$slotC3Rom"
+                    " intCxRom:$internalCxRom slotC3Rom:$slotC3Rom incC8Rom:$internalC8Rom"
 
     /** Affects $0-$1FF and $D000-$FFFF */
     private var altZp = false
@@ -65,18 +72,20 @@ class Memory(val size: Int? = null) {
                 println("BREAK")
             }
 
-            val result = when {
-                address in 0x000..0xff -> internal
-                address in 0x800..0xfff && internalC8Rom -> internal
-                ! internalCxRom && ! slotC3Rom -> {
-                    when(address) {
-                        in 0x300..0x3ff -> internal
-                        else -> slot
+            if (address in 0x300..0x3ff && slotC3WasReset) internalC8Rom = true
+
+            val result = if (internalC8Rom && address in 0x800..0xdff) internal
+                else when {
+                    address in 0x000..0xff -> internal
+                    ! internalCxRom && ! slotC3Rom -> {
+                        when(address) {
+                            in 0x300..0x3ff -> internal
+                            else -> slot
+                        }
                     }
+                    ! internalCxRom && slotC3Rom -> slot
+                    else -> internal
                 }
-                ! internalCxRom && slotC3Rom -> slot
-                else -> internal
-            }
 //            if (! init) println("Current: " + if (result == slot) "slot" else "internal")
 
             return result
@@ -92,8 +101,10 @@ class Memory(val size: Int? = null) {
 //                }
 //                if (result != null) return result
 //            }
-            if (address in 0xc300..0xc3ff)
-                internalC8Rom = true
+//            if (/* slotC3WasReset && */ address in 0xc300..0xc3ff) {
+//                slotC3WasReset = false
+//                internalC8Rom = true
+//            }
             return (address - 0xc000).let { mem(it)[it] }
         }
 
@@ -109,6 +120,18 @@ class Memory(val size: Int? = null) {
                     mem(it)[it] = value
                 }
 //            }
+        }
+
+        fun loadInSlot(bytes: ByteArray, offset: Int = 0, size: Int = bytes.size, destOffset: Int = 0) {
+            repeat(size) { index ->
+                slot[index + destOffset] = bytes[index + offset].toInt().and(0xff)
+            }
+        }
+
+        fun loadInInternal(bytes: ByteArray, offset: Int = 0, size: Int = bytes.size, destOffset: Int = 0) {
+            repeat(size) { index ->
+                internal[index + destOffset] = bytes[index + offset].toInt().and(0xff)
+            }
         }
     }
 
@@ -244,7 +267,7 @@ class Memory(val size: Int? = null) {
                 0xc055 -> page2 = true
                 0xc056 -> hires = false
                 0xc057 -> hires = true
-                0xcfff -> if (slotC3WasReset) internalC8Rom = false
+                0xcfff -> internalC8Rom = false
             }
 
             if (get) {
@@ -554,6 +577,14 @@ class Memory(val size: Int? = null) {
             }
         }
         init = false
+    }
+
+    fun loadCxxxInSlot(bytes: ByteArray, offset: Int = 0, size: Int = bytes.size, destOffset: Int = 0) {
+        c0Memory.loadInSlot(bytes, offset, size, destOffset)
+    }
+
+    fun loadCxxxInInternal(bytes: ByteArray, offset: Int = 0, size: Int = bytes.size, destOffset: Int = 0) {
+        c0Memory.loadInInternal(bytes, offset, size, destOffset)
     }
 
     fun forceValue(i: Int, value: Int) {
