@@ -18,8 +18,10 @@ val DISK = if (disk == 0)
     WozDisk(Woz::class.java.classLoader.getResource("woz2/DOS 3.3 System Master.woz").openStream())
 else if (disk == 1)
     DISK_DOS_3_3
-else
+else if (disk == 2)
     DskDisk(File("src/test/resources/audit.dsk").inputStream())
+else
+    DskDisk(File("d:\\pd\\a2audit\\audit\\audit.dsk").inputStream())
 
 //val DISK2 = WozDisk(
 //        File("d:\\pd\\Apple Disks\\woz2\\First Math Adventures - Understanding word problems.woz").inputStream())
