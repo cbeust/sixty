@@ -18,8 +18,20 @@ class Memory(val size: Int? = null) {
     private var writeAux = false
     private var hires = false
     private var page2 = false
+    var internalC8Rom : Boolean = false
+        set(f) {
+            slotC3WasReset = false
+            field = f
+        }
     var internalCxRom : Boolean by LoggedProp(false)
-    var slotC3Rom  : Boolean by LoggedProp(false)
+    var slotC3Rom  : Boolean = false
+        get() = field
+        set(f) {
+            slotC3WasReset = ! f
+            println("New slotC3WasReset: " + slotC3WasReset)
+            field = f
+        }
+    var slotC3WasReset = false
     private var video80 = false
     private var altChar = false
     private var textSet = true
@@ -49,8 +61,13 @@ class Memory(val size: Int? = null) {
             }
 //            if (init) return internal
 
+            if (! init && address == 0x800) {
+                println("BREAK")
+            }
+
             val result = when {
                 address in 0x000..0xff -> internal
+                address in 0x800..0xfff && internalC8Rom -> internal
                 ! internalCxRom && ! slotC3Rom -> {
                     when(address) {
                         in 0x300..0x3ff -> internal
@@ -75,6 +92,8 @@ class Memory(val size: Int? = null) {
 //                }
 //                if (result != null) return result
 //            }
+            if (address in 0xc300..0xc3ff)
+                internalC8Rom = true
             return (address - 0xc000).let { mem(it)[it] }
         }
 
@@ -225,6 +244,7 @@ class Memory(val size: Int? = null) {
                 0xc055 -> page2 = true
                 0xc056 -> hires = false
                 0xc057 -> hires = true
+                0xcfff -> if (slotC3WasReset) internalC8Rom = false
             }
 
             if (get) {

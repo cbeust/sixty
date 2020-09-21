@@ -76,6 +76,7 @@ fun createApple2Memory(): Memory {
         // Reset
         internalCxRom = false
         slotC3Rom = false
+        slotC3WasReset = false
         Thread {
             runWatcher(this)
         }.start()
@@ -134,6 +135,7 @@ fun apple2Computer(debugMem: Boolean, diskController: DiskController): Computer 
 //        memory[0x2027] = 0xdd
 //            loadPic(memory)
         val start = memory[0xfffc].or(memory[0xfffd].shl(8))
+
         cpu.PC = start
 //                run()
     }
