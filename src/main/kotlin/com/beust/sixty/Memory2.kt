@@ -27,7 +27,7 @@ class Memory(val size: Int? = null) {
 
     override fun toString() =
             "{Memory readAux:$readAux writeAux:$writeAux altZp:$altZp store80:$store80On page2: $page2" +
-                    " slotC3Rom:$slotC3Rom cxRom:$internalCxRom"
+                    " intCxRom:$internalCxRom slotC3Rom:$slotC3Rom"
 
     /** Affects $0-$1FF and $D000-$FFFF */
     private var altZp = false
