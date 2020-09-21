@@ -3,6 +3,12 @@ currentTest = $03
 add = $04
 expected = $06
 
+!macro START {
+    jsr reset
+    inc currentTest
+    ldx currentTest
+}
+
 !macro C1_ROM {
     jsr c1rom
     bcs +
@@ -63,17 +69,16 @@ expected = $06
 
 start:
     ;; Test 15
-    lda #$15
+    lda #$14
     sta currentTest
-    jsr reset
+    +START
     +C8_UNKNOWN
     +C1_UNKNOWN
     +C4_UNKNOWN
     +C3_ROM
 
     ;; Test 16
-    inc currentTest
-    jsr reset
+    +START
     sta $c00b  ;; set slotC3Rom
     +C1_UNKNOWN
     +C3_UNKNOWN
@@ -82,8 +87,7 @@ start:
 
     ;; test 17
     ;; expect all ROM
-    inc currentTest
-    jsr reset
+    +START
     sta $c007  ;; set intCxRom -> everything should go to internal
     +C1_ROM
     +C3_ROM
@@ -92,8 +96,7 @@ start:
 
     ;; test 18
     ;; expect all ROM
-    inc currentTest
-    jsr reset
+    +START
     sta $c007  ;; set intCxRom
     sta $c00b  ;; set slotc3
     +C1_ROM
@@ -103,8 +106,7 @@ start:
 
     ;; test 19
     ;; expect C3 and C8 rom
-    inc currentTest
-    jsr reset
+    +START
     +C1_UNKNOWN
     +C3_ROM
     +C4_UNKNOWN
@@ -114,6 +116,8 @@ start:
     rts
 
 reset:
+    nop
+    nop
     sta $c006
     sta $c00a
     rts
@@ -177,25 +181,25 @@ loop:
 
 .cxtestdata
 	;; C800-Cffe
-	!byte $00, $c8, $4c
-	!byte $21, $ca, $8d
-	!byte $43, $cc, $f0
-	!byte $b5, $ce, $7b
-
-	;; C100-C2ff
-	!byte $4d, $c1, $a5
-	!byte $6c, $c1, $2a
-	!byte $b5, $c2, $ad
-	!byte $ff, $c2, $00
-
-	;; C400-C7ff
-	!byte $36, $c4, $8d
-	!byte $48, $c5, $18
-	!byte $80, $c6, $8b
-	!byte $6e, $c7, $cb
-
-	;; C300-C3ff
-	!byte $00, $c3, $2c
-	!byte $0a, $c3, $0c
-	!byte $2b, $c3, $04
-	!byte $e2, $c3, $ed
+;	!byte $00, $c8, $4c
+;	!byte $21, $ca, $8d
+;	!byte $43, $cc, $f0
+;	!byte $b5, $ce, $7b
+;
+;	;; C100-C2ff
+;	!byte $4d, $c1, $a5
+;	!byte $6c, $c1, $2a
+;	!byte $b5, $c2, $ad
+;	!byte $ff, $c2, $00
+;
+;	;; C400-C7ff
+;	!byte $36, $c4, $8d
+;	!byte $48, $c5, $18
+;	!byte $80, $c6, $8b
+;	!byte $6e, $c7, $cb
+;
+;	;; C300-C3ff
+;	!byte $00, $c3, $2c
+;	!byte $0a, $c3, $0c
+;	!byte $2b, $c3, $04
+;	!byte $e2, $c3, $ed
