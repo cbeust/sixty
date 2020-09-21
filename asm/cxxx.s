@@ -3,10 +3,10 @@ currentTest = $03
 add = $04
 expected = $06
 
-!macro START {
+!macro START testNumber {
     jsr reset
-    inc currentTest
-    ldx currentTest
+    ldx #testNumber
+    stx currentTest
 }
 
 !macro C1_ROM {
@@ -68,17 +68,25 @@ expected = $06
 
 
 start:
+
+tests:
+    ;; test 19
+    ;; expect C3 and C8 rom
+    +START $19
+    +C1_UNKNOWN
+    +C3_ROM
+    +C4_UNKNOWN
+    +C8_ROM
+
     ;; Test 15
-    lda #$14
-    sta currentTest
-    +START
+    +START $15
     +C8_UNKNOWN
     +C1_UNKNOWN
     +C4_UNKNOWN
     +C3_ROM
 
     ;; Test 16
-    +START
+    +START $16
     sta $c00b  ;; set slotC3Rom
     +C1_UNKNOWN
     +C3_UNKNOWN
@@ -87,7 +95,7 @@ start:
 
     ;; test 17
     ;; expect all ROM
-    +START
+    +START $17
     sta $c007  ;; set intCxRom -> everything should go to internal
     +C1_ROM
     +C3_ROM
@@ -96,7 +104,7 @@ start:
 
     ;; test 18
     ;; expect all ROM
-    +START
+    +START $18
     sta $c007  ;; set intCxRom
     sta $c00b  ;; set slotc3
     +C1_ROM
@@ -104,13 +112,6 @@ start:
     +C4_ROM
     +C8_ROM
 
-    ;; test 19
-    ;; expect C3 and C8 rom
-    +START
-    +C1_UNKNOWN
-    +C3_ROM
-    +C4_UNKNOWN
-    +C8_ROM
 
     lda currentTest
     rts

@@ -5,10 +5,10 @@
      3                          add = $04
      4                          expected = $06
      5                          
-     6                          !macro START {
+     6                          !macro START testNumber {
      7                              jsr reset
-     8                              inc currentTest
-     9                              ldx currentTest
+     8                              ldx #testNumber
+     9                              stx currentTest
     10                          }
     11                          
     12                          !macro C1_ROM {
@@ -70,137 +70,138 @@
     68                          
     69                          
     70                          start:
-    71                              ;; Test 15
-    72  6000 a914                   lda #$14
-    73  6002 8503                   sta currentTest
-    74  6004 20d660e603a603         +START
-    75  600b 20fd609003a50300       +C8_UNKNOWN
-    76  6013 20e2609003a50300       +C1_UNKNOWN
-    77  601b 20eb609003a50300       +C4_UNKNOWN
-    78  6023 20f460b003a50300       +C3_ROM
-    79                          
-    80                              ;; Test 16
-    81  602b 20d660e603a603         +START
-    82  6032 8d0bc0                 sta $c00b  ;; set slotC3Rom
-    83  6035 20e2609003a50300       +C1_UNKNOWN
-    84  603d 20f4609003a50300       +C3_UNKNOWN
-    85  6045 20eb609003a50300       +C4_UNKNOWN
-    86  604d 20fd609003a50300       +C8_UNKNOWN
+    71                          
+    72                          tests:
+    73                              ;; test 19
+    74                              ;; expect C3 and C8 rom
+    75  6000 20d260a2198603         +START $19
+    76  6007 20de609003a50300       +C1_UNKNOWN
+    77  600f 20f060b003a50300       +C3_ROM
+    78  6017 20e7609003a50300       +C4_UNKNOWN
+    79  601f 20f960b003a50300       +C8_ROM
+    80                          
+    81                              ;; Test 15
+    82  6027 20d260a2158603         +START $15
+    83  602e 20f9609003a50300       +C8_UNKNOWN
+    84  6036 20de609003a50300       +C1_UNKNOWN
+    85  603e 20e7609003a50300       +C4_UNKNOWN
+    86  6046 20f060b003a50300       +C3_ROM
     87                          
-    88                              ;; test 17
-    89                              ;; expect all ROM
-    90  6055 20d660e603a603         +START
-    91  605c 8d07c0                 sta $c007  ;; set intCxRom -> everything should go to internal
-    92  605f 20e260b003a50300       +C1_ROM
-    93  6067 20f460b003a50300       +C3_ROM
-    94  606f 20eb60b003a50300       +C4_ROM
-    95  6077 20fd60b003a50300       +C8_ROM
-    96                          
-    97                              ;; test 18
-    98                              ;; expect all ROM
-    99  607f 20d660e603a603         +START
-   100  6086 8d07c0                 sta $c007  ;; set intCxRom
-   101  6089 8d0bc0                 sta $c00b  ;; set slotc3
-   102  608c 20e260b003a50300       +C1_ROM
-   103  6094 20f460b003a50300       +C3_ROM
-   104  609c 20eb60b003a50300       +C4_ROM
-   105  60a4 20fd60b003a50300       +C8_ROM
-   106                          
-   107                              ;; test 19
-   108                              ;; expect C3 and C8 rom
-   109  60ac 20d660e603a603         +START
-   110  60b3 20e2609003a50300       +C1_UNKNOWN
-   111  60bb 20f460b003a50300       +C3_ROM
-   112  60c3 20eb609003a50300       +C4_UNKNOWN
-   113  60cb 20fd60b003a50300       +C8_ROM
+    88                              ;; Test 16
+    89  604e 20d260a2168603         +START $16
+    90  6055 8d0bc0                 sta $c00b  ;; set slotC3Rom
+    91  6058 20de609003a50300       +C1_UNKNOWN
+    92  6060 20f0609003a50300       +C3_UNKNOWN
+    93  6068 20e7609003a50300       +C4_UNKNOWN
+    94  6070 20f9609003a50300       +C8_UNKNOWN
+    95                          
+    96                              ;; test 17
+    97                              ;; expect all ROM
+    98  6078 20d260a2178603         +START $17
+    99  607f 8d07c0                 sta $c007  ;; set intCxRom -> everything should go to internal
+   100  6082 20de60b003a50300       +C1_ROM
+   101  608a 20f060b003a50300       +C3_ROM
+   102  6092 20e760b003a50300       +C4_ROM
+   103  609a 20f960b003a50300       +C8_ROM
+   104                          
+   105                              ;; test 18
+   106                              ;; expect all ROM
+   107  60a2 20d260a2188603         +START $18
+   108  60a9 8d07c0                 sta $c007  ;; set intCxRom
+   109  60ac 8d0bc0                 sta $c00b  ;; set slotc3
+   110  60af 20de60b003a50300       +C1_ROM
+   111  60b7 20f060b003a50300       +C3_ROM
+   112  60bf 20e760b003a50300       +C4_ROM
+   113  60c7 20f960b003a50300       +C8_ROM
    114                          
-   115  60d3 a503                   lda currentTest
-   116  60d5 60                     rts
-   117                          
-   118                          reset:
-   119  60d6 ea                     nop
-   120  60d7 ea                     nop
-   121  60d8 8d06c0                 sta $c006
-   122  60db 8d0ac0                 sta $c00a
-   123  60de 60                     rts
-   124                          
-   125                          fail:
-   126  60df a503                   lda currentTest
-   127  60e1 00                     brk
-   128                          
-   129                          ; if Carry is set, C1 is ROM
-   130                          c1rom:
-   131  60e2 ad4dc1                 lda $c14d
-   132  60e5 c9a5                   cmp #$a5
-   133  60e7 f001                   beq +
-   134  60e9 18                     clc
-   135                          +
-   136  60ea 60                     rts
-   137                          
-   138                          c4rom:
-   139  60eb ad36c4                 lda $c436
-   140  60ee c98d                   cmp #$8d
-   141  60f0 f001                   beq +
-   142  60f2 18                     clc
-   143                          +
-   144  60f3 60                     rts
-   145                          
-   146                          c3rom:
-   147  60f4 ad00c3                 lda $c300
-   148  60f7 c92c                   cmp #$2c
-   149  60f9 f001                   beq +
-   150  60fb 18                     clc
-   151                          +
-   152  60fc 60                     rts
-   153                          
-   154                          c8rom:
-   155  60fd ad00c8                 lda $c800
-   156  6100 c94c                   cmp #$4c
-   157  6102 f001                   beq +
-   158  6104 18                     clc
-   159                          +
-   160  6105 60                     rts
-   161                          
+   115                          
+   116  60cf a503                   lda currentTest
+   117  60d1 60                     rts
+   118                          
+   119                          reset:
+   120  60d2 ea                     nop
+   121  60d3 ea                     nop
+   122  60d4 8d06c0                 sta $c006
+   123  60d7 8d0ac0                 sta $c00a
+   124  60da 60                     rts
+   125                          
+   126                          fail:
+   127  60db a503                   lda currentTest
+   128  60dd 00                     brk
+   129                          
+   130                          ; if Carry is set, C1 is ROM
+   131                          c1rom:
+   132  60de ad4dc1                 lda $c14d
+   133  60e1 c9a5                   cmp #$a5
+   134  60e3 f001                   beq +
+   135  60e5 18                     clc
+   136                          +
+   137  60e6 60                     rts
+   138                          
+   139                          c4rom:
+   140  60e7 ad36c4                 lda $c436
+   141  60ea c98d                   cmp #$8d
+   142  60ec f001                   beq +
+   143  60ee 18                     clc
+   144                          +
+   145  60ef 60                     rts
+   146                          
+   147                          c3rom:
+   148  60f0 ad00c3                 lda $c300
+   149  60f3 c92c                   cmp #$2c
+   150  60f5 f001                   beq +
+   151  60f7 18                     clc
+   152                          +
+   153  60f8 60                     rts
+   154                          
+   155                          c8rom:
+   156  60f9 ad00c8                 lda $c800
+   157  60fc c94c                   cmp #$4c
+   158  60fe f001                   beq +
+   159  6100 18                     clc
+   160                          +
+   161  6101 60                     rts
    162                          
    163                          
-   164                          test:
-   165  6106 a000                   ldy #$0
-   166  6108 ad2361                 lda .cxtestdata
-   167  610b 8504                   sta add
-   168  610d ad2461                 lda .cxtestdata+1
-   169  6110 8505                   sta add+1
-   170  6112 ad2561                 lda .cxtestdata+2
-   171  6115 8506                   sta expected
-   172                          
-   173                          loop:
-   174  6117 b104                   lda (add),Y
-   175  6119 c506                   cmp expected
-   176  611b d0c2                   bne fail
-   177  611d c8                     iny
-   178  611e c005                   cpy #5
-   179  6120 90f5                   bcc loop
-   180  6122 60                     rts
-   181                          
-   182                          .cxtestdata
-   183                          	;; C800-Cffe
-   184                          ;	!byte $00, $c8, $4c
-   185                          ;	!byte $21, $ca, $8d
-   186                          ;	!byte $43, $cc, $f0
-   187                          ;	!byte $b5, $ce, $7b
-   188                          ;
-   189                          ;	;; C100-C2ff
-   190                          ;	!byte $4d, $c1, $a5
-   191                          ;	!byte $6c, $c1, $2a
-   192                          ;	!byte $b5, $c2, $ad
-   193                          ;	!byte $ff, $c2, $00
-   194                          ;
-   195                          ;	;; C400-C7ff
-   196                          ;	!byte $36, $c4, $8d
-   197                          ;	!byte $48, $c5, $18
-   198                          ;	!byte $80, $c6, $8b
-   199                          ;	!byte $6e, $c7, $cb
-   200                          ;
-   201                          ;	;; C300-C3ff
-   202                          ;	!byte $00, $c3, $2c
-   203                          ;	!byte $0a, $c3, $0c
-   204                          ;	!byte $2b, $c3, $04
+   164                          
+   165                          test:
+   166  6102 a000                   ldy #$0
+   167  6104 ad1f61                 lda .cxtestdata
+   168  6107 8504                   sta add
+   169  6109 ad2061                 lda .cxtestdata+1
+   170  610c 8505                   sta add+1
+   171  610e ad2161                 lda .cxtestdata+2
+   172  6111 8506                   sta expected
+   173                          
+   174                          loop:
+   175  6113 b104                   lda (add),Y
+   176  6115 c506                   cmp expected
+   177  6117 d0c2                   bne fail
+   178  6119 c8                     iny
+   179  611a c005                   cpy #5
+   180  611c 90f5                   bcc loop
+   181  611e 60                     rts
+   182                          
+   183                          .cxtestdata
+   184                          	;; C800-Cffe
+   185                          ;	!byte $00, $c8, $4c
+   186                          ;	!byte $21, $ca, $8d
+   187                          ;	!byte $43, $cc, $f0
+   188                          ;	!byte $b5, $ce, $7b
+   189                          ;
+   190                          ;	;; C100-C2ff
+   191                          ;	!byte $4d, $c1, $a5
+   192                          ;	!byte $6c, $c1, $2a
+   193                          ;	!byte $b5, $c2, $ad
+   194                          ;	!byte $ff, $c2, $00
+   195                          ;
+   196                          ;	;; C400-C7ff
+   197                          ;	!byte $36, $c4, $8d
+   198                          ;	!byte $48, $c5, $18
+   199                          ;	!byte $80, $c6, $8b
+   200                          ;	!byte $6e, $c7, $cb
+   201                          ;
+   202                          ;	;; C300-C3ff
+   203                          ;	!byte $00, $c3, $2c
+   204                          ;	!byte $0a, $c3, $0c
+   205                          ;	!byte $2b, $c3, $04
