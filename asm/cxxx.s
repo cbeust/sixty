@@ -3,49 +3,112 @@ currentTest = $03
 add = $04
 expected = $06
 
+!macro C1_ROM {
+    jsr c1rom
+    bcs +
+    lda currentTest
+    brk
++
+}
+!macro C3_ROM {
+    jsr c3rom
+    bcs +
+    lda currentTest
+    brk
++
+}
+!macro C4_ROM {
+    jsr c4rom
+    bcs +
+    lda currentTest
+    brk
++
+}
+!macro C8_ROM {
+    jsr c8rom
+    bcs +
+    lda currentTest
+    brk
++
+}
+!macro C1_UNKNOWN {
+    jsr c1rom
+    bcc +
+    lda currentTest
+    brk
++
+}
+!macro C3_UNKNOWN {
+    jsr c3rom
+    bcc +
+    lda currentTest
+    brk
++
+}
+!macro C4_UNKNOWN {
+    jsr c4rom
+    bcc +
+    lda currentTest
+    brk
++
+}
+!macro C8_UNKNOWN {
+    jsr c8rom
+    bcc +
+    lda currentTest
+    brk
++
+}
+
 
 start:
     ;; Test 15
     lda #$15
     sta currentTest
     jsr reset
-    jsr c8rom
-    bcs fail
-    jsr c1rom
-    bcs fail
-    jsr c4rom
-    bcs fail
-    jsr c3rom
-    bcc fail
+    +C8_UNKNOWN
+    +C1_UNKNOWN
+    +C4_UNKNOWN
+    +C3_ROM
 
     ;; Test 16
-    lda #$16
-    sta currentTest
+    inc currentTest
     jsr reset
     sta $c00b  ;; set slotC3Rom
-    jsr c8rom
-    bcs fail
-    jsr c1rom
-    bcs fail
-    jsr c4rom
-    bcs fail
-    jsr c3rom
-    bcs fail
+    +C1_UNKNOWN
+    +C3_UNKNOWN
+    +C4_UNKNOWN
+    +C8_UNKNOWN
 
     ;; test 17
     ;; expect all ROM
-    lda #$17
-    sta currentTest
+    inc currentTest
     jsr reset
     sta $c007  ;; set intCxRom -> everything should go to internal
-    jsr c8rom
-    bcc fail
-    jsr c1rom
-    bcc fail
-    jsr c4rom
-    bcc fail
-    jsr c3rom
-    bcc fail
+    +C1_ROM
+    +C3_ROM
+    +C4_ROM
+    +C8_ROM
+
+    ;; test 18
+    ;; expect all ROM
+    inc currentTest
+    jsr reset
+    sta $c007  ;; set intCxRom
+    sta $c00b  ;; set slotc3
+    +C1_ROM
+    +C3_ROM
+    +C4_ROM
+    +C8_ROM
+
+    ;; test 19
+    ;; expect C3 and C8 rom
+    inc currentTest
+    jsr reset
+    +C1_UNKNOWN
+    +C3_ROM
+    +C4_UNKNOWN
+    +C8_ROM
 
     lda currentTest
     rts
