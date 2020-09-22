@@ -1,5 +1,7 @@
 package com.beust.app
 
+import com.beust.sixty.Apple2Memory
+import com.beust.sixty.Computer
 import com.beust.sixty.IPulse
 import com.beust.sixty.h
 import java.io.File
@@ -27,10 +29,28 @@ else
 //        File("d:\\pd\\Apple Disks\\woz2\\First Math Adventures - Understanding word problems.woz").inputStream())
 
 fun main() {
-    val choice = 2
+    val choice = 1
 
     val pulseListeners = arrayListOf<IPulse>()
 
+//    val diskController = DiskController()
+//    val apple2Memory = Apple2Memory()
+//    val c = Computer.create {
+//        memory = apple2Memory
+//        memoryListeners.add(Apple2MemoryListener(apple2Memory))
+//        memoryListeners.add(diskController)
+//    }.build()
+//    val start = apple2Memory[0xfffc].or(apple2Memory[0xfffd].shl(8))
+//    c.cpu.PC = start
+//
+//    pulseListeners.add(c)
+//    pulseListeners.add(diskController)
+//
+//    while (true) {
+//        pulseListeners.forEach { it
+//            it.onPulse()
+//        }
+//    }
     when(choice) {
         1 -> {
             println("Running the following 6502 program which will display HELLO")

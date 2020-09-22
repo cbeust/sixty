@@ -7,23 +7,33 @@ import com.beust.sixty.*
  */
 object TestComputer {
     fun createComputer(): IComputer {
-        val memory = SimpleMemory(size = 0x400).apply {
-            init(0,
-                    LDX_IMM, 0,
-                    LDA_ZP_X, 0x10,
-                    BEQ, 0x7,
-                    STA_ABS, 0, 3,
-                    INX,
-                    JMP, 2, 0,
-                    RTS,
-                    NOP, NOP,
-                    'H'.toInt(), 'E'.toInt(), 'L'.toInt(), 'L'.toInt(), 'O'.toInt(), '\n'.toInt(),
-                    0
-            )
-        }
-
-        val result = SimpleComputer(memory, Cpu(memory))
-
-        return result
+        return Computer.create {
+            memory = SimpleMemory(size = 0x400).apply {
+                init(0,
+                        LDX_IMM, 0,
+                        LDA_ZP_X, 0x10,
+                        BEQ, 0x7,
+                        STA_ABS, 0, 3,
+                        INX,
+                        JMP, 2, 0,
+                        RTS,
+                        NOP, NOP,
+                        'H'.toInt(), 'E'.toInt(), 'L'.toInt(), 'L'.toInt(), 'O'.toInt(), '\n'.toInt(),
+                        RTS
+                )
+            pcListener = object: PcListener {
+                override fun onPcChanged(c: Computer) = with(c) {
+                    if (memory[cpu.PC] == RTS) {
+                        stop()
+                    }
+                }
+            }
+            memoryListeners.add(object : MemoryListener() {
+                override fun isInRange(address: Int) = true
+                override fun onWrite(location: Int, value: Int) {
+                    if (location == 0x300) println(value.toChar())
+                }
+            })}
+        }.build()
     }
 }

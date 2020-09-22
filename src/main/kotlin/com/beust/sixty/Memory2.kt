@@ -16,6 +16,8 @@ interface IMemory {
         bytes.forEach { set(ii++, it) }
     }
 
+    fun word(address: Int): Int = this[address].or(this[address + 1].shl(8))
+
     fun loadResource(name: String, address: Int = 0, fileOffset: Int = 0, size: Int = 0) {
         val bytes = this::class.java.classLoader.getResource(name).openStream().readAllBytes()
         load(bytes, address, fileOffset, if (size == 0) bytes.size else size)
@@ -44,8 +46,17 @@ class SimpleMemory(size: Int): IMemory {
     override val lastMemDebug = arrayListOf<String>()
     private val bytes = IntArray(size)
 
-    override fun get(address: Int) = bytes[address]
-    override fun set(address: Int, value: Int) { bytes[address] = value }
+    override fun get(address: Int): Int {
+        val result = bytes[address]
+        listeners.forEach { it.onRead(address, result) }
+        return result
+    }
+
+    override fun set(address: Int, value: Int) {
+        listeners.forEach { it.onWrite(address, value) }
+        bytes[address] = value
+    }
+
     override fun forceValue(address: Int, value: Int) {
         this[address] = value
     }

@@ -15,6 +15,8 @@ class DiskController(val slot: Int = 6): IPulse, MemoryListener() {
     private fun c(address: Int) = address + slot16
     override fun isInRange(address:Int) = address in (c(0xc080)..c(0xc08c))
 
+    override fun stop() {}
+
     override fun onPulse(): PulseResult {
         // Faster way for unprotected disks
 //        latch = disk.nextByte()

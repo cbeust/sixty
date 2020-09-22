@@ -21,9 +21,9 @@ fun assertNotRegister(register: Int, expected: Int) {
 
 @Test
 abstract class BaseTest {
-    abstract fun createComputer(vararg bytes: Int): Computer
+    abstract fun createComputer(vararg bytes: Int): IComputer
 
-    fun computer(vararg bytes: Int): Computer {
+    fun computer(vararg bytes: Int): IComputer {
         with(createComputer(*bytes, BRK)) {
             return this
         }
@@ -97,7 +97,7 @@ abstract class BaseTest {
             cpu.A = 0x42
             cpu.Y = 2
             cpu.nextInstruction()
-            assertMemory(10, 0x42)
+            assertMemory(memory, 10, 0x42)
         }
     }
 
@@ -126,13 +126,13 @@ abstract class BaseTest {
 //        cmpFlags(1, 0xff, 0, 0, 0) // P: 0x31  N=0 Z=0 C=1
 //    }
 
-    fun bne() {
-        with(computer(0xd0, 0, 0x90, 1, 0x60, 0xa9, 1, 0x60)) {
-            assertRegister(cpu.A, 0)
-            run()
-            assertRegister(cpu.A, 1)
-        }
-    }
+//    fun bne() {
+//        with(computer(0xd0, 0, 0x90, 1, 0x60, 0xa9, 1, 0x60)) {
+//            assertRegister(cpu.A, 0)
+//            run()
+//            assertRegister(cpu.A, 1)
+//        }
+//    }
 
     fun bpl() {
         with(computer(0xa9, 0x10, // lda #$10
@@ -170,9 +170,9 @@ abstract class BaseTest {
 
     fun incZp() {
         with(computer(0xe6, 0x3, 0x60, 0x42)) {
-            assertMemory(3, 0x42)
+            assertMemory(memory, 3, 0x42)
             run()
-            assertMemory(3, 0x43)
+            assertMemory(memory, 3, 0x43)
         }
     }
 
@@ -196,7 +196,15 @@ abstract class BaseTest {
         }
     }
 
-    private fun assertMemory(memory: Memory, start: Int, end: Int, expected: Int) {
+    private fun assertMemory(memory: IMemory, address: Int, expected: Int) {
+        memory[address].let { value ->
+            assertThat(value)
+                .withFailMessage("Expected index memory[${address.hh()}] to be ${expected.h()} but was ${value.h()}")
+                .isEqualTo(expected)
+        }
+    }
+
+    private fun assertMemory(memory: IMemory, start: Int, end: Int, expected: Int) {
         (start..end).forEach {
             assertThat(memory[it])
                     .withFailMessage("Expected index $it to be $expected but was ${memory[it]}")
@@ -222,7 +230,7 @@ abstract class BaseTest {
                 0xa5, 0x4,  // LDA $04
                 0xc9, 0x04, // CMP #$03
                 0x90, 0xf1, // BCC $5
-                0x60)) {
+                BRK)) {
 
             // Make sure the entire memory is 0 before the run
             assertMemory(memory, 0x30, 0x1ff, 0)
@@ -244,9 +252,9 @@ abstract class BaseTest {
 
     private fun storeAbsolute(loadOp: Int, storeOp: Int) {
         with(computer(loadOp, 0x42, storeOp, 0x34, 0x12)) {
-            assertMemory(0x1234, 0)
+            assertMemory(memory, 0x1234, 0)
             run()
-            assertMemory(0x1234, 0x42)
+            assertMemory(memory, 0x1234, 0x42)
         }
     }
 
@@ -273,9 +281,9 @@ abstract class BaseTest {
             memory[0xf0] = 0x12
             memory[0xf1] = 0x34
             memory[0xf2] = 0x56
-            assertMemory(0xf1, 0x34)
+            assertMemory(memory, 0xf1, 0x34)
             run()
-            assertMemory(0xf1, 0x42)
+            assertMemory(memory, 0xf1, 0x42)
         }
     }
 

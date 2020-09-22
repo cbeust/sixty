@@ -10,8 +10,8 @@ import javax.swing.JFrame
 
 
 class Apple2Frame: JFrame() {
-    val textScreenPanel: TextScreenPanel
-    val hiresPanel: HiResScreenPanel
+    val textScreen: TextScreenPanel
+    val hiresScreen: HiResScreenPanel
 
     init {
         val layout = GroupLayout(contentPane)
@@ -24,11 +24,11 @@ class Apple2Frame: JFrame() {
         val w = HiResScreenPanel.WIDTH * 2
         val h = HiResScreenPanel.HEIGHT * 2
 
-        textScreenPanel = TextScreenPanel().apply {
+        textScreen = TextScreenPanel().apply {
             preferredSize = Dimension(w, h)
             setSize(w, h)
         }
-        hiresPanel = HiResScreenPanel().apply {
+        hiresScreen = HiResScreenPanel().apply {
             preferredSize = Dimension(w, h)
             setSize(w, h)
         }
@@ -37,12 +37,12 @@ class Apple2Frame: JFrame() {
             autoCreateGaps = true
             autoCreateContainerGaps = true
             setHorizontalGroup(createSequentialGroup()
-                    .addComponent(textScreenPanel, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, Int.MAX_VALUE)
-                    .addComponent(hiresPanel, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, Int.MAX_VALUE)
+                    .addComponent(textScreen, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, Int.MAX_VALUE)
+                    .addComponent(hiresScreen, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, Int.MAX_VALUE)
             )
             setVerticalGroup(createParallelGroup()
-                    .addComponent(textScreenPanel, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, Int.MAX_VALUE)
-                    .addComponent(hiresPanel, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, Int.MAX_VALUE)
+                    .addComponent(textScreen, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, Int.MAX_VALUE)
+                    .addComponent(hiresScreen, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, Int.MAX_VALUE)
             )
             pack()
         }
@@ -108,37 +108,37 @@ class Apple2Computer(val diskController: DiskController): IComputer, IPulse {
     override fun onPulse() = computer.onPulse()
     override fun stop() = computer.stop()
 
-    val frame = Apple2Frame().apply {
-        addKeyListener(object : java.awt.event.KeyListener {
-            override fun keyReleased(e: java.awt.event.KeyEvent?) {}
-            override fun keyTyped(e: java.awt.event.KeyEvent?) {}
-
-            override fun keyPressed(e: java.awt.event.KeyEvent) {
-                val key = when (e.keyCode) {
-                    10 -> 0x8d
-                    else -> {
-                        val result = e.keyCode.or(0x80)
-                        println("Result: " + result.h() + " " + result.toChar())
-                        result
-                    }
-                }
-                memory.forceValue(0xc000, key)
-                memory.forceValue(0xc010, 0x80)
-            }
-        })
-    }
-
-    init {
-        with(memory) {
-            listeners.add(diskController)
-            //        listeners.add(DiskController(5, DISK_DOS_3_3))
-            listeners.add(DebugMemoryListener(memory))
-            listeners.add(ScreenListener(this, frame.textScreenPanel, frame.hiresPanel))
-        }
-
-        val start = memory[0xfffc].or(memory[0xfffd].shl(8))
-        cpu.PC = start
-    }
+//    val frame = Apple2Frame().apply {
+//        addKeyListener(object : java.awt.event.KeyListener {
+//            override fun keyReleased(e: java.awt.event.KeyEvent?) {}
+//            override fun keyTyped(e: java.awt.event.KeyEvent?) {}
+//
+//            override fun keyPressed(e: java.awt.event.KeyEvent) {
+//                val key = when (e.keyCode) {
+//                    10 -> 0x8d
+//                    else -> {
+//                        val result = e.keyCode.or(0x80)
+//                        println("Result: " + result.h() + " " + result.toChar())
+//                        result
+//                    }
+//                }
+//                memory.forceValue(0xc000, key)
+//                memory.forceValue(0xc010, 0x80)
+//            }
+//        })
+//    }
+//
+//    init {
+//        with(memory) {
+//            listeners.add(diskController)
+//            //        listeners.add(DiskController(5, DISK_DOS_3_3))
+//            listeners.add(DebugMemoryListener(memory))
+//            listeners.add(Apple2MemoryListener(this, frame.textScreenPanel, frame.hiresPanel))
+//        }
+//
+//        val start = memory[0xfffc].or(memory[0xfffd].shl(8))
+//        cpu.PC = start
+//    }
 }
 
 private fun runWatcher(memory: IMemory) {
