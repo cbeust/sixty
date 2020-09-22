@@ -9,7 +9,7 @@ import java.lang.IllegalArgumentException
  * http://www.6502.org/tutorials/6502opcodes.html
  */
 
-data class Cpu(val memory: Memory,
+data class Cpu(val memory: IMemory,
         var A: Int = 0, var X: Int = 0, var Y: Int = 0,
         val P: StatusFlags = StatusFlags()) {
     val SP: StackPointer = StackPointer(memory)

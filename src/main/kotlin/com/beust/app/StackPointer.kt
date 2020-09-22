@@ -1,13 +1,13 @@
 package com.beust.app
 
-import com.beust.sixty.Memory
+import com.beust.sixty.IMemory
 import com.beust.sixty.h
 import kotlin.math.max
 
 /**
  * Implements the 6502 stack: in memory 0x100-0x1ff, starting at 0xff and decreasing.
  */
-class StackPointer(private val memory: Memory) {
+class StackPointer(private val memory: IMemory) {
     var S: Int = 0xff
     private val address = 0x100
 

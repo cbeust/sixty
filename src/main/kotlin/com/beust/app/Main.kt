@@ -1,14 +1,14 @@
 package com.beust.app
 
-import com.beust.sixty.IPulse
-import com.beust.sixty.h
+import com.beust.sixty.*
 import java.io.File
 
 var DEBUG = false
 // 6164: test failing LC writing
 // check failing at 0x64f9
 //val BREAKPOINT: Int? = 0x65f8 // 0x65c3 // 0x658d
-val BREAKPOINT: Int? = 0x6036 // test break
+val BREAKPOINT: Int? = null //0xfbba
+// val BREAKPOINT: Int? = 0x6036 // test break
 
 val disk = 2
 
@@ -29,30 +29,56 @@ else
 fun main() {
     val choice = 2
 
-    val pulseListeners = arrayListOf<IPulse>()
+    val pulseManager = PulseManager()
 
+//    val diskController = DiskController()
+//    val apple2Memory = Apple2Memory()
+//    val c = Computer.create {
+//        memory = apple2Memory
+//        memoryListeners.add(Apple2MemoryListener(apple2Memory))
+//        memoryListeners.add(diskController)
+//    }.build()
+//    val start = apple2Memory[0xfffc].or(apple2Memory[0xfffd].shl(8))
+//    c.cpu.PC = start
+//
+//    pulseListeners.add(c)
+//    pulseListeners.add(diskController)
+//
+//    while (true) {
+//        pulseListeners.forEach { it
+//            it.onPulse()
+//        }
+//    }
     when(choice) {
         1 -> {
             println("Running the following 6502 program which will display HELLO")
             val c = TestComputer.createComputer()
-            c.disassemble(start = 0, length = 15)
-            pulseListeners.add(c)
+//            c.disassemble(start = 0, length = 15)
+            pulseManager.addListener(c)
         }
         2 -> {
             val debugMem = false
             val debugAsm = DEBUG
 //            frame()
-            val dc = DiskController(6, DISK)
-            pulseListeners.add(dc)
-            val p: IPulse = apple2Computer(debugMem, dc)
-            pulseListeners.add(p)
+            val dc = DiskController(6).apply { loadDisk(DISK) }
+            pulseManager.addListener(dc)
+            val a2Memory = Apple2Memory()
+            val computer = Computer.create {
+                memory = a2Memory
+                memoryListeners.add(Apple2MemoryListener(a2Memory))
+                memoryListeners.add(dc)
+            }.build()
+            val start = a2Memory.word(0xfffc) // memory[0xfffc].or(memory[0xfffd].shl(8))
+            computer.cpu.PC = start
+
+            pulseManager.addListener(computer)
 //                    .run(debugMemory = debugMem, _debugAsm = debugAsm)//true, true)
         }
         3 -> {
             testDisk()
         }
         else -> {
-            pulseListeners.add(functionalTestComputer(false))
+            pulseManager.addListener(functionalTestComputer(false))
 //            with(result) {
 //                val sec = durationMillis / 1000
 //                val mhz = String.format("%.2f", cycles / sec / 1_000_000.0)
@@ -61,14 +87,7 @@ fun main() {
         }
     }
 
-    var stop = false
-    while (! stop) {
-        pulseListeners.forEach {
-            val r = it.onPulse()
-            if (r.stop) stop = true
-        }
-    }
-
+    pulseManager.run()
 }
 
 fun testDisk() {

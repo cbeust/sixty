@@ -3,7 +3,7 @@ package com.beust.app
 import com.beust.sixty.*
 import org.slf4j.LoggerFactory
 
-class DiskController(val slot: Int = 6, val disk: IDisk): IPulse, MemoryListener() {
+class DiskController(val slot: Int = 6): IPulse, MemoryListener() {
     private val log = LoggerFactory.getLogger("Disk")
     private val slot16 = slot * 16
     private var latch: Int = 0
@@ -15,25 +15,34 @@ class DiskController(val slot: Int = 6, val disk: IDisk): IPulse, MemoryListener
     private fun c(address: Int) = address + slot16
     override fun isInRange(address:Int) = address in (c(0xc080)..c(0xc08c))
 
-    override fun onPulse(): PulseResult {
-        // Faster way for unprotected disks
-//        latch = disk.nextByte()
+    override fun stop() {}
 
-        if (motorOn) {
-//     More formal way: bit by bit on every pulse
-            if (latch and 0x80 == 0) {
-                repeat(8) {
-                    latch = latch.shl(1).or(disk.nextBit()).and(0xff)
-                }
-                while (latch and 0x80 == 0) {
-                    latch = latch.shl(1).or(disk.nextBit()).and(0xff)
-                }
-            }
+    override fun onPulse(manager: PulseManager): PulseResult {
+        // Faster way for unprotected disks
+        disk?.let {
+            if (latch.and(0x80) == 0) latch = it.nextByte()
         }
-//        println("@@@   latch: ${latch.h()}")
+
+//        if (motorOn && disk != null) {
+////     More formal way: bit by bit on every pulse
+//            if (latch and 0x80 == 0) {
+//                repeat(8) {
+//                    latch = latch.shl(1).or(disk!!.nextBit()).and(0xff)
+//                }
+//                while (latch and 0x80 == 0) {
+//                    latch = latch.shl(1).or(disk!!.nextBit()).and(0xff)
+//                }
+//            }
+//        }
+////        println("@@@   latch: ${latch.h()}")
         return PulseResult()
     }
 
+    var disk: IDisk? = null
+
+    fun loadDisk(disk: IDisk) {
+        this.disk = disk
+    }
 
     override fun onRead(i: Int, value: Int): Int? {
         val a = i - slot16
@@ -51,7 +60,7 @@ class DiskController(val slot: Int = 6, val disk: IDisk): IPulse, MemoryListener
                    0xc087 -> 3 to true
                     else -> ERROR("SHOULD NEVER HAPPEN")
                 }
-                magnet(disk, phase, state)
+                disk?.let { magnet(it, phase, state) }
                 value
             }
             0xc088 -> {
@@ -75,9 +84,9 @@ class DiskController(val slot: Int = 6, val disk: IDisk): IPulse, MemoryListener
                 value
             }
             0xc08c -> {
-//                latch = disk.nextByte()
+//                latch = disk!!.nextByte()
                 val result = latch
-                if (latch.and(0x80) != 0) latch = latch.and(0x7f) // clear bit 7
+                if (latch.and(0x80) != 0) latch = 0//latch.and(0x7f) // clear bit 7
                 result
             }
             else -> value

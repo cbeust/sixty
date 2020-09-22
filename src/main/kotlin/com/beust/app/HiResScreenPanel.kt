@@ -1,6 +1,6 @@
 package com.beust.app
 
-import com.beust.sixty.Memory
+import com.beust.sixty.IMemory
 import java.awt.Color
 import java.awt.Graphics
 import javax.swing.JPanel
@@ -50,7 +50,7 @@ class HiResScreenPanel: JPanel() {
         board.redraw(g)
     }
 
-    fun drawMemoryLocation(memory: Memory, location: Int) {
+    fun drawMemoryLocation(memory: IMemory, location: Int) {
         val even = location % 2 == 0
         val bitPattern = if (even) {
             val byte0 = memory[location]

@@ -1,8 +1,8 @@
 package com.beust.sixty
 
-class DebugMemoryListener(val memory: Memory, private val debugMemory: Boolean = false) : MemoryListener() {
+class DebugMemoryListener(val memory: IMemory, private val debugMemory: Boolean = false) : MemoryListener() {
     private fun logMem(i: Int, value: Int, extra: String = "") {
-        logLines.add("  mem[${i.hh()}] = ${(value.and(0xff)).h()} $extra " + memory.lastMem)
+        logLines.add("  mem[${i.hh()}] = ${(value.and(0xff)).h()} $extra")
         ""
     }
 

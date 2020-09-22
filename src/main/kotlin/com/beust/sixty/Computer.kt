@@ -24,32 +24,45 @@ interface PcListener {
     fun onPcChanged(c: Computer)
 }
 
-class Computer(val cpu: Cpu = Cpu(memory = Memory()),
-//        memoryListener: MemoryListener? = null,
-        memoryInterceptor: MemoryInterceptor? = null,
-        var pcListener: PcListener? = null
-): IPulse {
+interface IComputer: IPulse {
+    val memory: IMemory
+    val cpu : Cpu
+}
+
+class ComputerBuilder {
+    lateinit var memory: IMemory
+    var memoryListeners = arrayListOf<MemoryListener>()
+    var pcListener: PcListener? = null
+
+    fun build(): IComputer {
+       val result = Computer(memory, Cpu(memory), pcListener)
+        memory.listeners.addAll(memoryListeners)
+        return result
+    }
+}
+
+class Computer(override val memory: IMemory, override val cpu: Cpu, val pcListener: PcListener?): IComputer {
     private val log = LoggerFactory.getLogger("Breakpoint")
     val pc get() = cpu.PC
-    val memory = cpu.memory
 
-    private var startTime: Long = 0
-
-    init {
-//        memory.listener = memoryListener
-        memory.interceptor = memoryInterceptor
+    companion object {
+        fun create(init: ComputerBuilder.() -> Unit): ComputerBuilder {
+            val result = ComputerBuilder()
+            result.init()
+            return result
+        }
     }
 
+    private var startTime: Long = 0
     private var stop: Boolean = false
 
-    fun stop() {
+    override fun stop() {
         stop = true
     }
 
-    fun word(memory: Memory = cpu.memory, address: Int = cpu.PC + 1): Int
-        = memory[address].or(memory[address + 1].shl(8))
+    fun word(memory: IMemory = cpu.memory, address: Int = cpu.PC + 1): Int = memory.word(address)
 
-    fun byteWord(memory: Memory = cpu.memory, address: Int = cpu.PC + 1): Pair<Int, Int> {
+    fun byteWord(memory: IMemory = cpu.memory, address: Int = cpu.PC + 1): Pair<Int, Int> {
         return memory[address] to word(memory, address)
     }
 
@@ -57,9 +70,10 @@ class Computer(val cpu: Cpu = Cpu(memory = Memory()),
     var track = 0
     var sector = 0
 
-    override fun onPulse(): PulseResult {
-        step()
-        return PulseResult(stop)
+    override fun onPulse(manager: PulseManager): PulseResult {
+        val done = step()
+        if (stop || done) manager.stop()
+        return PulseResult(done)
     }
 
     fun run(debugMemory: Boolean = false, _debugAsm: Boolean = false): RunResult {
@@ -87,11 +101,11 @@ class Computer(val cpu: Cpu = Cpu(memory = Memory()),
 //                if (cycles >= 1156500) {
 //                    DEBUG = true
 //                }
-            if (memory[cpu.PC + 1] == 0x44) {
-                println("BREAKPOINT")
-            }
+//            if (memory[cpu.PC + 1] == 0x44) {
+//                println("BREAKPOINT")
+//            }
             if (BREAKPOINT != null) {
-                if (cpu.PC in (BREAKPOINT - 100)..BREAKPOINT) {
+                if (cpu.PC in (BREAKPOINT - 20)..BREAKPOINT) {
                     DEBUG = true
                 }
             }
