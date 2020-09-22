@@ -10,18 +10,20 @@ var DEBUG = false
 val BREAKPOINT: Int? = null // 0xc2db
 // val BREAKPOINT: Int? = 0x6036 // test break
 
-val disk = 1
+val disk = 0
 
 val DISK_DOS_3_3 = DskDisk(File("src\\test\\resources\\Apple DOS 3.3.dsk").inputStream())
+val WOZ_DOS_3_3 = WozDisk(Woz::class.java.classLoader.getResource("woz2/DOS 3.3 System Master.woz").openStream())
 
 val DISK = if (disk == 0)
-    WozDisk(Woz::class.java.classLoader.getResource("woz2/DOS 3.3 System Master.woz").openStream())
+    WOZ_DOS_3_3
 else if (disk == 1)
     DISK_DOS_3_3
 else if (disk == 2)
     DskDisk(File("src/test/resources/audit.dsk").inputStream())
 else
-    DskDisk(File("d:\\pd\\Apple disks\\Ultima I - The Beginning.woz").inputStream())
+    DskDisk(File("d:\\pd\\Apple disks\\Sherwood Forest.dsk").inputStream())
+//    DskDisk(File("d:\\pd\\Apple disks\\Ultima I - The Beginning.woz").inputStream())
 
 //val DISK2 = WozDisk(
 //        File("d:\\pd\\Apple Disks\\woz2\\First Math Adventures - Understanding word problems.woz").inputStream())
