@@ -24,32 +24,28 @@ interface PcListener {
     fun onPcChanged(c: Computer)
 }
 
-class Computer(val cpu: Cpu = Cpu(memory = Memory()),
-//        memoryListener: MemoryListener? = null,
-        memoryInterceptor: MemoryInterceptor? = null,
-        var pcListener: PcListener? = null
-): IPulse {
+interface IComputer: IPulse {
+    val memory: IMemory
+    val cpu : Cpu
+
+    fun stop()
+}
+
+class Computer(val memory: IMemory, val cpu: Cpu, val pcListener: PcListener?): IPulse {
     private val log = LoggerFactory.getLogger("Breakpoint")
     val pc get() = cpu.PC
-    val memory = cpu.memory
 
     private var startTime: Long = 0
-
-    init {
-//        memory.listener = memoryListener
-        memory.interceptor = memoryInterceptor
-    }
-
     private var stop: Boolean = false
 
     fun stop() {
         stop = true
     }
 
-    fun word(memory: Memory = cpu.memory, address: Int = cpu.PC + 1): Int
+    fun word(memory: IMemory = cpu.memory, address: Int = cpu.PC + 1): Int
         = memory[address].or(memory[address + 1].shl(8))
 
-    fun byteWord(memory: Memory = cpu.memory, address: Int = cpu.PC + 1): Pair<Int, Int> {
+    fun byteWord(memory: IMemory = cpu.memory, address: Int = cpu.PC + 1): Pair<Int, Int> {
         return memory[address] to word(memory, address)
     }
 

@@ -6,8 +6,8 @@ import com.beust.sixty.*
  * Test computer where every character stored in address $300 is printed on stdout.
  */
 object TestComputer {
-    fun createComputer(): Computer {
-        val memory = Memory(size = 0x400).apply {
+    fun createComputer(): IComputer {
+        val memory = SimpleMemory(size = 0x400).apply {
             init(0,
                     LDX_IMM, 0,
                     LDA_ZP_X, 0x10,
@@ -22,7 +22,7 @@ object TestComputer {
             )
         }
 
-        val result = Computer(Cpu(memory))
+        val result = SimpleComputer(memory, Cpu(memory))
 
         return result
     }

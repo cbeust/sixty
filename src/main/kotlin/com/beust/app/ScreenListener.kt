@@ -1,11 +1,11 @@
 package com.beust.app
 
-import com.beust.sixty.Memory
+import com.beust.sixty.IMemory
 import com.beust.sixty.MemoryListener
 import com.beust.sixty.h
 import com.beust.sixty.hh
 
-class ScreenListener(private val memory: Memory, private val textScreen: TextScreenPanel,
+class ScreenListener(private val memory: IMemory, private val textScreen: TextScreenPanel,
         private val hiresScreen: HiResScreenPanel): MemoryListener() {
     override fun isInRange(address: Int): Boolean {
         return address in 0x400..0x800 || address in 0x2000..0x6000

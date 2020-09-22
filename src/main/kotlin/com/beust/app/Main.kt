@@ -4,7 +4,7 @@ import com.beust.sixty.IPulse
 import com.beust.sixty.h
 import java.io.File
 
-var DEBUG = false
+var DEBUG = true
 // 6164: test failing LC writing
 // check failing at 0x64f9
 //val BREAKPOINT: Int? = 0x65f8 // 0x65c3 // 0x658d
@@ -35,16 +35,16 @@ fun main() {
         1 -> {
             println("Running the following 6502 program which will display HELLO")
             val c = TestComputer.createComputer()
-            c.disassemble(start = 0, length = 15)
+//            c.disassemble(start = 0, length = 15)
             pulseListeners.add(c)
         }
         2 -> {
             val debugMem = false
             val debugAsm = DEBUG
 //            frame()
-            val dc = DiskController(6, DISK)
+            val dc = DiskController(6).apply { loadDisk(DISK) }
             pulseListeners.add(dc)
-            val p: IPulse = apple2Computer(debugMem, dc)
+            val p: IPulse = Apple2Computer(dc)
             pulseListeners.add(p)
 //                    .run(debugMemory = debugMem, _debugAsm = debugAsm)//true, true)
         }

@@ -3,7 +3,7 @@ package com.beust.app
 import com.beust.sixty.*
 import org.slf4j.LoggerFactory
 
-class DiskController(val slot: Int = 6, val disk: IDisk): IPulse, MemoryListener() {
+class DiskController(val slot: Int = 6): IPulse, MemoryListener() {
     private val log = LoggerFactory.getLogger("Disk")
     private val slot16 = slot * 16
     private var latch: Int = 0
@@ -19,14 +19,14 @@ class DiskController(val slot: Int = 6, val disk: IDisk): IPulse, MemoryListener
         // Faster way for unprotected disks
 //        latch = disk.nextByte()
 
-        if (motorOn) {
+        if (motorOn && disk != null) {
 //     More formal way: bit by bit on every pulse
             if (latch and 0x80 == 0) {
                 repeat(8) {
-                    latch = latch.shl(1).or(disk.nextBit()).and(0xff)
+                    latch = latch.shl(1).or(disk!!.nextBit()).and(0xff)
                 }
                 while (latch and 0x80 == 0) {
-                    latch = latch.shl(1).or(disk.nextBit()).and(0xff)
+                    latch = latch.shl(1).or(disk!!.nextBit()).and(0xff)
                 }
             }
         }
@@ -34,6 +34,11 @@ class DiskController(val slot: Int = 6, val disk: IDisk): IPulse, MemoryListener
         return PulseResult()
     }
 
+    var disk: IDisk? = null
+
+    fun loadDisk(disk: IDisk) {
+        this.disk = disk
+    }
 
     override fun onRead(i: Int, value: Int): Int? {
         val a = i - slot16
@@ -51,7 +56,7 @@ class DiskController(val slot: Int = 6, val disk: IDisk): IPulse, MemoryListener
                    0xc087 -> 3 to true
                     else -> ERROR("SHOULD NEVER HAPPEN")
                 }
-                magnet(disk, phase, state)
+                disk?.let { magnet(it, phase, state) }
                 value
             }
             0xc088 -> {

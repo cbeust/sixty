@@ -3,11 +3,70 @@ package com.beust.sixty
 import java.io.File
 import java.io.InputStream
 
+interface IMemory {
+    operator fun get(address: Int): Int
+    operator fun set(address: Int, value: Int)
+    fun forceValue(address: Int, value: Int)
+    fun load(allBytes: ByteArray, address: Int = 0, offset: Int = 0, size: Int = 0)
+    val listeners: ArrayList<MemoryListener>
+    val lastMemDebug: ArrayList<String>
+
+    fun init(address: Int, vararg bytes: Int) {
+        var ii = address
+        bytes.forEach { set(ii++, it) }
+    }
+
+    fun loadResource(name: String, address: Int = 0, fileOffset: Int = 0, size: Int = 0) {
+        val bytes = this::class.java.classLoader.getResource(name).openStream().readAllBytes()
+        load(bytes, address, fileOffset, if (size == 0) bytes.size else size)
+    }
+
+    fun dump(address: Int, length: Int = 80) {
+        val lineLength = 8
+        repeat(length / lineLength) { line ->
+            val sb = StringBuffer(String.format("%04x", address + (line * lineLength)) + ": ")
+            repeat(8) { byte ->
+                sb.append(String.format("%02x ", this[address + line * lineLength + byte]))
+            }
+            sb.append(" ")
+            repeat(8) { byte ->
+                val c = (this[address + line * lineLength + byte] and 0x7f).toChar()
+                sb.append(String.format("%c", c))
+            }
+            println(sb.toString())
+        }
+        println("===")
+    }
+}
+
+class SimpleMemory(size: Int): IMemory {
+    override val listeners = arrayListOf<MemoryListener>()
+    override val lastMemDebug = arrayListOf<String>()
+    private val bytes = IntArray(size)
+
+    override fun get(address: Int) = bytes[address]
+    override fun set(address: Int, value: Int) { bytes[address] = value }
+    override fun forceValue(address: Int, value: Int) {
+        this[address] = value
+    }
+
+    override fun load(allBytes: ByteArray, address: Int, offset: Int, size: Int) {
+        repeat(size) {
+            bytes[it + address] = allBytes[it + offset].toInt().and(0xff)
+        }
+    }
+
+    fun load(ins: InputStream, address: Int, fileOffset: Int, size: Int) {
+        val allBytes = ins.readBytes()
+        load(allBytes, address, fileOffset, size)
+    }
+}
+
 @Suppress("UnnecessaryVariable", "BooleanLiteralArgument")
-class Memory(val size: Int? = null) {
+class Apple2Memory(val size: Int? = null): IMemory {
     var interceptor: MemoryInterceptor? = null
-    val listeners = arrayListOf<MemoryListener>()
-    val lastMemDebug = arrayListOf<String>()
+    override val listeners = arrayListOf<MemoryListener>()
+    override val lastMemDebug = arrayListOf<String>()
 
     var init = true
 
@@ -17,24 +76,24 @@ class Memory(val size: Int? = null) {
     private var writeAux = false
     private var hires = false
     private var page2 = false
-    var internalC8Rom : Boolean = false
+    var internalC8Rom: Boolean = false
         set(f) {
             slotC3WasReset = false
             field = f
         }
-    var internalCxRom : Boolean = false
+    var internalCxRom: Boolean = false
         set(f) {
             internalC8Rom = false
             field = f
         }
-    var slotC3Rom  : Boolean = false
+    var slotC3Rom: Boolean = false
         set(f) {
             internalC8Rom = false
-            slotC3WasReset = ! f
+            slotC3WasReset = !f
             println("New slotC3WasReset: $slotC3WasReset")
             field = f
         }
-    var slotC3WasReset : Boolean = false
+    var slotC3WasReset: Boolean = false
         set(f) {
             println("SETTING RESET TO $f")
             field = f
@@ -68,24 +127,24 @@ class Memory(val size: Int? = null) {
             }
 //            if (init) return internal
 
-            if (! init && address == 0x800) {
+            if (!init && address == 0x800) {
                 println("BREAK")
             }
 
             if (address in 0x300..0x3ff && slotC3WasReset) internalC8Rom = true
 
             val result = if (internalC8Rom && address in 0x800..0xdff) internal
-                else when {
-                    address in 0x000..0xff -> internal
-                    ! internalCxRom && ! slotC3Rom -> {
-                        when(address) {
-                            in 0x300..0x3ff -> internal
-                            else -> slot
-                        }
+            else when {
+                address in 0x000..0xff -> internal
+                !internalCxRom && !slotC3Rom -> {
+                    when (address) {
+                        in 0x300..0x3ff -> internal
+                        else -> slot
                     }
-                    ! internalCxRom && slotC3Rom -> slot
-                    else -> internal
                 }
+                !internalCxRom && slotC3Rom -> slot
+                else -> internal
+            }
 //            if (! init) println("Current: " + if (result == slot) "slot" else "internal")
 
             return result
@@ -116,9 +175,9 @@ class Memory(val size: Int? = null) {
 //                internal[address - 0xc000] = value
 ////                slot[address - 0xc000] = value
 //            } else {
-                (address - 0xc000).let {
-                    mem(it)[it] = value
-                }
+            (address - 0xc000).let {
+                mem(it)[it] = value
+            }
 //            }
         }
 
@@ -140,14 +199,16 @@ class Memory(val size: Int? = null) {
     inner class HighRam(val name: String) {
         /** d000-dfff */
         val bank1 = IntArray(0x1000) { 0 }
+
         /** d000-dfff */
         val bank2 = IntArray(0x1000) { 0 }
+
         /** e000-ffff */
         val rom = IntArray(0x2000) { 0 }
 
         var readBank1 = false
             set(f) {
-                if(f) {
+                if (f) {
                     println("Selecting bank1")
                 }
                 field = f
@@ -173,7 +234,7 @@ class Memory(val size: Int? = null) {
 
         operator fun set(i: Int, value: Int) {
             val ea = i - 0xd000
-            if (i == 0xd17b && ! init) {
+            if (i == 0xd17b && !init) {
                 println("BREAKPOINT")
             }
             when {
@@ -211,11 +272,6 @@ class Memory(val size: Int? = null) {
         init = false
     }
 
-    fun init(address: Int, vararg bytes: Int) {
-        var ii = address
-        bytes.forEach { set(ii++, it) }
-    }
-
     private val mem = IntArray(0x10000) { 0 }
     private var writeCount = 0
 
@@ -241,7 +297,7 @@ class Memory(val size: Int? = null) {
                 if (altZp) auxZp[i] = value else mainZp[i] = value
             }
         } else if (i in 0x200..0xbfff) {
-            val mem = when(i) {
+            val mem = when (i) {
                 in 0x400..0x7ff -> correctMem(store80On)
                 in 0x2000..0x3fff -> correctMem(store80On && hires)
                 else -> if (get) {
@@ -258,7 +314,7 @@ class Memory(val size: Int? = null) {
             fun status(b: Boolean) = if (b) 0x80 else 0
 
             // Switches that are both read and write
-            when(i) {
+            when (i) {
                 0xc050 -> textSet = false
                 0xc051 -> textSet = true
                 0xc052 -> mixed = false
@@ -375,7 +431,7 @@ class Memory(val size: Int? = null) {
 //            } else{
 //                println("null mem")
 //            }
-            result
+        result
 //        } else {  // 0xe000-0xffff
 //            val ea = i - 0xe000
 //            val bug = true
@@ -420,7 +476,7 @@ class Memory(val size: Int? = null) {
         return result
     }
 
-    operator fun get(address: Int) : Int {
+    override operator fun get(address: Int): Int {
         var result = getOrSet(true, address)
         var actual: Int? = null
         listeners.forEach {
@@ -432,7 +488,7 @@ class Memory(val size: Int? = null) {
         return actual ?: result!!.and(0xff)
     }
 
-    operator fun set(address: Int, value: Int) {
+    override operator fun set(address: Int, value: Int) {
         if (address == 0x6040 && value == 0) {
             println("mem breakpoint")
         }
@@ -442,50 +498,56 @@ class Memory(val size: Int? = null) {
         }
     }
 
-    private fun handleRam(get: Boolean, i: Int) : Int {
+    private fun handleRam(get: Boolean, i: Int): Int {
         fun log(address: Int) {
             val readBank1 = currentHighRam().readBank1
             val writeBank1 = currentHighRam().writeBank1
             val writeBank2 = currentHighRam().writeBank2
-            if (! init) logMem(address.hh() + " writeCount:$writeCount" +
+            if (!init) logMem(address.hh() + " writeCount:$writeCount" +
                     " Read:" + (if (readRom) "rom" else if (readBank1) "ram1" else "ram2") +
                     " Write:" + (if (writeBank1) "ram1" else if (writeBank2) "ram2" else "no write"))
         }
+
         fun enableRomRead(address: Int) {
             readRom = true
             currentHighRam().readBank1 = false
             currentHighRam().readBank2 = false
             log(address)
         }
+
         fun enableRam1Read(address: Int) {
             readRom = false
             currentHighRam().readBank1 = true
             currentHighRam().readBank2 = false
             log(address)
         }
+
         fun enableRam2Read(address: Int) {
             readRom = false
             currentHighRam().readBank1 = false
             currentHighRam().readBank2 = true
             log(address)
         }
+
         fun enableRam1Write(address: Int) {
             currentHighRam().writeBank1 = true
             currentHighRam().writeBank2 = false
             log(address)
         }
+
         fun enableRam2Write(address: Int) {
             currentHighRam().writeBank1 = false
             currentHighRam().writeBank2 = true
             log(address)
         }
+
         fun disableWrite(address: Int) {
             currentHighRam().writeBank1 = false
             currentHighRam().writeBank2 = false
             log(address)
         }
 
-        when(i) {
+        when (i) {
             0xc080, 0xc084 -> {
                 writeCount = 0
                 enableRam2Read(i)
@@ -502,9 +564,9 @@ class Memory(val size: Int? = null) {
                 disableWrite(i)
             }
             else -> {
-                if (! init) {
+                if (!init) {
                     if (get) {
-                        when(i) {
+                        when (i) {
                             0xc081, 0xc085 -> {
                                 if (writeCount < 2) writeCount++
                                 enableRomRead(i)
@@ -556,26 +618,26 @@ class Memory(val size: Int? = null) {
         return 0
     }
 
-    fun loadResource(name: String, address: Int, fileOffset: Int = 0, size: Int = -1) {
-        load(this::class.java.classLoader.getResource(name).openStream(), address, fileOffset, size)
-    }
-
     fun load(file: String, address: Int = 0, fileOffset: Int = 0, size: Int = -1) {
         File(file).inputStream().use { ins ->
             load(ins, address, fileOffset, size)
         }
     }
 
-    fun load(ins: InputStream, address: Int = 0, fileOffset: Int = 0, size: Int = -1) {
-        init = true
-        val allBytes = ins.readBytes()
+    override fun load(allBytes: ByteArray, address: Int, offset: Int, size: Int) {
         val max = if (size == -1) allBytes.size else size
         repeat(max) { index ->
-            val v = allBytes[index + fileOffset]
+            val v = allBytes[index + offset]
             if (index + address < 0x10000) {
                 this[index + address] = v.toInt()
             }
         }
+    }
+
+    fun load(ins: InputStream, address: Int, fileOffset: Int, size: Int) {
+        init = true
+        val allBytes = ins.readBytes()
+        load(allBytes, address, fileOffset, size)
         init = false
     }
 
@@ -587,29 +649,12 @@ class Memory(val size: Int? = null) {
         c0Memory.loadInInternal(bytes, offset, size, destOffset)
     }
 
-    fun forceValue(i: Int, value: Int) {
+    override fun forceValue(i: Int, value: Int) {
         init = true
         this[i] = value
         init = false
 
     }
-
-
-    fun dump(address: Int, length: Int = 80) {
-        val lineLength = 8
-        repeat(length / lineLength) { line ->
-            val sb = StringBuffer(String.format("%04x", address + (line * lineLength)) + ": ")
-            repeat(8) { byte ->
-                sb.append(String.format("%02x ", this[address + line * lineLength + byte]))
-            }
-            sb.append(" ")
-            repeat(8) { byte ->
-                val c = (this[address + line * lineLength + byte] and 0x7f).toChar()
-                sb.append(String.format("%c", c))
-            }
-            println(sb.toString())
-        }
-        println("===")
-    }
-
 }
+
+

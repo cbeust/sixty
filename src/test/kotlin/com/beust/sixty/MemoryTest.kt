@@ -31,7 +31,7 @@ class MemoryTest {
         val start = 0x6000
         val memory = createApple2Memory().apply {
             val ins2 = File("asm/$fileName").inputStream()
-            load(ins2, start)
+            load(ins2.readAllBytes(), start)
             listeners.add(DebugMemoryListener(this))
         }
         var success = true

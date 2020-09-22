@@ -50,8 +50,8 @@ class Apple2Frame: JFrame() {
     }
 }
 
-fun createApple2Memory(): Memory {
-    val result = Memory(65536).apply {
+fun createApple2Memory(): Apple2Memory {
+    val result = Apple2Memory(65536).apply {
 
 //        load("d:\\pd\\Apple Disks\\roms\\APPLE2E.ROM", 0xc000)
 //        load("d:\\pd\\Apple Disks\\roms\\C000.dump", 0xc000)
@@ -98,8 +98,16 @@ fun createApple2Memory(): Memory {
     return result
 }
 
-fun apple2Computer(debugMem: Boolean, diskController: DiskController): Computer {
-    val memory = createApple2Memory()
+class Apple2Computer(val diskController: DiskController): IComputer, IPulse {
+    var pcListener: PcListener? = null
+    override val memory: IMemory = createApple2Memory()
+    override val cpu : Cpu = Cpu(memory)
+
+    private val computer = Computer(memory, cpu, pcListener)
+
+    override fun onPulse() = computer.onPulse()
+    override fun stop() = computer.stop()
+
     val frame = Apple2Frame().apply {
         addKeyListener(object : java.awt.event.KeyListener {
             override fun keyReleased(e: java.awt.event.KeyEvent?) {}
@@ -120,40 +128,20 @@ fun apple2Computer(debugMem: Boolean, diskController: DiskController): Computer 
         })
     }
 
-//    val listener = Apple2MemoryListener(frame.textScreenPanel, frame.hiresPanel) { -> debugMem }
-//    val pcListener = Apple2PcListener()
-//    val interceptor = Apple2MemoryInterceptor()
+    init {
+        with(memory) {
+            listeners.add(diskController)
+            //        listeners.add(DiskController(5, DISK_DOS_3_3))
+            listeners.add(DebugMemoryListener(memory))
+            listeners.add(ScreenListener(this, frame.textScreenPanel, frame.hiresPanel))
+        }
 
-    val appleCpu = Cpu(memory = memory)
-    val result = Computer(cpu = appleCpu)
-//    listener.computer = result
-//    interceptor.computer = result
-//    pcListener.computer = result
-
-    with(memory) {
-        listeners.add(diskController)
-//        listeners.add(DiskController(5, DISK_DOS_3_3))
-        listeners.add(DebugMemoryListener(memory))
-        listeners.add(ScreenListener(this, frame.textScreenPanel, frame.hiresPanel))
-    }
-
-    result.apply {
-//        memory.listener = listener
-//        memory.interceptor = interceptor
-//            fillScreen(memory)
-//            fillWithNumbers(memory)
-//        memory[0x2027] = 0xdd
-//            loadPic(memory)
         val start = memory[0xfffc].or(memory[0xfffd].shl(8))
-
         cpu.PC = start
-//                run()
     }
-
-    return result
 }
 
-private fun runWatcher(memory: Memory) {
+private fun runWatcher(memory: IMemory) {
     val watcher = FileSystems.getDefault().newWatchService()
 
     val dir = Paths.get("asm")
@@ -168,7 +156,7 @@ private fun runWatcher(memory: Memory) {
                 if (filename.toString() == "a") {
                     val file = Paths.get(dir.toAbsolutePath().toString(), filename.toString())
                     println("Reloading $file")
-                    memory.load(file.toFile().inputStream(), 0x300)
+                    memory.load(file.toFile().inputStream().readAllBytes(), 0x300)
                 }
                 println("$filename modified")
                 if (key.isValid) {
@@ -180,7 +168,7 @@ private fun runWatcher(memory: Memory) {
         }
     }
 }
-private fun loadPic(memory: Memory) {
+private fun loadPic(memory: IMemory) {
     val bytes = Paths.get("d:", "PD", "Apple disks", "fishgame.pic").toFile().readBytes()
     (4..0x2004).forEach {
         memory[0x2000 + it - 4] = bytes[it].toInt()
