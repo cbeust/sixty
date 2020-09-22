@@ -61,9 +61,9 @@ class SimpleMemory(size: Int): IMemory {
         this[address] = value
     }
 
-    override fun load(allBytes: ByteArray, address: Int, offset: Int, size: Int) {
-        repeat(size) {
-            bytes[it + address] = allBytes[it + offset].toInt().and(0xff)
+    override fun load(bytes: ByteArray, address: Int, offset: Int, size: Int) {
+        repeat(if (size == 0) bytes.size else size) {
+            this.bytes[it + address] = bytes[it + offset].toInt().and(0xff)
         }
     }
 

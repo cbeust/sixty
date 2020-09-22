@@ -105,7 +105,7 @@ class Apple2Computer(val diskController: DiskController): IComputer, IPulse {
 
     private val computer = Computer(memory, cpu, pcListener)
 
-    override fun onPulse() = computer.onPulse()
+    override fun onPulse(manager: PulseManager) = computer.onPulse(manager)
     override fun stop() = computer.stop()
 
 //    val frame = Apple2Frame().apply {

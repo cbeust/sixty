@@ -70,8 +70,9 @@ class Computer(override val memory: IMemory, override val cpu: Cpu, val pcListen
     var track = 0
     var sector = 0
 
-    override fun onPulse(): PulseResult {
+    override fun onPulse(manager: PulseManager): PulseResult {
         val done = step()
+        if (stop || done) manager.stop()
         return PulseResult(done)
     }
 

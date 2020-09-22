@@ -32,7 +32,7 @@ class MemoryTest {
         var success = true
         var message: String? = null
 
-        DEBUG = true
+//        DEBUG = true
         val mem = createApple2Memory().apply {
             val ins2 = File("asm/$fileName").inputStream()
             load(ins2.readAllBytes(), start)

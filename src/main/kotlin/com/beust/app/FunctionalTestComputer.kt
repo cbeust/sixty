@@ -20,7 +20,7 @@ class SimpleComputer(override val memory: IMemory, override val cpu: Cpu): IComp
     }
     private val computer = Computer(memory, cpu, pcListener)
     override fun stop() = computer.stop()
-    override fun onPulse() = computer.onPulse()
+    override fun onPulse(manager: PulseManager) = computer.onPulse(manager)
 }
 
 fun functionalTestComputer(debugMemory: Boolean): IComputer {

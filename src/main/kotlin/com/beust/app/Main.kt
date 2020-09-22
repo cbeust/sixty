@@ -1,16 +1,14 @@
 package com.beust.app
 
-import com.beust.sixty.Apple2Memory
-import com.beust.sixty.Computer
-import com.beust.sixty.IPulse
-import com.beust.sixty.h
+import com.beust.sixty.*
 import java.io.File
 
-var DEBUG = true
+var DEBUG = false
 // 6164: test failing LC writing
 // check failing at 0x64f9
 //val BREAKPOINT: Int? = 0x65f8 // 0x65c3 // 0x658d
-val BREAKPOINT: Int? = 0x6036 // test break
+val BREAKPOINT = 0x3619
+// val BREAKPOINT: Int? = 0x6036 // test break
 
 val disk = 2
 
@@ -31,7 +29,7 @@ else
 fun main() {
     val choice = 1
 
-    val pulseListeners = arrayListOf<IPulse>()
+    val pulseManager = PulseManager()
 
 //    val diskController = DiskController()
 //    val apple2Memory = Apple2Memory()
@@ -56,23 +54,23 @@ fun main() {
             println("Running the following 6502 program which will display HELLO")
             val c = TestComputer.createComputer()
 //            c.disassemble(start = 0, length = 15)
-            pulseListeners.add(c)
+            pulseManager.addListener(c)
         }
         2 -> {
             val debugMem = false
             val debugAsm = DEBUG
 //            frame()
             val dc = DiskController(6).apply { loadDisk(DISK) }
-            pulseListeners.add(dc)
+            pulseManager.addListener(dc)
             val p: IPulse = Apple2Computer(dc)
-            pulseListeners.add(p)
+            pulseManager.addListener(p)
 //                    .run(debugMemory = debugMem, _debugAsm = debugAsm)//true, true)
         }
         3 -> {
             testDisk()
         }
         else -> {
-            pulseListeners.add(functionalTestComputer(false))
+            pulseManager.addListener(functionalTestComputer(false))
 //            with(result) {
 //                val sec = durationMillis / 1000
 //                val mhz = String.format("%.2f", cycles / sec / 1_000_000.0)
@@ -81,14 +79,7 @@ fun main() {
         }
     }
 
-    var stop = false
-    while (! stop) {
-        pulseListeners.forEach {
-            val r = it.onPulse()
-            if (r.stop) stop = true
-        }
-    }
-
+    pulseManager.run()
 }
 
 fun testDisk() {

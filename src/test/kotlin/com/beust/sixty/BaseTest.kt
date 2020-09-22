@@ -22,10 +22,19 @@ fun assertNotRegister(register: Int, expected: Int) {
 @Test
 abstract class BaseTest {
     abstract fun createComputer(vararg bytes: Int): IComputer
+    private lateinit var computer: IComputer
 
     fun computer(vararg bytes: Int): IComputer {
-        with(createComputer(*bytes, BRK)) {
+        val result = with(createComputer(*bytes, BRK)) {
+            computer = this
             return this
+        }
+    }
+
+    fun run() {
+        PulseManager().apply {
+            addListener(computer)
+            run()
         }
     }
 
