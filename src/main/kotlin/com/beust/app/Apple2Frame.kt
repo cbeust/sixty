@@ -31,6 +31,7 @@ class Apple2Frame: JFrame() {
             setSize(w, h)
         }
         val wozPanel = WozDiskPanel(WOZ_DOS_3_3)
+        tabbedPane.addTab("Bytes", null, ByteBufferPanel(WOZ_DOS_3_3))
         tabbedPane.addTab("Hires ($2000)", null, hiresScreen)
         tabbedPane.addTab("WOZ disk", null, wozPanel)
 
