@@ -7,10 +7,10 @@ var DEBUG = false
 // 6164: test failing LC writing
 // check failing at 0x64f9
 //val BREAKPOINT: Int? = 0x65f8 // 0x65c3 // 0x658d
-val BREAKPOINT: Int? = null //0xfbba
+val BREAKPOINT: Int? = null // 0xc2db
 // val BREAKPOINT: Int? = 0x6036 // test break
 
-val disk = 0
+val disk = 1
 
 val DISK_DOS_3_3 = DskDisk(File("src\\test\\resources\\Apple DOS 3.3.dsk").inputStream())
 
@@ -72,7 +72,9 @@ fun main() {
             computer.cpu.PC = start
 
             pulseManager.addListener(computer)
-//                    .run(debugMemory = debugMem, _debugAsm = debugAsm)//true, true)
+            Thread {
+                FileWatcher().run(a2Memory)
+            }.start()
         }
         3 -> {
             testDisk()

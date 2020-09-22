@@ -546,7 +546,7 @@ class Apple2Memory(val size: Int? = null): IMemory {
     }
 
     override fun load(allBytes: ByteArray, address: Int, offset: Int, size: Int) {
-        val max = if (size == -1) allBytes.size else size
+        val max = if (size <= 0) allBytes.size else size
         repeat(max) { index ->
             val v = allBytes[index + offset]
             if (index + address < 0x10000) {
