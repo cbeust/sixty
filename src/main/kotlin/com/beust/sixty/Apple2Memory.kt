@@ -101,7 +101,7 @@ class Apple2Memory(val size: Int? = null): IMemory {
         }
 
         operator fun set(address: Int, value: Int) {
-            if (init && address % 256 == 0) {
+            if (init && address >= 0xc100 && address % 256 == 0) {
                 println("Loading bank ${address.hh()} in " + current(address - 0xc000))
             }
 //            if (init) {
@@ -158,7 +158,6 @@ class Apple2Memory(val size: Int? = null): IMemory {
                 readBank2 -> bank2[ea]
                 else -> ERROR("Should never happen")
             }
-            println("Highram $name [" + i.hh() + "] returning ${result.h()}")
             return result
         }
 
@@ -170,8 +169,6 @@ class Apple2Memory(val size: Int? = null): IMemory {
                 writeBank2 -> bank2[ea] = value
                 else -> ERROR("Should never happen")
             }
-
-            println("Highram $name [" + i.hh() + "]=" + value.hh())
         }
     }
 

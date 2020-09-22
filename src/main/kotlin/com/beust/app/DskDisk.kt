@@ -11,7 +11,7 @@ fun main() {
 
 class DskDisk(val ins: InputStream): IDisk {
     companion object {
-        private const val TRACK_MAX = 35
+        private const val TRACK_MAX = 70
         const val DISK_IMAGE_SIZE_BYTES = TRACK_MAX * 16 * 256
         const val TRACK_SIZE_BYTES = 16 * 256
         val LOGICAL_SECTORS = listOf(0, 7, 14, 6, 13, 5, 12, 4, 11, 3, 10, 2, 9, 1, 8, 15)

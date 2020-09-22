@@ -24,7 +24,7 @@ class DskDiskTest {
         ""
     }
 
-    @Test(enabled = false)
+    @Test(enabled = true)
     fun disk() {
         val proDos = false
         val expected = ins.readAllBytes()
@@ -45,13 +45,14 @@ class DskDiskTest {
                     val index = DskDisk.TRACK_SIZE_BYTES * track + sec * 256 + byte
                     val exp = expected[index].toUByte().toInt()
                     if (byte == 0) {
-                        println("Comparing $actual with $exp")
+                        println("T:${track.h()} S:${sec.h()} Received ${actual.h()}, expected ${exp.h()}")
                     }
                     assertThat(actual)
                             .withFailMessage("T:$track S:$sec B:$byte  Expected ${exp.h()} but got ${actual.h()}")
                             .isEqualTo(exp)
                 }
             }
+            disk.incTrack()
             disk.incTrack()
         }
     }

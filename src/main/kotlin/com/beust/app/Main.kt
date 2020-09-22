@@ -10,7 +10,7 @@ var DEBUG = false
 val BREAKPOINT: Int? = null //0xfbba
 // val BREAKPOINT: Int? = 0x6036 // test break
 
-val disk = 2
+val disk = 0
 
 val DISK_DOS_3_3 = DskDisk(File("src\\test\\resources\\Apple DOS 3.3.dsk").inputStream())
 
@@ -21,7 +21,7 @@ else if (disk == 1)
 else if (disk == 2)
     DskDisk(File("src/test/resources/audit.dsk").inputStream())
 else
-    DskDisk(File("d:\\pd\\a2audit\\audit\\audit.dsk").inputStream())
+    DskDisk(File("d:\\pd\\Apple disks\\Ultima I - The Beginning.woz").inputStream())
 
 //val DISK2 = WozDisk(
 //        File("d:\\pd\\Apple Disks\\woz2\\First Math Adventures - Understanding word problems.woz").inputStream())
@@ -105,7 +105,7 @@ fun getOneTrack(disk: IDisk, track: Int): Track {
     val sectors = hashMapOf<Int, Sector>()
     val result = arrayListOf<IntArray>()
     fun pair() = disk.nextByte().shl(1).or(1).and(disk.nextByte()).and(0xff)
-    repeat(16) {
+    repeat(16) { sector ->
         while (disk.peekBytes(3) != listOf(0xd5, 0xaa, 0x96)) {
             disk.nextByte()
         }
@@ -113,16 +113,16 @@ fun getOneTrack(disk: IDisk, track: Int): Track {
         val volume = pair()
         val readTrack = pair()
         if (track != -1 && readTrack != track) {
-            TODO("Tracks should match")
+            ERROR("Tracks should match (expected track: ${track.h()}, got ${readTrack.h()} - sector: ${sector.h()}")
         }
         val sector = pair()
         val checksumAddress = pair()
         if (volume.xor(track).xor(sector) != checksumAddress) {
-            TODO("Checksum doesn't match")
+            ERROR("Checksum doesn't match")
         }
         println("Volume: $volume Track: $track Sector: $sector checksum: $checksumAddress")
         if (disk.nextBytes(3) != listOf(0xde, 0xaa, 0xeb)) {
-            TODO("Didn't find closing for address")
+            ERROR("Didn't find closing for address")
         }
 
         while (disk.peekBytes(3) != listOf(0xd5, 0xaa, 0xad)) {
