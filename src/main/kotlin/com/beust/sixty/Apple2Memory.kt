@@ -19,7 +19,6 @@ class Apple2Memory(val size: Int? = null): IMemory {
     private var page2 = false
     var internalC8Rom: Boolean = false
         set(f) {
-            slotC3WasReset = false
             field = f
         }
     var internalCxRom: Boolean = false
@@ -30,13 +29,6 @@ class Apple2Memory(val size: Int? = null): IMemory {
     var slotC3Rom: Boolean = false
         set(f) {
             internalC8Rom = false
-            slotC3WasReset = !f
-            println("New slotC3WasReset: $slotC3WasReset")
-            field = f
-        }
-    var slotC3WasReset: Boolean = false
-        set(f) {
-            println("SETTING RESET TO $f")
             field = f
         }
     private var video80 = false
@@ -72,7 +64,7 @@ class Apple2Memory(val size: Int? = null): IMemory {
                 println("BREAK")
             }
 
-            if (address in 0x300..0x3ff && slotC3WasReset) internalC8Rom = true
+            if (address in 0x300..0x3ff && ! slotC3Rom) internalC8Rom = true
 
             val result = if (internalC8Rom && address in 0x800..0xdff) internal
             else when {
@@ -430,9 +422,6 @@ class Apple2Memory(val size: Int? = null): IMemory {
     }
 
     override operator fun set(address: Int, value: Int) {
-        if (address == 0x6040 && value == 0) {
-            println("mem breakpoint")
-        }
         getOrSet(false, address, value)
         listeners.forEach {
             if (it.isInRange(address)) it.onWrite(address, value)
@@ -630,7 +619,7 @@ class Apple2Memory(val size: Int? = null): IMemory {
         // Reset
         internalCxRom = false
         slotC3Rom = false
-        slotC3WasReset = false
+//        slotC3WasReset = false
         internalC8Rom = false
 //        Thread {
 //            runWatcher(this)
@@ -638,6 +627,7 @@ class Apple2Memory(val size: Int? = null): IMemory {
 
         // When restarting, no need to move the head 0x50 tracks
         this[0xc63c] = 4
+        init = false
     }
 
 }

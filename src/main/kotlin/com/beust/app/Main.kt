@@ -7,7 +7,7 @@ var DEBUG = false
 // 6164: test failing LC writing
 // check failing at 0x64f9
 //val BREAKPOINT: Int? = 0x65f8 // 0x65c3 // 0x658d
-val BREAKPOINT: Int? = null// = 0x3619
+val BREAKPOINT: Int? = null //0xfbba
 // val BREAKPOINT: Int? = 0x6036 // test break
 
 val disk = 2
@@ -66,6 +66,7 @@ fun main() {
             val computer = Computer.create {
                 memory = a2Memory
                 memoryListeners.add(Apple2MemoryListener(a2Memory))
+                memoryListeners.add(dc)
             }.build()
             val start = a2Memory.word(0xfffc) // memory[0xfffc].or(memory[0xfffd].shl(8))
             computer.cpu.PC = start

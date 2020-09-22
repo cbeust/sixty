@@ -85,7 +85,7 @@ fun createApple2Memory(): Apple2Memory {
         // Reset
         internalCxRom = false
         slotC3Rom = false
-        slotC3WasReset = false
+//        slotC3WasReset = false
         internalC8Rom = false
         Thread {
             runWatcher(this)

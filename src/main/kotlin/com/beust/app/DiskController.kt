@@ -19,20 +19,22 @@ class DiskController(val slot: Int = 6): IPulse, MemoryListener() {
 
     override fun onPulse(manager: PulseManager): PulseResult {
         // Faster way for unprotected disks
-//        latch = disk.nextByte()
-
-        if (motorOn && disk != null) {
-//     More formal way: bit by bit on every pulse
-            if (latch and 0x80 == 0) {
-                repeat(8) {
-                    latch = latch.shl(1).or(disk!!.nextBit()).and(0xff)
-                }
-                while (latch and 0x80 == 0) {
-                    latch = latch.shl(1).or(disk!!.nextBit()).and(0xff)
-                }
-            }
+        disk?.let {
+            if (latch.and(0x80) == 0) latch = it.nextByte()
         }
-//        println("@@@   latch: ${latch.h()}")
+
+//        if (motorOn && disk != null) {
+////     More formal way: bit by bit on every pulse
+//            if (latch and 0x80 == 0) {
+//                repeat(8) {
+//                    latch = latch.shl(1).or(disk!!.nextBit()).and(0xff)
+//                }
+//                while (latch and 0x80 == 0) {
+//                    latch = latch.shl(1).or(disk!!.nextBit()).and(0xff)
+//                }
+//            }
+//        }
+////        println("@@@   latch: ${latch.h()}")
         return PulseResult()
     }
 
@@ -82,9 +84,9 @@ class DiskController(val slot: Int = 6): IPulse, MemoryListener() {
                 value
             }
             0xc08c -> {
-//                latch = disk.nextByte()
+//                latch = disk!!.nextByte()
                 val result = latch
-                if (latch.and(0x80) != 0) latch = latch.and(0x7f) // clear bit 7
+                if (latch.and(0x80) != 0) latch = 0//latch.and(0x7f) // clear bit 7
                 result
             }
             else -> value
