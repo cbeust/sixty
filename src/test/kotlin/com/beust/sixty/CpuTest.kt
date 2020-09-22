@@ -8,8 +8,10 @@ class CpuTest: BaseTest() {
             }
             pcListener = object : PcListener {
                 override fun onPcChanged(c: Computer) {
-                    if (memory[c.cpu.PC] == BRK)
+                    val opCode = memory[c.cpu.PC]
+                    if (opCode == BRK || (opCode == RTS && c.cpu.SP.isEmpty())) {
                         c.stop()
+                    }
                 }
             }
         }.build()

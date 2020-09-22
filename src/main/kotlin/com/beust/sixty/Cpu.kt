@@ -22,7 +22,7 @@ data class Cpu(val memory: IMemory,
         }
     fun toWord(address: Int) = memory[address].or(memory[address + 1].shl(8))
 
-    fun nextInstruction(pc: Int = PC, debugMemory: Boolean = false, debugAsm: Boolean = false) {
+    fun nextInstruction(pc: Int = PC, debugMemory: Boolean = false, debugAsm: Boolean = false): Int {
         var opCode = memory[pc]
         var byte = memory[pc + 1]
         var word = byte.or(memory[pc + 2].shl(8))
@@ -303,6 +303,7 @@ data class Cpu(val memory: IMemory,
                 TODO("Unknown opcode: ${opCode.h()}")
             }
         }
+        return timing
     }
 
     private fun rol(v: Int): Int {

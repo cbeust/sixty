@@ -69,11 +69,16 @@ class Computer(override val memory: IMemory, override val cpu: Cpu, val pcListen
     var cycles = 0
     var track = 0
     var sector = 0
+    private var wait = 0
 
     override fun onPulse(manager: PulseManager): PulseResult {
-        val done = step()
-        if (stop || done) manager.stop()
-        return PulseResult(done)
+        if (wait == 0) {
+            wait = step() - 1
+        } else {
+//            println("----")
+            wait--
+        }
+        return PulseResult(stop)
     }
 
     fun run(debugMemory: Boolean = false, _debugAsm: Boolean = false): RunResult {
@@ -82,18 +87,18 @@ class Computer(override val memory: IMemory, override val cpu: Cpu, val pcListen
         while (!stop) {
             cycles++
             val done = step(debugMemory, _debugAsm)
-            if (done) stop = true
         }
 
         return RunResult(System.currentTimeMillis() - startTime, cycles)
     }
 
-    fun step(debugMemory: Boolean = false, _debugAsm: Boolean = false): Boolean {
+    fun step(debugMemory: Boolean = false, _debugAsm: Boolean = false): Int {
         var debugAsm = _debugAsm
         var previousPc = 0
         val opCode = memory[cpu.PC]
         var done = false
         cycles++
+        var timing = 0
 
         if (opCode == 0x60 && cpu.SP.isEmpty()) {
             done = true
@@ -140,7 +145,7 @@ class Computer(override val memory: IMemory, override val cpu: Cpu, val pcListen
                         ""
                     }
                     cpu.PC += SIZES[opCode]
-                    cpu.nextInstruction(previousPc)
+                    timing = cpu.nextInstruction(previousPc)
                     if (debugAsm) println(debugString + " " + cpu.toString() + " " + cycles)
                     if (true) { // debugMemory) {
                         memory.listeners.forEach {
@@ -152,7 +157,7 @@ class Computer(override val memory: IMemory, override val cpu: Cpu, val pcListen
                 } else {
                     previousPc = cpu.PC
                     cpu.PC += SIZES[opCode]
-                    cpu.nextInstruction(previousPc)
+                    timing = cpu.nextInstruction(previousPc)
                 }
             } catch(ex: Throwable) {
                 ex.printStackTrace()
@@ -175,7 +180,7 @@ class Computer(override val memory: IMemory, override val cpu: Cpu, val pcListen
             memory.lastMemDebug?.clear()
         }
         pcListener?.onPcChanged(this)
-        return done
+        return timing
     }
 
     class RunResult(val durationMillis: Long, val cycles: Int)

@@ -20,7 +20,8 @@ class DiskController(val slot: Int = 6): IPulse, MemoryListener() {
     override fun onPulse(manager: PulseManager): PulseResult {
         // Faster way for unprotected disks
         disk?.let {
-            if (latch.and(0x80) == 0) latch = it.nextByte()
+            if (latch.and(0x80) == 0) latch = latch.shl(1).or(it.nextBit())
+            println("new latch: " + latch.h())
         }
 
 //        if (motorOn && disk != null) {
