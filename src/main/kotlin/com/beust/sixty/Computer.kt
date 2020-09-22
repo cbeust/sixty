@@ -101,11 +101,11 @@ class Computer(override val memory: IMemory, override val cpu: Cpu, val pcListen
 //                if (cycles >= 1156500) {
 //                    DEBUG = true
 //                }
-            if (memory[cpu.PC + 1] == 0x44) {
-                println("BREAKPOINT")
-            }
+//            if (memory[cpu.PC + 1] == 0x44) {
+//                println("BREAKPOINT")
+//            }
             if (BREAKPOINT != null) {
-                if (cpu.PC in (BREAKPOINT - 100)..BREAKPOINT) {
+                if (cpu.PC in (BREAKPOINT - 20)..BREAKPOINT) {
                     DEBUG = true
                 }
             }

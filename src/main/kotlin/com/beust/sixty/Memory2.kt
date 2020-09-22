@@ -666,6 +666,50 @@ class Apple2Memory(val size: Int? = null): IMemory {
         init = false
 
     }
+
+    init {
+//        load("d:\\pd\\Apple Disks\\roms\\APPLE2E.ROM", 0xc000)
+//        load("d:\\pd\\Apple Disks\\roms\\C000.dump", 0xc000)
+        loadResource("Apple2e.rom", 0xd000, 0x1000, 0x3000)
+
+        val bytes = this::class.java.classLoader.getResource("Apple2e.rom").openStream().readAllBytes()
+
+        loadCxxxInInternal(bytes, 0x100, 0xeff, 0x100)
+//        slotC3Rom = true
+//        internalCxRom = true
+//        // Load C100-C2FF in internal rom
+//        loadResource("Apple2e.rom", 0xc100, 0x100, 0x200)
+//        // C400 internal
+//        slotC3Rom = true
+//        internalCxRom = true
+//        loadResource("Apple2e.rom", 0xc400, 0x400, 0x400)
+//        // Load C800-CFFF in internal
+//        slotC3Rom = true
+//        internalCxRom = true
+//        loadResource("Apple2e.rom", 0xc800, 0x800, 0x800)
+//        // Load C300-C3FF in internal rom
+//        slotC3Rom = true
+//        internalCxRom = true
+//        loadResource("Apple2e.rom", 0xc300, 0x300, 0x100)
+
+        internalCxRom = false
+        slotC3Rom = true
+        // C600 in slot
+        loadResource("DISK2.ROM", 0xc600)
+
+        // Reset
+        internalCxRom = false
+        slotC3Rom = false
+        slotC3WasReset = false
+        internalC8Rom = false
+//        Thread {
+//            runWatcher(this)
+//        }.start()
+
+        // When restarting, no need to move the head 0x50 tracks
+        this[0xc63c] = 4
+    }
+
 }
 
 

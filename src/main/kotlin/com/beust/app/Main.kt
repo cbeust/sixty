@@ -7,7 +7,7 @@ var DEBUG = false
 // 6164: test failing LC writing
 // check failing at 0x64f9
 //val BREAKPOINT: Int? = 0x65f8 // 0x65c3 // 0x658d
-val BREAKPOINT = 0x3619
+val BREAKPOINT: Int? = null// = 0x3619
 // val BREAKPOINT: Int? = 0x6036 // test break
 
 val disk = 2
@@ -27,7 +27,7 @@ else
 //        File("d:\\pd\\Apple Disks\\woz2\\First Math Adventures - Understanding word problems.woz").inputStream())
 
 fun main() {
-    val choice = 1
+    val choice = 2
 
     val pulseManager = PulseManager()
 
@@ -62,8 +62,15 @@ fun main() {
 //            frame()
             val dc = DiskController(6).apply { loadDisk(DISK) }
             pulseManager.addListener(dc)
-            val p: IPulse = Apple2Computer(dc)
-            pulseManager.addListener(p)
+            val a2Memory = Apple2Memory()
+            val computer = Computer.create {
+                memory = a2Memory
+                memoryListeners.add(Apple2MemoryListener(a2Memory))
+            }.build()
+            val start = a2Memory.word(0xfffc) // memory[0xfffc].or(memory[0xfffd].shl(8))
+            computer.cpu.PC = start
+
+            pulseManager.addListener(computer)
 //                    .run(debugMemory = debugMem, _debugAsm = debugAsm)//true, true)
         }
         3 -> {
