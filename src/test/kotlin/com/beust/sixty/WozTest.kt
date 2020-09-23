@@ -28,7 +28,7 @@ class WozTest {
 
     fun bytes() {
         val ins = Woz::class.java.classLoader.getResource("woz2/DOS 3.3 System Master.woz")!!.openStream()
-        val disk = WozDisk(ins)
+        val disk = WozDisk("DOS 3.3.woz", ins)
 
         val ins2 = Woz::class.java.classLoader.getResource("woz2/DOS 3.3 System Master.woz")!!.openStream()
         val bytes: ByteArray = ins2.readAllBytes()

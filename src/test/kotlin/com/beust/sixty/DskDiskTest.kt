@@ -10,9 +10,9 @@ import org.testng.annotations.Test
 @Test
 class DskDiskTest {
     private val ins get() = DskDiskTest::class.java.classLoader.getResource("Apple DOS 3.3.dsk")!!.openStream()
+    val disk = DskDisk("Apple DOS 3.3.dsk", ins)
 
     fun sectorsAllDifferent() {
-        val disk = DskDisk(ins)
         repeat(3) { disk.nextByte() } // d5 aa 96
         repeat(2) { disk.nextByte() } // volume
         val (b0, b1) = disk.peekBytes(2)
@@ -28,7 +28,6 @@ class DskDiskTest {
     fun disk() {
         val proDos = false
         val expected = ins.readAllBytes()
-        val disk = DskDisk(ins)
 //        SixAndTwo.dump(disk)
         repeat(35) { track ->
             val trackContent = getOneTrack(disk, track)
