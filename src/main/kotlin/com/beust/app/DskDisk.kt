@@ -6,10 +6,10 @@ import java.io.File
 import java.io.InputStream
 
 fun main() {
-    DskDisk(File("src/test/resources/audit.dsk").inputStream())
+    DskDisk("audit.dsk", File("src/test/resources/audit.dsk").inputStream())
 }
 
-class DskDisk(val ins: InputStream): IDisk {
+class DskDisk(override val path: String, ins: InputStream): IDisk {
     companion object {
         private const val TRACK_MAX = 70
         const val DISK_IMAGE_SIZE_BYTES = TRACK_MAX * 16 * 256

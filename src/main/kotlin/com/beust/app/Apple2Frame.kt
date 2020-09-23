@@ -13,7 +13,9 @@ class Apple2Frame: JFrame() {
     init {
         val layout = GroupLayout(contentPane)
         contentPane.layout = layout
-        title = "Cédric's Apple ][ emulator"
+        title = "Cédric's Apple ][ emulator. Disk: " + UiState.currentDiskName
+
+        UiState.currentDiskName.addListener { _, new: String -> title = new }
 
         isVisible = true //making the frame visible
         setSize(1700, 1000)

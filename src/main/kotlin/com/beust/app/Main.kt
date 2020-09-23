@@ -12,17 +12,17 @@ val BREAKPOINT: Int? = null // 0xc2db
 
 val disk = 0
 
-val DISK_DOS_3_3 = DskDisk(File("src\\test\\resources\\Apple DOS 3.3.dsk").inputStream())
-val WOZ_DOS_3_3 = WozDisk(Woz::class.java.classLoader.getResource("woz2/DOS 3.3 System Master.woz").openStream())
+val DISK_DOS_3_3 = DskDisk("Apple DOS 3.3.dsk", File("src\\test\\resources\\Apple DOS 3.3.dsk").inputStream())
+val WOZ_DOS_3_3 = WozDisk("DOS 3.3 System Master.woz", Woz::class.java.classLoader.getResource("woz2/DOS 3.3 System Master.woz").openStream())
 
 val DISK = if (disk == 0)
     WOZ_DOS_3_3
 else if (disk == 1)
     DISK_DOS_3_3
 else if (disk == 2)
-    DskDisk(File("src/test/resources/audit.dsk").inputStream())
+    DskDisk("audit.dsk", File("src/test/resources/audit.dsk").inputStream())
 else
-    DskDisk(File("d:\\pd\\Apple disks\\Sherwood Forest.dsk").inputStream())
+    DskDisk("Sherwood Forest.dsk", File("d:\\pd\\Apple disks\\Sherwood Forest.dsk").inputStream())
 //    DskDisk(File("d:\\pd\\Apple disks\\Ultima I - The Beginning.woz").inputStream())
 
 //val DISK2 = WozDisk(
@@ -62,7 +62,10 @@ fun main() {
             val debugMem = false
             val debugAsm = DEBUG
 //            frame()
-            val dc = DiskController(6).apply { loadDisk(DISK) }
+            val dc = DiskController(6).apply {
+                loadDisk(DISK)
+                UiState.currentDiskName.setValue(DISK.path)
+            }
             pulseManager.addListener(dc)
             val a2Memory = Apple2Memory()
             val computer = Computer.create {
@@ -91,13 +94,13 @@ fun main() {
         }
     }
 
-    pulseManager.run()
+//    pulseManager.run()
 }
 
 fun testDisk() {
     val ins = Woz::class.java.classLoader.getResource("woz2/DOS 3.3 System Master.woz")!!.openStream()
     val ins2 = File("d:\\pd\\Apple DIsks\\woz2\\The Apple at Play.woz").inputStream()
-    val disk: IDisk = WozDisk(ins)
+    val disk: IDisk = WozDisk("The Apple at Play.woz", ins)
     getOneTrack(disk, 0)
 }
 
