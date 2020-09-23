@@ -9,6 +9,28 @@ plugins {
     application
 }
 
+configurations.all {
+    resolutionStrategy {
+        dependencySubstitution {
+            // The maven property ${osgi.platform} is not handled by Gradle
+            // so we replace the dependency, using the osgi platform from the project settings
+            val os = System.getProperty("os.name").toLowerCase()
+            if (os.contains("windows")) {
+                substitute(module("org.eclipse.platform:org.eclipse.swt.\${osgi.platform}")).with(
+                        module("org.eclipse.platform:org.eclipse.swt.win32.win32.x86_64:3.114.0"))
+            }
+            else if (os.contains("linux")) {
+                substitute(module("org.eclipse.platform:org.eclipse.swt.\${osgi.platform}")).with(
+                        module("org.eclipse.platform:org.eclipse.swt.gtk.linux.x86_64:3.114.0"))
+            }
+            else if (os.contains("mac")) {
+                substitute(module("org.eclipse.platform:org.eclipse.swt.\${osgi.platform}")).with(
+                        module("org.eclipse.platform:org.eclipse.swt.cocoa.macosx.x86_64:3.114.0"))
+            }
+        }
+    }
+}
+
 repositories {
     jcenter()
     mavenCentral()
@@ -22,7 +44,8 @@ object This {
 }
 
 dependencies {
-    impl(kotlin("stdlib"), "com.beust:jcommander:1.72", "ch.qos.logback:logback-classic:1.2.3")
+    impl(kotlin("stdlib"), "com.beust:jcommander:1.72", "ch.qos.logback:logback-classic:1.2.3",
+            "org.eclipse.platform:org.eclipse.jface:3.21.0")
     testImpl(kotlin("test"), "org.testng:testng:7.0.0", "org.assertj:assertj-core:3.10.0")
 }
 
