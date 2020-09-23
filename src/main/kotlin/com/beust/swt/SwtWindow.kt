@@ -40,11 +40,14 @@ fun main() {
 ////            background = Color(display, 0, 0, 0)
 //        }
         MainWindow(shell)
-        val rightScreen = Composite(shell, SWT.NONE).apply {
-            setSize(WIDTH, HEIGHT)
+//        Label(shell, SWT.NONE).apply { text = "right panel "}
+        val tabFolder = TabFolder(shell, SWT.NONE)
+        val wozItem = TabItem(tabFolder, SWT.NONE).apply {
+            text = "WOZ"
+            control = ByteBufferTab(tabFolder)
         }
 
-        // create the manager and bind to a widget
+            // create the manager and bind to a widget
 
         // create the manager and bind to a widget
         val resManager = LocalResourceManager(JFaceResources.getResources(), shell)
