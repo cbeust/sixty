@@ -1,11 +1,12 @@
-package com.beust.app
+package com.beust.app.swing
 
+import com.beust.app.LineCalculator
 import java.awt.Color
 import java.awt.Graphics
 import javax.swing.JPanel
 
-class TextScreenPanel: JPanel() {
-    private val content = Array(WIDTH * HEIGHT) { 0x20 }
+class SwingTextScreenPanel: IGraphicTextPanel, JPanel() {
+    private val content = Array(SwingTextScreenPanel.WIDTH * SwingTextScreenPanel.HEIGHT) { 0x20 }
 
     companion object {
         val WIDTH = 40
@@ -41,47 +42,11 @@ class TextScreenPanel: JPanel() {
         }
     }
 
-    fun drawCharacter(x: Int, y: Int, value: Int) {
+    override fun drawCharacter(x: Int, y: Int, value: Int) {
         if (value in 0xa0..0xfe) {
             content[y * WIDTH + x] = value and 0x7f
             repaint()
         }
     }
 
-}
-
-class LineCalculator {
-    private val lineMap = hashMapOf<Int, Int>()
-
-    init {
-        var line = 0
-        listOf(0, 0x28, 0x50).forEach { m ->
-            repeat(8) {
-                val address = 0x400 + it * 0x80 + m
-//                println("Address: " + address.hh() + " line: $line")
-                lineMap[address] = line++
-            }
-        }
-        val l = lineFor(0x7d1)
-        ""
-    }
-
-    private fun lineFor(location: Int): Pair<Int, Int>? {
-        val result = lineMap.filter { (k, v) ->
-            location in k until k + TextScreenPanel.WIDTH
-        }
-        return if (result.isEmpty()) null else  result.iterator().next().let { it.key to it.value }
-    }
-
-    fun coordinatesFor(location: Int): Pair<Int, Int>?  {
-        val p = lineFor(location)
-        return if (p != null) {
-            val y = p.second
-            val x = (location - p.first) % TextScreenPanel.WIDTH
-            x to y
-        } else {
-            null
-
-        }
-    }
 }

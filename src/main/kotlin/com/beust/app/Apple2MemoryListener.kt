@@ -1,6 +1,6 @@
 package com.beust.app
 
-import com.beust.sixty.DebugMemoryListener
+import com.beust.app.swing.Apple2SwingFrame
 import com.beust.sixty.IMemory
 import com.beust.sixty.MemoryListener
 import com.beust.sixty.h
@@ -10,7 +10,7 @@ class Apple2MemoryListener(private val memory: IMemory): MemoryListener() {
         return address in 0x400..0x800 || address in 0x2000..0x6000
     }
 
-    val frame = Apple2Frame().apply {
+    val frame = Apple2SwingFrame().apply {
         addKeyListener(object : java.awt.event.KeyListener {
             override fun keyReleased(e: java.awt.event.KeyEvent?) {}
             override fun keyTyped(e: java.awt.event.KeyEvent?) {}

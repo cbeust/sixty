@@ -94,7 +94,7 @@ fun main() {
         }
     }
 
-//    pulseManager.run()
+    pulseManager.run()
 }
 
 fun testDisk() {
