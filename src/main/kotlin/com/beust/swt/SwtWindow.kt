@@ -2,74 +2,247 @@ package com.beust.swt
 
 import org.eclipse.jface.action.*
 import org.eclipse.jface.preference.RadioGroupFieldEditor
-import org.eclipse.jface.resource.FontDescriptor
 import org.eclipse.jface.resource.ImageDescriptor
-import org.eclipse.jface.resource.JFaceResources
-import org.eclipse.jface.resource.LocalResourceManager
 import org.eclipse.jface.window.ApplicationWindow
 import org.eclipse.swt.SWT
-import org.eclipse.swt.events.KeyEvent
-import org.eclipse.swt.events.KeyListener
-import org.eclipse.swt.graphics.Font
+import org.eclipse.swt.custom.ScrolledComposite
 import org.eclipse.swt.layout.FillLayout
+import org.eclipse.swt.layout.GridLayout
 import org.eclipse.swt.widgets.*
-import java.awt.event.KeyAdapter
 
 
 private val allowed = hashSetOf('a', 'b', 'c', 'd', 'e', 'f', 'A', 'B', 'C', 'D', 'E', 'F')
 
 private fun isHex(c: Char) = Character.isDigit(c) || allowed.contains(c)
 
-val WIDTH = 200
-val HEIGHT = 300
+//val WIDTH = 200
+//val HEIGHT = 300
 
 fun main() {
-    runWithShell { display, shell ->
-        shell.layout = FillLayout(SWT.HORIZONTAL)
-        shell.addKeyListener(object : KeyAdapter(), KeyListener {
-            override fun keyPressed(e: KeyEvent) {
-                if (e.character == 'q') {
-                    shell.dispose()
-                }
-            }
-            override fun keyReleased(e: KeyEvent?) {
-            }
-        })
-//        val mainScreen = Composite(shell, SWT.NONE).apply {
-//            setSize(WIDTH, HEIGHT)
-////            background = Color(display, 0, 0, 0)
-//        }
-        MainWindow(shell)
-//        Label(shell, SWT.NONE).apply { text = "right panel "}
-        val tabFolder = TabFolder(shell, SWT.NONE)
-        val wozItem = TabItem(tabFolder, SWT.NONE).apply {
-            text = "WOZ"
-            control = ByteBufferTab(tabFolder)
-        }
+    val display = Display()
+    val red = display.getSystemColor(SWT.COLOR_RED)
+    val blue = display.getSystemColor(SWT.COLOR_BLUE)
+    val shell = Shell(display)
+    shell.layout = FillLayout()
 
-            // create the manager and bind to a widget
+    // set the size of the scrolled content - method 1
 
-        // create the manager and bind to a widget
-        val resManager = LocalResourceManager(JFaceResources.getResources(), shell)
-        var hexFont: Font = resManager.createFont(FontDescriptor.createFrom("Arial", 10, SWT.BOLD))
+    // set the size of the scrolled content - method 1
+    val sc1 = ScrolledComposite(shell, SWT.H_SCROLL or SWT.V_SCROLL or SWT.BORDER)
+    val c1 = Composite(sc1, SWT.NONE)
+    sc1.content = c1
+    c1.background = red
+    var layout = GridLayout()
+    layout.numColumns = 4
+    c1.layout = layout
+    val b1 = Button(c1, SWT.PUSH)
+    b1.text = "first button"
+    c1.size = c1.computeSize(SWT.DEFAULT, SWT.DEFAULT)
 
-//        with(Text(shell, SWT.CENTER)) {
-//            setSize(300, 200)
-//            font = hexFont
-//            text = "D5 AA 96"
-//            addVerifyListener { e ->
-//                if (isHex(e.character)) {
-//                    e.doit = true
-//                    e.text = e.text.toUpperCase()
-//                } else {
-//                    e.doit = false
-//                }
-//            }
-//
-////            pack()
-//        }
-//        HexText(shell)
+    // set the minimum width and height of the scrolled content - method 2
+
+    // set the minimum width and height of the scrolled content - method 2
+    val sc2 = ScrolledComposite(shell, SWT.H_SCROLL or SWT.V_SCROLL or SWT.BORDER)
+    sc2.expandHorizontal = true
+    sc2.expandVertical = true
+    val c2 = Composite(sc2, SWT.NONE)
+    sc2.content = c2
+    c2.background = blue
+    layout = GridLayout()
+    layout.numColumns = 4
+    c2.layout = layout
+    val b2 = Button(c2, SWT.PUSH)
+    b2.text = "first button"
+    sc2.setMinSize(c2.computeSize(SWT.DEFAULT, SWT.DEFAULT))
+
+    val add = Button(shell, SWT.PUSH)
+    add.text = "add children"
+    val index = intArrayOf(0)
+    add.addListener(SWT.Selection) {
+        index[0]++
+        var button = Button(c1, SWT.PUSH)
+        button.text = "button " + index[0]
+        // reset size of content so children can be seen - method 1
+        c1.size = c1.computeSize(SWT.DEFAULT, SWT.DEFAULT)
+        c1.layout()
+        button = Button(c2, SWT.PUSH)
+        button.text = "button " + index[0]
+        // reset the minimum width and height so children can be seen - method 2
+        sc2.setMinSize(c2.computeSize(SWT.DEFAULT, SWT.DEFAULT))
+        c2.layout()
     }
+
+    shell.open()
+    while (!shell.isDisposed) {
+        if (!display.readAndDispatch()) display.sleep()
+    }
+    display.dispose()
+}
+
+class ByteBuffer {
+    fun run() {
+        val display = Display()
+        val shell = Shell(display)
+        createContents(shell)
+        shell.setSize(300, 300)
+        shell.open()
+        while (!shell.isDisposed) {
+            if (!display.readAndDispatch()) {
+                display.sleep()
+            }
+        }
+        display.dispose()
+    }
+
+    private fun createContents(parent: Composite) {
+        parent.layout = FillLayout()
+        val sc = ScrolledComposite(parent, SWT.H_SCROLL or SWT.V_SCROLL)
+
+        // Create a child composite to hold the controls
+        val child = Composite(sc, SWT.NONE)
+        child.layout = FillLayout()
+
+        val bb = ByteBufferTab(child)
+        // Create the buttons
+//        Button(child, SWT.PUSH).text = "One"
+//        Button(child, SWT.PUSH).text = "Two"
+        /*
+     * // Set the absolute size of the child child.setSize(400, 400);
+     */
+        // Set the child as the scrolled content of the ScrolledComposite
+        sc.content = child
+
+        // Set the minimum size
+        sc.setMinSize(500, bb.size.y)
+
+        // Expand both horizontally and vertically
+        sc.expandHorizontal = true
+        sc.expandVertical = true
+    }
+}
+
+
+fun main2() {
+    ByteBuffer().run()
+//    runWithShell { display, shell ->
+//        shell.setSize(300, 200)
+////        shell.pack()
+//        val container = ScrolledComposite(shell, SWT.NONE).apply {
+//            layout = GridLayout()
+//            setSize(300, 200)
+//            content = shell
+//        }
+//        repeat(50) {
+//            val label = label(container, "Test").apply {
+//                background = blue(display)
+//            }
+//        }
+//////        createContents2(shell)
+////        shell.layout = GridLayout(1, true)
+////        shell.layoutData = GridData().apply {
+////            heightHint = 100
+////        }
+////        shell.pack()
+//    }
+}
+
+
+class Works {
+    fun run() {
+        val display = Display()
+        val shell = Shell(display)
+        createContents(shell)
+//        shell.setSize(300, 300)
+        shell.open()
+        while (!shell.isDisposed) {
+            if (!display.readAndDispatch()) {
+                display.sleep()
+            }
+        }
+        display.dispose()
+    }
+
+    private fun createContents(parent: Composite) {
+        parent.layout = FillLayout()
+
+        // Create the ScrolledComposite to scroll horizontally and vertically
+        val sc = ScrolledComposite(parent, SWT.H_SCROLL
+                or SWT.V_SCROLL)
+
+        // Create a child composite to hold the controls
+        val child = Composite(sc, SWT.NONE)
+        child.layout = FillLayout()
+
+        // Create the buttons
+        Button(child, SWT.PUSH).text = "One"
+        Button(child, SWT.PUSH).text = "Two"
+        /*
+     * // Set the absolute size of the child child.setSize(400, 400);
+     */
+        // Set the child as the scrolled content of the ScrolledComposite
+        sc.content = child
+
+        // Set the minimum size
+        sc.setMinSize(500, 500)
+
+        // Expand both horizontally and vertically
+        sc.expandHorizontal = true
+        sc.expandVertical = true
+    }
+}
+
+
+private fun createContents2(parent: Composite) {
+//    val sc = ScrolledComposite(parent, SWT.H_SCROLL or SWT.V_SCROLL).apply {
+//        expandHorizontal = true
+//        expandVertical = true
+////        setSize(300, 100)
+////        setMinSize(300, 100)
+//    }
+    val child = Composite(parent, SWT.NONE).apply {
+        layout = GridLayout(1, true)
+        background = yellow(display)
+    }
+    repeat(50) {
+        val label = label(child, "Test").apply {
+            background = blue(display)
+        }
+    }
+//    sc.content = child
+    child.setSize(300, 100)
+    child.pack()
+//    sc.pack()
+}
+
+private fun createContents(parent: Composite) {
+    parent.layout = FillLayout()
+
+    // Create the ScrolledComposite to scroll horizontally and vertically
+    val sc = ScrolledComposite(parent, SWT.H_SCROLL
+            or SWT.V_SCROLL)
+
+    // Create a child composite to hold the controls
+    val child = Composite(sc, SWT.NONE)
+    child.layout = FillLayout()
+
+    // Create the buttons
+    Button(child, SWT.PUSH).apply {
+        setSize(300, 1000)
+        text = "One"
+    }
+    Button(child, SWT.PUSH).text = "Two"
+    /*
+     * // Set the absolute size of the child child.setSize(400, 400);
+     */
+    // Set the child as the scrolled content of the ScrolledComposite
+    sc.content = child
+
+    // Set the minimum size
+//    sc.setMinSize(400, 400)
+
+    // Expand both horizontally and vertically
+    sc.expandHorizontal = true
+    sc.expandVertical = true
 }
 
 fun runWithShell(init: (display: Display, shell: Shell) -> Unit) {
@@ -145,16 +318,6 @@ class Ch4_Contributions : ApplicationWindow(null) {
 
     override fun createStatusLineManager(): StatusLineManager {
         return slm
-    }
-
-    companion object {
-        @JvmStatic
-        fun main(args: Array<String>) {
-            val swin = Ch4_Contributions()
-            swin.setBlockOnOpen(true)
-            swin.open()
-            Display.getCurrent().dispose()
-        }
     }
 
     init {

@@ -15,6 +15,6 @@ class RightWindow(parent: Composite): Composite(parent, SWT.NONE) {
                 text = "Content of the tab"
             }
         }
-        pack()
+//        pack()
     }
 }

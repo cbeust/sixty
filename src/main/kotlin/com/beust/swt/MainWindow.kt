@@ -26,6 +26,6 @@ class MainWindow(parent: Composite): Composite(parent, SWT.NONE) {
                 }
             }
         }
-        pack()
+//        pack()
     }
 }

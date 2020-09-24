@@ -17,15 +17,15 @@ configurations.all {
             val os = System.getProperty("os.name").toLowerCase()
             if (os.contains("windows")) {
                 substitute(module("org.eclipse.platform:org.eclipse.swt.\${osgi.platform}")).with(
-                        module("org.eclipse.platform:org.eclipse.swt.win32.win32.x86_64:3.114.0"))
+                        module("org.eclipse.platform:org.eclipse.swt.win32.win32.x86_64:3.115.0"))
             }
             else if (os.contains("linux")) {
                 substitute(module("org.eclipse.platform:org.eclipse.swt.\${osgi.platform}")).with(
-                        module("org.eclipse.platform:org.eclipse.swt.gtk.linux.x86_64:3.114.0"))
+                        module("org.eclipse.platform:org.eclipse.swt.gtk.linux.x86_64:3.115.0"))
             }
             else if (os.contains("mac")) {
                 substitute(module("org.eclipse.platform:org.eclipse.swt.\${osgi.platform}")).with(
-                        module("org.eclipse.platform:org.eclipse.swt.cocoa.macosx.x86_64:3.114.0"))
+                        module("org.eclipse.platform:org.eclipse.swt.cocoa.macosx.x86_64:3.115.0"))
             }
         }
     }
