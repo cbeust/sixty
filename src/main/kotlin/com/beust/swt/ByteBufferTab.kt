@@ -11,6 +11,7 @@ import org.eclipse.swt.widgets.*
 import java.awt.FlowLayout
 
 fun label(parent: Composite, t: String) = Label(parent, SWT.NONE).apply { text = t }
+fun button(parent: Composite, t: String) = Button(parent, SWT.NONE).apply { text = t }
 fun red(d: Display) = d.getSystemColor(SWT.COLOR_RED)
 fun blue(d: Display) = d.getSystemColor(SWT.COLOR_BLUE)
 fun yellow(d: Display) = d.getSystemColor(SWT.COLOR_YELLOW)
