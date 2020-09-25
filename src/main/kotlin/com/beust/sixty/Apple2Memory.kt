@@ -19,15 +19,18 @@ class Apple2Memory(val size: Int? = null): IMemory {
     private var page2 = false
     var internalC8Rom: Boolean = false
         set(f) {
+            logMem("internalC8Rom: $f")
             field = f
         }
     var internalCxRom: Boolean = false
         set(f) {
             internalC8Rom = false
+            logMem("internalCxRom: $f")
             field = f
         }
     var slotC3Rom: Boolean = false
         set(f) {
+            logMem("internalC3Rom: $f")
             internalC8Rom = false
             field = f
         }

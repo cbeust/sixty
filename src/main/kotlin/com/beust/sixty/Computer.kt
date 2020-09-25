@@ -13,6 +13,10 @@ interface MemoryInterceptor {
     fun onWrite(location: Int, value: Int): Response
 }
 
+interface IKeyProvider {
+    fun keyPressed(memory: IMemory, value: Int, shift: Boolean = false, control: Boolean = false)
+}
+
 abstract class MemoryListener {
     val logLines = arrayListOf<String>()
     abstract fun isInRange(address: Int): Boolean

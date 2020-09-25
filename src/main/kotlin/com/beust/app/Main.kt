@@ -10,7 +10,7 @@ var DEBUG = false
 // 6164: test failing LC writing
 // check failing at 0x64f9
 //val BREAKPOINT: Int? = 0x65f8 // 0x65c3 // 0x658d
-val BREAKPOINT: Int? = null // 0xc2db
+val BREAKPOINT: Int? = 0xc2de // 0xc2db
 // val BREAKPOINT: Int? = 0x6036 // test break
 
 val disk = 0
@@ -71,11 +71,18 @@ fun main() {
                 loadDisk(DISK)
                 UiState.currentDiskName.setValue(DISK.path)
             }
-            graphics = createWindows()
-            val textPanel =  TextPanel(graphics.textScreen)
+            val keyProvider = object: IKeyProvider {
+                override fun keyPressed(memory: IMemory, value: Int, shift: Boolean, control: Boolean) {
+                    memory.forceValue(0xc000, value.or(0x80))
+                    memory.forceValue(0xc010, 0x80)
+                }
+            }
 
             pulseManager.addListener(dc)
             val a2Memory = Apple2Memory()
+            graphics = createWindows(a2Memory, keyProvider)
+            val textPanel =  TextPanel(graphics.textScreen)
+
             val computer = Computer.create {
                 memory = a2Memory
                 memoryListeners.add(Apple2MemoryListener(textPanel))

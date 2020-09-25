@@ -1,6 +1,7 @@
 package com.beust.app
 
 import com.beust.app.swing.TextPanel
+import com.beust.sixty.IKeyProvider
 import com.beust.sixty.MemoryListener
 
 class Apple2MemoryListener(private val textPanel: TextPanel): MemoryListener() {

@@ -3,7 +3,13 @@ package com.beust.sixty
 interface IMemory {
     operator fun get(address: Int): Int
     operator fun set(address: Int, value: Int)
+
+    /**
+     * Used when the value has to be set regardless of any other consideration (e.g. it's coming
+     * from the emulator code, such as the keyboard).
+     */
     fun forceValue(address: Int, value: Int)
+
     fun load(allBytes: ByteArray, address: Int = 0, offset: Int = 0, size: Int = 0)
     val listeners: ArrayList<MemoryListener>
     val lastMemDebug: ArrayList<String>
