@@ -1,6 +1,7 @@
 package com.beust.swt
 
 import com.beust.app.app.ITextScreen
+import com.beust.sixty.h
 import org.eclipse.jface.resource.FontDescriptor
 import org.eclipse.jface.resource.JFaceResources
 import org.eclipse.jface.resource.LocalResourceManager
@@ -16,7 +17,9 @@ class MainWindow(parent: Composite): Composite(parent, SWT.NONE), ITextScreen {
     private val labels = arrayListOf<Label>()
 
     init {
-        layout = GridLayout(40, true)
+        layout = GridLayout(40, true).apply {
+            horizontalSpacing = 0
+        }
         background = display.getSystemColor(SWT.COLOR_BLACK)
         repeat(ITextScreen.WIDTH) {
             repeat(ITextScreen.HEIGHT) {
@@ -32,13 +35,38 @@ class MainWindow(parent: Composite): Composite(parent, SWT.NONE), ITextScreen {
 //        pack()
     }
 
+    /**
+     * Reference:  https://en.wikipedia.org/wiki/Apple_II_character_set
+     */
     override fun drawCharacter(x: Int, y: Int, value: Int) {
-        val c = (value - 0x80).toChar()
         display.asyncExec {
             if (! shell.isDisposed) {
                 labels[y * ITextScreen.WIDTH + x].let { label ->
                     if (!label.isDisposed) {
-                        label.text = c.toString()
+                        when(value) {
+                            in 0x01..0x3f -> { // inverse
+                                label.background = green(display)
+                                label.foreground = black(display)
+                            }
+//                            in 0x40..0x7f -> { // flashing
+//
+//                            }
+                            else -> {
+                                label.background = black(display)
+                                label.foreground = green(display)
+                            }
+                        }
+
+                        val c = when(value) {
+                            in 0x01..0x1a -> {
+                                value + 0x40
+                            }
+                            else -> value.and(0x7f)
+                        }
+                        if (value != 0xff && value != 0xa0) {
+                            println("Drawing ${value.h()} ${c.h()} " + c.toChar().toString())
+                        }
+                        label.text = c.toChar().toString()
                     }
                 }
             }
