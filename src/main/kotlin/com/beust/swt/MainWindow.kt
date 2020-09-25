@@ -12,6 +12,8 @@ import org.eclipse.swt.widgets.Composite
 import org.eclipse.swt.widgets.Label
 
 class MainWindow(parent: Composite): Composite(parent, SWT.NONE), ITextScreen {
+    private val WIDTH = 40
+    private val HEIGHT = 24
     private val resManager = LocalResourceManager(JFaceResources.getResources(), shell)
     private val textFont: Font = resManager.createFont(FontDescriptor.createFrom("Arial", 10, SWT.BOLD))
     private val labels = arrayListOf<Label>()
