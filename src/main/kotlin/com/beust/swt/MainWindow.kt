@@ -11,8 +11,6 @@ import org.eclipse.swt.widgets.Composite
 import org.eclipse.swt.widgets.Label
 
 class MainWindow(parent: Composite): Composite(parent, SWT.NONE), ITextScreen {
-    private val WIDTH = 40
-    private val HEIGHT = 23
     private val resManager = LocalResourceManager(JFaceResources.getResources(), shell)
     private val textFont: Font = resManager.createFont(FontDescriptor.createFrom("Arial", 10, SWT.BOLD))
     private val labels = arrayListOf<Label>()
@@ -20,8 +18,8 @@ class MainWindow(parent: Composite): Composite(parent, SWT.NONE), ITextScreen {
     init {
         layout = GridLayout(40, true)
         background = display.getSystemColor(SWT.COLOR_BLACK)
-        repeat(40) {
-            repeat(24) {
+        repeat(ITextScreen.WIDTH) {
+            repeat(ITextScreen.HEIGHT) {
                 labels.add(Label(this, SWT.NONE).apply {
                     font = textFont
                     background = display.getSystemColor(SWT.COLOR_BLACK)
@@ -38,7 +36,7 @@ class MainWindow(parent: Composite): Composite(parent, SWT.NONE), ITextScreen {
         val c = (value - 0x80).toChar()
         display.asyncExec {
             if (! shell.isDisposed) {
-                labels[y * WIDTH + x].let { label ->
+                labels[y * ITextScreen.WIDTH + x].let { label ->
                     if (!label.isDisposed) {
                         label.text = c.toString()
                     }
