@@ -1,6 +1,7 @@
 package com.beust.app.swing
 
 import com.beust.app.LineCalculator
+import com.beust.app.app.ITextScreen
 import java.awt.Color
 import java.awt.Graphics
 import javax.swing.JPanel

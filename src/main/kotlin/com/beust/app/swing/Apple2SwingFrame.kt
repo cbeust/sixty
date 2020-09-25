@@ -1,6 +1,7 @@
 package com.beust.app.swing
 
 import com.beust.app.*
+import com.beust.app.app.TextPanel
 import java.awt.Dimension
 import javax.swing.GroupLayout
 import javax.swing.JFrame

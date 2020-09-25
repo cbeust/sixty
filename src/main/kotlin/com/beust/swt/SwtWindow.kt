@@ -1,6 +1,6 @@
 package com.beust.swt
 
-import com.beust.app.swing.ITextScreen
+import com.beust.app.app.ITextScreen
 import com.beust.sixty.IKeyProvider
 import com.beust.sixty.IMemory
 import org.eclipse.swt.SWT

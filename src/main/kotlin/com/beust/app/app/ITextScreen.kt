@@ -1,4 +1,4 @@
-package com.beust.app.swing
+package com.beust.app.app
 
 import com.beust.app.LineCalculator
 

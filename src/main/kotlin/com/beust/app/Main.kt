@@ -1,6 +1,6 @@
 package com.beust.app
 
-import com.beust.app.swing.TextPanel
+import com.beust.app.app.TextPanel
 import com.beust.sixty.*
 import com.beust.swt.IGraphics
 import com.beust.swt.createWindows
@@ -10,7 +10,7 @@ var DEBUG = false
 // 6164: test failing LC writing
 // check failing at 0x64f9
 //val BREAKPOINT: Int? = 0x65f8 // 0x65c3 // 0x658d
-val BREAKPOINT: Int? = 0xc2de // 0xc2db
+val BREAKPOINT: Int? = null//0xc2de // 0xc2db
 // val BREAKPOINT: Int? = 0x6036 // test break
 
 val disk = 0
