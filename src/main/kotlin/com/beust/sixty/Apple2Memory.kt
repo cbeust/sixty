@@ -55,15 +55,6 @@ class Apple2Memory(val size: Int? = null): IMemory {
         fun current(address: Int): String = if (mem(address) == slot) "slot" else "internal"
 
         private fun mem(address: Int): IntArray {
-            if (address >= 0x1000) {
-                TODO("SHOULD NEVER HAPPEN")
-            }
-//            if (init) return internal
-
-            if (!init && address == 0x800) {
-                println("BREAK")
-            }
-
             if (address in 0x300..0x3ff && ! slotC3Rom) internalC8Rom = true
 
             val result = if (internalC8Rom && address in 0x800..0xdff) internal
@@ -84,34 +75,16 @@ class Apple2Memory(val size: Int? = null): IMemory {
         }
 
         operator fun get(address: Int): Int {
-//            if (init) return internal[address - 0xc000]
-//            if (! init) {
-//                val result = when (address) {
-//                    0xc2ff -> 1
-////                    0xceb5 -> 0xfe
-//                    else -> null
-//                }
-//                if (result != null) return result
-//            }
-//            if (/* slotC3WasReset && */ address in 0xc300..0xc3ff) {
-//                slotC3WasReset = false
-//                internalC8Rom = true
-//            }
             return (address - 0xc000).let { mem(it)[it] }
         }
 
         operator fun set(address: Int, value: Int) {
             if (init && address >= 0xc100 && address % 256 == 0) {
-                println("Loading bank ${address.hh()} in " + current(address - 0xc000))
+                logMem("Loading bank ${address.hh()} in " + current(address - 0xc000))
             }
-//            if (init) {
-//                internal[address - 0xc000] = value
-////                slot[address - 0xc000] = value
-//            } else {
             (address - 0xc000).let {
                 mem(it)[it] = value
             }
-//            }
         }
 
         fun loadInSlot(bytes: ByteArray, offset: Int = 0, size: Int = bytes.size, destOffset: Int = 0) {
@@ -180,15 +153,8 @@ class Apple2Memory(val size: Int? = null): IMemory {
     private val auxHighRam = HighRam("Aux")
     private fun currentHighRam() = if (altZp) auxHighRam else mainHighRam
 
-//    private val ram1 = IntArray(0x1000) { 0 }
-//    private val ram2 = IntArray(0x1000) { 0 }
-//    private val auxRam1 = IntArray(0x1000) { 0 }
-//    private val auxRam2 = IntArray(0x1000) { 0 }
-
     /** $E000-$FFFF */
     private var readRom = true
-//    private val romBank1 = IntArray(0x2000) { 0 }
-//    private val romBank2 = IntArray(0x2000) { 0 }
 
     fun force(block: () -> Unit) {
         init = true
@@ -196,7 +162,6 @@ class Apple2Memory(val size: Int? = null): IMemory {
         init = false
     }
 
-    private val mem = IntArray(0x10000) { 0 }
     private var writeCount = 0
 
     private fun getOrSet(get: Boolean, i: Int, value: Int = 0): Int? {
