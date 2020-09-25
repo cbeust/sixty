@@ -22,6 +22,8 @@ class SimpleMemory(size: Int): IMemory {
         this[address] = value
     }
 
+    override fun forceInternalRomValue(address: Int, value: Int) = forceValue(address, value)
+
     override fun load(bytes: ByteArray, address: Int, offset: Int, size: Int) {
         repeat(if (size == 0) bytes.size else size) {
             this.bytes[it + address] = bytes[it + offset].toInt().and(0xff)

@@ -53,11 +53,14 @@ class Apple2Memory(val size: Int? = null): IMemory {
 
     inner class C0Page {
         private val slot = IntArray(0x1000) { 0 }
-        private val internal = IntArray(0x1000) { 0 }
+        val internal = IntArray(0x1000) { 0 }
 
         fun current(address: Int): String = if (mem(address) == slot) "slot" else "internal"
 
         private fun mem(address: Int): IntArray {
+            if (address  in 0x2d0..0x2df && ! internalCxRom) {
+                println("BREAKPOINT")
+            }
             if (address in 0x300..0x3ff && ! slotC3Rom) internalC8Rom = true
 
             val result = if (internalC8Rom && address in 0x800..0xdff) internal
@@ -543,6 +546,13 @@ class Apple2Memory(val size: Int? = null): IMemory {
         this[i] = value
         init = false
 
+    }
+
+    override fun forceInternalRomValue(i: Int, value: Int) {
+        if (i !in 0xc000..0xcfff) {
+            ERROR("SHOULD BE IN 0xc000-0xcfff RANGE")
+        }
+        c0Memory.internal[i - 0xc000] = value
     }
 
     init {

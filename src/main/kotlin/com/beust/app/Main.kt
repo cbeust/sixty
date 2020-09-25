@@ -73,8 +73,8 @@ fun main() {
             }
             val keyProvider = object: IKeyProvider {
                 override fun keyPressed(memory: IMemory, value: Int, shift: Boolean, control: Boolean) {
-                    memory.forceValue(0xc000, value.or(0x80))
-                    memory.forceValue(0xc010, 0x80)
+                    memory.forceInternalRomValue(0xc000, value.or(0x80))
+                    memory.forceInternalRomValue(0xc010, 0x80)
                 }
             }
 

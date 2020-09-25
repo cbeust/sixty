@@ -9,6 +9,7 @@ interface IMemory {
      * from the emulator code, such as the keyboard).
      */
     fun forceValue(address: Int, value: Int)
+    fun forceInternalRomValue(address: Int, value: Int)
 
     fun load(allBytes: ByteArray, address: Int = 0, offset: Int = 0, size: Int = 0)
     val listeners: ArrayList<MemoryListener>
