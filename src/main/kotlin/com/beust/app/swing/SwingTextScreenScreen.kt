@@ -5,8 +5,8 @@ import java.awt.Color
 import java.awt.Graphics
 import javax.swing.JPanel
 
-class SwingTextScreenPanel: IGraphicTextPanel, JPanel() {
-    private val content = Array(SwingTextScreenPanel.WIDTH * SwingTextScreenPanel.HEIGHT) { 0x20 }
+class SwingTextScreenScreen: ITextScreen, JPanel() {
+    private val content = Array(SwingTextScreenScreen.WIDTH * SwingTextScreenScreen.HEIGHT) { 0x20 }
 
     companion object {
         val WIDTH = 40

@@ -2,16 +2,16 @@ package com.beust.app.swing
 
 import com.beust.app.LineCalculator
 
-interface IGraphicTextPanel {
+interface ITextScreen {
     fun drawCharacter(x: Int, y: Int, value: Int)
 }
 
-class TextPanel(private val graphicPanel: IGraphicTextPanel) {
+class TextPanel(private val screen: ITextScreen) {
     private val calculator = LineCalculator()
 
     fun drawMemoryLocation(location: Int, value: Int) {
         calculator.coordinatesFor(location)?.let { (x, y) ->
-            graphicPanel.drawCharacter(x, y, value)
+            screen.drawCharacter(x, y, value)
         }
     }
 

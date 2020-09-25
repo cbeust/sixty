@@ -24,7 +24,7 @@ class Apple2SwingFrame: JFrame() {
         val w = HiResScreenPanel.WIDTH * 2
         val h = HiResScreenPanel.HEIGHT * 2
 
-        val swingTextPanel = SwingTextScreenPanel()
+        val swingTextPanel = SwingTextScreenScreen()
         textScreen = TextPanel(swingTextPanel).apply {
             preferredSize = Dimension(w, h)
             setSize(w, h)

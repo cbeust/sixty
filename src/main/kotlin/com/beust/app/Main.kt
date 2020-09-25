@@ -1,6 +1,9 @@
 package com.beust.app
 
+import com.beust.app.swing.TextPanel
 import com.beust.sixty.*
+import com.beust.swt.IGraphics
+import com.beust.swt.createWindows
 import java.io.File
 
 var DEBUG = false
@@ -51,6 +54,8 @@ fun main() {
 //            it.onPulse()
 //        }
 //    }
+    var graphics: IGraphics? = null
+
     when(choice) {
         1 -> {
             println("Running the following 6502 program which will display HELLO")
@@ -66,11 +71,14 @@ fun main() {
                 loadDisk(DISK)
                 UiState.currentDiskName.setValue(DISK.path)
             }
+            graphics = createWindows()
+            val textPanel =  TextPanel(graphics.textScreen)
+
             pulseManager.addListener(dc)
             val a2Memory = Apple2Memory()
             val computer = Computer.create {
                 memory = a2Memory
-                memoryListeners.add(Apple2MemoryListener(a2Memory))
+                memoryListeners.add(Apple2MemoryListener(textPanel))
                 memoryListeners.add(dc)
             }.build()
             val start = a2Memory.word(0xfffc) // memory[0xfffc].or(memory[0xfffd].shl(8))
@@ -94,7 +102,11 @@ fun main() {
         }
     }
 
-    pulseManager.run()
+    Thread {
+        pulseManager.run()
+    }.start()
+
+    graphics?.run()
 }
 
 fun testDisk() {
