@@ -109,9 +109,9 @@ fun main() {
         }
     }
 
-//    Thread {
-//        pulseManager.run()
-//    }.start()
+    Thread {
+        pulseManager.run()
+    }.start()
 
     graphics?.run()
 }

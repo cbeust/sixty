@@ -69,6 +69,8 @@ fun createWindows(memory: IMemory, keyProvider: IKeyProvider): SwtContext {
         control = createScrollableByteBuffer(folder)
     }
 
+    mainWindow.pack()
+    folder.pack()
     shell.setSize(mainWindow.bounds.width + folder.bounds.width, mainWindow.bounds.height + 50)
     return SwtContext(display, shell, mainWindow)
 }
