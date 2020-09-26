@@ -1,9 +1,6 @@
 package com.beust.swt
 
-import com.beust.app.IDisk
-import com.beust.app.UiState
-import com.beust.app.Woz
-import com.beust.app.WozDisk
+import com.beust.app.*
 import com.beust.sixty.h
 import org.eclipse.jface.resource.FontDescriptor
 import org.eclipse.swt.SWT
@@ -61,6 +58,9 @@ class ByteBufferWindow(parent: Composite) : Composite(parent, SWT.NONE) {
         UiState.currentTrack.addListener { _, _ ->
             updateBuffer()
         }
+        UiState.byteAlgorithn.addListener { _, _ ->
+            updateBuffer()
+        }
         updateBuffer()
     }
 
@@ -76,11 +76,21 @@ class ByteBufferWindow(parent: Composite) : Composite(parent, SWT.NONE) {
 
                     fun nextByte(): Int {
                         var byte = 0
-                        while (byte and 0x80 == 0) {
-//                        repeat(8) {
-                            val (p, bit) = bitStream.next(position)
-                            byte = byte.shl(1).or(bit)
-                            position = p
+                        when(UiState.byteAlgorithn.value) {
+                            ByteAlgorithm.SHIFTED -> {
+                                while (byte and 0x80 == 0) {
+                                    val (p, bit) = bitStream.next(position)
+                                    byte = byte.shl(1).or(bit)
+                                    position = p
+                                }
+                            }
+                            else -> {
+                                repeat(8) {
+                                    val (p, bit) = bitStream.next(position)
+                                    byte = byte.shl(1).or(bit)
+                                    position = p
+                                }
+                            }
                         }
                         return byte
                     }

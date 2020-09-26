@@ -22,8 +22,11 @@ class Obs<T>(val def: T) {
     override fun toString() = _value.toString()
 }
 
+enum class ByteAlgorithm { RAW, SHIFTED, DISK_CONTENT }
+
 object UiState {
     var currentDiskFile: Obs<File?> = Obs(null)
-    var currentTrack: Obs<Int> = Obs(0)
-//    var currentDisk: Obs<IDisk?> = Obs(null)
+    var currentTrack = Obs(0)
+
+    var byteAlgorithn = Obs(ByteAlgorithm.RAW)
 }

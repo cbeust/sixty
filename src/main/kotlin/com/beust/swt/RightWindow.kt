@@ -1,5 +1,6 @@
 package com.beust.swt
 
+import com.beust.app.ByteAlgorithm
 import com.beust.app.UiState
 import org.eclipse.swt.SWT
 import org.eclipse.swt.custom.ScrolledComposite
@@ -18,7 +19,7 @@ class RightWindow(parent: Composite, parentHeight: Int): Composite(parent, SWT.N
         layout = GridLayout(3, false)
 
         val header = Composite(this, SWT.NONE).apply {
-            layout = GridLayout(4, false)
+            layout = GridLayout(6, false)
 //            background = grey(display)
             layoutData = GridData().apply {
 //                background = grey(display)
@@ -57,9 +58,8 @@ class RightWindow(parent: Composite, parentHeight: Int): Composite(parent, SWT.N
         //
         // Track number drop down
         //
-        Combo(header, SWT.DROP_DOWN).apply {
+        Combo(header, SWT.DROP_DOWN or SWT.READ_ONLY).apply {
             layoutData = GridData(SWT.BEGINNING, SWT.CENTER, false, false)
-            text = "Track number"
             val tracks = arrayListOf<String>()
             repeat(160) {
                 tracks.add((it.toFloat() / 4).toString())
@@ -75,6 +75,35 @@ class RightWindow(parent: Composite, parentHeight: Int): Composite(parent, SWT.N
                 override fun widgetDefaultSelected(e: SelectionEvent?) {}
             })
         }
+
+        //
+        // Byte algorithm label
+        //
+        label(header, "Bytes displayed").apply {
+            layoutData = GridData(SWT.BEGINNING, SWT.CENTER, false, false)
+        }
+
+        //
+        // Track number drop down
+        //
+        Combo(header, SWT.DROP_DOWN or SWT.READ_ONLY).apply {
+            layoutData = GridData(SWT.BEGINNING, SWT.CENTER, false, false)
+            setItems(ByteAlgorithm.RAW.toString(), ByteAlgorithm.SHIFTED.toString())
+            select(0)
+            addSelectionListener(object: SelectionListener {
+                override fun widgetSelected(e: SelectionEvent) {
+                    val newAlgo = when((e.widget as Combo).selectionIndex) {
+                        0 -> ByteAlgorithm.RAW
+                        else -> ByteAlgorithm.SHIFTED
+                    }
+                    UiState.byteAlgorithn.value = newAlgo
+                }
+
+                override fun widgetDefaultSelected(e: SelectionEvent?) {}
+            })
+        }
+
+
 
         scrolledComposite = createScrollableByteBuffer(this).apply {
             layoutData = GridData(GridData.FILL, GridData.FILL, true, true).apply {
