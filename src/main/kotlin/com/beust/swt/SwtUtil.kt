@@ -6,9 +6,10 @@ import org.eclipse.jface.resource.FontDescriptor
 import org.eclipse.jface.resource.JFaceResources
 import org.eclipse.jface.resource.LocalResourceManager
 import org.eclipse.swt.SWT
+import org.eclipse.swt.custom.CLabel
 import org.eclipse.swt.widgets.*
 
-fun label(parent: Composite, t: String) = Label(parent, SWT.NONE).apply { text = t }
+fun label(parent: Composite, t: String, style: Int = SWT.NONE) = Label(parent, style).apply { text = t }
 fun button(parent: Composite, t: String) = Button(parent, SWT.NONE).apply { text = t }
 fun red(d: Display) = d.getSystemColor(SWT.COLOR_RED)
 fun white(d: Display) = d.getSystemColor(SWT.COLOR_WHITE)

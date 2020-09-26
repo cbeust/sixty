@@ -31,7 +31,7 @@ fun works() {
 
     val tab = CTabItem(folder, SWT.NONE).apply {
         text = "DISK"
-        control = createScrollableByteBuffer(folder, 300)
+        control = createScrollableByteBuffer(folder)
     }
 
     shell.setSize(600, 100)

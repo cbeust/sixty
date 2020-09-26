@@ -110,12 +110,12 @@ fun createWindows(memory: IMemory, keyProvider: IKeyProvider): SwtContext {
     return SwtContext(display, shell, mainWindow)
 }
 
-fun createScrollableByteBuffer(parent: Composite, parentHeight: Int): ScrolledComposite {
+fun createScrollableByteBuffer(parent: Composite): ScrolledComposite {
 //    val composite = Composite(parent, SWT.NONE).apply {
 //        layoutData = GridData(SWT.FILL, SWT.TOP, true, false)
 //    }
 
-    val result = ScrolledComposite(parent, SWT.V_SCROLL or SWT.H_SCROLL).apply {
+    val result = ScrolledComposite(parent, SWT.BORDER or SWT.V_SCROLL or SWT.H_SCROLL).apply {
 //        expandVertical = true
         background = black(display)
 //        setMinSize(400, parentHeight)
@@ -123,12 +123,12 @@ fun createScrollableByteBuffer(parent: Composite, parentHeight: Int): ScrolledCo
     }
 
     val bb = ByteBufferWindow(result).let {
-        it.addListener(SWT.Resize) { event ->
-//            val width: Int = clientArea.width
-//            val s = computeSize(width, SWT.DEFAULT)
-            println("Resized to " + event.height)
-//            setMinSize(s)
-        }
+//        it.addListener(SWT.Resize) { event ->
+////            val width: Int = clientArea.width
+////            val s = computeSize(width, SWT.DEFAULT)
+//            println("Resized to " + event.height)
+////            setMinSize(s)
+//        }
         it.pack()
         with(it.bounds) {
             result.setMinSize(Point(500, 4000))

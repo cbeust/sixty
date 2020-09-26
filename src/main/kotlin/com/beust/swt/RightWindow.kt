@@ -3,12 +3,9 @@ package com.beust.swt
 import com.beust.app.UiState
 import org.eclipse.swt.SWT
 import org.eclipse.swt.custom.ScrolledComposite
-import org.eclipse.swt.layout.GridData
-import org.eclipse.swt.layout.GridLayout
+import org.eclipse.swt.layout.*
 import org.eclipse.swt.widgets.Composite
 import org.eclipse.swt.widgets.Label
-import org.eclipse.swt.widgets.TabFolder
-import org.eclipse.swt.widgets.TabItem
 
 class RightWindow(parent: Composite, parentHeight: Int): Composite(parent, SWT.NONE) {
     private val diskLabel: Label
@@ -17,9 +14,9 @@ class RightWindow(parent: Composite, parentHeight: Int): Composite(parent, SWT.N
     init {
         layout = GridLayout(3, false)
 
-        label(this, "File:").apply {
-        }
-        diskLabel = label(this, UiState.currentDiskFile?.value?.name ?: "<none>").apply {
+        val header = Composite(this, SWT.NONE).apply {
+            layout = GridLayout(2, false)
+            background = grey(display)
             layoutData = GridData().apply {
 //                background = grey(display)
                 horizontalSpan = 2
@@ -27,7 +24,20 @@ class RightWindow(parent: Composite, parentHeight: Int): Composite(parent, SWT.N
                 grabExcessHorizontalSpace = true
             }
         }
-        scrolledComposite = createScrollableByteBuffer(this, parentHeight).apply {
+
+        diskLabel = label(header, UiState.currentDiskFile.value?.name ?: "<none>").apply {
+            layoutData = GridData(SWT.BEGINNING, SWT.CENTER, false, false)
+////                background = grey(display)
+////                horizontalSpan = 2
+//                horizontalAlignment = GridData.FILL
+//                grabExcessHorizontalSpace = true
+//            }
+        }
+        button(header, "...").apply {
+            layoutData = GridData(SWT.BEGINNING, SWT.CENTER, false, false)
+        }
+
+        scrolledComposite = createScrollableByteBuffer(this).apply {
             layoutData = GridData(GridData.FILL, GridData.FILL, true, true).apply {
 //                horizontalAlignment = GridData.FILL
 //                verticalAlignment = GridData.FILL
