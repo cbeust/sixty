@@ -6,6 +6,8 @@ import org.eclipse.jface.resource.ImageDescriptor
 import org.eclipse.jface.viewers.TableLayout
 import org.eclipse.jface.window.ApplicationWindow
 import org.eclipse.swt.SWT
+import org.eclipse.swt.custom.CTabFolder
+import org.eclipse.swt.custom.CTabItem
 import org.eclipse.swt.custom.ScrolledComposite
 import org.eclipse.swt.layout.FillLayout
 import org.eclipse.swt.layout.GridLayout
@@ -13,48 +15,45 @@ import org.eclipse.swt.layout.RowLayout
 import org.eclipse.swt.widgets.*
 
 
-fun simple() {
+private const val STYLE = SWT.BORDER or SWT.H_SCROLL or SWT.V_SCROLL
+
+fun main() {
+    works()
+}
+
+fun createScrollableByteBuffer(parent: Composite): Composite {
+    return ScrolledComposite(parent, SWT.V_SCROLL).let { scroller ->
+        val bb = ByteBufferTab(scroller)
+        scroller.apply {
+            layout = FillLayout()
+            minHeight = bb.computeSize(SWT.DEFAULT, SWT.DEFAULT).y
+            content = bb
+        }
+    }
+}
+
+fun works() {
     val display = Display()
     val shell = Shell(display)
-    shell.layout = TableLayout()
+    shell.text = "ScrolledComposite in 'scroll' and 'browser' mode"
+    shell.layout = FillLayout()
 
-    button(shell, "Test button").apply {
-        setSize(200, 600)
+    val folder = CTabFolder(shell, SWT.TOP)
+
+    val tab = CTabItem(folder, SWT.NONE).apply {
+        text = "DISK"
+        control = createScrollableByteBuffer(folder)
     }
-    shell.pack()
-    shell.setSize(300, 400)
+
+    shell.setSize(600, 100)
     shell.open()
     while (!shell.isDisposed) {
         if (!display.readAndDispatch()) display.sleep()
     }
     display.dispose()
+
 }
 
-fun rowLayout() {
-    val display = Display()
-    val shell = Shell(display)
-    // Create the layout.
-    // Create the layout.
-    val layout = RowLayout()
-    // Optionally set layout fields.
-    // Optionally set layout fields.
-    layout.wrap = true
-    // Set the layout into the composite.
-    // Set the layout into the composite.
-    shell.layout = layout
-    // Create the children of the composite.
-    // Create the children of the composite.
-    Button(shell, SWT.PUSH).text = "B1"
-    Button(shell, SWT.PUSH).text = "Wide Button 2"
-    Button(shell, SWT.PUSH).text = "Button 3"
-    shell.pack()
-    shell.setSize(300, 200)
-    shell.open()
-
-    while (!shell.isDisposed) {
-        if (!display.readAndDispatch()) display.sleep()
-    }
-}
 fun multipleWays() {
     val display = Display()
     val red = display.getSystemColor(SWT.COLOR_RED)
@@ -116,6 +115,49 @@ fun multipleWays() {
         if (!display.readAndDispatch()) display.sleep()
     }
     display.dispose()
+}
+
+fun simple() {
+    val display = Display()
+    val shell = Shell(display)
+    shell.layout = TableLayout()
+
+    button(shell, "Test button").apply {
+        setSize(200, 600)
+    }
+    shell.pack()
+    shell.setSize(300, 400)
+    shell.open()
+    while (!shell.isDisposed) {
+        if (!display.readAndDispatch()) display.sleep()
+    }
+    display.dispose()
+}
+
+fun rowLayout() {
+    val display = Display()
+    val shell = Shell(display)
+    // Create the layout.
+    // Create the layout.
+    val layout = RowLayout()
+    // Optionally set layout fields.
+    // Optionally set layout fields.
+    layout.wrap = true
+    // Set the layout into the composite.
+    // Set the layout into the composite.
+    shell.layout = layout
+    // Create the children of the composite.
+    // Create the children of the composite.
+    Button(shell, SWT.PUSH).text = "B1"
+    Button(shell, SWT.PUSH).text = "Wide Button 2"
+    Button(shell, SWT.PUSH).text = "Button 3"
+    shell.pack()
+    shell.setSize(300, 200)
+    shell.open()
+
+    while (!shell.isDisposed) {
+        if (!display.readAndDispatch()) display.sleep()
+    }
 }
 
 class ByteBuffer {

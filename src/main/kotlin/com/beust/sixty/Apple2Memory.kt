@@ -542,17 +542,20 @@ class Apple2Memory(val size: Int? = null): IMemory {
     }
 
     override fun forceValue(i: Int, value: Int) {
-        init = true
-        this[i] = value
-        init = false
-
+        synchronized(this) {
+            init = true
+            this[i] = value
+            init = false
+        }
     }
 
     override fun forceInternalRomValue(i: Int, value: Int) {
         if (i !in 0xc000..0xcfff) {
             ERROR("SHOULD BE IN 0xc000-0xcfff RANGE")
         }
-        c0Memory.internal[i - 0xc000] = value
+        synchronized(this) {
+            c0Memory.internal[i - 0xc000] = value
+        }
     }
 
     init {

@@ -4,14 +4,13 @@ import com.beust.app.app.ITextScreen
 import com.beust.sixty.IKeyProvider
 import com.beust.sixty.IMemory
 import org.eclipse.swt.SWT
+import org.eclipse.swt.custom.CTabItem
 import org.eclipse.swt.custom.ScrolledComposite
 import org.eclipse.swt.events.KeyAdapter
 import org.eclipse.swt.events.KeyEvent
 import org.eclipse.swt.layout.FillLayout
-import org.eclipse.swt.widgets.Display
-import org.eclipse.swt.widgets.Shell
-import org.eclipse.swt.widgets.TabFolder
-import org.eclipse.swt.widgets.TabItem
+import org.eclipse.swt.layout.GridData
+import org.eclipse.swt.widgets.*
 
 
 private val allowed = hashSetOf('a', 'b', 'c', 'd', 'e', 'f', 'A', 'B', 'C', 'D', 'E', 'F')
@@ -39,29 +38,37 @@ class SwtContext(val display: Display, val shell: Shell, val textScreen: ITextSc
 
 fun createWindows(memory: IMemory, keyProvider: IKeyProvider): SwtContext {
     val display = Display()
-    val shell = Shell(display)
-    shell.layout = FillLayout()
+    val shell = Shell(display).apply {
+        layout = FillLayout()
+    }
+
+    //
+    // Main screen of the emulator
+    //
     val mainWindow = MainWindow(shell)
     mainWindow.pack()
     mainWindow.addKeyListener(object: KeyAdapter() {
         override fun keyPressed(e: KeyEvent) {
             val av = if (Character.isAlphabetic(e.keyCode)) e.character.toUpperCase().toInt()
-                else e.keyCode
+            else e.keyCode
             keyProvider.keyPressed(memory, av)
         }
     })
-
-    val height = mainWindow.bounds.height
-    val tabFolder = TabFolder(shell, SWT.NONE)
-    val scrolled = ScrolledComposite(tabFolder, SWT.V_SCROLL)
-    val wozItem = TabItem(tabFolder, SWT.NONE).apply {
-        text = "WOZ"
-        control = scrolled
+    mainWindow.layoutData = GridData().apply {
+        horizontalAlignment = GridData.HORIZONTAL_ALIGN_END
+        verticalAlignment = GridData.VERTICAL_ALIGN_END
     }
-    scrolled.content = ByteBufferTab(scrolled)
 
-    shell.pack()
-    shell.setSize(mainWindow.bounds.width + tabFolder.bounds.width + 10, height)
+    //
+    // Right panel
+    //
+    val folder = TabFolder(shell, SWT.NONE)
 
+    val tab = TabItem(folder, SWT.NONE).apply {
+        text = "DISK"
+        control = createScrollableByteBuffer(folder)
+    }
+
+    shell.setSize(mainWindow.bounds.width + folder.bounds.width, mainWindow.bounds.height + 50)
     return SwtContext(display, shell, mainWindow)
 }

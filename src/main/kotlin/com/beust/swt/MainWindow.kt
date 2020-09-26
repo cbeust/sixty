@@ -19,6 +19,7 @@ class MainWindow(parent: Composite): Composite(parent, SWT.NONE), ITextScreen {
     init {
         layout = GridLayout(40, true).apply {
             horizontalSpacing = 0
+            verticalSpacing = 2
         }
         background = display.getSystemColor(SWT.COLOR_BLACK)
         repeat(ITextScreen.WIDTH) {
@@ -32,7 +33,7 @@ class MainWindow(parent: Composite): Composite(parent, SWT.NONE), ITextScreen {
             }
         }
 
-//        pack()
+        pack()
     }
 
     /**
