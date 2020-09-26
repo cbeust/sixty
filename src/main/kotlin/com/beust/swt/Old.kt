@@ -21,17 +21,6 @@ fun main() {
     works()
 }
 
-fun createScrollableByteBuffer(parent: Composite): Composite {
-    return ScrolledComposite(parent, SWT.V_SCROLL).let { scroller ->
-        val bb = ByteBufferTab(scroller)
-        scroller.apply {
-            layout = FillLayout()
-            minHeight = bb.computeSize(SWT.DEFAULT, SWT.DEFAULT).y
-            content = bb
-        }
-    }
-}
-
 fun works() {
     val display = Display()
     val shell = Shell(display)

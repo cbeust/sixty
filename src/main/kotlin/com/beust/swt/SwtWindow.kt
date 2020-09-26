@@ -3,13 +3,13 @@ package com.beust.swt
 import com.beust.app.app.ITextScreen
 import com.beust.sixty.IKeyProvider
 import com.beust.sixty.IMemory
+import org.eclipse.jface.viewers.TableLayout
 import org.eclipse.swt.SWT
 import org.eclipse.swt.custom.CTabItem
 import org.eclipse.swt.custom.ScrolledComposite
 import org.eclipse.swt.events.KeyAdapter
 import org.eclipse.swt.events.KeyEvent
-import org.eclipse.swt.layout.FillLayout
-import org.eclipse.swt.layout.GridData
+import org.eclipse.swt.layout.*
 import org.eclipse.swt.widgets.*
 
 
@@ -40,6 +40,7 @@ fun createWindows(memory: IMemory, keyProvider: IKeyProvider): SwtContext {
     val display = Display()
     val shell = Shell(display).apply {
         layout = FillLayout()
+//        layout = GridLayout(2, false)
     }
 
     //
@@ -66,7 +67,7 @@ fun createWindows(memory: IMemory, keyProvider: IKeyProvider): SwtContext {
 
     val tab = TabItem(folder, SWT.NONE).apply {
         text = "DISK"
-        control = createScrollableByteBuffer(folder)
+        control = t(folder)
     }
 
     mainWindow.pack()
@@ -74,3 +75,53 @@ fun createWindows(memory: IMemory, keyProvider: IKeyProvider): SwtContext {
     shell.setSize(mainWindow.bounds.width + folder.bounds.width, mainWindow.bounds.height + 50)
     return SwtContext(display, shell, mainWindow)
 }
+
+fun createScrollableByteBuffer(parent: Composite): Composite {
+    return ScrolledComposite(parent, SWT.V_SCROLL or SWT.H_SCROLL).let { scroller ->
+        ByteBufferTab(scroller).let { bb ->
+            scroller.apply {
+                layout = FillLayout()
+                minHeight = bb.computeSize(SWT.DEFAULT, SWT.DEFAULT).y
+                content = bb
+            }
+        }
+    }
+}
+
+fun t(parent: Composite): Composite {
+    val result = Composite(parent, SWT.NONE).apply {
+        layout = GridLayout(3, false)
+        background = yellow(display)
+    }
+    label(result, "File:").apply {
+    }
+    label(result, "SomeDisk.woz").apply {
+        layoutData = GridData().apply {
+            horizontalSpan = 2
+            horizontalAlignment = GridData.FILL
+            grabExcessHorizontalSpace = true
+            background = red(display)
+        }
+    }
+//    label(result, "Rest").apply {
+//        layoutData = GridData().apply {
+//            background = blue(display)
+//            horizontalAlignment = GridData.FILL
+//            verticalAlignment = GridData.FILL
+//            horizontalSpan = 3
+//            grabExcessVerticalSpace = true
+//        }
+//    }
+    createScrollableByteBuffer(result).apply {
+        layoutData = GridData().apply {
+            background = blue(display)
+            horizontalAlignment = GridData.FILL
+            verticalAlignment = GridData.FILL
+            horizontalSpan = 3
+            grabExcessVerticalSpace = true
+        }
+
+    }
+    return result
+}
+
