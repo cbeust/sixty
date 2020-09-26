@@ -1,5 +1,8 @@
 package com.beust.app
 
+import com.beust.sixty.ERROR
+import java.io.File
+
 interface IByteStream {
     /** Position in bytes */
     var position: Int
@@ -16,6 +19,14 @@ interface IByteStream {
     fun nextByte() = nextBytes(1).first()
 }
 interface IDisk {
+    companion object {
+        fun create(file: File): IDisk = when {
+                file.name.endsWith(".woz") -> WozDisk(file.absolutePath, file.inputStream())
+                file.name.endsWith(".dsk") -> DskDisk(file.absolutePath, file.inputStream())
+                else -> ERROR("Unsupported disk format: $file")
+            }
+    }
+
     val name: String
 
     fun nextBit(): Int

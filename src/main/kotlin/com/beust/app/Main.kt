@@ -15,17 +15,17 @@ val BREAKPOINT: Int? = null//0xc2de // 0xc2db
 
 val disk = 0
 
-val DISK_DOS_3_3 = DskDisk("Apple DOS 3.3.dsk", File("src\\test\\resources\\Apple DOS 3.3.dsk").inputStream())
-val WOZ_DOS_3_3 = WozDisk("DOS 3.3 System Master.woz", Woz::class.java.classLoader.getResource("woz2/DOS 3.3 System Master.woz").openStream())
+val DISK_DOS_3_3 = File("src/test/resources/Apple DOS 3.3.dsk")
+val WOZ_DOS_3_3 = File("src/test/resources/woz2/DOS 3.3 System Master.woz")
 
 val DISK = if (disk == 0)
     WOZ_DOS_3_3
 else if (disk == 1)
     DISK_DOS_3_3
 else if (disk == 2)
-    DskDisk("audit.dsk", File("src/test/resources/audit.dsk").inputStream())
+    File("src/test/resources/audit.dsk")
 else
-    DskDisk("Sherwood Forest.dsk", File("d:\\pd\\Apple disks\\Sherwood Forest.dsk").inputStream())
+    File("d:\\pd\\Apple disks\\Sherwood Forest.dsk")
 //    DskDisk(File("d:\\pd\\Apple disks\\Ultima I - The Beginning.woz").inputStream())
 
 //val DISK2 = WozDisk(
@@ -69,8 +69,8 @@ fun main() {
             val debugAsm = DEBUG
 //            frame()
             val dc = DiskController(6).apply {
-                loadDisk(DISK)
-                UiState.currentDisk.value = DISK
+                loadDisk(IDisk.create(DISK))
+                UiState.currentDiskFile.value = DISK
             }
             val keyProvider = object: IKeyProvider {
                 override fun keyPressed(memory: IMemory, value: Int, shift: Boolean, control: Boolean) {

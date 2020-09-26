@@ -1,5 +1,6 @@
 package com.beust.app
 
+import java.io.File
 import kotlin.reflect.KProperty
 
 typealias ObsListener<T> = (T, T) -> Unit
@@ -21,5 +22,7 @@ class Obs<T>(val def: T) {
 }
 
 object UiState {
-    var currentDisk: Obs<IDisk?> = Obs(null)
+    var currentDiskFile: Obs<File?> = Obs(null)
+    var currentTrack: Obs<Int> = Obs(0)
+//    var currentDisk: Obs<IDisk?> = Obs(null)
 }

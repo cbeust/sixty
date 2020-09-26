@@ -18,7 +18,7 @@ class RightWindow(parent: Composite, parentHeight: Int): Composite(parent, SWT.N
 
         label(this, "File:").apply {
         }
-        diskLabel = label(this, UiState.currentDisk?.value?.name ?: "<none>").apply {
+        diskLabel = label(this, UiState.currentDiskFile?.value?.name ?: "<none>").apply {
             layoutData = GridData().apply {
                 horizontalSpan = 2
                 horizontalAlignment = GridData.FILL
@@ -34,6 +34,6 @@ class RightWindow(parent: Composite, parentHeight: Int): Composite(parent, SWT.N
             }
         }
 
-        UiState.currentDisk.addListener { _, new -> diskLabel.text = new?.name }
+        UiState.currentDiskFile.addListener { _, new -> diskLabel.text = new?.name }
     }
 }
