@@ -78,20 +78,20 @@ fun createWindows(memory: IMemory, keyProvider: IKeyProvider): SwtContext {
 //    }
 //    createScrollableByteBuffer(shell)
     mainWindow.pack()
-    val parentHeight = mainWindow.bounds.height
+    val parentHeight = mainWindow.bounds.height + 50
     val folder = TabFolder(shell, SWT.NONE).apply {
 //        layoutData = FormData(500, parentHeight).apply {
 //            top = FormAttachment(shell)
 //            left = FormAttachment(mainWindow)
 //        }
-        layoutData = GridData(GridData.FILL_HORIZONTAL).apply {
-            heightHint = parentHeight
+        layoutData = GridData(GridData.FILL, SWT.BEGINNING, true, true).apply {
+//            heightHint = parentHeight
         }
     }
 
     val tab = TabItem(folder, SWT.NONE).apply {
         text = "DISK"
-        control = createScrollableByteBuffer(folder, parentHeight)
+        control = t(folder, parentHeight)
     }
 
 //    folder.setSize(500, 900)
@@ -99,7 +99,7 @@ fun createWindows(memory: IMemory, keyProvider: IKeyProvider): SwtContext {
 //    mainWindow.pack()
 //    folder.pack()
     shell.pack()
-//    shell.setSize(mainWindow.bounds.width + 700, parentHeight)
+    shell.setSize(mainWindow.bounds.width + 700, parentHeight)
     return SwtContext(display, shell, mainWindow)
 }
 
@@ -150,7 +150,7 @@ fun createScrollableByteBuffer(parent: Composite, parentHeight: Int): ScrolledCo
     return result
 }
 
-fun t(parent: Composite): Composite {
+fun t(parent: Composite, parentHeight: Int): Composite {
     val result = Composite(parent, SWT.NONE).apply {
         layout = GridLayout(3, false)
         background = yellow(display)
@@ -174,7 +174,7 @@ fun t(parent: Composite): Composite {
 //            grabExcessVerticalSpace = true
 //        }
 //    }
-    createScrollableByteBuffer(result, 500).apply {
+    createScrollableByteBuffer(result, parentHeight).apply {
         layoutData = GridData().apply {
             background = blue(display)
             horizontalAlignment = GridData.FILL
