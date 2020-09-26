@@ -12,6 +12,7 @@ import org.eclipse.swt.widgets.TabItem
 
 class RightWindow(parent: Composite, parentHeight: Int): Composite(parent, SWT.NONE) {
     private val diskLabel: Label
+    val scrolledComposite: ScrolledComposite
 
     init {
         layout = GridLayout(3, false)
@@ -20,17 +21,19 @@ class RightWindow(parent: Composite, parentHeight: Int): Composite(parent, SWT.N
         }
         diskLabel = label(this, UiState.currentDiskFile?.value?.name ?: "<none>").apply {
             layoutData = GridData().apply {
+//                background = grey(display)
                 horizontalSpan = 2
                 horizontalAlignment = GridData.FILL
                 grabExcessHorizontalSpace = true
             }
         }
-        createScrollableByteBuffer(this, parentHeight).apply {
-            layoutData = GridData().apply {
-                horizontalAlignment = GridData.FILL
-                verticalAlignment = GridData.FILL
+        scrolledComposite = createScrollableByteBuffer(this, parentHeight).apply {
+            layoutData = GridData(GridData.FILL, GridData.FILL, true, true).apply {
+//                horizontalAlignment = GridData.FILL
+//                verticalAlignment = GridData.FILL
                 horizontalSpan = 3
                 grabExcessVerticalSpace = true
+                grabExcessHorizontalSpace = true
             }
         }
 

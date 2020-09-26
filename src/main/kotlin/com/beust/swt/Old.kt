@@ -172,7 +172,7 @@ class ByteBuffer {
         val child = Composite(sc, SWT.NONE)
         child.layout = FillLayout()
 
-        val bb = ByteBufferTab(child)
+        val bb = ByteBufferWindow(child)
         // Create the buttons
 //        Button(child, SWT.PUSH).text = "One"
 //        Button(child, SWT.PUSH).text = "Two"

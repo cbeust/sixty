@@ -79,19 +79,25 @@ fun createWindows(memory: IMemory, keyProvider: IKeyProvider): SwtContext {
 //    createScrollableByteBuffer(shell)
     mainWindow.pack()
     val parentHeight = mainWindow.bounds.height + 50
+//
+//    createScrollableByteBuffer(shell, parentHeight).apply {
+////        layoutData = GridData(GridData.FILL_BOTH, GridData.FILL_BOTH, true, true)
+//    }
     val folder = TabFolder(shell, SWT.NONE).apply {
 //        layoutData = FormData(500, parentHeight).apply {
 //            top = FormAttachment(shell)
 //            left = FormAttachment(mainWindow)
 //        }
-        layoutData = GridData(GridData.FILL, SWT.BEGINNING, true, true).apply {
+        layoutData = GridData(GridData.FILL, GridData.FILL, true, true).apply {
+            grabExcessVerticalSpace = true
 //            heightHint = parentHeight
         }
     }
 
+    val rightWindow = RightWindow(folder, parentHeight)
     val tab = TabItem(folder, SWT.NONE).apply {
         text = "DISK"
-        control = RightWindow(folder, parentHeight)
+        control = rightWindow
     }
 
 //    folder.setSize(500, 900)
@@ -100,6 +106,7 @@ fun createWindows(memory: IMemory, keyProvider: IKeyProvider): SwtContext {
 //    folder.pack()
     shell.pack()
     shell.setSize(mainWindow.bounds.width + 700, parentHeight)
+//    rightWindow.scrolledComposite.setMinSize(mainWindow.bounds.width + 700, parentHeight)
     return SwtContext(display, shell, mainWindow)
 }
 
@@ -109,25 +116,27 @@ fun createScrollableByteBuffer(parent: Composite, parentHeight: Int): ScrolledCo
 //    }
 
     val result = ScrolledComposite(parent, SWT.V_SCROLL or SWT.H_SCROLL).apply {
-        layout = GridLayout()
-        expandVertical = true
+//        expandVertical = true
+        background = black(display)
+//        setMinSize(400, parentHeight)
 //        layoutData = GridData(SWT.FILL, SWT.FILL, true, true, 1, 1)
-//        addListener(SWT.Resize) { event ->
-//            val width: Int = clientArea.width
-//            val s = computeSize(width, SWT.DEFAULT)
-//            println("Resizing to $s")
-//            setMinSize(s)
-//        }
     }
 
-    val bb = ByteBufferTab(result).let {
+    val bb = ByteBufferWindow(result).let {
+        it.addListener(SWT.Resize) { event ->
+//            val width: Int = clientArea.width
+//            val s = computeSize(width, SWT.DEFAULT)
+            println("Resized to " + event.height)
+//            setMinSize(s)
+        }
         it.pack()
         with(it.bounds) {
-            result.setMinSize(Point(width, height))
-            height = parentHeight
+            result.setMinSize(Point(500, 4000))
+//            result.size = Point(width, height)
+//            height = parentHeight
         }
-        it.layoutData = GridData(SWT.FILL, SWT.FILL, false, false)
         result.content = it
+        result.expandHorizontal = true
         result.expandVertical = true
     }
 
