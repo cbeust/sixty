@@ -2,10 +2,12 @@ package com.beust.sixty
 
 import org.slf4j.LoggerFactory
 import java.nio.file.*
+import java.util.concurrent.TimeUnit
 
 class FileWatcher {
     private val log = LoggerFactory.getLogger(FileWatcher::class.java)
     private val DIR = "D:\\pd\\Apple disks\\"
+    var stop = false
     class WatchedFile(val filename: String, val address: Int)
 
     private val files = listOf(WatchedFile("watched.pic", 0x2000))
@@ -16,10 +18,9 @@ class FileWatcher {
 
         val dir = Paths.get(DIR)
         dir.register(watcher, StandardWatchEventKinds.ENTRY_MODIFY)
-        var done = false
-        while(! done) {
-            val key = watcher.take()
-            key.pollEvents().forEach { event ->
+        while(! stop) {
+            val key = watcher.poll(1, TimeUnit.SECONDS)
+            key?.pollEvents()?.forEach { event ->
                 if (event.kind() != StandardWatchEventKinds.OVERFLOW) {
                     val ev = event as WatchEvent<Path>
                     val filename = ev.context()
@@ -33,11 +34,12 @@ class FileWatcher {
                         if (key.isValid) {
                             key.reset()
                         } else {
-                            done = true
+                            stop = true
                         }
                     }
                 }
             }
         }
+        watcher.close()
     }
 }

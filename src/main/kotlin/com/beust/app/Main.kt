@@ -55,6 +55,7 @@ fun main() {
 //        }
 //    }
     var graphics: IGraphics? = null
+    val fw = FileWatcher()
 
     when(choice) {
         1 -> {
@@ -93,7 +94,7 @@ fun main() {
 
             pulseManager.addListener(computer)
             Thread {
-                FileWatcher().run(a2Memory)
+                fw.run(a2Memory)
             }.start()
         }
         3 -> {
@@ -114,6 +115,7 @@ fun main() {
 //    }.start()
 
     graphics?.run()
+    fw.stop = true
 }
 
 fun testDisk() {
