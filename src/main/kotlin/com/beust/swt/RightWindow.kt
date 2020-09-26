@@ -4,6 +4,7 @@ import com.beust.app.UiState
 import org.eclipse.swt.SWT
 import org.eclipse.swt.custom.ScrolledComposite
 import org.eclipse.swt.layout.*
+import org.eclipse.swt.widgets.Combo
 import org.eclipse.swt.widgets.Composite
 import org.eclipse.swt.widgets.Label
 
@@ -15,8 +16,8 @@ class RightWindow(parent: Composite, parentHeight: Int): Composite(parent, SWT.N
         layout = GridLayout(3, false)
 
         val header = Composite(this, SWT.NONE).apply {
-            layout = GridLayout(2, false)
-            background = grey(display)
+            layout = GridLayout(4, false)
+//            background = grey(display)
             layoutData = GridData().apply {
 //                background = grey(display)
                 horizontalSpan = 2
@@ -25,6 +26,9 @@ class RightWindow(parent: Composite, parentHeight: Int): Composite(parent, SWT.N
             }
         }
 
+        //
+        // Name of the disk
+        //
         diskLabel = label(header, UiState.currentDiskFile.value?.name ?: "<none>").apply {
             layoutData = GridData(SWT.BEGINNING, SWT.CENTER, false, false)
 ////                background = grey(display)
@@ -33,8 +37,33 @@ class RightWindow(parent: Composite, parentHeight: Int): Composite(parent, SWT.N
 //                grabExcessHorizontalSpace = true
 //            }
         }
+
+        //
+        // Button to open a different disk
+        //
         button(header, "...").apply {
             layoutData = GridData(SWT.BEGINNING, SWT.CENTER, false, false)
+        }
+
+        //
+        // Track number label
+        //
+        label(header, "Track number:").apply {
+            layoutData = GridData(SWT.BEGINNING, SWT.CENTER, false, false)
+        }
+
+        //
+        // Track number drop down
+        //
+        Combo(header, SWT.DROP_DOWN).apply {
+            layoutData = GridData(SWT.BEGINNING, SWT.CENTER, false, false)
+            text = "Track number"
+            val tracks = arrayListOf<String>()
+            repeat(160) {
+                tracks.add((it.toFloat() / 4).toString())
+            }
+            setItems(*tracks.toTypedArray())
+            select(0)
         }
 
         scrolledComposite = createScrollableByteBuffer(this).apply {
