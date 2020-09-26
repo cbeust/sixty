@@ -3,6 +3,7 @@ package com.beust.swt
 import org.eclipse.swt.SWT
 import org.eclipse.swt.custom.ScrolledComposite
 import org.eclipse.swt.graphics.Color
+import org.eclipse.swt.graphics.Point
 import org.eclipse.swt.layout.FillLayout
 import org.eclipse.swt.layout.FormLayout
 import org.eclipse.swt.layout.GridLayout
@@ -23,19 +24,15 @@ class ByteBufferTab(parent: Composite) : Composite(parent, SWT.NONE) {
     init {
 //        background = display.getSystemColor(SWT.COLOR_BLUE)
         // Create a child composite to hold the controls
-        val child = this // Composite(this, SWT.NONE)
-        child.layout = GridLayout(17, true)
+        layout = GridLayout(17, true)
 
         val rowSize = 16
-        repeat(80) { row ->
-            label(child, "\$" + String.format("%04X", row * 16))
+        repeat(40) { row ->
+            label(this, "\$" + String.format("%04X", row * 16))
             repeat(rowSize) {
-                label(child, "FF")
+                label(this, "FF")
             }
         }
-        setSize(300, 300)
-//        setMinSize(500, 200)
-        pack()
     }
 
 }
