@@ -70,7 +70,7 @@ fun main() {
 //            frame()
             val dc = DiskController(6).apply {
                 loadDisk(DISK)
-                UiState.currentDiskName.setValue(DISK.path)
+                UiState.currentDisk.value = DISK
             }
             val keyProvider = object: IKeyProvider {
                 override fun keyPressed(memory: IMemory, value: Int, shift: Boolean, control: Boolean) {

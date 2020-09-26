@@ -1,22 +1,39 @@
 package com.beust.swt
 
+import com.beust.app.UiState
 import org.eclipse.swt.SWT
 import org.eclipse.swt.custom.ScrolledComposite
+import org.eclipse.swt.layout.GridData
+import org.eclipse.swt.layout.GridLayout
 import org.eclipse.swt.widgets.Composite
+import org.eclipse.swt.widgets.Label
 import org.eclipse.swt.widgets.TabFolder
 import org.eclipse.swt.widgets.TabItem
 
-class RightWindow(parent: Composite): Composite(parent, SWT.NONE) {
+class RightWindow(parent: Composite, parentHeight: Int): Composite(parent, SWT.NONE) {
+    private val diskLabel: Label
+
     init {
-        val tabFolder = TabFolder(parent, SWT.NONE)
-        val scrolled = ScrolledComposite(tabFolder, SWT.V_SCROLL)
-        val wozItem = TabItem(tabFolder, SWT.NONE).apply {
-            text = "WOZ"
-            control = scrolled
+        layout = GridLayout(3, false)
+
+        label(this, "File:").apply {
         }
-        scrolled.content = ByteBufferTab(scrolled).apply {
-            background = blue(display)
+        diskLabel = label(this, UiState.currentDisk?.value?.name ?: "<none>").apply {
+            layoutData = GridData().apply {
+                horizontalSpan = 2
+                horizontalAlignment = GridData.FILL
+                grabExcessHorizontalSpace = true
+            }
         }
-//        pack()
+        createScrollableByteBuffer(this, parentHeight).apply {
+            layoutData = GridData().apply {
+                horizontalAlignment = GridData.FILL
+                verticalAlignment = GridData.FILL
+                horizontalSpan = 3
+                grabExcessVerticalSpace = true
+            }
+        }
+
+        UiState.currentDisk.addListener { _, new -> diskLabel.text = new?.name }
     }
 }

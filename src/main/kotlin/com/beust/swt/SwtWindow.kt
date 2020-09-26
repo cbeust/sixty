@@ -91,7 +91,7 @@ fun createWindows(memory: IMemory, keyProvider: IKeyProvider): SwtContext {
 
     val tab = TabItem(folder, SWT.NONE).apply {
         text = "DISK"
-        control = t(folder, parentHeight)
+        control = RightWindow(folder, parentHeight)
     }
 
 //    folder.setSize(500, 900)
@@ -150,37 +150,37 @@ fun createScrollableByteBuffer(parent: Composite, parentHeight: Int): ScrolledCo
     return result
 }
 
-fun t(parent: Composite, parentHeight: Int): Composite {
-    val result = Composite(parent, SWT.NONE).apply {
-        layout = GridLayout(3, false)
-    }
-    label(result, "File:").apply {
-    }
-    label(result, "SomeDisk.woz").apply {
-        layoutData = GridData().apply {
-            horizontalSpan = 2
-            horizontalAlignment = GridData.FILL
-            grabExcessHorizontalSpace = true
-        }
-    }
-//    label(result, "Rest").apply {
+//fun t(parent: Composite, parentHeight: Int): Composite {
+//    val result = Composite(parent, SWT.NONE).apply {
+//        layout = GridLayout(3, false)
+//    }
+//    label(result, "File:").apply {
+//    }
+//    label(result, "SomeDisk.woz").apply {
 //        layoutData = GridData().apply {
-//            background = blue(display)
+//            horizontalSpan = 2
+//            horizontalAlignment = GridData.FILL
+//            grabExcessHorizontalSpace = true
+//        }
+//    }
+////    label(result, "Rest").apply {
+////        layoutData = GridData().apply {
+////            background = blue(display)
+////            horizontalAlignment = GridData.FILL
+////            verticalAlignment = GridData.FILL
+////            horizontalSpan = 3
+////            grabExcessVerticalSpace = true
+////        }
+////    }
+//    createScrollableByteBuffer(result, parentHeight).apply {
+//        layoutData = GridData().apply {
 //            horizontalAlignment = GridData.FILL
 //            verticalAlignment = GridData.FILL
 //            horizontalSpan = 3
 //            grabExcessVerticalSpace = true
 //        }
+//
 //    }
-    createScrollableByteBuffer(result, parentHeight).apply {
-        layoutData = GridData().apply {
-            horizontalAlignment = GridData.FILL
-            verticalAlignment = GridData.FILL
-            horizontalSpan = 3
-            grabExcessVerticalSpace = true
-        }
-
-    }
-    return result
-}
+//    return result
+//}
 

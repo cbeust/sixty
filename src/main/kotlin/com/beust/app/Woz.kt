@@ -3,11 +3,15 @@ package com.beust.app
 import com.beust.sixty.bit
 import com.beust.sixty.h
 import com.beust.sixty.hh
+import java.io.File
 import java.io.InputStream
 import kotlin.random.Random
 
-class WozDisk(override val path: String, ins: InputStream,
+class WozDisk(override val name: String, ins: InputStream,
         val bitStreamFactory: (bytes: List<Byte>) -> IBitStream = { bytes -> BitStream(bytes) }): IDisk, IByteStream {
+
+    constructor(file: File): this(file.absolutePath, file.inputStream())
+
     private val MAX_TRACK = 160
 
     override var position: Int = 0

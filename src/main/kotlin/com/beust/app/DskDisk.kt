@@ -9,7 +9,7 @@ fun main() {
     DskDisk("audit.dsk", File("src/test/resources/audit.dsk").inputStream())
 }
 
-class DskDisk(override val path: String, ins: InputStream): IDisk {
+class DskDisk(override val name: String, ins: InputStream): IDisk {
     companion object {
         private const val TRACK_MAX = 70
         const val DISK_IMAGE_SIZE_BYTES = TRACK_MAX * 16 * 256
