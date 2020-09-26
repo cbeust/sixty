@@ -39,8 +39,8 @@ fun createWindows(memory: IMemory, keyProvider: IKeyProvider): SwtContext {
     val display = Display()
     val shell = Shell(display).apply {
 //        layout = FillLayout()
-//        layout = GridLayout(2, false)
-        layout = FormLayout()
+        layout = GridLayout(2, false)
+//        layout = FormLayout()
     }
 
     //
@@ -55,15 +55,15 @@ fun createWindows(memory: IMemory, keyProvider: IKeyProvider): SwtContext {
                 keyProvider.keyPressed(memory, av)
             }
         })
-//        layoutData = GridData().apply {
-//            horizontalAlignment = GridData.HORIZONTAL_ALIGN_END
-//            verticalAlignment = GridData.VERTICAL_ALIGN_END
-//            }
-        layoutData = FormData().apply {
-//            width = SWT.FILL
-            top = FormAttachment(shell)
-            left = FormAttachment(shell)
+        layoutData = GridData().apply {
+            horizontalAlignment = GridData.HORIZONTAL_ALIGN_END
+            verticalAlignment = GridData.VERTICAL_ALIGN_END
         }
+//        layoutData = FormData().apply {
+////            width = SWT.FILL
+//            top = FormAttachment(shell)
+//            left = FormAttachment(shell)
+//        }
     }
 
     //
@@ -78,13 +78,15 @@ fun createWindows(memory: IMemory, keyProvider: IKeyProvider): SwtContext {
 //    }
 //    createScrollableByteBuffer(shell)
     mainWindow.pack()
-    val parentHeight = mainWindow.bounds.height + 50
+    val parentHeight = mainWindow.bounds.height
     val folder = TabFolder(shell, SWT.NONE).apply {
-        layoutData = FormData(500, parentHeight).apply {
-            top = FormAttachment(shell)
-            left = FormAttachment(mainWindow)
+//        layoutData = FormData(500, parentHeight).apply {
+//            top = FormAttachment(shell)
+//            left = FormAttachment(mainWindow)
+//        }
+        layoutData = GridData(GridData.FILL_HORIZONTAL).apply {
+            heightHint = parentHeight
         }
-
     }
 
     val tab = TabItem(folder, SWT.NONE).apply {
