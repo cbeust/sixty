@@ -110,7 +110,6 @@ fun createScrollableByteBuffer(parent: Composite, parentHeight: Int): ScrolledCo
 
     val result = ScrolledComposite(parent, SWT.V_SCROLL or SWT.H_SCROLL).apply {
         layout = GridLayout()
-        background = blue(display)
         expandVertical = true
 //        layoutData = GridData(SWT.FILL, SWT.FILL, true, true, 1, 1)
 //        addListener(SWT.Resize) { event ->
@@ -122,13 +121,14 @@ fun createScrollableByteBuffer(parent: Composite, parentHeight: Int): ScrolledCo
     }
 
     val bb = ByteBufferTab(result).let {
-        it.size = Point(300, parentHeight)
-        result.setMinSize(Point(300, 700))
-        result.size = Point(300, parentHeight)
+        it.pack()
+        with(it.bounds) {
+            result.setMinSize(Point(width, height))
+            height = parentHeight
+        }
         it.layoutData = GridData(SWT.FILL, SWT.FILL, false, false)
         result.content = it
         result.expandVertical = true
-//        result.setSize(Point(300, 200))
     }
 
 //    val c = Composite(result, SWT.NONE).let {
@@ -153,7 +153,6 @@ fun createScrollableByteBuffer(parent: Composite, parentHeight: Int): ScrolledCo
 fun t(parent: Composite, parentHeight: Int): Composite {
     val result = Composite(parent, SWT.NONE).apply {
         layout = GridLayout(3, false)
-        background = yellow(display)
     }
     label(result, "File:").apply {
     }
@@ -162,7 +161,6 @@ fun t(parent: Composite, parentHeight: Int): Composite {
             horizontalSpan = 2
             horizontalAlignment = GridData.FILL
             grabExcessHorizontalSpace = true
-            background = red(display)
         }
     }
 //    label(result, "Rest").apply {
@@ -176,7 +174,6 @@ fun t(parent: Composite, parentHeight: Int): Composite {
 //    }
     createScrollableByteBuffer(result, parentHeight).apply {
         layoutData = GridData().apply {
-            background = blue(display)
             horizontalAlignment = GridData.FILL
             verticalAlignment = GridData.FILL
             horizontalSpan = 3

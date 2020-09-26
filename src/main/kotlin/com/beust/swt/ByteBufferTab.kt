@@ -1,15 +1,12 @@
 package com.beust.swt
 
+import com.beust.sixty.h
 import org.eclipse.swt.SWT
-import org.eclipse.swt.custom.ScrolledComposite
-import org.eclipse.swt.graphics.Color
-import org.eclipse.swt.graphics.Point
-import org.eclipse.swt.layout.FillLayout
-import org.eclipse.swt.layout.FormLayout
 import org.eclipse.swt.layout.GridLayout
-import org.eclipse.swt.layout.RowLayout
-import org.eclipse.swt.widgets.*
-import java.awt.FlowLayout
+import org.eclipse.swt.widgets.Button
+import org.eclipse.swt.widgets.Composite
+import org.eclipse.swt.widgets.Display
+import org.eclipse.swt.widgets.Label
 
 fun label(parent: Composite, t: String) = Label(parent, SWT.NONE).apply { text = t }
 fun button(parent: Composite, t: String) = Button(parent, SWT.NONE).apply { text = t }
@@ -24,13 +21,14 @@ class ByteBufferTab(parent: Composite) : Composite(parent, SWT.NONE) {
     init {
 //        background = display.getSystemColor(SWT.COLOR_BLUE)
         // Create a child composite to hold the controls
-        layout = GridLayout(17, true)
-
         val rowSize = 16
+
+        layout = GridLayout(rowSize + 1, true)
+
         repeat(40) { row ->
             label(this, "\$" + String.format("%04X", row * 16))
             repeat(rowSize) {
-                label(this, "FF")
+                label(this, it.h())
             }
         }
     }
