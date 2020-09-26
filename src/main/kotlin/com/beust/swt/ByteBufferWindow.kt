@@ -58,6 +58,9 @@ class ByteBufferWindow(parent: Composite) : Composite(parent, SWT.NONE) {
                 updateBuffer()
             }
         }
+        UiState.currentTrack.addListener { _, _ ->
+            updateBuffer()
+        }
         updateBuffer()
     }
 
@@ -96,6 +99,8 @@ class ByteBufferWindow(parent: Composite) : Composite(parent, SWT.NONE) {
                     }
                     offsets.text = offsetText.toString()
                     bytes.text = byteText.toString()
+                } else {
+                    println("NO OFFSET HERE")
                 }
             }
         }

@@ -14,8 +14,9 @@ class Obs<T>(val def: T) {
     var value: T
         get() = _value
         set(f) {
-            listeners.forEach { it.invoke(_value, f) }
+            println("New value: $f")
             _value = f
+            listeners.forEach { it.invoke(_value, f) }
         }
 
     override fun toString() = _value.toString()

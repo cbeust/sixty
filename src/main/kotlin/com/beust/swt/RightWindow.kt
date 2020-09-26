@@ -3,6 +3,8 @@ package com.beust.swt
 import com.beust.app.UiState
 import org.eclipse.swt.SWT
 import org.eclipse.swt.custom.ScrolledComposite
+import org.eclipse.swt.events.SelectionEvent
+import org.eclipse.swt.events.SelectionListener
 import org.eclipse.swt.layout.*
 import org.eclipse.swt.widgets.Combo
 import org.eclipse.swt.widgets.Composite
@@ -64,6 +66,14 @@ class RightWindow(parent: Composite, parentHeight: Int): Composite(parent, SWT.N
             }
             setItems(*tracks.toTypedArray())
             select(0)
+            addSelectionListener(object: SelectionListener {
+                override fun widgetSelected(e: SelectionEvent) {
+                    val track = (e.widget as Combo).selectionIndex
+                    UiState.currentTrack.value = track
+                }
+
+                override fun widgetDefaultSelected(e: SelectionEvent?) {}
+            })
         }
 
         scrolledComposite = createScrollableByteBuffer(this).apply {
