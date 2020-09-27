@@ -2,12 +2,9 @@ package com.beust.swt
 
 import com.beust.app.*
 import com.beust.sixty.h
-import org.eclipse.jface.resource.FontDescriptor
+import com.beust.sixty.log
 import org.eclipse.swt.SWT
 import org.eclipse.swt.custom.StyledText
-import org.eclipse.swt.events.FocusAdapter
-import org.eclipse.swt.events.FocusEvent
-import org.eclipse.swt.events.FocusListener
 import org.eclipse.swt.layout.GridData
 import org.eclipse.swt.layout.GridLayout
 import org.eclipse.swt.widgets.Composite
@@ -61,7 +58,7 @@ class ByteBufferWindow(parent: Composite) : Composite(parent, SWT.NONE) {
 //            val result = bytes.getText(e.caretOffset + pair.first, e.caretOffset+ pair.second)
 //                    .split(" ")
 //                    .map { Integer.parseInt(it, 16) }
-            println("o:${o} line:$line mod:$mod index:${index.h()} byte:${currentBytes[index].h()}")
+            log("o:${o} line:$line mod:$mod index:${index.h()} byte:${currentBytes[index].h()}")
         }
 //        bytes.addFocusListener(object: FocusAdapter() {
 //            override fun focusGained(e: FocusEvent) {
@@ -122,10 +119,19 @@ class ByteBufferWindow(parent: Composite) : Composite(parent, SWT.NONE) {
                     var row = 0
                     val offsetText = StringBuffer()
                     val byteText = StringBuffer()
+                    val state = State()
                     while (bitsToGo >= 0) {
                         offsetText.append("\$" + String.format("%04X", row) + "\n")
                         repeat(rowSize) {
                             val nb = nextByte()
+                            state.state(currentBytes.size, nb)
+                            if (state.foundD5AA96) {
+                                log("D5AA96 at " + state.start)
+                            } else if (state.foundD5AAAD) {
+                                log("D5AAAD at " + state.start)
+                            } else if (state.foundDEAA) {
+                                log("DEAA at " + state.start)
+                            }
                             byteText.append(nb.h() + " ")
                             currentBytes.add(nb)
                             bitsToGo -= 8
@@ -138,6 +144,62 @@ class ByteBufferWindow(parent: Composite) : Composite(parent, SWT.NONE) {
                 } else {
                     println("NO OFFSET HERE")
                 }
+            }
+        }
+    }
+}
+
+class State {
+    private var fD5 = false
+    private var fD5AA = false
+    var foundD5AAAD = false
+    var foundD5AA96 = false
+    private var fDE = false
+    var foundDEAA = false
+    var start = -1
+
+    private fun reset() {
+        fD5 = false
+        fD5AA = false
+        foundD5AA96 = false
+        foundD5AAAD = false
+        fDE = false
+        foundDEAA = false
+        start = -1
+    }
+
+    fun state(position: Int, byte: Int) {
+        when(byte) {
+            0xd5 -> {
+                start = position
+                fD5 = true
+            }
+            0xaa -> if (fD5) {
+                fD5 = false
+                fD5AA = true
+            } else if (fDE) {
+                fDE = false
+                foundDEAA = true
+            } else {
+                reset()
+            }
+            0x96 -> if (fD5AA) {
+                foundD5AA96 = true
+            } else {
+                reset()
+            }
+            0xad -> if (fD5AA) {
+                fD5AA = false
+                foundD5AAAD = true
+            } else {
+                reset()
+            }
+            0xde -> {
+                start = position
+                fDE = true
+            }
+            else -> {
+                reset()
             }
         }
     }
