@@ -2,6 +2,8 @@ package com.beust.swt
 
 import com.beust.app.app.ITextScreen
 import com.beust.sixty.h
+import com.beust.sixty.log
+import com.beust.sixty.logText
 import org.eclipse.jface.resource.FontDescriptor
 import org.eclipse.jface.resource.JFaceResources
 import org.eclipse.jface.resource.LocalResourceManager
@@ -64,7 +66,7 @@ class MainWindow(parent: Composite): Composite(parent, SWT.NONE), ITextScreen {
                             else -> value.and(0x7f)
                         }
                         if (value != 0xff && value != 0xa0) {
-                            println("Drawing ${value.h()} ${c.h()} " + c.toChar().toString())
+                            logText("Drawing ${value.h()} ${c.h()} " + c.toChar().toString())
                         }
                         label.text = c.toChar().toString()
                     }
