@@ -14,7 +14,7 @@ import org.eclipse.swt.events.SelectionListener
 import org.eclipse.swt.layout.*
 import org.eclipse.swt.widgets.*
 
-class RightWindow(parent: Composite, parentHeight: Int): Composite(parent, NONE) {
+class DiskWindow(parent: Composite, parentHeight: Int): Composite(parent, NONE) {
     private lateinit var diskLabel: Label
     private val scrolledComposite: ScrolledComposite
     private var byteText: Text? = null
@@ -151,12 +151,12 @@ class RightWindow(parent: Composite, parentHeight: Int): Composite(parent, NONE)
         }
 
         //
-        // Track number drop down
+        // Byte algorithm dropdown
         //
         Combo(header, SWT.DROP_DOWN or SWT.READ_ONLY).apply {
             layoutData = GridData(SWT.BEGINNING, SWT.CENTER, false, false)
             setItems(ByteAlgorithm.RAW.toString(), ByteAlgorithm.SHIFTED.toString())
-            select(0)
+            select(1)
             addSelectionListener(object: SelectionListener {
                 override fun widgetSelected(e: SelectionEvent) {
                     val newAlgo = when((e.widget as Combo).selectionIndex) {

@@ -94,18 +94,24 @@ fun createWindows(memory: IMemory, keyProvider: IKeyProvider): SwtContext {
         }
     }
 
-    val rightWindow = RightWindow(folder, parentHeight)
+    val diskWindow = DiskWindow(folder, parentHeight)
     val tab = TabItem(folder, SWT.NONE).apply {
         text = "DISK"
-        control = rightWindow
+        control = diskWindow
     }
+    TabItem(folder, SWT.NONE).apply {
+        text = "\$2000"
+        control = HiResWindow(folder)
+    }
+    folder.setSelection(0)
+
 
 //    folder.setSize(500, 900)
 
 //    mainWindow.pack()
 //    folder.pack()
     shell.pack()
-    shell.setSize(mainWindow.bounds.width + rightWindow.bounds.width, parentHeight)
+    shell.setSize(mainWindow.bounds.width + diskWindow.bounds.width, parentHeight)
 //    rightWindow.scrolledComposite.setMinSize(mainWindow.bounds.width + 700, parentHeight)
     return SwtContext(display, shell, mainWindow)
 }
