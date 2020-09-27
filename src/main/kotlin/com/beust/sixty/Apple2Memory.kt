@@ -15,12 +15,19 @@ class Apple2Memory(val size: Int? = null): IMemory {
     private var store80On = false
     private var readAux = false
     private var writeAux = false
-    private var hires = false
-    private var page2 = false
-    var internalC8Rom: Boolean = false
+    private var textSet = true
         set(f) {
             field = f
+            logMem("Text: $f")
         }
+    private var hires = false
+        set(f) {
+            field = f
+            logMem("Hires: $f")
+        }
+
+    private var page2 = false
+    var internalC8Rom: Boolean = false
     var internalCxRom: Boolean = false
         set(f) {
             internalC8Rom = false
@@ -33,7 +40,6 @@ class Apple2Memory(val size: Int? = null): IMemory {
         }
     private var video80 = false
     private var altChar = false
-    private var textSet = true
     private var mixed = false
 
     override fun toString() =
