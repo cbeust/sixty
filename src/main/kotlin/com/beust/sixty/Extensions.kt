@@ -1,6 +1,6 @@
 package com.beust.sixty
 
-import java.awt.Color
+import org.eclipse.swt.graphics.Color
 
 fun Byte.h(): String = String.format("%02x", this).toUpperCase()
 fun Int.h(): String = String.format("%02x", this).toUpperCase()
@@ -27,16 +27,6 @@ fun Int.b(): String {
 }
 
 fun Byte.b() = toInt().b()
-
-fun Color.s() = when(this) {
-    Color.BLACK -> "black"
-    Color.WHITE -> "white"
-    Color.GREEN -> "green"
-    Color.MAGENTA -> "magenta"
-    Color.ORANGE -> "orange"
-    Color.BLUE -> "blue"
-    else -> this.toString()
-}
 
 fun Boolean.int(): Int = if (this) 1 else 0
 fun Int.toBoolean(): Boolean = if (this == 0) false else if (this == 1) true

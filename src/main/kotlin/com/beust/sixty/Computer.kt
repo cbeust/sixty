@@ -21,7 +21,7 @@ abstract class MemoryListener {
     val logLines = arrayListOf<String>()
     abstract fun isInRange(address: Int): Boolean
     open fun onRead(location: Int, value: Int): Int? = null
-    open fun onWrite(location: Int, value: Int){}
+    open fun onWrite(memory: IMemory, location: Int, value: Int){}
 }
 
 interface PcListener {

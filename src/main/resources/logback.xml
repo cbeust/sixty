@@ -10,9 +10,11 @@
 
     <!-- set to debug to display, info to hide -->
     <logger name="Disk" level="info" />
+    <logger name="Text" level="info" />
+
+    <logger name="Graphics" level="debug" />
     <logger name="Memory" level="debug" />
     <logger name="Breakpoint" level="debug" />
-    <logger name="Text" level="info" />
     <logger name="Default" level="debug" />
 
     <root level="info">

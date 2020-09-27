@@ -326,7 +326,7 @@ class Apple2Memory(val size: Int? = null): IMemory {
     override operator fun set(address: Int, value: Int) {
         getOrSet(false, address, value)
         listeners.forEach {
-            if (it.isInRange(address)) it.onWrite(address, value)
+            if (it.isInRange(address)) it.onWrite(this, address, value)
         }
     }
 

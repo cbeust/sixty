@@ -16,22 +16,6 @@ fun createApple2Memory(): Apple2Memory {
         val bytes = this::class.java.classLoader.getResource("Apple2e.rom").openStream().readAllBytes()
 
         loadCxxxInInternal(bytes, 0x100, 0xeff, 0x100)
-//        slotC3Rom = true
-//        internalCxRom = true
-//        // Load C100-C2FF in internal rom
-//        loadResource("Apple2e.rom", 0xc100, 0x100, 0x200)
-//        // C400 internal
-//        slotC3Rom = true
-//        internalCxRom = true
-//        loadResource("Apple2e.rom", 0xc400, 0x400, 0x400)
-//        // Load C800-CFFF in internal
-//        slotC3Rom = true
-//        internalCxRom = true
-//        loadResource("Apple2e.rom", 0xc800, 0x800, 0x800)
-//        // Load C300-C3FF in internal rom
-//        slotC3Rom = true
-//        internalCxRom = true
-//        loadResource("Apple2e.rom", 0xc300, 0x300, 0x100)
 
         internalCxRom = false
         slotC3Rom = true
@@ -54,48 +38,16 @@ fun createApple2Memory(): Apple2Memory {
     return result
 }
 
-class Apple2Computer(val diskController: DiskController): IComputer, IPulse {
-    var pcListener: PcListener? = null
-    override val memory: IMemory = createApple2Memory()
-    override val cpu : Cpu = Cpu(memory)
-
-    private val computer = Computer(memory, cpu, pcListener)
-
-    override fun onPulse(manager: PulseManager) = computer.onPulse(manager)
-    override fun stop() = computer.stop()
-
-//    val frame = Apple2Frame().apply {
-//        addKeyListener(object : java.awt.event.KeyListener {
-//            override fun keyReleased(e: java.awt.event.KeyEvent?) {}
-//            override fun keyTyped(e: java.awt.event.KeyEvent?) {}
+//class Apple2Computer(val diskController: DiskController): IComputer, IPulse {
+//    var pcListener: PcListener? = null
+//    override val memory: IMemory = createApple2Memory()
+//    override val cpu : Cpu = Cpu(memory)
 //
-//            override fun keyPressed(e: java.awt.event.KeyEvent) {
-//                val key = when (e.keyCode) {
-//                    10 -> 0x8d
-//                    else -> {
-//                        val result = e.keyCode.or(0x80)
-//                        println("Result: " + result.h() + " " + result.toChar())
-//                        result
-//                    }
-//                }
-//                memory.forceValue(0xc000, key)
-//                memory.forceValue(0xc010, 0x80)
-//            }
-//        })
-//    }
+//    private val computer = Computer(memory, cpu, pcListener)
 //
-//    init {
-//        with(memory) {
-//            listeners.add(diskController)
-//            //        listeners.add(DiskController(5, DISK_DOS_3_3))
-//            listeners.add(DebugMemoryListener(memory))
-//            listeners.add(Apple2MemoryListener(this, frame.textScreenPanel, frame.hiresPanel))
-//        }
-//
-//        val start = memory[0xfffc].or(memory[0xfffd].shl(8))
-//        cpu.PC = start
-//    }
-}
+//    override fun onPulse(manager: PulseManager) = computer.onPulse(manager)
+//    override fun stop() = computer.stop()
+//}
 
 private fun runWatcher(memory: IMemory) {
     val watcher = FileSystems.getDefault().newWatchService()
@@ -124,10 +76,3 @@ private fun runWatcher(memory: IMemory) {
         }
     }
 }
-private fun loadPic(memory: IMemory) {
-    val bytes = Paths.get("d:", "PD", "Apple disks", "fishgame.pic").toFile().readBytes()
-    (4..0x2004).forEach {
-        memory[0x2000 + it - 4] = bytes[it].toInt()
-    }
-}
-

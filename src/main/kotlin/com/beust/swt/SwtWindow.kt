@@ -23,7 +23,7 @@ interface IGraphics {
     fun run()
 }
 
-class SwtContext(val display: Display, val shell: Shell, val textScreen: ITextScreen)
+class SwtContext(val display: Display, val shell: Shell, val textScreen: ITextScreen, val hiResWindow: HiResWindow)
     : IGraphics
 {
     override fun run() {
@@ -99,9 +99,10 @@ fun createWindows(memory: IMemory, keyProvider: IKeyProvider): SwtContext {
         text = "DISK"
         control = diskWindow
     }
+    val hiResWindow = HiResWindow(folder)
     TabItem(folder, SWT.NONE).apply {
         text = "\$2000"
-        control = HiResWindow(folder)
+        control = hiResWindow
     }
     folder.setSelection(0)
 
@@ -111,9 +112,9 @@ fun createWindows(memory: IMemory, keyProvider: IKeyProvider): SwtContext {
 //    mainWindow.pack()
 //    folder.pack()
     shell.pack()
-    shell.setSize(mainWindow.bounds.width + diskWindow.bounds.width, parentHeight)
+    shell.setSize(mainWindow.bounds.width + folder.bounds.width, parentHeight)
 //    rightWindow.scrolledComposite.setMinSize(mainWindow.bounds.width + 700, parentHeight)
-    return SwtContext(display, shell, mainWindow)
+    return SwtContext(display, shell, mainWindow, hiResWindow)
 }
 
 fun createScrollableByteBuffer(parent: Composite): ScrolledComposite {

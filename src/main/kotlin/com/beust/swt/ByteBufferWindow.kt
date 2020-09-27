@@ -134,10 +134,8 @@ class ByteBufferWindow(parent: Composite) : Composite(parent, SWT.NONE) {
                             state.state(byteText.length, nb)
                             if (state.foundD5AA96) {
                                 addressStart = state.start
-                                log("D5AA96 at " + state.start.hh() + "-" + (byteText.length + 3).hh())
                             } else if (state.foundD5AAAD) {
                                 dataStart = state.start
-                                log("D5AAAD at " + state.start.hh())
                             } else if (state.foundDEAA) {
                                 if (addressStart > 0) {
                                     ranges.add(StyleRange(addressStart, byteText.length - addressStart + 2, null,
@@ -148,7 +146,6 @@ class ByteBufferWindow(parent: Composite) : Composite(parent, SWT.NONE) {
                                             lightYellow(display)))
                                     dataStart = -1
                                 }
-                                log("DEAA at " + state.start.hh())
                             }
                             byteText.append(nb.h() + " ")
                             currentBytes.add(nb)

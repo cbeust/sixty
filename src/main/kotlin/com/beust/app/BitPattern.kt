@@ -1,7 +1,23 @@
 package com.beust.app
 
-import com.beust.sixty.s
-import java.awt.Color
+import com.beust.sixty.ERROR
+import com.beust.swt.*
+import org.eclipse.swt.graphics.Color
+import org.eclipse.swt.widgets.Display
+
+enum class SColor {
+    BLACK, WHITE, GREEN, ORANGE, MAGENTA, BLUE;
+
+    fun toSwtColor(display: Display): Color = when (this) {
+            BLACK -> black(display)
+            WHITE -> white(display)
+            GREEN -> green(display)
+            ORANGE -> orange(display)
+            MAGENTA -> magenta(display)
+            BLUE -> blue(display)
+            else -> ERROR("Unexpected color: $this")
+    }
+}
 
 class BitPattern(private val byte0: Int, private val byte1: Int) {
     var p0: Int = 0
@@ -35,20 +51,20 @@ class BitPattern(private val byte0: Int, private val byte1: Int) {
         // only pixels with odd X-coordinates could be green or orange. Likewise, only even-numbered pixels
         // could be violet or blue.[4]
         //
-        fun color(group: Int, bits: Int, x: Int): Color {
+        fun color(group: Int, bits: Int, x: Int): SColor {
             val result = when(bits) {
-                0 -> Color.BLACK
-                3 -> Color.WHITE
-                2 -> /* if (x%2==0) Color.BLACK else */ if (group == 0) Color.GREEN else Color.ORANGE
-                else -> /* if (x%2==1) Color.BLACK else */ if (group == 0) Color.MAGENTA else Color.BLUE
+                0 -> SColor.BLACK
+                3 -> SColor.WHITE
+                2 -> /* if (x%2==0) Color.BLACK else */ if (group == 0) SColor.GREEN  else SColor.ORANGE
+                else -> /* if (x%2==1) Color.BLACK else */ if (group == 0) SColor.MAGENTA else SColor.BLUE
             }
             return result // if (result == Color.ORANGE) result else Color.BLACK
         }
     }
 
-    fun colors(x: Int) : List<Color> =
+    fun colors(d: Display, x: Int) : List<SColor> =
         listOf(color(p0, aa, x), color(p0, bb, x+1), color(p0, cc, x+2), color(p0, dd, x+3),
                 color(p1, ee, x+4), color(p1, ff, x+5), color(p1, gg, x+6))
 
-    fun colorStrings(x: Int): String = colors(x).map { it.s() }.joinToString(" ")
+    fun colorStrings(d: Display, x: Int): String = colors(d, x).map { it.toString() }.joinToString(" ")
 }

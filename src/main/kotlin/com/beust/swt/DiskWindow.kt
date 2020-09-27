@@ -1,8 +1,8 @@
 package com.beust.swt
 
 import com.beust.app.ByteAlgorithm
+import com.beust.app.SixAndTwo
 import com.beust.app.UiState
-import com.beust.app.pair4And4
 import com.beust.app.word
 import com.beust.sixty.h
 import com.beust.sixty.hh
@@ -46,7 +46,7 @@ class DiskWindow(parent: Composite, parentHeight: Int): Composite(parent, NONE) 
         display.asyncExec {
             byteText?.text = bytes[0].h()
             wordText?.text = word(bytes[0], bytes[1]).hh()
-            fourAndFourText?.text = pair4And4(bytes[0], bytes[1]).h()
+            fourAndFourText?.text = SixAndTwo.pair4And4(bytes[0], bytes[1]).h()
         }
 
     }

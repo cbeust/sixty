@@ -1,35 +1,57 @@
 package com.beust.app
 
-import java.awt.Color
-import java.awt.Graphics
-import javax.swing.JPanel
+import org.eclipse.swt.graphics.GC
+import org.eclipse.swt.widgets.Control
 
-class Board {
-    private val DEFAULT = Color.black
-    private val blockWidth = 3
-    private val blockHeight = 3
+class Board(private val control: Control) {
+    private val DEFAULT = SColor.BLACK
+    private val blockWidth = 2
+    private val blockHeight = 2
     private val gap = 0
     private val WIDTH = 280
     private val HEIGHT = 192
-    private val content = Array<Color>(WIDTH * HEIGHT) { DEFAULT }
 
     private fun index(x: Int, y: Int) = y * WIDTH + x
 
-    fun redraw(g: Graphics) {
-        repeat(HEIGHT) { y ->
-            repeat(WIDTH) { x ->
-                g.color = content[index(x, y)]
-                val xx = x * (blockWidth + gap)
-                val yy = y * (blockHeight + gap)
-                g.fillRect(xx, yy, blockWidth, blockHeight)
+//    fun redraw(g: GC) {
+//        repeat(HEIGHT) { y ->
+//            repeat(WIDTH) { x ->
+//                g.background = content[index(x, y)].toSwtColor(display)
+//                val xx = x * (blockWidth + gap)
+//                val yy = y * (blockHeight + gap)
+//                g.fillRectangle(xx, yy, blockWidth, blockHeight)
+//            }
+//        }
+//    }
+
+    class Command(val x: Int, val y: Int, val width: Int, val height: Int, val color: SColor)
+    val commands = ArrayList<Command>()
+
+    fun redraw(gc: GC) {
+        while (commands.isNotEmpty()) {
+            commands[0]?.let { c ->
+                if (c != null) {
+                    gc.background = c.color.toSwtColor(control.display)
+                    gc.fillRectangle(c.x, c.y, c.width, c.height)
+                }
+                commands.removeAt(0)
             }
         }
     }
 
-    fun draw(x: Int, y: Int, color: Color) {
+    fun draw(x: Int, y: Int, color: SColor) {
         if (index(x,y) >= WIDTH*HEIGHT) {
             println("ERROR")
         }
-        content[index(x, y)] = color
+
+        val xx = x * (blockWidth + gap)
+        val yy = y * (blockHeight + gap)
+//        println("Queuing $xx,$yy: " + color)
+        commands.add(Command(xx, yy, blockWidth, blockHeight, color))
+//        control.display.asyncExec {
+//            control.redraw()
+//        }
+//        gc.fillRectangle(xx, yy, blockWidth, blockHeight)
+//        control.redraw()
     }
 }

@@ -8,7 +8,7 @@ class DebugMemoryListener(val memory: IMemory, private val debugMemory: Boolean 
 
     override fun isInRange(address: Int) = true
 
-    override fun onWrite(location: Int, value: Int) {
+    override fun onWrite(memory: IMemory, location: Int, value: Int) {
         if (location == 0xd17b) {
 //        if (true && ! (location in 0x100 .. 0x1ff))
             logMem(location, value)
