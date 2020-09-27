@@ -32,6 +32,8 @@ class Board(private val control: Control) {
             commands[0]?.let { c ->
                 if (c != null) {
                     gc.background = c.color.toSwtColor(control.display)
+//                    println("Queuing " + c.x + "," + c.y + ": " + c.color)
+//                    gc.drawPoint(c.x, c.y)
                     gc.fillRectangle(c.x, c.y, c.width, c.height)
                 }
                 commands.removeAt(0)
@@ -46,7 +48,6 @@ class Board(private val control: Control) {
 
         val xx = x * (blockWidth + gap)
         val yy = y * (blockHeight + gap)
-//        println("Queuing $xx,$yy: " + color)
         commands.add(Command(xx, yy, blockWidth, blockHeight, color))
 //        control.display.asyncExec {
 //            control.redraw()

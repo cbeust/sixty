@@ -104,7 +104,7 @@ fun createWindows(memory: IMemory, keyProvider: IKeyProvider): SwtContext {
         text = "\$2000"
         control = hiResWindow
     }
-    folder.setSelection(0)
+    folder.setSelection(1)
 
 
 //    folder.setSize(500, 900)

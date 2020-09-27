@@ -109,17 +109,17 @@ fun main() {
         }
     }
 
-    Thread {
-        pulseManager.run()
-    }.start()
+//    Thread {
+//        pulseManager.run()
+//    }.start()
 
     swtContext?.run()
     fw.stop = true
 }
 
 private fun loadPic(memory: IMemory) {
-//    val bytes = Paths.get("d:", "PD", "Apple disks", "fishgame.pic").toFile().readBytes()
-//    (4..0x2004).forEach {
-//        memory[0x2000 + it - 4] = bytes[it].toInt()
-//    }
+    val bytes = Paths.get("d:", "PD", "Apple disks", "fishgame.pic").toFile().readBytes()
+    (4..0x2004).forEach {
+        memory[0x2000 + it - 4] = bytes[it].toInt()
+    }
 }
