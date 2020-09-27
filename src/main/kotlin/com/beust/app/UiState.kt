@@ -28,6 +28,6 @@ object UiState {
     var currentDiskFile: Obs<File?> = Obs(null)
     var currentTrack = Obs(0)
 
-    var byteAlgorithn = Obs(ByteAlgorithm.RAW)
+    var byteAlgorithn = Obs(ByteAlgorithm.SHIFTED)
     val currentBytes: Obs<List<Int>> = Obs(emptyList())
 }
