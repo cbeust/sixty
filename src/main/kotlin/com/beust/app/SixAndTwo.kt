@@ -3,9 +3,10 @@ package com.beust.app
 import com.beust.sixty.ERROR
 import com.beust.sixty.h
 
-object SixAndTwo {
-    fun pair4And4(b1: Int, b2: Int) = b1.shl(1).or(1).and(b2).and(0xff)
+fun pair4And4(b1: Int, b2: Int) = b1.shl(1).or(1).and(b2).and(0xff)
+fun word(b1: Int, b2: Int): Int = b1.or(b2.shl(8))
 
+object SixAndTwo {
     fun dump(disk: IDisk) {
         val sectors = hashMapOf<Int, Sector>()
         val result = arrayListOf<IntArray>()

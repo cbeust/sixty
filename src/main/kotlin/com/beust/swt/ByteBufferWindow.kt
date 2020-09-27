@@ -2,6 +2,7 @@ package com.beust.swt
 
 import com.beust.app.*
 import com.beust.sixty.h
+import com.beust.sixty.hh
 import com.beust.sixty.log
 import org.eclipse.swt.SWT
 import org.eclipse.swt.custom.StyledText
@@ -54,7 +55,7 @@ class ByteBufferWindow(parent: Composite) : Composite(parent, SWT.NONE) {
             val line = bytes.getLineAtOffset(e.caretOffset)
             val mod = (if (line == 0) o else (o - line)) % 48
             val index = line * 16 + (mod / 3)
-            val byte = currentBytes[index]
+            UiState.currentBytes.value = listOf(currentBytes[index], currentBytes[index + 1])
 //            val result = bytes.getText(e.caretOffset + pair.first, e.caretOffset+ pair.second)
 //                    .split(" ")
 //                    .map { Integer.parseInt(it, 16) }
@@ -126,11 +127,11 @@ class ByteBufferWindow(parent: Composite) : Composite(parent, SWT.NONE) {
                             val nb = nextByte()
                             state.state(currentBytes.size, nb)
                             if (state.foundD5AA96) {
-                                log("D5AA96 at " + state.start)
+                                log("D5AA96 at " + state.start.hh())
                             } else if (state.foundD5AAAD) {
-                                log("D5AAAD at " + state.start)
+                                log("D5AAAD at " + state.start.hh())
                             } else if (state.foundDEAA) {
-                                log("DEAA at " + state.start)
+                                log("DEAA at " + state.start.hh())
                             }
                             byteText.append(nb.h() + " ")
                             currentBytes.add(nb)

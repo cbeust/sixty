@@ -105,7 +105,7 @@ fun createWindows(memory: IMemory, keyProvider: IKeyProvider): SwtContext {
 //    mainWindow.pack()
 //    folder.pack()
     shell.pack()
-    shell.setSize(mainWindow.bounds.width + 700, parentHeight)
+    shell.setSize(mainWindow.bounds.width + rightWindow.bounds.width, parentHeight)
 //    rightWindow.scrolledComposite.setMinSize(mainWindow.bounds.width + 700, parentHeight)
     return SwtContext(display, shell, mainWindow)
 }

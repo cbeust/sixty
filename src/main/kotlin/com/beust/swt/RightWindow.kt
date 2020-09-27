@@ -2,23 +2,90 @@ package com.beust.swt
 
 import com.beust.app.ByteAlgorithm
 import com.beust.app.UiState
+import com.beust.app.pair4And4
+import com.beust.app.word
+import com.beust.sixty.h
+import com.beust.sixty.hh
 import org.eclipse.swt.SWT
+import org.eclipse.swt.SWT.NONE
 import org.eclipse.swt.custom.ScrolledComposite
 import org.eclipse.swt.events.SelectionEvent
 import org.eclipse.swt.events.SelectionListener
 import org.eclipse.swt.layout.*
-import org.eclipse.swt.widgets.Combo
-import org.eclipse.swt.widgets.Composite
-import org.eclipse.swt.widgets.Label
+import org.eclipse.swt.widgets.*
 
-class RightWindow(parent: Composite, parentHeight: Int): Composite(parent, SWT.NONE) {
-    private val diskLabel: Label
-    val scrolledComposite: ScrolledComposite
+class RightWindow(parent: Composite, parentHeight: Int): Composite(parent, NONE) {
+    private lateinit var diskLabel: Label
+    private val scrolledComposite: ScrolledComposite
+    private var byteText: Text? = null
+    private var wordText: Text? = null
+    private var fourAndFourText: Text? = null
 
     init {
         layout = GridLayout(3, false)
 
-        val header = Composite(this, SWT.NONE).apply {
+        val header = createHeader(this)
+        val dataInspector = createDataInspector(this)
+
+        scrolledComposite = createScrollableByteBuffer(this).apply {
+            layoutData = GridData(GridData.FILL, GridData.FILL, true, true).apply {
+//                horizontalAlignment = GridData.FILL
+//                verticalAlignment = GridData.FILL
+                horizontalSpan = 2
+                grabExcessVerticalSpace = true
+                grabExcessHorizontalSpace = false
+            }
+        }
+
+        UiState.currentDiskFile.addListener { _, new -> diskLabel.text = new?.name }
+        UiState.currentBytes.addListener { _, _ -> updateInspector() }
+    }
+
+    private fun updateInspector() {
+        val bytes = UiState.currentBytes.value
+        display.asyncExec {
+            byteText?.text = bytes[0].h()
+            wordText?.text = word(bytes[0], bytes[1]).hh()
+            fourAndFourText?.text = pair4And4(bytes[0], bytes[1]).h()
+        }
+
+    }
+    private fun createLabelText(parent: Composite, label: String): Pair<Composite, Text> {
+        val result = Composite(parent, SWT.NONE).apply {
+            layoutData = GridData(GridData.FILL, GridData.FILL, true, false)
+            layout = GridLayout(2, false)
+        }
+        label(result, label, SWT.RIGHT).apply {
+            layoutData = GridData().apply {
+                widthHint = 100
+            }
+        }
+        val text = Text(result, SWT.BORDER).apply {
+            layoutData = GridData().apply {
+                widthHint = 100
+            }
+        }
+        return result to text
+    }
+
+    private fun createDataInspector(parent: Composite): Composite {
+        val result = Group(parent, NONE).apply {
+            layout = GridLayout(1, false)
+            text = "Data inspector"
+            layoutData = GridData(SWT.FILL, SWT.FILL, true, true).apply {
+                widthHint = 400
+                verticalSpan = 2
+            }
+        }
+        byteText = createLabelText(result, "Byte").second
+        wordText = createLabelText(result, "Word").second
+        fourAndFourText = createLabelText(result, "4-and-4").second
+
+        return result
+    }
+
+    private fun createHeader(parent: Composite): Composite {
+        val header = Composite(this, NONE).apply {
             layout = GridLayout(6, false)
 //            background = grey(display)
             layoutData = GridData().apply {
@@ -103,18 +170,6 @@ class RightWindow(parent: Composite, parentHeight: Int): Composite(parent, SWT.N
             })
         }
 
-
-
-        scrolledComposite = createScrollableByteBuffer(this).apply {
-            layoutData = GridData(GridData.FILL, GridData.FILL, true, true).apply {
-//                horizontalAlignment = GridData.FILL
-//                verticalAlignment = GridData.FILL
-                horizontalSpan = 3
-                grabExcessVerticalSpace = true
-                grabExcessHorizontalSpace = true
-            }
-        }
-
-        UiState.currentDiskFile.addListener { _, new -> diskLabel.text = new?.name }
+        return header
     }
 }

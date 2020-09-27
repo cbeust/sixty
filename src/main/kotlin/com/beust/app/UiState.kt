@@ -29,4 +29,5 @@ object UiState {
     var currentTrack = Obs(0)
 
     var byteAlgorithn = Obs(ByteAlgorithm.RAW)
+    val currentBytes: Obs<List<Int>> = Obs(emptyList())
 }
