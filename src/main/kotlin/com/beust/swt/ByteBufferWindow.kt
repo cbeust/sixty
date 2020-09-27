@@ -5,6 +5,7 @@ import com.beust.sixty.h
 import com.beust.sixty.hh
 import com.beust.sixty.log
 import org.eclipse.swt.SWT
+import org.eclipse.swt.custom.StyleRange
 import org.eclipse.swt.custom.StyledText
 import org.eclipse.swt.layout.GridData
 import org.eclipse.swt.layout.GridLayout
@@ -121,16 +122,32 @@ class ByteBufferWindow(parent: Composite) : Composite(parent, SWT.NONE) {
                     val offsetText = StringBuffer()
                     val byteText = StringBuffer()
                     val state = State()
+                    val ranges = arrayListOf<StyleRange>()
+                    var addressStart = -1
+                    var addressEnd = -1
+                    var dataStart = -1
+                    var dataEnd = -1
                     while (bitsToGo >= 0) {
                         offsetText.append("\$" + String.format("%04X", row) + "\n")
                         repeat(rowSize) {
                             val nb = nextByte()
-                            state.state(currentBytes.size, nb)
+                            state.state(byteText.length, nb)
                             if (state.foundD5AA96) {
-                                log("D5AA96 at " + state.start.hh())
+                                addressStart = state.start
+                                log("D5AA96 at " + state.start.hh() + "-" + (byteText.length + 3).hh())
                             } else if (state.foundD5AAAD) {
+                                dataStart = state.start
                                 log("D5AAAD at " + state.start.hh())
                             } else if (state.foundDEAA) {
+                                if (addressStart > 0) {
+                                    ranges.add(StyleRange(addressStart, byteText.length - addressStart + 2, null,
+                                            lightBlue(display)))
+                                    addressStart = -1
+                                } else if (dataStart > 0) {
+                                    ranges.add(StyleRange(dataStart, byteText.length - dataStart + 2, null,
+                                            lightYellow(display)))
+                                    dataStart = -1
+                                }
                                 log("DEAA at " + state.start.hh())
                             }
                             byteText.append(nb.h() + " ")
@@ -142,6 +159,7 @@ class ByteBufferWindow(parent: Composite) : Composite(parent, SWT.NONE) {
                     }
                     offsets.text = offsetText.toString()
                     bytes.text = byteText.toString()
+                    bytes.styleRanges = ranges.toTypedArray()
                 } else {
                     println("NO OFFSET HERE")
                 }

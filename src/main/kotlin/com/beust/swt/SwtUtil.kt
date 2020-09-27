@@ -7,6 +7,7 @@ import org.eclipse.jface.resource.JFaceResources
 import org.eclipse.jface.resource.LocalResourceManager
 import org.eclipse.swt.SWT
 import org.eclipse.swt.custom.CLabel
+import org.eclipse.swt.graphics.Color
 import org.eclipse.swt.widgets.*
 
 fun label(parent: Composite, t: String, style: Int = SWT.NONE) = Label(parent, style).apply { text = t }
@@ -18,6 +19,9 @@ fun green(d: Display) = d.getSystemColor(SWT.COLOR_GREEN)
 fun blue(d: Display) = d.getSystemColor(SWT.COLOR_BLUE)
 fun grey(d: Display) = d.getSystemColor(SWT.COLOR_GRAY)
 fun yellow(d: Display) = d.getSystemColor(SWT.COLOR_YELLOW)
+
+fun lightBlue(d: Display) = Color(d, 0x99, 0xcc, 0xff)
+fun lightYellow(d: Display) = Color(d, 0xff, 0xff, 0x99)
 
 fun font(shell: Shell, name: String, size: Int, style: Int = SWT.NONE)
     = LocalResourceManager(JFaceResources.getResources(), shell)
