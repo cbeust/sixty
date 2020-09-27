@@ -19,18 +19,15 @@ class Apple2Memory(val size: Int? = null): IMemory {
     private var page2 = false
     var internalC8Rom: Boolean = false
         set(f) {
-            logMem("internalC8Rom: $f")
             field = f
         }
     var internalCxRom: Boolean = false
         set(f) {
             internalC8Rom = false
-            logMem("internalCxRom: $f")
             field = f
         }
     var slotC3Rom: Boolean = false
         set(f) {
-            logMem("internalC3Rom: $f")
             internalC8Rom = false
             field = f
         }
@@ -301,69 +298,6 @@ class Apple2Memory(val size: Int? = null): IMemory {
                 }
             }
         }
-//
-//            fun memName(mem: IntArray?): String = when (mem) {
-//                rom -> "rom"
-//                auxRam1 -> "auxram1"
-//                auxRam2 -> "auxram2"
-//                ram1 -> "ram1"
-//                ram2 -> "ram2"
-//                else -> "denied"
-//            }
-//            if (! init && i == 0xd17b) {
-//                println("Breakpoint")
-//            }
-//            lastMem = memName(mem)
-//            if (mem != null) {
-//                if (get) {
-//                    result = mem[ea]
-//                } else {
-//                    if (i == 0xd17b) {
-//                        println("BREAKPOINT D1")
-//                    }
-//                    mem[ea] = value
-//                }
-//            } else{
-//                println("null mem")
-//            }
-        result
-//        } else {  // 0xe000-0xffff
-//            val ea = i - 0xe000
-//            val bug = true
-//            if (! bug) {
-//                if (get) {
-//                    result = mem[i]
-//                } else {
-//                    if (! init && i == 0xfe1f) {
-//                        println("BREAK")
-//                    }
-//                    if (init) mem[i] = value
-//                }
-//            } else {
-////                if (! init && i == 0xfe1f) {
-////                    println("BREAKPOINT")
-////                }
-//                if (get) {
-//                    result = when {
-//                        readRom -> rom[i - 0xd000]
-//                        readBank1 -> romBank1[ea]
-//                        readBank2 -> romBank2[ea]
-//                        else -> ERROR("Should never happen")
-//                    }
-//                } else {
-//                    when {
-//                        writeBank1 -> romBank1[ea] = value
-//                        writeBank2 -> romBank2[ea] = value
-//                        init -> {
-//                            rom[i - 0xd000] = value
-//                            romBank1[ea] = value
-//                            romBank2[ea] = value
-//                        }
-//                        else -> println("Can't write to rom")
-//                    }
-//                }
-//            }
-//        }
 
         if (get && result == null) {
             TODO("Should not happen")
