@@ -3,6 +3,7 @@ package com.beust.app
 import com.beust.sixty.bit
 import com.beust.sixty.h
 import com.beust.sixty.hh
+import com.beust.sixty.logDisk
 import kotlin.random.Random
 
 class Woz(private val bytes: ByteArray,
@@ -148,7 +149,7 @@ class Woz(private val bytes: ByteArray,
                 val trackOffset = trk.startingBlock * 512
                 try {
                     val slice = bytes.slice(trackOffset..(trackOffset + streamSizeInBytes))
-                    println("Track ${trackNumber / 4.0} starts at ${trackOffset.hh()}")
+                    logDisk("Track ${trackNumber / 4.0} starts at ${trackOffset.hh()}")
                     bitStreamFactory(slice)
                 } catch (ex: Exception) {
                     println("PROBLEM")

@@ -7,10 +7,12 @@ object Loggers {
     val memory = LoggerFactory.getLogger("Memory")
     val text = LoggerFactory.getLogger("Text")
     val graphics = LoggerFactory.getLogger("Graphics")
+    val disk = LoggerFactory.getLogger("Disk")
 }
 
-fun logMem(s: String) = Loggers.memory.debug(s)
-fun logText(s: String) = Loggers.text.debug(s)
-fun logGraphics(s: String) = Loggers.graphics.debug(s)
+fun logMem(s: String) = Loggers.memory.debug("[MEM] $s")
+fun logText(s: String) = Loggers.text.debug("[TEXT] $s")
+fun logGraphics(s: String) = Loggers.graphics.debug("[GFX] $s")
+fun logDisk(s: String) = Loggers.disk.debug("[DISK] $s")
 fun log(s: String) = Loggers.def.debug(s)
 

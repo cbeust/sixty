@@ -1,10 +1,18 @@
 <configuration>
 
-    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+    <appender name="DEBUG" class="ch.qos.logback.core.ConsoleAppender">
         <!-- encoders are assigned the type
              ch.qos.logback.classic.encoder.PatternLayoutEncoder by default -->
         <encoder>
             <pattern>%d{HH:mm:ss} %-1level %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <appender name="INFO" class="ch.qos.logback.core.ConsoleAppender">
+        <!-- encoders are assigned the type
+             ch.qos.logback.classic.encoder.PatternLayoutEncoder by default -->
+        <encoder>
+            <pattern>%msg%n</pattern>
         </encoder>
     </appender>
 
@@ -17,7 +25,11 @@
     <logger name="Breakpoint" level="debug" />
     <logger name="Default" level="debug" />
 
+    <root level="debug">
+        <appender-ref ref="DEBUG" />
+    </root>
+
     <root level="info">
-        <appender-ref ref="STDOUT" />
+        <appender-ref ref="INFO" />
     </root>
 </configuration>
