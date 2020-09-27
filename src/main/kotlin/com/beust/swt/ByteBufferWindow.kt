@@ -55,16 +55,13 @@ class ByteBufferWindow(parent: Composite) : Composite(parent, SWT.NONE) {
         bytes.addCaretListener { e ->
             val o = e.caretOffset
             val line = bytes.getLineAtOffset(e.caretOffset)
-            val bytes = (line * 3 - 1) / 3
-            val mod = ((o - 1)/ 3) % 16
-            val index =
-                    if (line == 0) o / 3
-                    else line * 16 + mod
+            val mod = (if (line == 0) o else (o - line)) % 48
+            val index = line * 16 + (mod / 3)
             val byte = currentBytes[index]
 //            val result = bytes.getText(e.caretOffset + pair.first, e.caretOffset+ pair.second)
 //                    .split(" ")
 //                    .map { Integer.parseInt(it, 16) }
-            println("o:${o.h()} mod:$mod index:${index.h()} byte:${currentBytes[index].h()}")
+            println("o:${o} line:$line mod:$mod index:${index.h()} byte:${currentBytes[index].h()}")
         }
 //        bytes.addFocusListener(object: FocusAdapter() {
 //            override fun focusGained(e: FocusEvent) {
