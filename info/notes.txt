@@ -1,3 +1,9 @@
+- Page flip
+- Find out how to superpose windows in SWT
+- Write to disk
+- updatePosition() when incrementing/decrementing track
+
+
 https://github.com/cmosher01/Epple-II
 
 
