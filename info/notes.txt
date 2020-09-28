@@ -2,6 +2,10 @@
 - Find out how to superpose windows in SWT
 - Write to disk
 - updatePosition() when incrementing/decrementing track
+- saving to disk
+- second drive, other controllers $C500
+- shift/control
+
 
 
 https://github.com/cmosher01/Epple-II
