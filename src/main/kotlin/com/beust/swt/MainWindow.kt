@@ -32,7 +32,7 @@ class MainWindow(parent: Composite): Composite(parent, SWT.NONE), ITextScreen {
                     foreground = display.getSystemColor(SWT.COLOR_GREEN)
                     text = (x % 10).toString()
                     layoutData = GridData().apply {
-                        widthHint = ((WIDTH * FACTOR) / 40) - 1
+                    widthHint = (ACTUAL_WIDTH / 40) - 1
                     }
                 })
             }

@@ -16,7 +16,10 @@ private val allowed = hashSetOf('a', 'b', 'c', 'd', 'e', 'f', 'A', 'B', 'C', 'D'
 
 const val WIDTH = 280
 const val HEIGHT = 192
-const val FACTOR = 2
+const val WIDTH_FACTOR = 2
+const val HEIGHT_FACTOR = 2
+const val ACTUAL_WIDTH = WIDTH * WIDTH_FACTOR
+const val ACTUAL_HEIGHT = HEIGHT * HEIGHT_FACTOR
 
 fun isHex(c: Char) = Character.isDigit(c) || allowed.contains(c)
 
@@ -51,15 +54,21 @@ fun createWindows(memory: IMemory, keyProvider: IKeyProvider): SwtContext {
         layout = GridLayout()
         background = blue(display)
         layoutData = GridData().apply {
-            widthHint = WIDTH * FACTOR
-            heightHint = HEIGHT * FACTOR
+            widthHint = ACTUAL_WIDTH
+            heightHint = ACTUAL_HEIGHT
         }
     }
+
+    val showText = true
+
     //
     // Main screen of the emulator
     //
     val mainWindow = MainWindow(mainContainer).apply {
-//        pack()
+        layoutData = GridData().apply {
+            visible = showText
+            exclude = ! showText
+        }
         addKeyListener(object : KeyAdapter() {
             override fun keyPressed(e: KeyEvent) {
                 val av = if (Character.isAlphabetic(e.keyCode)) e.character.toUpperCase().toInt()
@@ -67,20 +76,16 @@ fun createWindows(memory: IMemory, keyProvider: IKeyProvider): SwtContext {
                 keyProvider.keyPressed(memory, av)
             }
         })
-//        layoutData = GridData().apply {
-//            widthHint = WIDTH * FACTOR
-//            heightHint = HEIGHT * FACTOR
-//        }
+    }
 
-//        layoutData = GridData().apply {
-//            horizontalAlignment = GridData.HORIZONTAL_ALIGN_END
-//            verticalAlignment = GridData.VERTICAL_ALIGN_END
-//        }
-//        layoutData = FormData().apply {
-////            width = SWT.FILL
-//            top = FormAttachment(shell)
-//            left = FormAttachment(shell)
-//        }
+    //
+    // Graphic screen
+    //
+    val hiResWindow = HiResWindow(mainContainer).apply {
+        layoutData = GridData().apply {
+            visible = ! showText
+            exclude = showText
+        }
     }
 
     //
@@ -116,12 +121,12 @@ fun createWindows(memory: IMemory, keyProvider: IKeyProvider): SwtContext {
         text = "DISK"
         control = diskWindow
     }
-    val hiResWindow = HiResWindow(folder)
-    TabItem(folder, SWT.NONE).apply {
-        text = "\$2000"
-        control = hiResWindow
-    }
-    folder.setSelection(1)
+//    val hiResWindow = HiResWindow(folder)
+//    TabItem(folder, SWT.NONE).apply {
+//        text = "\$2000"
+//        control = hiResWindow
+//    }
+    folder.setSelection(0)
 
 
 //    folder.setSize(500, 900)
