@@ -4,10 +4,15 @@ import com.beust.app.BitPattern
 import com.beust.app.Board
 import com.beust.app.SColor
 import com.beust.sixty.IMemory
+import com.beust.sixty.hh
 import org.eclipse.swt.SWT
 import org.eclipse.swt.graphics.Color
 import org.eclipse.swt.graphics.GC
+import org.eclipse.swt.layout.GridData
+import org.eclipse.swt.layout.GridLayout
+import org.eclipse.swt.widgets.Canvas
 import org.eclipse.swt.widgets.Composite
+import java.util.*
 
 class HiResWindow(parent: Composite, style: Int = SWT.NONE): Composite(parent, style) {
     companion object {
@@ -24,15 +29,48 @@ class HiResWindow(parent: Composite, style: Int = SWT.NONE): Composite(parent, s
             0x28, 0xa8, 0x128, 0x1a8, 0x228, 0x2a8, 0x328, 0x3a8,
             0x50, 0xd0, 0x150, 0x1d0, 0x250, 0x2d0, 0x350, 0x3d0)
     private val lineMap = hashMapOf<Int, Int>()
-    private val board: Board
+//    private val board: Board
+    private val canvas: Canvas
+
+    private val content = Array(WIDTH * HEIGHT) { SColor.BLACK }
+    private fun index(x: Int, y: Int) = y * WIDTH + x
+    private val FACTOR = 2
+    private val blockWidth = FACTOR
+    private val blockHeight = FACTOR
+    class Command(val x: Int, val y: Int, val width: Int, val height: Int, val color: SColor)
+    val lock = "commands"
+    val commands = ArrayList<Command>()
+
 
     init {
+        layout = GridLayout()
         background = white(display)
-        board = Board(parent)
-        addPaintListener { e ->
-            board.redraw(e.gc)
+        canvas = Canvas(this, SWT.NO_REDRAW_RESIZE).apply {
+            background = black(display)
+            layoutData = GridData().apply {
+                widthHint = WIDTH * FACTOR
+                heightHint = HEIGHT * FACTOR
+            }
         }
-
+        canvas.addPaintListener { e ->
+            synchronized(lock) {
+                while (commands.isNotEmpty()) {
+                    commands.removeAt(0)?.let { cmd ->
+                        val c = content[index(cmd.x / FACTOR, cmd.y / FACTOR)].toSwtColor(display)
+                        e.gc.background = c
+                        e.gc.fillRectangle(cmd.x, cmd.y, cmd.width, cmd.height)
+                    }
+                }
+            }
+        }
+//        Timer().schedule(object: TimerTask() {
+//            override fun run() {
+//                display.asyncExec {
+//                    canvas.redraw()
+//                }
+//            }
+//        }, 0, 10)
+//
 //        addPaintListener { e ->
 ////            GC(this).let { g ->
 //                gc.background = blue(display)
@@ -89,7 +127,11 @@ class HiResWindow(parent: Composite, style: Int = SWT.NONE): Composite(parent, s
 
         fun drawPixel(x: Int, y: Int, color: SColor) {
             if (x < WIDTH) {
-                board.draw(x, y, color)
+                content[index(x, y)] = color
+                synchronized(lock) {
+                    commands.add(Command(x * FACTOR, y * FACTOR, FACTOR, FACTOR, color))
+                }
+                canvas.display.asyncExec { canvas.redraw() }
             }
         }
 
