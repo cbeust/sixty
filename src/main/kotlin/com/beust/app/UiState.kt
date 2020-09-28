@@ -1,7 +1,6 @@
 package com.beust.app
 
 import java.io.File
-import kotlin.reflect.KProperty
 
 typealias ObsListener<T> = (T, T) -> Unit
 
@@ -30,4 +29,9 @@ object UiState {
 
     var byteAlgorithn = Obs(ByteAlgorithm.SHIFTED)
     val currentBytes: Obs<List<Int>> = Obs(emptyList())
+
+    var mainScreenText = Obs(true)
+    var mainScreenMixed = Obs(false)
+    var mainScreenHires = Obs(false)
+    var mainScreenPage2 = Obs(false)
 }

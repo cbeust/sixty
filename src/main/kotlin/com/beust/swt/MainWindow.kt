@@ -9,6 +9,7 @@ import org.eclipse.jface.resource.JFaceResources
 import org.eclipse.jface.resource.LocalResourceManager
 import org.eclipse.swt.SWT
 import org.eclipse.swt.graphics.Font
+import org.eclipse.swt.graphics.GC
 import org.eclipse.swt.layout.GridData
 import org.eclipse.swt.layout.GridLayout
 import org.eclipse.swt.widgets.Composite
@@ -47,6 +48,10 @@ class MainWindow(parent: Composite): Composite(parent, SWT.NONE), ITextScreen {
     override fun drawCharacter(x: Int, y: Int, value: Int) {
         display.asyncExec {
             if (! shell.isDisposed) {
+//                GC(this).let { gc ->
+//                    gc.background = red(display)
+//                    gc.drawString("FOO", x * WIDTH_FACTOR, y)
+//                }
                 labels[y * ITextScreen.WIDTH + x].let { label ->
                     if (!label.isDisposed) {
                         when(value) {

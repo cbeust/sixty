@@ -14,7 +14,7 @@ class SimpleMemory(size: Int): IMemory {
     }
 
     override fun set(address: Int, value: Int) {
-        listeners.forEach { it.onWrite(this, address, value) }
+        listeners.forEach { it.onWrite(address, value) }
         bytes[address] = value
     }
 

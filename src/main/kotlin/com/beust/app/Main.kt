@@ -4,6 +4,9 @@ import com.beust.app.app.TextPanel
 import com.beust.sixty.*
 import com.beust.swt.SwtContext
 import com.beust.swt.createWindows
+import org.eclipse.swt.layout.GridData
+import org.eclipse.swt.widgets.Composite
+import org.eclipse.swt.widgets.Control
 import java.io.File
 import java.nio.file.Paths
 
@@ -16,7 +19,7 @@ val BREAKPOINT: Int? = null//0xc2de // 0xc2db
 
 val disk = 0
 
-val DISK_DOS_3_3 = File("src/test/resources/Apple DOS 3.3.dsk")
+val DISK_DOS_3_3 = File("D:\\pd\\Apple disks\\Apple DOS 3.3.dsk") // File("src/test/resources/Apple DOS 3.3.dsk")
 val WOZ_DOS_3_3 = File("src/test/resources/woz2/DOS 3.3 System Master.woz")
 
 val DISK = if (disk == 0)
@@ -83,16 +86,32 @@ fun main() {
             pulseManager.addListener(dc)
             val a2Memory = Apple2Memory()
             swtContext = createWindows(a2Memory, keyProvider)
+
+            fun show(b: Boolean, control: Control) {
+                if (b) {
+                    with(control) {
+                        display.asyncExec {
+                            swtContext.show(this)
+                            parent.layout()
+                            setFocus()
+                        }
+                    }
+                }
+            }
+
+            UiState.mainScreenHires.addListener { _, new -> show(new, swtContext.hiResWindow) }
+            UiState.mainScreenText.addListener { _, new -> show(new, swtContext.textScreen) }
+
             val textPanel =  TextPanel(swtContext.textScreen)
 
             val computer = Computer.create {
                 memory = a2Memory
-                memoryListeners.add(Apple2MemoryListener(textPanel, swtContext.hiResWindow))
+                memoryListeners.add(Apple2MemoryListener(a2Memory, textPanel, swtContext.hiResWindow))
                 memoryListeners.add(dc)
             }.build()
             val start = a2Memory.word(0xfffc) // memory[0xfffc].or(memory[0xfffd].shl(8))
             computer.cpu.PC = start
-            loadPic(a2Memory)
+//            loadPic(a2Memory)
 
             pulseManager.addListener(computer)
             Thread {
@@ -109,9 +128,9 @@ fun main() {
         }
     }
 
-//    Thread {
-//        pulseManager.run()
-//    }.start()
+    Thread {
+        pulseManager.run()
+    }.start()
 
     swtContext?.run()
     fw.stop = true

@@ -8,7 +8,7 @@ class LoggedProp(private var value: Boolean) {
     }
 
     operator fun setValue(thisRef: Any?, property: KProperty<*>, newValue: Boolean) {
-//        println(property.name + "=" + newValue)
+        println(property.name + "=" + newValue)
 //        if (newValue) {
 //            println("BREAK")
 //        }

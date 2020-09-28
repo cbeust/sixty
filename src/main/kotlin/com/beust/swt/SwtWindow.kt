@@ -3,8 +3,10 @@ package com.beust.swt
 import com.beust.app.app.ITextScreen
 import com.beust.sixty.IKeyProvider
 import com.beust.sixty.IMemory
+import com.beust.sixty.log
 import org.eclipse.swt.SWT
 import org.eclipse.swt.custom.ScrolledComposite
+import org.eclipse.swt.custom.StackLayout
 import org.eclipse.swt.events.KeyAdapter
 import org.eclipse.swt.events.KeyEvent
 import org.eclipse.swt.graphics.Point
@@ -30,7 +32,8 @@ interface IGraphics {
     fun run()
 }
 
-class SwtContext(val display: Display, val shell: Shell, val textScreen: ITextScreen, val hiResWindow: HiResWindow)
+class SwtContext(val display: Display, val shell: Shell, val textScreen: MainWindow, val hiResWindow: HiResWindow,
+        private val stackLayout: StackLayout)
     : IGraphics
 {
     override fun run() {
@@ -40,6 +43,8 @@ class SwtContext(val display: Display, val shell: Shell, val textScreen: ITextSc
         }
         display.dispose()
     }
+
+    fun show(c: Control) { stackLayout.topControl = c }
 }
 
 fun createWindows(memory: IMemory, keyProvider: IKeyProvider): SwtContext {
@@ -50,8 +55,9 @@ fun createWindows(memory: IMemory, keyProvider: IKeyProvider): SwtContext {
 //        layout = FormLayout()
     }
 
+    val stackLayout = StackLayout()
     val mainContainer = Composite(shell, SWT.NONE).apply {
-        layout = GridLayout()
+        layout = stackLayout
         background = blue(display)
         layoutData = GridData().apply {
             widthHint = ACTUAL_WIDTH
@@ -59,33 +65,32 @@ fun createWindows(memory: IMemory, keyProvider: IKeyProvider): SwtContext {
         }
     }
 
-    val showText = true
-
     //
     // Main screen of the emulator
     //
-    val mainWindow = MainWindow(mainContainer).apply {
-        layoutData = GridData().apply {
-            visible = showText
-            exclude = ! showText
-        }
-        addKeyListener(object : KeyAdapter() {
-            override fun keyPressed(e: KeyEvent) {
-                val av = if (Character.isAlphabetic(e.keyCode)) e.character.toUpperCase().toInt()
+    val keyAdapter = object : KeyAdapter() {
+        override fun keyPressed(e: KeyEvent) {
+            val av = if (Character.isAlphabetic(e.keyCode)) e.character.toUpperCase().toInt()
                 else e.keyCode
-                keyProvider.keyPressed(memory, av)
-            }
-        })
+            log("Sending key $e")
+            keyProvider.keyPressed(memory, av)
+        }
     }
+
+    val mainWindow = MainWindow(mainContainer).apply {
+//        layoutData = GridData().apply {
+//            visible = showText
+//            exclude = ! showText
+//        }
+        addKeyListener(keyAdapter)
+    }
+    (mainContainer.layout as StackLayout).topControl = mainWindow
 
     //
     // Graphic screen
     //
     val hiResWindow = HiResWindow(mainContainer).apply {
-        layoutData = GridData().apply {
-            visible = ! showText
-            exclude = showText
-        }
+        addKeyListener(keyAdapter)
     }
 
     //
@@ -136,7 +141,7 @@ fun createWindows(memory: IMemory, keyProvider: IKeyProvider): SwtContext {
     shell.pack()
     shell.setSize(mainWindow.bounds.width + folder.bounds.width, parentHeight)
 //    rightWindow.scrolledComposite.setMinSize(mainWindow.bounds.width + 700, parentHeight)
-    return SwtContext(display, shell, mainWindow, hiResWindow)
+    return SwtContext(display, shell, mainWindow, hiResWindow, stackLayout)
 }
 
 fun createScrollableByteBuffer(parent: Composite): ScrolledComposite {

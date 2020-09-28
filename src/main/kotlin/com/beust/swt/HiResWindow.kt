@@ -28,21 +28,21 @@ class HiResWindow(parent: Composite, style: Int = SWT.NONE): Composite(parent, s
 
     private val content = Array(WIDTH * HEIGHT) { SColor.BLACK }
     private fun index(x: Int, y: Int) = y * WIDTH + x
-    private val blockWidth = FACTOR
-    private val blockHeight = FACTOR
+    private val blockWidth = WIDTH_FACTOR
+    private val blockHeight = HEIGHT_FACTOR
 
     init {
         layout = GridLayout()
         background = white(display)
-        img = Image(display, WIDTH * FACTOR, HEIGHT * FACTOR)
+        img = Image(display, ACTUAL_WIDTH, ACTUAL_HEIGHT)
         gc = GC(img)
         val lab = Label(this, SWT.NONE).apply {
             text = "Big button"
             background = lightBlue(display)
             image = img
             layoutData = GridData().apply {
-                widthHint = WIDTH * FACTOR
-                heightHint = HEIGHT * FACTOR
+                widthHint = ACTUAL_WIDTH
+                heightHint = ACTUAL_HEIGHT
             }
         }
         Timer().scheduleAtFixedRate(object: TimerTask() {
@@ -103,7 +103,7 @@ class HiResWindow(parent: Composite, style: Int = SWT.NONE): Composite(parent, s
                 content[index(x, y)] = color
                 display.syncExec {
                     gc.background = color.toSwtColor(display)
-                    gc.fillRectangle(x * FACTOR, y * FACTOR, blockWidth, blockHeight)
+                    gc.fillRectangle(x * WIDTH_FACTOR, y * HEIGHT_FACTOR, blockWidth, blockHeight)
                 }
             }
         }

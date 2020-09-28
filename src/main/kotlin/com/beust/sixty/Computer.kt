@@ -1,5 +1,6 @@
 package com.beust.sixty
 
+import com.beust.app.Apple2MemoryListener
 import com.beust.app.BREAKPOINT
 import com.beust.app.DEBUG
 import org.slf4j.LoggerFactory
@@ -21,7 +22,7 @@ abstract class MemoryListener {
     val logLines = arrayListOf<String>()
     abstract fun isInRange(address: Int): Boolean
     open fun onRead(location: Int, value: Int): Int? = null
-    open fun onWrite(memory: IMemory, location: Int, value: Int){}
+    open fun onWrite(location: Int, value: Int){}
 }
 
 interface PcListener {

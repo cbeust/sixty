@@ -1,13 +1,14 @@
 package com.beust.sixty
 
+import com.beust.app.UiState
 import java.io.File
 import java.io.InputStream
 
 @Suppress("UnnecessaryVariable", "BooleanLiteralArgument")
 class Apple2Memory(val size: Int? = null): IMemory {
     var interceptor: MemoryInterceptor? = null
-    override val listeners = arrayListOf<MemoryListener>()
     override val lastMemDebug = arrayListOf<String>()
+    override val listeners = arrayListOf<MemoryListener>()
 
     var init = true
 
@@ -18,15 +19,24 @@ class Apple2Memory(val size: Int? = null): IMemory {
     private var textSet = true
         set(f) {
             field = f
-            logMem("Text: $f")
+            UiState.mainScreenText.value = f
         }
-    private var hires = false
+    var mixed  = false
         set(f) {
             field = f
-            logMem("Hires: $f")
+            UiState.mainScreenMixed.value = f
+        }
+    var hires = false
+        set(f) {
+            field = f
+            UiState.mainScreenHires.value = f
+        }
+    var page2 = false
+        set(f) {
+            field = f
+            UiState.mainScreenPage2.value = f
         }
 
-    private var page2 = false
     var internalC8Rom: Boolean = false
     var internalCxRom: Boolean = false
         set(f) {
@@ -40,7 +50,6 @@ class Apple2Memory(val size: Int? = null): IMemory {
         }
     private var video80 = false
     private var altChar = false
-    private var mixed = false
 
     override fun toString() =
             "{Memory readAux:$readAux writeAux:$writeAux altZp:$altZp store80:$store80On page2: $page2" +
@@ -326,7 +335,7 @@ class Apple2Memory(val size: Int? = null): IMemory {
     override operator fun set(address: Int, value: Int) {
         getOrSet(false, address, value)
         listeners.forEach {
-            if (it.isInRange(address)) it.onWrite(this, address, value)
+            if (it.isInRange(address)) it.onWrite(address, value)
         }
     }
 
