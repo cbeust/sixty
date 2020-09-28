@@ -13,11 +13,6 @@ import org.eclipse.swt.widgets.Label
 import java.util.*
 
 class HiResWindow(parent: Composite, style: Int = SWT.NONE): Composite(parent, style) {
-    companion object {
-        const val WIDTH = 280
-        const val HEIGHT = 192
-    }
-
     /**
      * 2000-2027
      */
@@ -33,7 +28,6 @@ class HiResWindow(parent: Composite, style: Int = SWT.NONE): Composite(parent, s
 
     private val content = Array(WIDTH * HEIGHT) { SColor.BLACK }
     private fun index(x: Int, y: Int) = y * WIDTH + x
-    private val FACTOR = 2
     private val blockWidth = FACTOR
     private val blockHeight = FACTOR
 

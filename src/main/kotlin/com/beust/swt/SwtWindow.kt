@@ -14,6 +14,10 @@ import org.eclipse.swt.widgets.*
 
 private val allowed = hashSetOf('a', 'b', 'c', 'd', 'e', 'f', 'A', 'B', 'C', 'D', 'E', 'F')
 
+const val WIDTH = 280
+const val HEIGHT = 192
+const val FACTOR = 2
+
 fun isHex(c: Char) = Character.isDigit(c) || allowed.contains(c)
 
 //val WIDTH = 200
@@ -43,11 +47,19 @@ fun createWindows(memory: IMemory, keyProvider: IKeyProvider): SwtContext {
 //        layout = FormLayout()
     }
 
+    val mainContainer = Composite(shell, SWT.NONE).apply {
+        layout = GridLayout()
+        background = blue(display)
+        layoutData = GridData().apply {
+            widthHint = WIDTH * FACTOR
+            heightHint = HEIGHT * FACTOR
+        }
+    }
     //
     // Main screen of the emulator
     //
-    val mainWindow = MainWindow(shell).apply {
-        pack()
+    val mainWindow = MainWindow(mainContainer).apply {
+//        pack()
         addKeyListener(object : KeyAdapter() {
             override fun keyPressed(e: KeyEvent) {
                 val av = if (Character.isAlphabetic(e.keyCode)) e.character.toUpperCase().toInt()
@@ -55,10 +67,15 @@ fun createWindows(memory: IMemory, keyProvider: IKeyProvider): SwtContext {
                 keyProvider.keyPressed(memory, av)
             }
         })
-        layoutData = GridData().apply {
-            horizontalAlignment = GridData.HORIZONTAL_ALIGN_END
-            verticalAlignment = GridData.VERTICAL_ALIGN_END
-        }
+//        layoutData = GridData().apply {
+//            widthHint = WIDTH * FACTOR
+//            heightHint = HEIGHT * FACTOR
+//        }
+
+//        layoutData = GridData().apply {
+//            horizontalAlignment = GridData.HORIZONTAL_ALIGN_END
+//            verticalAlignment = GridData.VERTICAL_ALIGN_END
+//        }
 //        layoutData = FormData().apply {
 ////            width = SWT.FILL
 //            top = FormAttachment(shell)

@@ -9,32 +9,36 @@ import org.eclipse.jface.resource.JFaceResources
 import org.eclipse.jface.resource.LocalResourceManager
 import org.eclipse.swt.SWT
 import org.eclipse.swt.graphics.Font
+import org.eclipse.swt.layout.GridData
 import org.eclipse.swt.layout.GridLayout
 import org.eclipse.swt.widgets.Composite
 import org.eclipse.swt.widgets.Label
 
 class MainWindow(parent: Composite): Composite(parent, SWT.NONE), ITextScreen {
-    private val textFont: Font = font(shell, "Arial", 10, SWT.BOLD)
+    private val textFont: Font = font(shell, "Arial", 9, SWT.BOLD)
     private val labels = arrayListOf<Label>()
 
     init {
         layout = GridLayout(40, true).apply {
             horizontalSpacing = 0
-            verticalSpacing = 2
+            verticalSpacing = 0
         }
         background = display.getSystemColor(SWT.COLOR_BLACK)
-        repeat(ITextScreen.WIDTH) {
-            repeat(ITextScreen.HEIGHT) {
+        repeat(ITextScreen.HEIGHT) {
+            repeat(ITextScreen.WIDTH) { x ->
                 labels.add(Label(this, SWT.NONE).apply {
                     font = textFont
                     background = display.getSystemColor(SWT.COLOR_BLACK)
                     foreground = display.getSystemColor(SWT.COLOR_GREEN)
-                    text = "@"
+                    text = (x % 10).toString()
+                    layoutData = GridData().apply {
+                        widthHint = ((WIDTH * FACTOR) / 40) - 1
+                    }
                 })
             }
         }
 
-        pack()
+//        pack()
     }
 
     /**
