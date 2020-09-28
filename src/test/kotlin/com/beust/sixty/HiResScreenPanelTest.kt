@@ -21,7 +21,6 @@ class HiResScreenPanelTest {
     @Test(dataProvider = "bp")
     fun bitPatterns(byte0: Int, byte1: Int, p0: Int, p1: Int, a: Int, b: Int, c: Int, d: Int, e: Int, f: Int, g: Int) {
         with(BitPattern(byte0, byte1)) {
-            println(colorStrings(0))
             assertThat(this.p0).isEqualTo(p0)
             assertThat(this.p1).isEqualTo(p1)
             assertThat(aa).isEqualTo(a)

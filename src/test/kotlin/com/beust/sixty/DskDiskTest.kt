@@ -41,9 +41,9 @@ class DskDiskTest {
                     val actual = thisSec.content[byte]
                     val index = DskDisk.TRACK_SIZE_BYTES * track + sec * 256 + byte
                     val exp = expected[index].toUByte().toInt()
-                    if (byte == 0) {
-                        println("T:${track.h()} S:${sec.h()} Received ${actual.h()}, expected ${exp.h()}")
-                    }
+//                    if (byte == 0) {
+//                        println("T:${track.h()} S:${sec.h()} Received ${actual.h()}, expected ${exp.h()}")
+//                    }
                     assertThat(actual)
                             .withFailMessage("T:$track S:$sec B:$byte  Expected ${exp.h()} but got ${actual.h()}")
                             .isEqualTo(exp)
@@ -74,7 +74,7 @@ fun getOneTrack(disk: IDisk, track: Int): Track {
         if (volume.xor(track).xor(sector) != checksumAddress) {
             ERROR("Checksum doesn't match")
         }
-        println("Volume: $volume Track: $track Sector: $sector checksum: $checksumAddress")
+        logDisk("Volume: $volume Track: $track Sector: $sector checksum: $checksumAddress")
         if (disk.nextBytes(3) != listOf(0xde, 0xaa, 0xeb)) {
             ERROR("Didn't find closing for address")
         }

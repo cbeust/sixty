@@ -2,6 +2,7 @@ package com.beust.app
 
 import com.beust.sixty.ERROR
 import com.beust.sixty.h
+import com.beust.sixty.logDisk
 
 fun word(b1: Int, b2: Int): Int = b1.or(b2.shl(8))
 
@@ -31,7 +32,7 @@ object SixAndTwo {
                 if (volume.xor(track).xor(sector) != checksumAddress) {
                     ERROR("Checksum doesn't match")
                 }
-                println("   Volume: $volume Track: $track Sector: $sector checksum: $checksumAddress")
+                logDisk("   Volume: $volume Track: $track Sector: $sector checksum: $checksumAddress")
                 if (disk.nextBytes(3) != listOf(0xde, 0xaa, 0xeb)) {
                     ERROR("Didn't find closing for address")
                 }
