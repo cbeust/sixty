@@ -28,15 +28,14 @@ class Board(private val control: Control) {
     val commands = ArrayList<Command>()
 
     fun redraw(gc: GC) {
-        while (commands.isNotEmpty()) {
-            commands[0]?.let { c ->
-                if (c != null) {
-                    gc.background = c.color.toSwtColor(control.display)
+        if (commands.isEmpty()) {
+            println("Redraw all")
+        } else while (commands.isNotEmpty()) {
+            commands.removeAt(0).let { c ->
+                gc.background = c.color.toSwtColor(control.display)
 //                    println("Queuing " + c.x + "," + c.y + ": " + c.color)
 //                    gc.drawPoint(c.x, c.y)
-                    gc.fillRectangle(c.x, c.y, c.width, c.height)
-                }
-                commands.removeAt(0)
+                gc.fillRectangle(c.x, c.y, c.width, c.height)
             }
         }
     }
@@ -49,6 +48,7 @@ class Board(private val control: Control) {
         val xx = x * (blockWidth + gap)
         val yy = y * (blockHeight + gap)
         commands.add(Command(xx, yy, blockWidth, blockHeight, color))
+        
 //        control.display.asyncExec {
 //            control.redraw()
 //        }
