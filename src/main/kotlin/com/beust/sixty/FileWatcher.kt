@@ -10,7 +10,8 @@ class FileWatcher {
     var stop = false
     class WatchedFile(val filename: String, val address: Int)
 
-    private val files = listOf(WatchedFile("watched.pic", 0x1ffc))
+    private val files = listOf(WatchedFile("watched.pic", 0x1ffc),
+            WatchedFile("watched2.pic", 0x3ffc))
 
     fun run(memory: IMemory) {
         log.info("Starting FileWatcher")
