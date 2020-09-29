@@ -56,6 +56,7 @@ fun createWindows(memory: IMemory, keyProvider: IKeyProvider): SwtContext {
     }
 
     val stackLayout = StackLayout()
+
     val mainContainer = Composite(shell, SWT.NONE).apply {
         layout = stackLayout
         background = blue(display)
@@ -63,35 +64,29 @@ fun createWindows(memory: IMemory, keyProvider: IKeyProvider): SwtContext {
             widthHint = ACTUAL_WIDTH
             heightHint = ACTUAL_HEIGHT
         }
+        display.addFilter(SWT.KeyDown) { e ->
+            val av = if (Character.isAlphabetic(e.keyCode)) e.character.toUpperCase().toInt()
+                else e.keyCode
+            keyProvider.keyPressed(memory, av)
+        }
     }
 
     //
     // Main screen of the emulator
     //
-    val keyAdapter = object : KeyAdapter() {
-        override fun keyPressed(e: KeyEvent) {
-            val av = if (Character.isAlphabetic(e.keyCode)) e.character.toUpperCase().toInt()
-                else e.keyCode
-            log("Sending key $e")
-            keyProvider.keyPressed(memory, av)
-        }
-    }
 
     val mainWindow = MainWindow(mainContainer).apply {
 //        layoutData = GridData().apply {
 //            visible = showText
 //            exclude = ! showText
 //        }
-        addKeyListener(keyAdapter)
     }
     (mainContainer.layout as StackLayout).topControl = mainWindow
 
     //
     // Graphic screen
     //
-    val hiResWindow = HiResWindow(mainContainer).apply {
-        addKeyListener(keyAdapter)
-    }
+    val hiResWindow = HiResWindow(mainContainer)
 
     //
     // Right panel
@@ -105,7 +100,7 @@ fun createWindows(memory: IMemory, keyProvider: IKeyProvider): SwtContext {
 //    }
 //    createScrollableByteBuffer(shell)
     mainWindow.pack()
-    val parentHeight = mainWindow.bounds.height + 50
+    val parentHeight = mainWindow.bounds.height + 120
 //
 //    createScrollableByteBuffer(shell, parentHeight).apply {
 ////        layoutData = GridData(GridData.FILL_BOTH, GridData.FILL_BOTH, true, true)
