@@ -2,6 +2,7 @@ package com.beust.app
 
 import com.beust.app.app.TextPanel
 import com.beust.sixty.*
+import com.beust.swt.ACTUAL_HEIGHT
 import com.beust.swt.SwtContext
 import com.beust.swt.createWindows
 import org.eclipse.swt.layout.GridData
@@ -101,6 +102,18 @@ fun main() {
 
             UiState.mainScreenHires.addListener { _, new -> show(new, swtContext.hiResWindow) }
             UiState.mainScreenText.addListener { _, new -> show(new, swtContext.textScreen) }
+            UiState.mainScreenMixed.addListener { _, new ->
+                swtContext.hiResWindow.let { w ->
+                    w.display.asyncExec {
+                        val fullHeight = ACTUAL_HEIGHT
+                        val shortHeight = ACTUAL_HEIGHT * 5 / 6
+                        val b = w.bounds
+                        val newHeight = if (new) shortHeight else fullHeight
+                        w.setBounds(b.x, b.y, b.width, newHeight)
+                        w.parent.layout()
+                    }
+                }
+            }
 
             val textPanel =  TextPanel(swtContext.textScreen)
 

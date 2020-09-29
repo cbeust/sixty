@@ -10,6 +10,7 @@ import org.eclipse.swt.custom.StackLayout
 import org.eclipse.swt.events.KeyAdapter
 import org.eclipse.swt.events.KeyEvent
 import org.eclipse.swt.graphics.Point
+import org.eclipse.swt.graphics.Rectangle
 import org.eclipse.swt.layout.*
 import org.eclipse.swt.widgets.*
 
@@ -32,8 +33,7 @@ interface IGraphics {
     fun run()
 }
 
-class SwtContext(val display: Display, val shell: Shell, val textScreen: MainWindow, val hiResWindow: HiResWindow,
-        private val stackLayout: StackLayout)
+class SwtContext(val display: Display, val shell: Shell, val textScreen: MainWindow, val hiResWindow: HiResWindow)
     : IGraphics
 {
     override fun run() {
@@ -44,21 +44,18 @@ class SwtContext(val display: Display, val shell: Shell, val textScreen: MainWin
         display.dispose()
     }
 
-    fun show(c: Control) { stackLayout.topControl = c }
+    fun show(c: Control) {
+        c.moveAbove(null)
+    }
 }
 
 fun createWindows(memory: IMemory, keyProvider: IKeyProvider): SwtContext {
     val display = Display()
     val shell = Shell(display).apply {
-//        layout = FillLayout()
         layout = GridLayout(2, false)
-//        layout = FormLayout()
     }
 
-    val stackLayout = StackLayout()
-
     val mainContainer = Composite(shell, SWT.NONE).apply {
-        layout = stackLayout
         background = blue(display)
         layoutData = GridData().apply {
             widthHint = ACTUAL_WIDTH
@@ -81,12 +78,13 @@ fun createWindows(memory: IMemory, keyProvider: IKeyProvider): SwtContext {
 //            exclude = ! showText
 //        }
     }
-    (mainContainer.layout as StackLayout).topControl = mainWindow
 
     //
     // Graphic screen
     //
-    val hiResWindow = HiResWindow(mainContainer)
+    val hiResWindow = HiResWindow(mainContainer).apply {
+        bounds = Rectangle(0, 0, ACTUAL_WIDTH, ACTUAL_HEIGHT)
+    }
 
     //
     // Right panel
@@ -136,7 +134,7 @@ fun createWindows(memory: IMemory, keyProvider: IKeyProvider): SwtContext {
     shell.pack()
     shell.setSize(mainWindow.bounds.width + folder.bounds.width, parentHeight)
 //    rightWindow.scrolledComposite.setMinSize(mainWindow.bounds.width + 700, parentHeight)
-    return SwtContext(display, shell, mainWindow, hiResWindow, stackLayout)
+    return SwtContext(display, shell, mainWindow, hiResWindow)//, stackLayout)
 }
 
 fun createScrollableByteBuffer(parent: Composite): ScrolledComposite {

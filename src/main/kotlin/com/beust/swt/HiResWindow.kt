@@ -37,13 +37,8 @@ class HiResWindow(parent: Composite, style: Int = SWT.NONE): Composite(parent, s
         img = Image(display, ACTUAL_WIDTH, ACTUAL_HEIGHT)
         gc = GC(img)
         val lab = Label(this, SWT.NONE).apply {
-            text = "Big button"
             background = lightBlue(display)
             image = img
-            layoutData = GridData().apply {
-                widthHint = ACTUAL_WIDTH
-                heightHint = ACTUAL_HEIGHT
-            }
         }
         Timer().scheduleAtFixedRate(object: TimerTask() {
             override fun run() {
