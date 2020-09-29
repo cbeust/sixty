@@ -15,7 +15,7 @@ import org.eclipse.swt.layout.GridLayout
 import org.eclipse.swt.widgets.Composite
 import org.eclipse.swt.widgets.Label
 
-class MainWindow(parent: Composite): Composite(parent, SWT.NONE), ITextScreen {
+class TextWindow(parent: Composite): Composite(parent, SWT.NONE), ITextScreen {
     private val textFont: Font = font(shell, "Arial", 9, SWT.BOLD)
     private val labels = arrayListOf<Label>()
 
@@ -24,7 +24,7 @@ class MainWindow(parent: Composite): Composite(parent, SWT.NONE), ITextScreen {
             horizontalSpacing = 0
             verticalSpacing = 0
         }
-        background = display.getSystemColor(SWT.COLOR_BLACK)
+        background = black2(display)
         repeat(ITextScreen.HEIGHT) {
             repeat(ITextScreen.WIDTH) { x ->
                 labels.add(Label(this, SWT.NONE).apply {

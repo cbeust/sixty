@@ -3,6 +3,7 @@ package com.beust.swt
 import com.beust.app.BitPattern
 import com.beust.app.SColor
 import com.beust.sixty.IMemory
+import com.beust.sixty.hh
 import org.eclipse.swt.SWT
 import org.eclipse.swt.graphics.GC
 import org.eclipse.swt.graphics.Image
@@ -12,7 +13,9 @@ import org.eclipse.swt.widgets.Composite
 import org.eclipse.swt.widgets.Label
 import java.util.*
 
-class HiResWindow(parent: Composite, style: Int = SWT.NONE): Composite(parent, style) {
+class HiResWindow(val startLocation: Int, parent: Composite, style: Int = SWT.NONE): Composite(parent, style) {
+    override fun toString() = "HiRes $${startLocation.hh()}"
+
     /**
      * 2000-2027
      */
@@ -74,7 +77,7 @@ class HiResWindow(parent: Composite, style: Int = SWT.NONE): Composite(parent, s
         // Calculate x,y
         //
         val evenLocation = if (even) location else location - 1
-        val loc = evenLocation - 0x2000
+        val loc = evenLocation - startLocation
         var closest = Integer.MAX_VALUE
         var key = -1
         lineMap.keys.forEach { k ->

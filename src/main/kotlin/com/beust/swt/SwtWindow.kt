@@ -1,14 +1,9 @@
 package com.beust.swt
 
-import com.beust.app.app.ITextScreen
 import com.beust.sixty.IKeyProvider
 import com.beust.sixty.IMemory
-import com.beust.sixty.log
 import org.eclipse.swt.SWT
 import org.eclipse.swt.custom.ScrolledComposite
-import org.eclipse.swt.custom.StackLayout
-import org.eclipse.swt.events.KeyAdapter
-import org.eclipse.swt.events.KeyEvent
 import org.eclipse.swt.graphics.Point
 import org.eclipse.swt.graphics.Rectangle
 import org.eclipse.swt.layout.*
@@ -33,7 +28,8 @@ interface IGraphics {
     fun run()
 }
 
-class SwtContext(val display: Display, val shell: Shell, val textScreen: MainWindow, val hiResWindow: HiResWindow)
+class SwtContext(val display: Display, val shell: Shell, val textScreen: TextWindow, val hiResWindow: HiResWindow,
+        val hiRes2Window: HiResWindow)
     : IGraphics
 {
     override fun run() {
@@ -62,9 +58,16 @@ fun createWindows(memory: IMemory, keyProvider: IKeyProvider): SwtContext {
             heightHint = ACTUAL_HEIGHT
         }
         display.addFilter(SWT.KeyDown) { e ->
-            val av = if (Character.isAlphabetic(e.keyCode)) e.character.toUpperCase().toInt()
-                else e.keyCode
-            keyProvider.keyPressed(memory, av)
+            if (e.keyCode != 0xd) {
+                val av = if (Character.isAlphabetic(e.keyCode)) e.character.toUpperCase().toInt()
+                    else e.keyCode
+                keyProvider.keyPressed(memory, av)
+            }
+        }
+        display.addFilter(SWT.Traverse) { e ->
+            if (e.keyCode == 0xd && e.widget is Shell) {
+                keyProvider.keyPressed(memory, e.keyCode)
+            }
         }
     }
 
@@ -72,19 +75,20 @@ fun createWindows(memory: IMemory, keyProvider: IKeyProvider): SwtContext {
     // Main screen of the emulator
     //
 
-    val mainWindow = MainWindow(mainContainer).apply {
-//        layoutData = GridData().apply {
-//            visible = showText
-//            exclude = ! showText
-//        }
+    val text1Window = TextWindow(mainContainer).apply {
+        bounds = Rectangle(0, 0, ACTUAL_WIDTH, ACTUAL_HEIGHT)
     }
 
     //
-    // Graphic screen
+    // Graphic screens
     //
-    val hiResWindow = HiResWindow(mainContainer).apply {
+    val hiResWindow = HiResWindow(0x2000, mainContainer).apply {
         bounds = Rectangle(0, 0, ACTUAL_WIDTH, ACTUAL_HEIGHT)
     }
+    val hiRes2Window = HiResWindow(0x4000, mainContainer).apply {
+        bounds = Rectangle(0, 0, ACTUAL_WIDTH, ACTUAL_HEIGHT)
+    }
+    text1Window.moveAbove(null)
 
     //
     // Right panel
@@ -97,8 +101,8 @@ fun createWindows(memory: IMemory, keyProvider: IKeyProvider): SwtContext {
 //        }
 //    }
 //    createScrollableByteBuffer(shell)
-    mainWindow.pack()
-    val parentHeight = mainWindow.bounds.height + 120
+    text1Window.pack()
+    val parentHeight = text1Window.bounds.height + 120
 //
 //    createScrollableByteBuffer(shell, parentHeight).apply {
 ////        layoutData = GridData(GridData.FILL_BOTH, GridData.FILL_BOTH, true, true)
@@ -132,9 +136,9 @@ fun createWindows(memory: IMemory, keyProvider: IKeyProvider): SwtContext {
 //    mainWindow.pack()
 //    folder.pack()
     shell.pack()
-    shell.setSize(mainWindow.bounds.width + folder.bounds.width, parentHeight)
+    shell.setSize(text1Window.bounds.width + folder.bounds.width, parentHeight)
 //    rightWindow.scrolledComposite.setMinSize(mainWindow.bounds.width + 700, parentHeight)
-    return SwtContext(display, shell, mainWindow, hiResWindow)//, stackLayout)
+    return SwtContext(display, shell, text1Window, hiResWindow, hiRes2Window)//, stackLayout)
 }
 
 fun createScrollableByteBuffer(parent: Composite): ScrolledComposite {

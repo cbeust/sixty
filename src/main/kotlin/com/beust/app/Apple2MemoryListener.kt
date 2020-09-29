@@ -7,7 +7,7 @@ import com.beust.sixty.MemoryListener
 import com.beust.swt.HiResWindow
 
 class Apple2MemoryListener(private val memory: Apple2Memory,
-        private val textPanel: TextPanel, private val hiresScreen: HiResWindow):
+        private val textPanel: TextPanel, private val hiresScreen: HiResWindow, private val hires2Screen: HiResWindow):
         MemoryListener() {
     override fun isInRange(address: Int): Boolean {
         return address in 0x400..0x800 || address in 0x2000..0x6000
@@ -21,7 +21,10 @@ class Apple2MemoryListener(private val memory: Apple2Memory,
             if (! memory.page2 && memory.hires) {
                 hiresScreen.drawMemoryLocation(memory, location)
             }
-//            logLines.add("Writing in graphics")
+        } else if (location in 0x4000..0x6000) {
+            if (memory.page2 && memory.hires) {
+                hires2Screen.drawMemoryLocation(memory, location)
+            }
         }
     }
 }

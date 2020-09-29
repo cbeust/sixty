@@ -88,20 +88,35 @@ fun main() {
             val a2Memory = Apple2Memory()
             swtContext = createWindows(a2Memory, keyProvider)
 
-            fun show(b: Boolean, control: Control) {
-                if (b) {
-                    with(control) {
-                        display.asyncExec {
-                            swtContext.show(this)
-                            parent.layout()
-                            setFocus()
-                        }
+            fun show(control: Control) {
+                with(control) {
+                    display.asyncExec {
+                        println("NOW SHOWING $this")
+                        swtContext.show(this)
                     }
                 }
             }
 
-            UiState.mainScreenHires.addListener { _, new -> show(new, swtContext.hiResWindow) }
-            UiState.mainScreenText.addListener { _, new -> show(new, swtContext.textScreen) }
+            UiState.mainScreenHires.addListener { _, new ->
+                if (UiState.mainScreenPage2.value) show(swtContext.hiRes2Window)
+                    else show(swtContext.hiResWindow)
+            }
+            UiState.mainScreenPage2.addListener { _, new ->
+                if (UiState.mainScreenText.value) {
+//                    if (UiState.mainScreenPage2.value) show(new, textScreen2)
+//                        else
+                        show(swtContext.textScreen)
+                } else {
+                    println("Page2 changed to $new, its value is " + UiState.mainScreenPage2.value)
+                    if (UiState.mainScreenPage2.value) show(swtContext.hiRes2Window)
+                       else show(swtContext.hiResWindow)
+                }
+            }
+            UiState.mainScreenText.addListener { _, new ->
+//                if (UiState.mainScreenPage2) show(new, textScreen2)
+//                else
+                if (new) show(swtContext.textScreen)
+            }
             UiState.mainScreenMixed.addListener { _, new ->
                 swtContext.hiResWindow.let { w ->
                     w.display.asyncExec {
@@ -115,11 +130,12 @@ fun main() {
                 }
             }
 
-            val textPanel =  TextPanel(swtContext.textScreen)
+            val textPanel1 =  TextPanel(0x400, swtContext.textScreen)
 
             val computer = Computer.create {
                 memory = a2Memory
-                memoryListeners.add(Apple2MemoryListener(a2Memory, textPanel, swtContext.hiResWindow))
+                memoryListeners.add(Apple2MemoryListener(a2Memory, textPanel1, swtContext.hiResWindow,
+                    swtContext.hiRes2Window))
                 memoryListeners.add(dc)
             }.build()
             val start = a2Memory.word(0xfffc) // memory[0xfffc].or(memory[0xfffd].shl(8))

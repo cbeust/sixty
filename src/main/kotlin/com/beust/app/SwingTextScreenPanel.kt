@@ -2,20 +2,18 @@ package com.beust.app
 
 import com.beust.app.app.ITextScreen
 
-class LineCalculator {
+class LineCalculator(val start: Int) {
     private val lineMap = hashMapOf<Int, Int>()
 
     init {
         var line = 0
         listOf(0, 0x28, 0x50).forEach { m ->
             repeat(8) {
-                val address = 0x400 + it * 0x80 + m
+                val address = start + it * 0x80 + m
 //                println("Address: " + address.hh() + " line: $line")
                 lineMap[address] = line++
             }
         }
-        val l = lineFor(0x7d1)
-        ""
     }
 
     private fun lineFor(location: Int): Pair<Int, Int>? {

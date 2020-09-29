@@ -22,6 +22,7 @@ fun yellow(d: Display) = d.getSystemColor(SWT.COLOR_YELLOW)
 fun magenta(d: Display) = d.getSystemColor(SWT.COLOR_MAGENTA)
 
 // Need to be disposed
+fun black2(d: Display) = Color(d, 0x60, 0x60, 0x60)
 fun orange(d: Display) = Color(d, 0xff, 0x45, 0x00)
 fun lightBlue(d: Display) = Color(d, 0x99, 0xcc, 0xff)
 fun lightYellow(d: Display) = Color(d, 0xff, 0xff, 0x99)
