@@ -12,7 +12,6 @@ import org.eclipse.swt.layout.GridLayout
 import org.eclipse.swt.widgets.Composite
 
 class ByteBufferWindow(parent: Composite) : Composite(parent, SWT.NONE) {
-    private var diskFile = UiState.currentDiskFile.value
     private var disk: IDisk? = null
     private var woz: Woz? = null
     private val rowSize = 16
@@ -72,7 +71,7 @@ class ByteBufferWindow(parent: Composite) : Composite(parent, SWT.NONE) {
 //        })
         UiState.currentDiskFile.addListener { _, new ->
             if (new != null) {
-                disk = WozDisk(new)
+                disk = IDisk.create(new)
                 UiState.currentTrack.value = 0
                 updateBuffer()
             }
@@ -88,30 +87,33 @@ class ByteBufferWindow(parent: Composite) : Composite(parent, SWT.NONE) {
 
     private fun updateBuffer() {
         currentBytes.clear()
-        diskFile?.let { df ->
-            Woz(df.readBytes()).let { woz ->
-                val track = UiState.currentTrack.value
-                val offset = woz.tmap.offsetFor(track)
-                var position = 0
-                if (offset != -1) {
-                    val bitStream = woz.bitStreamForTrack(track)
-                    var bitsToGo = woz.trks.trks[offset].bitCount
+        UiState.currentDiskFile?.let { df ->
+            val disk = IDisk.create(df.value!!)
+            val track = UiState.currentTrack.value
+            repeat (track * 4) {
+                disk.incTrack()
+            }
+//            Woz(disk.readBytes()).let { woz ->
+//                val track = UiState.currentTrack.value
+//                val offset = woz.tmap.offsetFor(track)
+//                var position = 0
+//                if (offset != -1) {
+//                    val bitStream = woz.bitStreamForTrack(track)
+//                    var bitsToGo = woz.trks.trks[offset].bitCount
 
                     fun nextByte(): Int {
                         var byte = 0
                         when(UiState.byteAlgorithn.value) {
                             ByteAlgorithm.SHIFTED -> {
                                 while (byte and 0x80 == 0) {
-                                    val (p, bit) = bitStream.next(position)
+                                    val bit = disk.nextBit()
                                     byte = byte.shl(1).or(bit)
-                                    position = p
                                 }
                             }
                             else -> {
                                 repeat(8) {
-                                    val (p, bit) = bitStream.next(position)
+                                    val bit = disk.nextBit()
                                     byte = byte.shl(1).or(bit)
-                                    position = p
                                 }
                             }
                         }
@@ -127,7 +129,7 @@ class ByteBufferWindow(parent: Composite) : Composite(parent, SWT.NONE) {
                     var addressEnd = -1
                     var dataStart = -1
                     var dataEnd = -1
-                    while (bitsToGo >= 0) {
+                    repeat(6000) {
                         offsetText.append("\$" + String.format("%04X", row) + "\n")
                         repeat(rowSize) {
                             val nb = nextByte()
@@ -149,7 +151,6 @@ class ByteBufferWindow(parent: Composite) : Composite(parent, SWT.NONE) {
                             }
                             byteText.append(nb.h() + " ")
                             currentBytes.add(nb)
-                            bitsToGo -= 8
                         }
                         byteText.append("\n")
                         row += rowSize
@@ -157,10 +158,10 @@ class ByteBufferWindow(parent: Composite) : Composite(parent, SWT.NONE) {
                     offsets.text = offsetText.toString()
                     bytes.text = byteText.toString()
                     bytes.styleRanges = ranges.toTypedArray()
-                } else {
-                    println("NO OFFSET HERE")
-                }
-            }
+//                } else {
+//                    println("NO OFFSET HERE")
+//                }
+//            }
         }
     }
 }

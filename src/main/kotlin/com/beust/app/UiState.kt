@@ -24,14 +24,14 @@ class Obs<T>(val name: String, val def: T) {
 enum class ByteAlgorithm { RAW, SHIFTED, DISK_CONTENT }
 
 object UiState {
-    var currentDiskFile: Obs<File?> = Obs("Current disk", null)
-    var currentTrack = Obs("Current track", 0)
+    val currentDiskFile: Obs<File?> = Obs("Current disk", null)
+    val currentTrack = Obs("Current track", 0)
 
-    var byteAlgorithn = Obs("Byte algorithm", ByteAlgorithm.SHIFTED)
+    val byteAlgorithn = Obs("Byte algorithm", ByteAlgorithm.SHIFTED)
     val currentBytes: Obs<List<Int>> = Obs("Current bytes", emptyList())
 
-    var mainScreenText = Obs("text", true)
-    var mainScreenMixed = Obs("mixed", false)
-    var mainScreenHires = Obs("hires", false)
-    var mainScreenPage2 = Obs("page2", false)
+    val mainScreenText = Obs("text", true)
+    val mainScreenMixed = Obs("mixed", false)
+    val mainScreenHires = Obs("hires", false)
+    val mainScreenPage2 = Obs("page2", false)
 }

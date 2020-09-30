@@ -115,11 +115,11 @@ class DiskWindow(parent: Composite, parentHeight: Int): Composite(parent, NONE) 
                 println("Button pressed!")
                 val disk = FileDialog(shell).apply {
                     text = "Pick a disk file"
-                    filterExtensions = arrayOf("*.dsk", "*.woz")
+                    filterExtensions = arrayOf("*.dsk;*.woz")
                     filterPath = "d:\\pd\\Apple disks"
                 }.open()
                 if (disk != null) {
-                    UiState.currentDiskFile = Obs("Disk", File(disk))
+                    UiState.currentDiskFile.value = File(disk)
                 }
             }
         }
