@@ -5,6 +5,15 @@
 - saving to disk
 - second drive, other controllers $C500
 - shift/control
+- why c600g doesn't work
+
+
+C050 Graphics 49232
+C051 Text 49233
+C052 Full Screen 49234
+C053 Mixed Screen 49235
+C054 Page 1 49236
+C055 Page 2 49237
 
 
 
