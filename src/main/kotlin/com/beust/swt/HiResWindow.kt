@@ -36,9 +36,10 @@ class HiResWindow(val startLocation: Int, parent: Composite, style: Int = SWT.NO
 
     init {
         layout = GridLayout()
-        background = white(display)
         img = Image(display, ACTUAL_WIDTH, ACTUAL_HEIGHT)
         gc = GC(img)
+        gc.background = red(display)
+        gc.drawLine(0, 0, 100, 100)
         val lab = Label(this, SWT.NONE).apply {
             background = lightBlue(display)
             image = img

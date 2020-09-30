@@ -54,8 +54,8 @@ fun createWindows(memory: IMemory, keyProvider: IKeyProvider): SwtContext {
     val mainContainer = Composite(shell, SWT.NONE).apply {
         background = blue(display)
         layoutData = GridData().apply {
-            widthHint = ACTUAL_WIDTH
-            heightHint = ACTUAL_HEIGHT
+            widthHint = ACTUAL_WIDTH + 200
+            heightHint = ACTUAL_HEIGHT + 200
         }
         display.addFilter(SWT.KeyDown) { e ->
             if (e.keyCode != 0xd) {
@@ -67,6 +67,7 @@ fun createWindows(memory: IMemory, keyProvider: IKeyProvider): SwtContext {
         display.addFilter(SWT.Traverse) { e ->
             if (e.keyCode == 0xd && e.widget is Shell) {
                 keyProvider.keyPressed(memory, e.keyCode)
+                e.doit = false
             }
         }
     }
@@ -83,12 +84,14 @@ fun createWindows(memory: IMemory, keyProvider: IKeyProvider): SwtContext {
     // Graphic screens
     //
     val hiResWindow = HiResWindow(0x2000, mainContainer).apply {
+        background = yellow(display)
         bounds = Rectangle(0, 0, ACTUAL_WIDTH, ACTUAL_HEIGHT)
     }
     val hiRes2Window = HiResWindow(0x4000, mainContainer).apply {
+        background = red(display)
         bounds = Rectangle(0, 0, ACTUAL_WIDTH, ACTUAL_HEIGHT)
     }
-    text1Window.moveAbove(null)
+    hiRes2Window.moveAbove(null)
 
     //
     // Right panel

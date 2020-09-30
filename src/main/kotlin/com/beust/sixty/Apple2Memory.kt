@@ -13,7 +13,7 @@ class Apple2Memory(val size: Int? = null): IMemory {
     var init = true
 
     var lastMem: String? = null
-    private var store80On = false
+    var store80On = false
     private var readAux = false
     private var writeAux = false
     private var textSet = true
