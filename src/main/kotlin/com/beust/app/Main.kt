@@ -28,7 +28,7 @@ else if (disk == 1)
 else if (disk == 2)
     File("src/test/resources/audit.dsk")
 else
-    File("d:\\pd\\Apple disks\\Sherwood Forest.dsk")
+    File("disks/Sherwood_Forest.dsk")
 //    DskDisk(File("d:\\pd\\Apple disks\\Ultima I - The Beginning.woz").inputStream())
 
 //val DISK2 = WozDisk(
