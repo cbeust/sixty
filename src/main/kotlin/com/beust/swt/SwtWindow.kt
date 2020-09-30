@@ -54,8 +54,8 @@ fun createWindows(memory: IMemory, keyProvider: IKeyProvider): SwtContext {
     val mainContainer = Composite(shell, SWT.NONE).apply {
         background = blue(display)
         layoutData = GridData().apply {
-            widthHint = ACTUAL_WIDTH + 200
-            heightHint = ACTUAL_HEIGHT + 200
+            widthHint = ACTUAL_WIDTH + 20
+            heightHint = ACTUAL_HEIGHT + 20
         }
         display.addFilter(SWT.KeyDown) { e ->
             if (e.keyCode != 0xd) {

@@ -6,7 +6,7 @@ import java.io.File
 import java.io.InputStream
 
 fun main() {
-    DskDisk("audit.dsk", File("src/test/resources/audit.dsk").inputStream())
+    DskDisk("Sherwood.dsk", File("d:/pd/Apple Disks/Sherwood Forest.dsk").inputStream())
 }
 
 class DskDisk(override val name: String, ins: InputStream): IDisk {
