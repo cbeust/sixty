@@ -9,6 +9,7 @@ import org.eclipse.swt.widgets.Control
 import java.io.File
 import java.nio.file.Paths
 
+val RUN = true
 var DEBUG = false
 // 6164: test failing LC writing
 // check failing at 0x64f9
@@ -16,20 +17,27 @@ var DEBUG = false
 val BREAKPOINT: Int? = null//0xc2de // 0xc2db
 // val BREAKPOINT: Int? = 0x6036 // test break
 
-val disk = 0
-
 val DISK_DOS_3_3 = File("D:\\pd\\Apple disks\\Apple DOS 3.3.dsk") // File("src/test/resources/Apple DOS 3.3.dsk")
 val WOZ_DOS_3_3 = File("src/test/resources/woz2/DOS 3.3 System Master.woz")
 
-val DISK = if (disk == 0)
-    WOZ_DOS_3_3
-else if (disk == 1)
-    DISK_DOS_3_3
-else if (disk == 2)
-    File("src/test/resources/audit.dsk")
-else
-    File("disks/Sherwood_Forest.dsk")
-//    DskDisk(File("d:\\pd\\Apple disks\\Ultima I - The Beginning.woz").inputStream())
+val disks = listOf(
+        DISK_DOS_3_3, WOZ_DOS_3_3, File("src/test/resources/audit.dsk"),
+        File("disks/Blade_of_Blackpoole_A.dsk"), // 3
+        File("disks/Sherwood_Forest.dsk") ,       // 4
+        File("d:/pd/Apple disks/Ultima I - The Beginning.woz") // 5
+)
+
+val DISK = disks[5]
+//val DISK = if (disk == 0)
+//    WOZ_DOS_3_3
+//else if (disk == 1)
+//    DISK_DOS_3_3
+//else if (disk == 2)
+//    disks[2]
+//else
+////    File("disks/Sherwood_Forest.dsk")
+//    disks[3]
+////    DskDisk(File("d:\\pd\\Apple disks\\Ultima I - The Beginning.woz").inputStream())
 
 //val DISK2 = WozDisk(
 //        File("d:\\pd\\Apple Disks\\woz2\\First Math Adventures - Understanding word problems.woz").inputStream())
@@ -101,7 +109,7 @@ fun main() {
 
             fun show(control: Control, old: Control?) {
                 with(control) {
-                    display.syncExec {
+                    display.asyncExec {
                         maybeResize(control)
                         swtContext.show(this)
                     }
@@ -145,7 +153,7 @@ fun main() {
             }.build()
             val start = a2Memory.word(0xfffc) // memory[0xfffc].or(memory[0xfffd].shl(8))
             computer.cpu.PC = start
-//            loadPic(a2Memory)
+            loadPic(a2Memory)
 
             pulseManager.addListener(computer)
             Thread {
@@ -162,10 +170,11 @@ fun main() {
         }
     }
 
-    Thread {
-        pulseManager.run()
-    }.start()
-
+    if (RUN) {
+        Thread {
+            pulseManager.run()
+        }.start()
+    }
     swtContext?.run()
     fw.stop = true
 }
