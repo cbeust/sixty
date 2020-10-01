@@ -5,13 +5,11 @@ import com.beust.app.SColor
 import com.beust.sixty.IMemory
 import com.beust.sixty.hh
 import org.eclipse.swt.SWT
-import org.eclipse.swt.graphics.GC
-import org.eclipse.swt.graphics.Image
-import org.eclipse.swt.layout.GridData
+import org.eclipse.swt.graphics.*
+import org.eclipse.swt.layout.FillLayout
 import org.eclipse.swt.layout.GridLayout
+import org.eclipse.swt.widgets.Canvas
 import org.eclipse.swt.widgets.Composite
-import org.eclipse.swt.widgets.Label
-import java.util.*
 
 class HiResWindow(val startLocation: Int, parent: Composite, style: Int = SWT.NONE): Composite(parent, style) {
     override fun toString() = "HiRes $${startLocation.hh()}"
@@ -26,29 +24,77 @@ class HiResWindow(val startLocation: Int, parent: Composite, style: Int = SWT.NO
             0x50, 0xd0, 0x150, 0x1d0, 0x250, 0x2d0, 0x350, 0x3d0)
     private val lineMap = hashMapOf<Int, Int>()
 //    private val board: Board
-    private val img: Image
-    private val gc: GC
+//    private val img: Image
+//    private val gc: GC
+    private val canvas: Canvas
+    private val imageData: ImageData
 
     private val content = Array(WIDTH * HEIGHT) { SColor.BLACK }
     private fun index(x: Int, y: Int) = y * WIDTH + x
     private val blockWidth = WIDTH_FACTOR
     private val blockHeight = HEIGHT_FACTOR
+    // https://mrob.com/pub/xapple2/colors.html
+    private val PALETTE_DATA = PaletteData(*arrayOf(
+            RGB(0, 0, 0), // black
+            RGB(0xff, 0xff, 0xff), // white
+            RGB(20, 245, 60), // green
+            RGB(255, 106, 60), // orange
+            RGB(255, 68, 253), // magenta
+            RGB(20, 207, 254) // blue
+    ))
+
+    private fun drawSquare(imageData: ImageData, xx: Int, yy: Int, color: Int) {
+        val x = xx * WIDTH_FACTOR
+        val y = yy * HEIGHT_FACTOR
+        repeat(WIDTH_FACTOR) { w ->
+            repeat(HEIGHT_FACTOR) { h ->
+                imageData.setPixel(x + w, y + h, color)
+            }
+        }
+    }
+
+    private fun newImageData() = ImageData(ACTUAL_WIDTH, ACTUAL_HEIGHT, 4, PALETTE_DATA)
+
+    private fun newImage(): Image {
+        val imageData = newImageData()
+        drawSquare(imageData, 0, 0, 4)
+        return Image(display, imageData)
+    }
 
     init {
-        layout = GridLayout()
-        img = Image(display, ACTUAL_WIDTH, ACTUAL_HEIGHT)
-        gc = GC(img)
-        gc.background = red(display)
-        gc.drawLine(0, 0, 100, 100)
-        val lab = Label(this, SWT.NONE).apply {
-            background = lightBlue(display)
-            image = img
-        }
-        Timer().scheduleAtFixedRate(object: TimerTask() {
-            override fun run() {
-                display.asyncExec { lab.redraw() }
+        layout = FillLayout()
+        imageData = newImageData()
+        canvas = Canvas(this, SWT.NO_BACKGROUND).apply {
+            addPaintListener { e ->
+                val image = Image(display, imageData)
+                GC(image).apply {
+                    background = red(display)
+//                    fillRectangle(x, 10, 20, 20)
+                    dispose()
+                }
+                e.gc.apply {
+                    drawImage(image, 0, 0)
+                    image.dispose()
+                }
             }
-        }, 0, 100)
+        }    // Set up the timer for the animation
+
+        // Set up the timer for the animationval
+        val TIMER_INTERVAL = 10
+        val runnable: Runnable = object : Runnable {
+            override fun run() {
+                canvas.redraw()
+                display.timerExec(TIMER_INTERVAL, this)
+            }
+        }
+        display.timerExec(TIMER_INTERVAL, runnable)
+
+
+//        Timer().scheduleAtFixedRate(object: TimerTask() {
+//            override fun run() {
+//                display.asyncExec { lab.redraw() }
+//            }
+//        }, 0, 500)
 
         var l = 0
         interleaving.forEach { il ->
@@ -100,10 +146,14 @@ class HiResWindow(val startLocation: Int, parent: Composite, style: Int = SWT.NO
         fun drawPixel(x: Int, y: Int, color: SColor) {
             if (x < WIDTH) {
                 content[index(x, y)] = color
-                display.syncExec {
-                    gc.background = color.toSwtColor(display)
-                    gc.fillRectangle(x * WIDTH_FACTOR, y * HEIGHT_FACTOR, blockWidth, blockHeight)
-                }
+                drawSquare(imageData, x, y, color.ordinal)
+//                display.syncExec {
+//                    println("Drawing pixel at " + (x * WIDTH_FACTOR) + "," + (x * WIDTH_FACTOR) + " color: " + color.ordinal)
+//                    img.imageData.setPixel(x * WIDTH_FACTOR, y * HEIGHT_FACTOR, color.ordinal)
+//                    label.redraw()
+//                    gc.background = color.toSwtColor(display)
+//                    gc.fillRectangle(x * WIDTH_FACTOR, y * HEIGHT_FACTOR, blockWidth, blockHeight)
+//                }
             }
         }
 
