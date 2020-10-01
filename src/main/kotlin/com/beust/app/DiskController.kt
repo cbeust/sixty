@@ -4,7 +4,6 @@ import com.beust.sixty.*
 import org.slf4j.LoggerFactory
 
 class DiskController(val slot: Int = 6): IPulse, MemoryListener() {
-    private val log = LoggerFactory.getLogger("Disk")
     private val slot16 = slot * 16
     private var latch: Int = 0
 
@@ -19,7 +18,7 @@ class DiskController(val slot: Int = 6): IPulse, MemoryListener() {
 
     override fun onPulse(manager: PulseManager): PulseResult {
         // Faster way for unprotected disks
-        disk?.let {
+        disk()?.let {
             if (latch.and(0x80) == 0) {
 //                latch = latch.shl(1).or(it.nextBit())
                 latch = it.nextByte()
@@ -42,10 +41,12 @@ class DiskController(val slot: Int = 6): IPulse, MemoryListener() {
         return PulseResult()
     }
 
-    var disk: IDisk? = null
+    private var disk1: IDisk? = null
+    private var disk2: IDisk? = null
 
-    fun loadDisk(disk: IDisk) {
-        this.disk = disk
+    private fun disk() = if (drive1) disk1 else disk2
+    fun loadDisk(disk: IDisk, drive: Int) {
+        if (drive == 1) disk1 = disk else disk2 = disk
     }
 
     override fun onRead(i: Int, value: Int): Int? {
@@ -64,26 +65,26 @@ class DiskController(val slot: Int = 6): IPulse, MemoryListener() {
                    0xc087 -> 3 to true
                     else -> ERROR("SHOULD NEVER HAPPEN")
                 }
-                disk?.let { magnet(it, phase, state) }
+                disk()?.let { magnet(it, phase, state) }
                 value
             }
             0xc088 -> {
-                log.debug("Turning motor off")
+                logDisk("Turning motor off")
                 motorOn = false
                 value
             }
             0xc089 -> {
-                log.debug("Turning motor on")
+                logDisk("Turning motor on")
                 motorOn = true
                 value
             }
             0xc08a -> {
-                log.debug("Turning on drive 1")
+                logDisk("Turning on drive 1")
                 drive1 = true
                 value
             }
             0xc08b -> {
-                log.debug("Turning on drive 2")
+                logDisk("Turning on drive 2")
                 drive2 = true
                 value
             }
