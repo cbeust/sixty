@@ -7,7 +7,7 @@ import org.testng.annotations.Test
 
 @Test
 class TextScreenTest {
-    private val calculator = LineCalculator()
+    private val calculator = LineCalculator(0x400)
     private val addresses = listOf(
             0x00, 0x80, 0x100, 0x180, 0x200, 0x280, 0x300, 0x380,
             0x28, 0xa8, 0x128, 0x1a8, 0x228, 0x2a8, 0x328, 0x3a8,
