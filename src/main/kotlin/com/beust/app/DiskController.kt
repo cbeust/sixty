@@ -9,7 +9,6 @@ class DiskController(val slot: Int = 6): IPulse, MemoryListener() {
 
     private var motorOn = false
     private var drive1 = true
-    private var drive2 = false
 
     private fun c(address: Int) = address + slot16
     override fun isInRange(address:Int) = address in (c(0xc080)..c(0xc08c))
@@ -39,6 +38,12 @@ class DiskController(val slot: Int = 6): IPulse, MemoryListener() {
 //        }
 ////        println("@@@   latch: ${latch.h()}")
         return PulseResult()
+    }
+
+    init {
+        UiState.currentDiskFile.addListener { _, new ->
+            if (new != null) loadDisk(IDisk.create(new), if (drive1) 1 else 2)
+        }
     }
 
     private var disk1: IDisk? = null
@@ -85,7 +90,7 @@ class DiskController(val slot: Int = 6): IPulse, MemoryListener() {
             }
             0xc08b -> {
                 logDisk("Turning on drive 2")
-                drive2 = true
+                drive1 = false
                 value
             }
             0xc08c -> {
