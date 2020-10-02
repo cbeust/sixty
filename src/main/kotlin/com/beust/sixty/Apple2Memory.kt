@@ -547,7 +547,7 @@ class Apple2Memory(val size: Int? = null): IMemory {
 //        }.start()
 
         // When restarting, no need to move the head 0x50 tracks
-        this[0xc63c] = 4
+//        this[0xc63c] = 4
         init = false
     }
 
