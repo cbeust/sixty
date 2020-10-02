@@ -16,10 +16,18 @@ import org.eclipse.swt.widgets.Composite
 import org.eclipse.swt.widgets.Label
 
 class TextWindow(parent: Composite): Composite(parent, SWT.NONE), ITextScreen {
-    private val textFont: Font = font(shell, "Arial", 9, SWT.BOLD)
+
+    private val textFont: Font
     private val labels = arrayListOf<Label>()
 
     init {
+        val isFontLoaded = shell.display.loadFont("fonts/PrintChar21.ttf");
+        textFont = if (isFontLoaded) {
+            Font(shell.display, "Print Char 21", 12, SWT.NORMAL);
+        } else {
+            font(shell, "Arial", 9, SWT.BOLD)
+        }
+
         layout = GridLayout(40, true).apply {
             horizontalSpacing = 0
             verticalSpacing = 0
