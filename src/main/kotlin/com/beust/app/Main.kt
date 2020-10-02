@@ -27,7 +27,7 @@ val disks = listOf(
         File("d:/pd/Apple disks/Ultima I - The Beginning.woz") // 5
 )
 
-val DISK = disks[5]
+val DISK = disks[4]
 //val DISK = if (disk == 0)
 //    WOZ_DOS_3_3
 //else if (disk == 1)
@@ -80,7 +80,7 @@ fun main() {
             val debugAsm = DEBUG
 //            frame()
             val dc = DiskController(6).apply {
-                loadDisk(IDisk.create(DISK))
+                loadDisk(IDisk.create(DISK), 0)
                 UiState.currentDiskFile.value = DISK
             }
             val keyProvider = object: IKeyProvider {
@@ -177,11 +177,12 @@ fun main() {
     }
     swtContext?.run()
     fw.stop = true
+    pulseManager.stop()
 }
 
 private fun loadPic(memory: IMemory) {
-    val bytes = Paths.get("d:", "PD", "Apple disks", "fishgame.pic").toFile().readBytes()
-    (4..0x2004).forEach {
-        memory[0x2000 + it - 4] = bytes[it].toInt()
-    }
+//    val bytes = Paths.get("d:", "PD", "Apple disks", "fishgame.pic").toFile().readBytes()
+//    (4..0x2004).forEach {
+//        memory[0x2000 + it - 4] = bytes[it].toInt()
+//    }
 }
