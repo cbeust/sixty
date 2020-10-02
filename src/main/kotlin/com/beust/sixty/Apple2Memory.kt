@@ -131,12 +131,6 @@ class Apple2Memory(val size: Int? = null): IMemory {
         val rom = IntArray(0x2000) { 0 }
 
         var readBank1 = false
-            set(f) {
-                if (f) {
-                    println("Selecting bank1")
-                }
-                field = f
-            }
         var readBank2 = false
         var writeBank1 = false
         var writeBank2 = false
