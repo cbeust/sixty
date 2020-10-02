@@ -1,5 +1,6 @@
 package com.beust.app
 
+import com.beust.sixty.logUiStatus
 import java.io.File
 
 typealias ObsListener<T> = (T, T) -> Unit
@@ -13,7 +14,7 @@ class Obs<T>(val name: String, val def: T) {
     var value: T
         get() = _value
         set(f) {
-            println("$name=$f")
+            logUiStatus("$name=$f")
             _value = f
             listeners.forEach { it.invoke(_value, f) }
         }
