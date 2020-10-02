@@ -116,14 +116,12 @@ fun main() {
                 }
             }
 
-            UiState.mainScreenHires.addListener { _, new ->
+            UiState.mainScreenHires.addListener { _, _ ->
                 show(swtContext.hiResWindow)
             }
-            UiState.mainScreenPage2.addListener { _, new ->
+            UiState.mainScreenPage2.addListener { _, _ ->
                 if (!a2Memory.store80On) {
                     if (UiState.mainScreenText.value) {
-                        //                    if (UiState.mainScreenPage2.value) show(new, textScreen2)
-                        //                        else
                         show(swtContext.textScreen)
                     } else {
                         show(swtContext.hiResWindow)
@@ -131,8 +129,6 @@ fun main() {
                 }
             }
             UiState.mainScreenText.addListener { _, new ->
-//                if (UiState.mainScreenPage2) show(new, textScreen2)
-//                else
                 if (new) show(swtContext.textScreen)
             }
             UiState.mainScreenMixed.addListener { _, new ->
