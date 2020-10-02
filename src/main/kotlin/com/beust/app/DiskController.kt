@@ -1,7 +1,6 @@
 package com.beust.app
 
 import com.beust.sixty.*
-import org.slf4j.LoggerFactory
 
 class DiskController(val slot: Int = 6): IPulse, MemoryListener() {
     private val slot16 = slot * 16
@@ -110,41 +109,52 @@ class DiskController(val slot: Int = 6): IPulse, MemoryListener() {
     private var phase = 0
 
     private fun magnet(disk: IDisk, index: Int, state: Boolean) {
+        fun logInc(p1: Int, p2: Int) { logDisk("Phase $p1 -> $p2: Incrementing track")}
+        fun logDec(p1: Int, p2: Int) { logDisk("Phase $p1 -> $p2: Decrementing track")}
         if (state) {
             when(phase) {
                 0 -> {
                     if (index == 1) {
                         phase = 1
+                        logInc(0, 1)
                         disk.incTrack()
                     } else if (index == 3) {
                         phase = 3
+                        logDec(0, 3)
+                        logDisk("Phase 0 -> 1, decrementing track")
                         disk.decTrack()
                     }
                 }
                 1 -> {
                     if (index == 2) {
                         phase = 2
+                        logInc(1, 2)
                         disk.incTrack()
                     } else if (index == 0) {
                         phase = 0
+                        logDec(1, 0)
                         disk.decTrack()
                     }
                 }
                 2 -> {
                     if (index == 3) {
                         phase = 3
+                        logInc(2, 3)
                         disk.incTrack()
                     } else if (index == 1) {
                         phase = 1
+                        logDec(2, 1)
                         disk.decTrack()
                     }
                 }
                 3 -> {
                     if (index == 0) {
                         phase = 0
+                        logInc(3, 4)
                         disk.incTrack()
                     } else if (index == 2) {
                         phase = 2
+                        logDec(3, 2)
                         disk.decTrack()
                     }
                 }
