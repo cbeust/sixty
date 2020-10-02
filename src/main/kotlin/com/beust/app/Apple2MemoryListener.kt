@@ -14,21 +14,26 @@ class Apple2MemoryListener(private val memory: Apple2Memory,
     }
 
     override fun onWrite(location: Int, value: Int) {
-        if (location in 0x400..0x7ff) {
-            textPanel.drawMemoryLocation(location, value)
-//            logLines.add("Writing on the text screen: $" + location.hh() + "=$" + value.h())
-        } else if (location in 0x2000..0x4000) {
-            if (memory.hires) {
-                hiresScreen.drawMemoryLocation(memory, location, 0)
+        when (location) {
+            in 0x400..0x7ff -> {
+                textPanel.drawMemoryLocation(location, value)
             }
-        } else if (location in 0x4000..0x6000) {
-            if (memory.hires) {
-                hiresScreen.drawMemoryLocation(memory, location, 1)
+            in 0x2000..0x4000 -> {
+                if (memory.hires) {
+                    hiresScreen.drawMemoryLocation(memory, location, 0)
+                }
             }
-        } else if (location == 0xc054) {
-            hiresScreen.page = 0
-        } else if (location == 0xc055) {
-            hiresScreen.page = 1
+            in 0x4000..0x6000 -> {
+                if (memory.hires) {
+                    hiresScreen.drawMemoryLocation(memory, location, 1)
+                }
+            }
+            0xc054  -> {
+                hiresScreen.page = 0
+            }
+            0xc055 -> {
+                hiresScreen.page = 1
+            }
         }
     }
 }
