@@ -42,6 +42,10 @@ class HiResWindow(private val startLocation: Int, parent: Composite, style: Int 
             RGB(255, 68, 253), // magenta
             RGB(20, 207, 254) // blue
     ))
+    private var stop = false
+    fun stop() {
+        stop = true
+    }
 
     private fun drawSquare(imageData: ImageData, xx: Int, yy: Int, color: Int) {
         val x = xx * WIDTH_FACTOR
@@ -68,14 +72,9 @@ class HiResWindow(private val startLocation: Int, parent: Composite, style: Int 
         layout = FillLayout()
         imageDatas.add(newImageData())
         imageDatas.add(newImageData())
-        canvas = Canvas(this, SWT.NO_BACKGROUND).apply {
+        canvas = Canvas(this, SWT.DOUBLE_BUFFERED).apply {
             addPaintListener { e ->
                 val image = Image(display, imageData())
-                GC(image).apply {
-                    background = red(display)
-//                    fillRectangle(x, 10, 20, 20)
-                    dispose()
-                }
                 e.gc.apply {
                     drawImage(image, 0, 0)
                     image.dispose()
@@ -84,11 +83,13 @@ class HiResWindow(private val startLocation: Int, parent: Composite, style: Int 
         }    // Set up the timer for the animation
 
         // Set up the timer for the animationval
-        val TIMER_INTERVAL = 10
+        val TIMER_INTERVAL = 100
         val runnable: Runnable = object : Runnable {
             override fun run() {
-                canvas.redraw()
-                display.timerExec(TIMER_INTERVAL, this)
+                if (! display.isDisposed) {
+                    canvas.redraw()
+                    if (! stop) display.timerExec(TIMER_INTERVAL, this)
+                }
             }
         }
         display.timerExec(TIMER_INTERVAL, runnable)

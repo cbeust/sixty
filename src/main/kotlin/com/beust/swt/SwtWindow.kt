@@ -37,7 +37,8 @@ class SwtContext(val display: Display, val shell: Shell, val textScreen: TextWin
         while (!shell.isDisposed) {
             if (!display.readAndDispatch()) display.sleep()
         }
-        display.dispose()
+        hiResWindow.stop()
+//        display.dispose()
     }
 
     fun show(c: Control) {

@@ -109,7 +109,7 @@ fun main() {
             }
 
             fun show(control: Control, old: Control?) {
-                with(control) {
+                if (! control.isDisposed) with(control) {
                     display.asyncExec {
                         maybeResize(control)
                         swtContext.show(this)
