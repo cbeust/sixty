@@ -83,8 +83,10 @@ class HiResWindow(val startLocation: Int, parent: Composite, style: Int = SWT.NO
         val TIMER_INTERVAL = 10
         val runnable: Runnable = object : Runnable {
             override fun run() {
-                canvas.redraw()
-                display.timerExec(TIMER_INTERVAL, this)
+                if (! canvas.isDisposed) {
+                    canvas.redraw()
+                    display.timerExec(TIMER_INTERVAL, this)
+                }
             }
         }
         display.timerExec(TIMER_INTERVAL, runnable)

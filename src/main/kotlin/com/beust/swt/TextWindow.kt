@@ -47,7 +47,7 @@ class TextWindow(parent: Composite): Composite(parent, SWT.NONE), ITextScreen {
      */
     override fun drawCharacter(x: Int, y: Int, value: Int) {
         display.asyncExec {
-            if (! shell.isDisposed) {
+            if (shell.display != null) {
 //                GC(this).let { gc ->
 //                    gc.background = red(display)
 //                    gc.drawString("FOO", x * WIDTH_FACTOR, y)
