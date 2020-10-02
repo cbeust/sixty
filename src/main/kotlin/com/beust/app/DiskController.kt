@@ -50,6 +50,7 @@ class DiskController(val slot: Int = 6): IPulse, MemoryListener() {
     private var disk2: IDisk? = null
 
     private fun disk() = if (drive1) disk1 else disk2
+    /** @param drive 0 for drive 1, 1 for drive 2 */
     fun loadDisk(disk: IDisk, drive: Int) {
         if (drive == 1) disk1 = disk else disk2 = disk
     }
