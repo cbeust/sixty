@@ -116,11 +116,16 @@ fun createWindows(memory: IMemory, keyProvider: IKeyProvider): SwtContext {
         }
     }
 
-    val diskWindow = DiskWindow(folder, parentHeight)
-    val tab = TabItem(folder, SWT.NONE).apply {
+    val diskWindow = DiskWindow(folder)
+    TabItem(folder, SWT.NONE).apply {
         text = "DISK"
         control = diskWindow
     }
+    TabItem(folder, SWT.NONE).apply {
+        text = "DEBUGGER"
+        control = DebuggerWindow(folder)
+    }
+
 //    val hiResWindow = HiResWindow(folder)
 //    TabItem(folder, SWT.NONE).apply {
 //        text = "\$2000"

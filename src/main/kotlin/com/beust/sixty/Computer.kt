@@ -3,6 +3,7 @@ package com.beust.sixty
 import com.beust.app.Apple2MemoryListener
 import com.beust.app.BREAKPOINT
 import com.beust.app.DEBUG
+import com.beust.app.UiState
 import org.slf4j.LoggerFactory
 
 interface MemoryInterceptor {
@@ -49,6 +50,12 @@ class ComputerBuilder {
 class Computer(override val memory: IMemory, override val cpu: Cpu, val pcListener: PcListener?): IComputer {
     private val log = LoggerFactory.getLogger("Breakpoint")
     val pc get() = cpu.PC
+
+    init {
+        UiState.debug.addListener { _, _ ->
+            DEBUG = UiState.debug.value
+        }
+    }
 
     companion object {
         fun create(init: ComputerBuilder.() -> Unit): ComputerBuilder {

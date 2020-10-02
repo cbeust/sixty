@@ -12,7 +12,7 @@ import org.eclipse.swt.layout.*
 import org.eclipse.swt.widgets.*
 import java.io.File
 
-class DiskWindow(parent: Composite, parentHeight: Int): Composite(parent, NONE) {
+class DiskWindow(parent: Composite): Composite(parent, NONE) {
     private lateinit var diskLabel: Label
     private val scrolledComposite: ScrolledComposite
     private var byteText: Text? = null
