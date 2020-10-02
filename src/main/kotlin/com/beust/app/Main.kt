@@ -80,7 +80,7 @@ fun main() {
             val debugAsm = DEBUG
 //            frame()
             val dc = DiskController(6).apply {
-                loadDisk(IDisk.create(DISK))
+                loadDisk(IDisk.create(DISK), 0)
                 UiState.currentDiskFile.value = DISK
             }
             val keyProvider = object: IKeyProvider {
