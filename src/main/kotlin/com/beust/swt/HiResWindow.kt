@@ -11,7 +11,7 @@ import org.eclipse.swt.layout.GridLayout
 import org.eclipse.swt.widgets.Canvas
 import org.eclipse.swt.widgets.Composite
 
-class HiResWindow(val startLocation: Int, parent: Composite, style: Int = SWT.NONE): Composite(parent, style) {
+class HiResWindow(private val startLocation: Int, parent: Composite, style: Int = SWT.NONE): Composite(parent, style) {
     override fun toString() = "HiRes $${startLocation.hh()}"
 
     /**
@@ -27,7 +27,7 @@ class HiResWindow(val startLocation: Int, parent: Composite, style: Int = SWT.NO
 //    private val img: Image
 //    private val gc: GC
     private val canvas: Canvas
-    private val imageData: ImageData
+    private val imageDatas = arrayListOf<ImageData>()
 
     private val content = Array(WIDTH * HEIGHT) { SColor.BLACK }
     private fun index(x: Int, y: Int) = y * WIDTH + x
@@ -61,12 +61,16 @@ class HiResWindow(val startLocation: Int, parent: Composite, style: Int = SWT.NO
         return Image(display, imageData)
     }
 
+    var page = 0 // or 1
+    private fun imageData() = if (page == 0) imageDatas[0] else imageDatas[1]
+
     init {
         layout = FillLayout()
-        imageData = newImageData()
+        imageDatas.add(newImageData())
+        imageDatas.add(newImageData())
         canvas = Canvas(this, SWT.NO_BACKGROUND).apply {
             addPaintListener { e ->
-                val image = Image(display, imageData)
+                val image = Image(display, imageData())
                 GC(image).apply {
                     background = red(display)
 //                    fillRectangle(x, 10, 20, 20)
@@ -83,10 +87,8 @@ class HiResWindow(val startLocation: Int, parent: Composite, style: Int = SWT.NO
         val TIMER_INTERVAL = 10
         val runnable: Runnable = object : Runnable {
             override fun run() {
-                if (! canvas.isDisposed) {
-                    canvas.redraw()
-                    display.timerExec(TIMER_INTERVAL, this)
-                }
+                canvas.redraw()
+                display.timerExec(TIMER_INTERVAL, this)
             }
         }
         display.timerExec(TIMER_INTERVAL, runnable)
@@ -107,7 +109,7 @@ class HiResWindow(val startLocation: Int, parent: Composite, style: Int = SWT.NO
     }
 //    fun drawMemoryLocation(memory: IMemory, location: Int) {}
 
-    fun drawMemoryLocation(memory: IMemory, location: Int) {
+    fun drawMemoryLocation(memory: IMemory, location: Int, page: Int) {
         val even = location % 2 == 0
         val bitPattern = if (even) {
             val byte0 = memory[location]
@@ -145,10 +147,10 @@ class HiResWindow(val startLocation: Int, parent: Composite, style: Int = SWT.NO
 //            println("PROBLEM")
 //        }
 
-        fun drawPixel(x: Int, y: Int, color: SColor) {
+        fun drawPixel(x: Int, y: Int, color: SColor, page: Int) {
             if (x < WIDTH) {
                 content[index(x, y)] = color
-                drawSquare(imageData, x, y, color.ordinal)
+                drawSquare(imageDatas[page], x, y, color.ordinal)
 //                display.syncExec {
 //                    println("Drawing pixel at " + (x * WIDTH_FACTOR) + "," + (x * WIDTH_FACTOR) + " color: " + color.ordinal)
 //                    img.imageData.setPixel(x * WIDTH_FACTOR, y * HEIGHT_FACTOR, color.ordinal)
@@ -161,15 +163,15 @@ class HiResWindow(val startLocation: Int, parent: Composite, style: Int = SWT.NO
 
         y!!
 
-        repeat(2) { drawPixel(x + i++, y, BitPattern.color(bitPattern.p0, bitPattern.aa, x)) }
-        repeat(2) { drawPixel(x + i++, y, BitPattern.color(bitPattern.p0, bitPattern.bb, x + 1)) }
-        repeat(2) { drawPixel(x + i++, y, BitPattern.color(bitPattern.p0, bitPattern.cc, x + 2)) }
+        repeat(2) { drawPixel(x + i++, y, BitPattern.color(bitPattern.p0, bitPattern.aa, x), page) }
+        repeat(2) { drawPixel(x + i++, y, BitPattern.color(bitPattern.p0, bitPattern.bb, x + 1), page) }
+        repeat(2) { drawPixel(x + i++, y, BitPattern.color(bitPattern.p0, bitPattern.cc, x + 2), page) }
         repeat(2) {
             drawPixel(x + i++, y, BitPattern.color(if (even) bitPattern.p0 else bitPattern.p1,
-                    bitPattern.dd, x + 3))
+                    bitPattern.dd, x + 3), page)
         }
-        repeat(2) { drawPixel(x + i++, y, BitPattern.color(bitPattern.p1, bitPattern.ee, x + 4)) }
-        repeat(2) { drawPixel(x + i++, y, BitPattern.color(bitPattern.p1, bitPattern.ff, x + 5)) }
-        repeat(2) { drawPixel(x + i++, y, BitPattern.color(bitPattern.p1, bitPattern.gg, x + 6)) }
+        repeat(2) { drawPixel(x + i++, y, BitPattern.color(bitPattern.p1, bitPattern.ee, x + 4), page) }
+        repeat(2) { drawPixel(x + i++, y, BitPattern.color(bitPattern.p1, bitPattern.ff, x + 5), page) }
+        repeat(2) { drawPixel(x + i++, y, BitPattern.color(bitPattern.p1, bitPattern.gg, x + 6), page) }
     }
 }
