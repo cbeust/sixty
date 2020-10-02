@@ -24,10 +24,11 @@ val disks = listOf(
         DISK_DOS_3_3, WOZ_DOS_3_3, File("src/test/resources/audit.dsk"),
         File("disks/Blade_of_Blackpoole_A.dsk"), // 3
         File("disks/Sherwood_Forest.dsk") ,       // 4
-        File("d:/pd/Apple disks/Ultima I - The Beginning.woz") // 5
+        File("d:/pd/Apple disks/Ultima I - The Beginning.woz"), // 5
+        File("disks/Rescue Raiders.dsk") // 6
 )
 
-val DISK = disks[4]
+val DISK = disks[6]
 //val DISK = if (disk == 0)
 //    WOZ_DOS_3_3
 //else if (disk == 1)
@@ -147,8 +148,7 @@ fun main() {
 
             val computer = Computer.create {
                 memory = a2Memory
-                memoryListeners.add(Apple2MemoryListener(a2Memory, textPanel1, swtContext.hiResWindow,
-                    swtContext.hiRes2Window))
+                memoryListeners.add(Apple2MemoryListener(a2Memory, textPanel1, swtContext.hiResWindow))
                 memoryListeners.add(dc)
             }.build()
             val start = a2Memory.word(0xfffc) // memory[0xfffc].or(memory[0xfffd].shl(8))
