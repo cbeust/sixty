@@ -2,6 +2,8 @@
 
 package com.beust.swt
 
+import com.beust.app.Obs
+import com.beust.app.UiState
 import org.eclipse.jface.resource.FontDescriptor
 import org.eclipse.jface.resource.JFaceResources
 import org.eclipse.jface.resource.LocalResourceManager
@@ -9,9 +11,23 @@ import org.eclipse.swt.SWT
 import org.eclipse.swt.graphics.Color
 import org.eclipse.swt.graphics.RGB
 import org.eclipse.swt.widgets.*
+import java.io.File
 
 fun label(parent: Composite, t: String, style: Int = SWT.NONE) = Label(parent, style).apply { text = t }
-fun button(parent: Composite, t: String) = Button(parent, SWT.NONE).apply { text = t }
+fun button(parent: Composite, t: String, style: Int = SWT.NONE) = Button(parent, style).apply { text = t }
+fun fileDialog(shell: Shell, button: Button, observable: Obs<File?>): Button {
+    button.addListener(SWT.Selection) { e ->
+        val disk = FileDialog(shell).apply {
+            text = "Pick a disk file"
+            filterExtensions = arrayOf("*.dsk;*.woz")
+            filterPath = "d:\\pd\\Apple disks"
+        }.open()
+        if (disk != null) {
+            observable.value = File(disk)
+        }
+    }
+    return button
+}
 fun red(d: Display) = d.getSystemColor(SWT.COLOR_RED)
 fun white(d: Display) = d.getSystemColor(SWT.COLOR_WHITE)
 fun black(d: Display) = d.getSystemColor(SWT.COLOR_BLACK)

@@ -1,9 +1,12 @@
 package com.beust.swt
 
+import com.beust.app.UiState
+import com.beust.sixty.IComputer
 import com.beust.sixty.IKeyProvider
 import com.beust.sixty.IMemory
 import org.eclipse.swt.SWT
 import org.eclipse.swt.custom.ScrolledComposite
+import org.eclipse.swt.custom.StackLayout
 import org.eclipse.swt.graphics.Point
 import org.eclipse.swt.graphics.Rectangle
 import org.eclipse.swt.layout.*
@@ -25,12 +28,16 @@ fun isHex(c: Char) = Character.isDigit(c) || allowed.contains(c)
 //val HEIGHT = 300
 
 interface IGraphics {
+    var computer: IComputer
+
     fun run()
 }
 
 class SwtContext(val display: Display, val shell: Shell, val textScreen: TextWindow, val hiResWindow: HiResWindow)
     : IGraphics
 {
+    override lateinit var computer: IComputer
+
     override fun run() {
         shell.open()
         while (!shell.isDisposed) {
@@ -48,14 +55,15 @@ class SwtContext(val display: Display, val shell: Shell, val textScreen: TextWin
 fun createWindows(memory: IMemory, keyProvider: IKeyProvider): SwtContext {
     val display = Display()
     val shell = Shell(display).apply {
-        layout = GridLayout(2, false)
+        layout = GridLayout(3, false)
     }
 
     val mainContainer = Composite(shell, SWT.NONE).apply {
         background = blue(display)
         layoutData = GridData().apply {
-            widthHint = ACTUAL_WIDTH + 20
-            heightHint = ACTUAL_HEIGHT + 20
+            verticalAlignment = SWT.BEGINNING
+            widthHint = ACTUAL_WIDTH
+            heightHint = ACTUAL_HEIGHT
         }
         display.addFilter(SWT.KeyDown) { e ->
             if (e.keyCode != 0xd) {
@@ -79,27 +87,39 @@ fun createWindows(memory: IMemory, keyProvider: IKeyProvider): SwtContext {
     val text1Window = TextWindow(mainContainer).apply {
         bounds = Rectangle(0, 0, ACTUAL_WIDTH, ACTUAL_HEIGHT)
     }
+    text1Window.pack()
 
     //
     // Graphic screens
     //
     val hiResWindow = HiResWindow(0x2000, mainContainer).apply {
-        background = yellow(display)
         bounds = Rectangle(0, 0, ACTUAL_WIDTH, ACTUAL_HEIGHT)
+    }
+
+    //
+    // Middle panel, where the buttons live
+    //
+    val buttonContainer = Composite(shell, SWT.BORDER)
+    val rebootButton = button(buttonContainer, "Reboot")
+    buttonContainer.apply {
+        layoutData = GridData(SWT.FILL, SWT.FILL, false, true)
+        layout = GridLayout(1, true)
+        listOf(
+                rebootButton,
+                fileDialog(shell, button(this, "Disk 1", SWT.WRAP), UiState.currentDisk1File),
+                button(this, "Swap\ndisks", SWT.WRAP),
+                fileDialog(shell, button(this, "Disk 2", SWT.WRAP), UiState.currentDisk2File)
+        ).forEach {
+            it.layoutData = GridData().apply {
+                widthHint = 50
+                heightHint = 50
+            }
+        }
     }
 
     //
     // Right panel
     //
-//    val c = Composite(shell, SWT.NONE).apply {
-//        layout = FillLayout()
-//        layoutData = GridData().apply {
-//            horizontalAlignment = GridData.HORIZONTAL_ALIGN_END
-//            verticalAlignment = GridData.VERTICAL_ALIGN_END
-//        }
-//    }
-//    createScrollableByteBuffer(shell)
-    text1Window.pack()
     val parentHeight = text1Window.bounds.height + 120
 //
 //    createScrollableByteBuffer(shell, parentHeight).apply {
@@ -140,8 +160,14 @@ fun createWindows(memory: IMemory, keyProvider: IKeyProvider): SwtContext {
 //    folder.pack()
     shell.pack()
     shell.setSize(text1Window.bounds.width + folder.bounds.width, parentHeight)
-//    rightWindow.scrolledComposite.setMinSize(mainWindow.bounds.width + 700, parentHeight)
-    return SwtContext(display, shell, text1Window, hiResWindow)//, stackLayout)
+    val result = SwtContext(display, shell, text1Window, hiResWindow)
+    result.apply {
+        rebootButton.addListener(SWT.Selection) { e ->
+            computer.cpu.PC = 0xc600
+        }
+    }
+
+    return result
 }
 
 fun createScrollableByteBuffer(parent: Composite): ScrolledComposite {

@@ -35,7 +35,7 @@ class DiskWindow(parent: Composite): Composite(parent, NONE) {
             }
         }
 
-        UiState.currentDiskFile.addListener { _, new -> diskLabel.text = new?.name }
+        UiState.currentDisk1File.addListener { _, new -> diskLabel.text = new?.name }
         UiState.currentBytes.addListener { _, _ -> updateInspector() }
     }
 
@@ -97,7 +97,7 @@ class DiskWindow(parent: Composite): Composite(parent, NONE) {
         //
         // Name of the disk
         //
-        diskLabel = label(header, UiState.currentDiskFile.value?.name ?: "<none>").apply {
+        diskLabel = label(header, UiState.currentDisk1File.value?.name ?: "<none>").apply {
             layoutData = GridData(SWT.BEGINNING, SWT.CENTER, false, false)
 ////                background = grey(display)
 ////                horizontalSpan = 2
@@ -109,20 +109,10 @@ class DiskWindow(parent: Composite): Composite(parent, NONE) {
         //
         // Button to open a different disk
         //
-        button(header, "...").apply {
+        val b = button(header, "...").apply {
             layoutData = GridData(SWT.BEGINNING, SWT.CENTER, false, false)
-            addListener(SWT.Selection) { e ->
-                println("Button pressed!")
-                val disk = FileDialog(shell).apply {
-                    text = "Pick a disk file"
-                    filterExtensions = arrayOf("*.dsk;*.woz")
-                    filterPath = "d:\\pd\\Apple disks"
-                }.open()
-                if (disk != null) {
-                    UiState.currentDiskFile.value = File(disk)
-                }
-            }
         }
+        fileDialog(shell, b, UiState.currentDisk1File)
 
         //
         // Track number label

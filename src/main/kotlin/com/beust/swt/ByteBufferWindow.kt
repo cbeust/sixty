@@ -69,7 +69,7 @@ class ByteBufferWindow(parent: Composite) : Composite(parent, SWT.NONE) {
 //            }
 //
 //        })
-        UiState.currentDiskFile.addListener { _, new ->
+        UiState.currentDisk1File.addListener { _, new ->
             if (new != null) {
                 disk = IDisk.create(new)
                 UiState.currentTrack.value = 0
@@ -87,7 +87,7 @@ class ByteBufferWindow(parent: Composite) : Composite(parent, SWT.NONE) {
 
     private fun updateBuffer() {
         currentBytes.clear()
-        UiState.currentDiskFile?.let { df ->
+        UiState.currentDisk1File?.let { df ->
             val disk = IDisk.create(df.value!!)
             val track = UiState.currentTrack.value
             repeat (track * 4) {

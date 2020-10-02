@@ -40,7 +40,7 @@ class DiskController(val slot: Int = 6): IPulse, MemoryListener() {
     }
 
     init {
-        UiState.currentDiskFile.addListener { _, new ->
+        UiState.currentDisk1File.addListener { _, new ->
             if (new != null) loadDisk(IDisk.create(new), if (drive1) 1 else 2)
         }
     }

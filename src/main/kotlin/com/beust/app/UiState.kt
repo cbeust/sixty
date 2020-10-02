@@ -28,7 +28,8 @@ object UiState {
     //
     // DISK tab
     //
-    val currentDiskFile: Obs<File?> = Obs("Current disk", null)
+    val currentDisk1File: Obs<File?> = Obs("Disk 1", null)
+    val currentDisk2File: Obs<File?> = Obs("Disk 2", null)
     val currentTrack = Obs("Current track", 0)
     val byteAlgorithn = Obs("Byte algorithm", ByteAlgorithm.SHIFTED)
     val currentBytes: Obs<List<Int>> = Obs("Current bytes", emptyList())

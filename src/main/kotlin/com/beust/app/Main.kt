@@ -24,10 +24,11 @@ val disks = listOf(
         File("disks/Blade_of_Blackpoole_A.dsk"), // 3
         File("disks/Sherwood_Forest.dsk") ,       // 4
         File("d:/pd/Apple disks/Ultima I - The Beginning.woz"), // 5
-        File("disks/Rescue Raiders.dsk") // 6
+        File("disks/Rescue Raiders.dsk"), // 6
+        File("disks/Ultima4.dsk")  // 7
 )
 
-val DISK = disks[6]
+val DISK = disks[7]
 //val DISK = if (disk == 0)
 //    WOZ_DOS_3_3
 //else if (disk == 1)
@@ -81,7 +82,7 @@ fun main() {
 //            frame()
             val dc = DiskController(6).apply {
                 loadDisk(IDisk.create(DISK), 0)
-                UiState.currentDiskFile.value = DISK
+                UiState.currentDisk1File.value = DISK
             }
             val keyProvider = object: IKeyProvider {
                 override fun keyPressed(memory: IMemory, value: Int, shift: Boolean, control: Boolean) {
@@ -142,6 +143,7 @@ fun main() {
                 memoryListeners.add(Apple2MemoryListener(a2Memory, textPanel1, swtContext.hiResWindow))
                 memoryListeners.add(dc)
             }.build()
+            swtContext.computer = computer
             val start = a2Memory.word(0xfffc) // memory[0xfffc].or(memory[0xfffd].shl(8))
             computer.cpu.PC = start
             loadPic(a2Memory)
