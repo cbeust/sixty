@@ -28,8 +28,7 @@ interface IGraphics {
     fun run()
 }
 
-class SwtContext(val display: Display, val shell: Shell, val textScreen: TextWindow, val hiResWindow: HiResWindow,
-        val hiRes2Window: HiResWindow)
+class SwtContext(val display: Display, val shell: Shell, val textScreen: TextWindow, val hiResWindow: HiResWindow)
     : IGraphics
 {
     override fun run() {
@@ -88,11 +87,6 @@ fun createWindows(memory: IMemory, keyProvider: IKeyProvider): SwtContext {
         background = yellow(display)
         bounds = Rectangle(0, 0, ACTUAL_WIDTH, ACTUAL_HEIGHT)
     }
-    val hiRes2Window = HiResWindow(0x4000, mainContainer).apply {
-        background = red(display)
-        bounds = Rectangle(0, 0, ACTUAL_WIDTH, ACTUAL_HEIGHT)
-    }
-    hiRes2Window.moveAbove(null)
 
     //
     // Right panel
@@ -142,7 +136,7 @@ fun createWindows(memory: IMemory, keyProvider: IKeyProvider): SwtContext {
     shell.pack()
     shell.setSize(text1Window.bounds.width + folder.bounds.width, parentHeight)
 //    rightWindow.scrolledComposite.setMinSize(mainWindow.bounds.width + 700, parentHeight)
-    return SwtContext(display, shell, text1Window, hiResWindow, hiRes2Window)//, stackLayout)
+    return SwtContext(display, shell, text1Window, hiResWindow)//, stackLayout)
 }
 
 fun createScrollableByteBuffer(parent: Composite): ScrolledComposite {

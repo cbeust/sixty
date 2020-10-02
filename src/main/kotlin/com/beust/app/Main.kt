@@ -7,7 +7,6 @@ import com.beust.swt.SwtContext
 import com.beust.swt.createWindows
 import org.eclipse.swt.widgets.Control
 import java.io.File
-import java.nio.file.Paths
 
 val RUN = true
 var DEBUG = false
@@ -96,7 +95,7 @@ fun main() {
             swtContext = createWindows(a2Memory, keyProvider)
 
             fun maybeResize(control: Control) {
-                if (control == swtContext.hiResWindow || control == swtContext.hiRes2Window) {
+                if (control == swtContext.hiResWindow) {
                     control.display.asyncExec {
                         val fullHeight = ACTUAL_HEIGHT
                         val shortHeight = ACTUAL_HEIGHT * 5 / 6
@@ -108,7 +107,7 @@ fun main() {
                 }
             }
 
-            fun show(control: Control, old: Control?) {
+            fun show(control: Control) {
                 if (! control.isDisposed) with(control) {
                     display.asyncExec {
                         maybeResize(control)
@@ -118,30 +117,26 @@ fun main() {
             }
 
             UiState.mainScreenHires.addListener { _, new ->
-                if (UiState.mainScreenPage2.value) show(swtContext.hiRes2Window, swtContext.hiResWindow)
-                    else show(swtContext.hiResWindow, swtContext.hiRes2Window)
+                show(swtContext.hiResWindow)
             }
             UiState.mainScreenPage2.addListener { _, new ->
                 if (!a2Memory.store80On) {
                     if (UiState.mainScreenText.value) {
                         //                    if (UiState.mainScreenPage2.value) show(new, textScreen2)
                         //                        else
-                        show(swtContext.textScreen, null)
+                        show(swtContext.textScreen)
                     } else {
-                        println("Page2 changed to $new, its value is " + UiState.mainScreenPage2.value)
-                        if (UiState.mainScreenPage2.value) show(swtContext.hiRes2Window, swtContext.hiResWindow)
-                        else show(swtContext.hiResWindow, swtContext.hiRes2Window)
+                        show(swtContext.hiResWindow)
                     }
                 }
             }
             UiState.mainScreenText.addListener { _, new ->
 //                if (UiState.mainScreenPage2) show(new, textScreen2)
 //                else
-                if (new) show(swtContext.textScreen, null)
+                if (new) show(swtContext.textScreen)
             }
             UiState.mainScreenMixed.addListener { _, new ->
-                val window = if (UiState.mainScreenPage2.value) swtContext.hiRes2Window else swtContext.hiResWindow
-                maybeResize(window)
+                maybeResize(swtContext.hiResWindow)
             }
 
             val textPanel1 =  TextPanel(0x400, swtContext.textScreen)
