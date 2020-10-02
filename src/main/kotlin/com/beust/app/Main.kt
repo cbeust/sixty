@@ -27,7 +27,7 @@ val disks = listOf(
         File("d:/pd/Apple disks/Ultima I - The Beginning.woz") // 5
 )
 
-val DISK = disks[5]
+val DISK = disks[4]
 //val DISK = if (disk == 0)
 //    WOZ_DOS_3_3
 //else if (disk == 1)
