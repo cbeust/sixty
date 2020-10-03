@@ -53,8 +53,8 @@ class Computer(override val memory: IMemory, override val cpu: Cpu, val pcListen
     val pc get() = cpu.PC
 
     init {
-        UiState.debug.addListener { _, _ ->
-            DEBUG = UiState.debug.value
+        UiState.debug.addListener { _, new ->
+            DEBUG = new
         }
     }
 

@@ -7,16 +7,19 @@ typealias ObsListener<T> = (T, T) -> Unit
 
 class Obs<T>(val name: String, val def: T) {
     private val listeners = mutableListOf<ObsListener<T>>()
+    private val afterListeners = mutableListOf<ObsListener<T>>()
 
     fun addListener(l: (T, T) -> Unit) { listeners.add(l) }
+    fun addAfterListener(l: (T, T) -> Unit) { afterListeners.add(l) }
 
     private var _value = def
     var value: T
         get() = _value
         set(f) {
             logUiStatus("$name=$f")
-            _value = f
             listeners.forEach { it.invoke(_value, f) }
+            _value = f
+            afterListeners.forEach { it.invoke(_value, f) }
         }
 
     override fun toString() = _value.toString()

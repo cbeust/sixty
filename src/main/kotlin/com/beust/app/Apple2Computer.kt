@@ -54,10 +54,10 @@ class Apple2Computer() {
             }
         }
 
-        UiState.mainScreenHires.addListener { _, _ ->
-            show(swtContext.hiResWindow)
+        UiState.mainScreenHires.addListener { _, new ->
+            if (new) show(swtContext.hiResWindow)
         }
-        UiState.mainScreenPage2.addListener { _, _ ->
+        UiState.mainScreenPage2.addAfterListener { _, _ ->
             if (!a2Memory.store80On) {
                 if (UiState.mainScreenText.value) {
                     show(swtContext.textScreen)
@@ -69,7 +69,7 @@ class Apple2Computer() {
         UiState.mainScreenText.addListener { _, new ->
             if (new) show(swtContext.textScreen)
         }
-        UiState.mainScreenMixed.addListener { _, new ->
+        UiState.mainScreenMixed.addAfterListener { _, new ->
             maybeResize(swtContext.hiResWindow)
         }
 
