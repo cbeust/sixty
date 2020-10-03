@@ -7,6 +7,8 @@
 - shift/control
 - why c600g doesn't work
 - debug tab with DEBUG checkbox
+- Prodos
+- Keyboard shift/control
 
 
 C050 Graphics 49232
