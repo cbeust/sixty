@@ -19,18 +19,21 @@ val BREAKPOINT: Int? = null//0xc2de // 0xc2db
 val DISK_DOS_3_3 = File("D:\\pd\\Apple disks\\Apple DOS 3.3.dsk") // File("src/test/resources/Apple DOS 3.3.dsk")
 val WOZ_DOS_3_3 = File("src/test/resources/woz2/DOS 3.3 System Master.woz")
 
+fun disk(s: String) = File("disks/$s")
+
 val disks = listOf(
         DISK_DOS_3_3,
         WOZ_DOS_3_3,
         File("src/test/resources/audit.dsk"),
-        File("disks/Blade_of_Blackpoole_A.dsk"), // 3
-        File("disks/Sherwood_Forest.dsk") ,       // 4
+        disk("Blade_of_Blackpoole_A.dsk"), // 3
+        disk("/Sherwood_Forest.dsk") ,       // 4
         File("d:/pd/Apple disks/Ultima I - The Beginning.woz"), // 5
-        File("disks/Rescue Raiders.dsk"), // 6
-        File("disks/Ultima4.dsk")  // 7
+        disk("/Rescue Raiders.dsk"), // 6
+        disk("/Ultima4.dsk") , // 7
+        disk("/Force 7.woz") // 8
 )
 
-val DISK = disks[6]
+val DISK = disks[3]
 //val DISK = if (disk == 0)
 //    WOZ_DOS_3_3
 //else if (disk == 1)
@@ -38,7 +41,7 @@ val DISK = disks[6]
 //else if (disk == 2)
 //    disks[2]
 //else
-////    File("disks/Sherwood_Forest.dsk")
+////    disk("/Sherwood_Forest.dsk")
 //    disks[3]
 ////    DskDisk(File("d:\\pd\\Apple disks\\Ultima I - The Beginning.woz").inputStream())
 
