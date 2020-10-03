@@ -76,20 +76,19 @@ class ByteBufferWindow(parent: Composite) : Composite(parent, SWT.NONE) {
                 updateBuffer()
             }
         }
-        UiState.currentTrack.addListener { _, _ ->
-            updateBuffer()
+        UiState.currentTrack.addListener { _, new ->
+            updateBuffer(track = new)
         }
-        UiState.byteAlgorithn.addListener { _, _ ->
-            updateBuffer()
+        UiState.byteAlgorithn.addListener { _, new ->
+            updateBuffer(byteAlgorithm = new)
         }
         updateBuffer()
     }
 
-    private fun updateBuffer() {
+    private fun updateBuffer(track: Int = 0, byteAlgorithm: ByteAlgorithm = ByteAlgorithm.SHIFTED) {
         currentBytes.clear()
         UiState.currentDisk1File?.let { df ->
             val disk = IDisk.create(df.value!!)
-            val track = UiState.currentTrack.value
             repeat (track * 4) {
                 disk.incTrack()
             }
@@ -103,7 +102,7 @@ class ByteBufferWindow(parent: Composite) : Composite(parent, SWT.NONE) {
 
                     fun nextByte(): Int {
                         var byte = 0
-                        when(UiState.byteAlgorithn.value) {
+                        when(byteAlgorithm) {
                             ByteAlgorithm.SHIFTED -> {
                                 while (byte and 0x80 == 0) {
                                     val bit = disk.nextBit()

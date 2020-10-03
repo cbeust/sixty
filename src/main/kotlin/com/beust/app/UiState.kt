@@ -15,8 +15,8 @@ class Obs<T>(val name: String, val def: T) {
         get() = _value
         set(f) {
             logUiStatus("$name=$f")
-            _value = f
             listeners.forEach { it.invoke(_value, f) }
+            _value = f
         }
 
     override fun toString() = _value.toString()

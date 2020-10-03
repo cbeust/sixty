@@ -69,6 +69,7 @@ fun main() {
     var swtContext: SwtContext? = null
     val fw = FileWatcher()
 
+    var lastFlip = System.currentTimeMillis()
     when(choice) {
         1 -> {
             println("Running the following 6502 program which will display HELLO")
@@ -117,22 +118,27 @@ fun main() {
                 }
             }
 
-            UiState.mainScreenHires.addListener { _, _ ->
-                show(swtContext.hiResWindow)
+            UiState.mainScreenHires.addListener { _, new ->
+                if (new) show(swtContext.hiResWindow)
             }
-            UiState.mainScreenPage2.addListener { _, _ ->
-                if (!a2Memory.store80On) {
+            UiState.mainScreenPage2.addListener { old, new ->
+                if (!a2Memory.store80On && old != new) {
                     if (UiState.mainScreenText.value) {
                         show(swtContext.textScreen)
                     } else {
+                        val diff = System.currentTimeMillis() - lastFlip
+                        // Wait at least a few ms before each page switch
+                        val min = 26
+                        if (diff < min) Thread.sleep(min - diff)
                         show(swtContext.hiResWindow)
+                        lastFlip = System.currentTimeMillis()
                     }
                 }
             }
             UiState.mainScreenText.addListener { _, new ->
                 if (new) show(swtContext.textScreen)
             }
-            UiState.mainScreenMixed.addListener { _, new ->
+            UiState.mainScreenMixed.addListener { _, _ ->
                 maybeResize(swtContext.hiResWindow)
             }
 

@@ -36,11 +36,10 @@ class DiskWindow(parent: Composite): Composite(parent, NONE) {
         }
 
         UiState.currentDisk1File.addListener { _, new -> diskLabel.text = new?.name }
-        UiState.currentBytes.addListener { _, _ -> updateInspector() }
+        UiState.currentBytes.addListener { _, new -> updateInspector(new) }
     }
 
-    private fun updateInspector() {
-        val bytes = UiState.currentBytes.value
+    private fun updateInspector(bytes: List<Int>) {
         display.asyncExec {
             byteText?.text = bytes[0].h()
             wordText?.text = word(bytes[0], bytes[1]).hh()

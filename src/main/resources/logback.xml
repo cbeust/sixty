@@ -11,8 +11,8 @@
     <!-- set to debug to display, info to hide -->
     <logger name="Text" level="info" />
     <logger name="Memory" level="info" />
-    <logger name="UiStatus" level="info" />
     <logger name="Disk" level="info" />
+    <logger name="UiStatus" level="info" />
 
     <logger name="Graphics" level="debug" />
     <logger name="Breakpoint" level="debug" />
