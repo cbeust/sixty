@@ -20,6 +20,8 @@ class SimpleComputer(override val memory: IMemory, override val cpu: Cpu): IComp
     }
     private val computer = Computer(memory, cpu, pcListener)
     override fun stop() = computer.stop()
+    override fun reboot() {}
+
     override fun onPulse(manager: PulseManager) = computer.onPulse(manager)
 }
 

@@ -33,6 +33,7 @@ interface PcListener {
 interface IComputer: IPulse {
     val memory: IMemory
     val cpu : Cpu
+    fun reboot()
 }
 
 class ComputerBuilder {
@@ -66,10 +67,15 @@ class Computer(override val memory: IMemory, override val cpu: Cpu, val pcListen
     }
 
     private var startTime: Long = 0
-    private var stop: Boolean = false
+    enum class RunStatus { RUN, STOP, REBOOT }
+    private var runStatus = RunStatus.RUN
 
     override fun stop() {
-        stop = true
+        runStatus = RunStatus.STOP
+    }
+
+    override fun reboot() {
+        runStatus = RunStatus.REBOOT
     }
 
     fun word(memory: IMemory = cpu.memory, address: Int = cpu.PC + 1): Int = memory.word(address)
@@ -90,13 +96,13 @@ class Computer(override val memory: IMemory, override val cpu: Cpu, val pcListen
 //            println("----")
             wait--
         }
-        return PulseResult(stop)
+        return PulseResult(runStatus)
     }
 
     fun run(debugMemory: Boolean = false, _debugAsm: Boolean = false): RunResult {
         var done = false
         startTime = System.currentTimeMillis()
-        while (!stop) {
+        while (runStatus == RunStatus.RUN) {
             cycles++
             val done = step(debugMemory, _debugAsm)
         }

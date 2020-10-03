@@ -2,9 +2,103 @@
 
 package com.beust.app
 
+import com.beust.app.app.TextPanel
 import com.beust.sixty.*
+import com.beust.swt.ACTUAL_HEIGHT
+import com.beust.swt.SwtContext
+import com.beust.swt.createWindows
+import org.eclipse.swt.widgets.Control
 import java.nio.file.*
 
+class Apple2Computer() {
+    fun run(): IComputer {
+        val pulseManager = PulseManager()
+
+        var swtContext: SwtContext? = null
+        val fw = FileWatcher()
+
+        val debugMem = false
+        val debugAsm = DEBUG
+//            frame()
+        val dc = DiskController(6).apply {
+            loadDisk(IDisk.create(DISK), 0)
+            UiState.currentDisk1File.value = DISK
+        }
+        val keyProvider = object: IKeyProvider {
+            override fun keyPressed(memory: IMemory, value: Int, shift: Boolean, control: Boolean) {
+                memory.forceInternalRomValue(0xc000, value.or(0x80))
+                memory.forceInternalRomValue(0xc010, 0x80)
+            }
+        }
+
+        pulseManager.addListener(dc)
+        val a2Memory = Apple2Memory()
+        swtContext = createWindows(a2Memory, keyProvider)
+
+        fun maybeResize(control: Control) {
+            if (control == swtContext.hiResWindow) {
+                control.display.asyncExec {
+                    val fullHeight = ACTUAL_HEIGHT
+                    val shortHeight = ACTUAL_HEIGHT * 5 / 6
+                    val b = control.bounds
+                    val newHeight = if (UiState.mainScreenMixed.value) shortHeight else fullHeight
+                    control.setBounds(b.x, b.y, b.width, newHeight)
+                    control.parent.layout()
+                }
+            }
+        }
+
+        fun show(control: Control) {
+            if (! control.isDisposed) with(control) {
+                display.asyncExec {
+                    maybeResize(control)
+                    swtContext.show(this)
+                }
+            }
+        }
+
+        UiState.mainScreenHires.addListener { _, _ ->
+            show(swtContext.hiResWindow)
+        }
+        UiState.mainScreenPage2.addListener { _, _ ->
+            if (!a2Memory.store80On) {
+                if (UiState.mainScreenText.value) {
+                    show(swtContext.textScreen)
+                } else {
+                    show(swtContext.hiResWindow)
+                }
+            }
+        }
+        UiState.mainScreenText.addListener { _, new ->
+            if (new) show(swtContext.textScreen)
+        }
+        UiState.mainScreenMixed.addListener { _, new ->
+            maybeResize(swtContext.hiResWindow)
+        }
+
+        val textPanel1 =  TextPanel(0x400, swtContext.textScreen)
+
+        val computer = Computer.create {
+            memory = a2Memory
+            memoryListeners.add(Apple2MemoryListener(a2Memory, textPanel1, swtContext.hiResWindow))
+            memoryListeners.add(dc)
+        }.build()
+        swtContext.computer = computer
+        val start = a2Memory.word(0xfffc) // memory[0xfffc].or(memory[0xfffd].shl(8))
+        computer.cpu.PC = start
+//        loadPic(a2Memory)
+
+        return computer
+    }
+
+    private fun loadPic(memory: IMemory) {
+//    val bytes = Paths.get("d:", "PD", "Apple disks", "fishgame.pic").toFile().readBytes()
+//    (4..0x2004).forEach {
+//        memory[0x2000 + it - 4] = bytes[it].toInt()
+//    }
+    }
+
+}
 
 fun createApple2Memory(): Apple2Memory {
     val result = Apple2Memory(65536).apply {

@@ -6,10 +6,10 @@ import com.beust.sixty.IKeyProvider
 import com.beust.sixty.IMemory
 import org.eclipse.swt.SWT
 import org.eclipse.swt.custom.ScrolledComposite
-import org.eclipse.swt.custom.StackLayout
 import org.eclipse.swt.graphics.Point
 import org.eclipse.swt.graphics.Rectangle
-import org.eclipse.swt.layout.*
+import org.eclipse.swt.layout.GridData
+import org.eclipse.swt.layout.GridLayout
 import org.eclipse.swt.widgets.*
 
 
@@ -31,25 +31,6 @@ interface IGraphics {
     var computer: IComputer
 
     fun run()
-}
-
-class SwtContext(val display: Display, val shell: Shell, val textScreen: TextWindow, val hiResWindow: HiResWindow)
-    : IGraphics
-{
-    override lateinit var computer: IComputer
-
-    override fun run() {
-        shell.open()
-        while (!shell.isDisposed) {
-            if (!display.readAndDispatch()) display.sleep()
-        }
-        hiResWindow.stop()
-//        display.dispose()
-    }
-
-    fun show(c: Control) {
-        c.moveAbove(null)
-    }
 }
 
 fun createWindows(memory: IMemory, keyProvider: IKeyProvider): SwtContext {
@@ -163,7 +144,7 @@ fun createWindows(memory: IMemory, keyProvider: IKeyProvider): SwtContext {
     val result = SwtContext(display, shell, text1Window, hiResWindow)
     result.apply {
         rebootButton.addListener(SWT.Selection) { e ->
-            computer.cpu.PC = 0xc600
+            computer.reboot()
         }
     }
 

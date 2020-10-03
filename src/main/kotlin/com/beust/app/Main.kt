@@ -20,7 +20,9 @@ val DISK_DOS_3_3 = File("D:\\pd\\Apple disks\\Apple DOS 3.3.dsk") // File("src/t
 val WOZ_DOS_3_3 = File("src/test/resources/woz2/DOS 3.3 System Master.woz")
 
 val disks = listOf(
-        DISK_DOS_3_3, WOZ_DOS_3_3, File("src/test/resources/audit.dsk"),
+        DISK_DOS_3_3,
+        WOZ_DOS_3_3,
+        File("src/test/resources/audit.dsk"),
         File("disks/Blade_of_Blackpoole_A.dsk"), // 3
         File("disks/Sherwood_Forest.dsk") ,       // 4
         File("d:/pd/Apple disks/Ultima I - The Beginning.woz"), // 5
@@ -28,7 +30,7 @@ val disks = listOf(
         File("disks/Ultima4.dsk")  // 7
 )
 
-val DISK = disks[7]
+val DISK = disks[0]
 //val DISK = if (disk == 0)
 //    WOZ_DOS_3_3
 //else if (disk == 1)
@@ -66,106 +68,40 @@ fun main() {
 //            it.onPulse()
 //        }
 //    }
-    var swtContext: SwtContext? = null
     val fw = FileWatcher()
 
-    when(choice) {
+    val computer: () -> IPulse = when(choice) {
         1 -> {
-            println("Running the following 6502 program which will display HELLO")
-            val c = TestComputer.createComputer()
+            { ->
+                println("Running the following 6502 program which will display HELLO")
+                TestComputer.createComputer()
+            }
 //            c.disassemble(start = 0, length = 15)
-            pulseManager.addListener(c)
+//            pulseManager.addListener(c)
         }
         2 -> {
-            val debugMem = false
-            val debugAsm = DEBUG
-//            frame()
-            val dc = DiskController(6).apply {
-                loadDisk(IDisk.create(DISK), 0)
-                UiState.currentDisk1File.value = DISK
-            }
-            val keyProvider = object: IKeyProvider {
-                override fun keyPressed(memory: IMemory, value: Int, shift: Boolean, control: Boolean) {
-                    memory.forceInternalRomValue(0xc000, value.or(0x80))
-                    memory.forceInternalRomValue(0xc010, 0x80)
-                }
-            }
-
-            pulseManager.addListener(dc)
-            val a2Memory = Apple2Memory()
-            swtContext = createWindows(a2Memory, keyProvider)
-
-            fun maybeResize(control: Control) {
-                if (control == swtContext.hiResWindow) {
-                    control.display.asyncExec {
-                        val fullHeight = ACTUAL_HEIGHT
-                        val shortHeight = ACTUAL_HEIGHT * 5 / 6
-                        val b = control.bounds
-                        val newHeight = if (UiState.mainScreenMixed.value) shortHeight else fullHeight
-                        control.setBounds(b.x, b.y, b.width, newHeight)
-                        control.parent.layout()
-                    }
-                }
-            }
-
-            fun show(control: Control) {
-                if (! control.isDisposed) with(control) {
-                    display.asyncExec {
-                        maybeResize(control)
-                        swtContext.show(this)
-                    }
-                }
-            }
-
-            UiState.mainScreenHires.addListener { _, _ ->
-                show(swtContext.hiResWindow)
-            }
-            UiState.mainScreenPage2.addListener { _, _ ->
-                if (!a2Memory.store80On) {
-                    if (UiState.mainScreenText.value) {
-                        show(swtContext.textScreen)
-                    } else {
-                        show(swtContext.hiResWindow)
-                    }
-                }
-            }
-            UiState.mainScreenText.addListener { _, new ->
-                if (new) show(swtContext.textScreen)
-            }
-            UiState.mainScreenMixed.addListener { _, new ->
-                maybeResize(swtContext.hiResWindow)
-            }
-
-            val textPanel1 =  TextPanel(0x400, swtContext.textScreen)
-
-            val computer = Computer.create {
-                memory = a2Memory
-                memoryListeners.add(Apple2MemoryListener(a2Memory, textPanel1, swtContext.hiResWindow))
-                memoryListeners.add(dc)
-            }.build()
-            swtContext.computer = computer
-            val start = a2Memory.word(0xfffc) // memory[0xfffc].or(memory[0xfffd].shl(8))
-            computer.cpu.PC = start
-            loadPic(a2Memory)
-
-            pulseManager.addListener(computer)
-            Thread {
-                fw.run(a2Memory)
-            }.start()
+            { -> Apple2Computer().run() }
         }
         else -> {
-            pulseManager.addListener(functionalTestComputer(false))
-//            with(result) {
-//                val sec = durationMillis / 1000
-//                val mhz = String.format("%.2f", cycles / sec / 1_000_000.0)
-//                println("Computer stopping after $cycles cycles, $sec seconds, $mhz MHz")
-//            }
+            TODO("Should not happen")
         }
     }
 
     if (RUN) {
         Thread {
-            pulseManager.run()
+            var stop = false
+            var c = computer()
+            pulseManager.addListener(c)
+            while (! stop) {
+                val status = pulseManager.run()
+                if (status == Computer.RunStatus.STOP) {
+                    stop = true
+                } else {
+                    pulseManager.removeListener(c)
+                    c = computer()
+                    pulseManager.addListener(c)
+                }
+            }
         }.start()
     }
     swtContext?.run()
@@ -173,9 +109,3 @@ fun main() {
     pulseManager.stop()
 }
 
-private fun loadPic(memory: IMemory) {
-//    val bytes = Paths.get("d:", "PD", "Apple disks", "fishgame.pic").toFile().readBytes()
-//    (4..0x2004).forEach {
-//        memory[0x2000 + it - 4] = bytes[it].toInt()
-//    }
-}
