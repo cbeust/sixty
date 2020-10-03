@@ -51,7 +51,11 @@ class DiskController(val slot: Int = 6): IPulse, MemoryListener() {
     private fun disk() = if (drive1) disk1 else disk2
     /** @param drive 0 for drive 1, 1 for drive 2 */
     fun loadDisk(disk: IDisk, drive: Int) {
-        if (drive == 1) disk1 = disk else disk2 = disk
+        when(drive) {
+            0 -> disk1 = disk
+            1 -> disk2 = disk
+            else -> ERROR("INCORRECT DRIVE")
+        }
     }
 
     override fun onRead(i: Int, value: Int): Int? {

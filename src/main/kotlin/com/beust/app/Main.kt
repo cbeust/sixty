@@ -30,7 +30,7 @@ val disks = listOf(
         File("disks/Ultima4.dsk")  // 7
 )
 
-val DISK = disks[0]
+val DISK = disks[6]
 //val DISK = if (disk == 0)
 //    WOZ_DOS_3_3
 //else if (disk == 1)
@@ -70,23 +70,26 @@ fun main() {
 //    }
     val fw = FileWatcher()
 
-    val computer: () -> IPulse = when(choice) {
-        1 -> {
-            { ->
-                println("Running the following 6502 program which will display HELLO")
-                TestComputer.createComputer()
-            }
-//            c.disassemble(start = 0, length = 15)
-//            pulseManager.addListener(c)
-        }
-        2 -> {
-            { -> Apple2Computer().run() }
-        }
-        else -> {
-            TODO("Should not happen")
-        }
-    }
+//    val computer: () -> IPulse = when(choice) {
+//        1 -> {
+//            { ->
+//                println("Running the following 6502 program which will display HELLO")
+//                TestComputer.createComputer()
+//            }
+////            c.disassemble(start = 0, length = 15)
+////            pulseManager.addListener(c)
+//        }
+//        2 -> {
+//            { -> Apple2Computer().run() }
+//        }
+//        else -> {
+//            TODO("Should not happen")
+//        }
+//    }
 
+    val p = Apple2Computer().run(pulseManager)
+    val swtContext = p.first
+    val computer = { -> p.second }
     if (RUN) {
         Thread {
             var stop = false
@@ -99,6 +102,7 @@ fun main() {
                 } else {
                     pulseManager.removeListener(c)
                     c = computer()
+                    swtContext?.computer = c
                     pulseManager.addListener(c)
                 }
             }

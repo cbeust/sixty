@@ -11,10 +11,7 @@ import org.eclipse.swt.widgets.Control
 import java.nio.file.*
 
 class Apple2Computer() {
-    fun run(): IComputer {
-        val pulseManager = PulseManager()
-
-        var swtContext: SwtContext? = null
+    fun run(pulseManager: PulseManager): Pair<SwtContext?, IComputer> {
         val fw = FileWatcher()
 
         val debugMem = false
@@ -33,7 +30,7 @@ class Apple2Computer() {
 
         pulseManager.addListener(dc)
         val a2Memory = Apple2Memory()
-        swtContext = createWindows(a2Memory, keyProvider)
+        val swtContext = createWindows(a2Memory, keyProvider)
 
         fun maybeResize(control: Control) {
             if (control == swtContext.hiResWindow) {
@@ -88,7 +85,7 @@ class Apple2Computer() {
         computer.cpu.PC = start
 //        loadPic(a2Memory)
 
-        return computer
+        return swtContext to computer
     }
 
     private fun loadPic(memory: IMemory) {
