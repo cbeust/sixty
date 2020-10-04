@@ -1,5 +1,6 @@
 package com.beust.swt
 
+import com.beust.app.LineCalculator
 import com.beust.app.app.ITextScreen
 import com.beust.sixty.h
 import com.beust.sixty.log
@@ -15,10 +16,19 @@ import org.eclipse.swt.layout.GridLayout
 import org.eclipse.swt.widgets.Composite
 import org.eclipse.swt.widgets.Label
 
-class TextWindow(parent: Composite): Composite(parent, SWT.NONE), ITextScreen {
+class TextWindow(parent: Composite, private val start: Int): Composite(parent, SWT.NONE), ITextScreen {
 
     private val textFont: Font
     private val labels = arrayListOf<Label>()
+    private val calculator = LineCalculator(start)
+
+    fun drawMemoryLocation(location: Int, value: Int) {
+        calculator.coordinatesFor(location)?.let { (x, y) ->
+            drawCharacter(x, y, value)
+        }
+    }
+
+
 
     init {
         val isFontLoaded = shell.display.loadFont("fonts/PrintChar21.ttf");
@@ -32,22 +42,26 @@ class TextWindow(parent: Composite): Composite(parent, SWT.NONE), ITextScreen {
             horizontalSpacing = 0
             verticalSpacing = 0
         }
-        background = black2(display)
-        repeat(ITextScreen.HEIGHT) {
-            repeat(ITextScreen.WIDTH) { x ->
-                labels.add(Label(this, SWT.NONE).apply {
-                    font = textFont
-                    background = display.getSystemColor(SWT.COLOR_BLACK)
-                    foreground = display.getSystemColor(SWT.COLOR_GREEN)
-                    text = (x % 10).toString()
-                    layoutData = GridData().apply {
-                    widthHint = (ACTUAL_WIDTH / 40) - 1
-                    }
-                })
+        clear()
+    }
+
+    fun clear() {
+        display.syncExec {
+            background = black2(display)
+            repeat(ITextScreen.HEIGHT) {
+                repeat(ITextScreen.WIDTH) { x ->
+                    labels.add(Label(this, SWT.NONE).apply {
+                        font = textFont
+                        background = display.getSystemColor(SWT.COLOR_BLACK)
+                        foreground = display.getSystemColor(SWT.COLOR_GREEN)
+                        text = 0xa0.toChar().toString() // (x % 10).toString()
+                        layoutData = GridData().apply {
+                            widthHint = (ACTUAL_WIDTH / 40) - 1
+                        }
+                    })
+                }
             }
         }
-
-//        pack()
     }
 
     /**

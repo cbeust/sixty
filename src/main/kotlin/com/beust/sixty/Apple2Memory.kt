@@ -70,9 +70,6 @@ class Apple2Memory(val size: Int? = null): IMemory {
         fun current(address: Int): String = if (mem(address) == slot) "slot" else "internal"
 
         private fun mem(address: Int): IntArray {
-            if (address  in 0x2d0..0x2df && ! internalCxRom) {
-                println("BREAKPOINT")
-            }
             if (address in 0x300..0x3ff && ! slotC3Rom) internalC8Rom = true
 
             val result = if (internalC8Rom && address in 0x800..0xdff) internal

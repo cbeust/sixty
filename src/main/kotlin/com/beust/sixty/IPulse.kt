@@ -13,11 +13,17 @@ class PulseManager {
     fun addListener(listener: IPulse) {
         pulseListeners.add(listener)
     }
-    fun removeListener(listener: IPulse) {
-        pulseListeners.remove(listener)
+
+    fun removeListeners() {
+        pulseListeners.clear()
     }
 
+//    fun removeListener(listener: IPulse) {
+//        pulseListeners.remove(listener)
+//    }
+
     fun run(): Computer.RunStatus {
+        runStatus = Computer.RunStatus.RUN
         while (runStatus == Computer.RunStatus.RUN) {
             pulseListeners.forEach {
                 val r = it.onPulse(this)

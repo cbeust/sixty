@@ -33,123 +33,123 @@ interface IGraphics {
     fun run()
 }
 
-fun createWindows(memory: IMemory, keyProvider: IKeyProvider): SwtContext {
-    val display = Display()
-    val shell = Shell(display).apply {
-        layout = GridLayout(3, false)
-    }
-
-    val mainContainer = Composite(shell, SWT.NONE).apply {
-        background = blue(display)
-        layoutData = GridData().apply {
-            verticalAlignment = SWT.BEGINNING
-            widthHint = ACTUAL_WIDTH
-            heightHint = ACTUAL_HEIGHT
-        }
-        display.addFilter(SWT.KeyDown) { e ->
-            if (e.keyCode != 0xd) {
-                val av = if (Character.isAlphabetic(e.keyCode)) e.character.toUpperCase().toInt()
-                    else e.keyCode
-                keyProvider.keyPressed(memory, av)
-            }
-        }
-        display.addFilter(SWT.Traverse) { e ->
-            if (e.keyCode == 0xd && e.widget is Shell) {
-                keyProvider.keyPressed(memory, e.keyCode)
-                e.doit = false
-            }
-        }
-    }
-
-    //
-    // Main screen of the emulator
-    //
-
-    val text1Window = TextWindow(mainContainer).apply {
-        bounds = Rectangle(0, 0, ACTUAL_WIDTH, ACTUAL_HEIGHT)
-    }
-    text1Window.pack()
-
-    //
-    // Graphic screens
-    //
-    val hiResWindow = HiResWindow(0x2000, mainContainer).apply {
-        bounds = Rectangle(0, 0, ACTUAL_WIDTH, ACTUAL_HEIGHT)
-    }
-
-    //
-    // Middle panel, where the buttons live
-    //
-    val buttonContainer = Composite(shell, SWT.BORDER)
-    val rebootButton = button(buttonContainer, "Reboot")
-    buttonContainer.apply {
-        layoutData = GridData(SWT.FILL, SWT.FILL, false, true)
-        layout = GridLayout(1, true)
-        listOf(
-                rebootButton,
-                fileDialog(shell, button(this, "Disk 1", SWT.WRAP), UiState.currentDisk1File),
-                button(this, "Swap\ndisks", SWT.WRAP),
-                fileDialog(shell, button(this, "Disk 2", SWT.WRAP), UiState.currentDisk2File)
-        ).forEach {
-            it.layoutData = GridData().apply {
-                widthHint = 50
-                heightHint = 50
-            }
-        }
-    }
-
-    //
-    // Right panel
-    //
-    val parentHeight = text1Window.bounds.height + 120
+//fun createWindows(memory: () -> IMemory, keyProvider: IKeyProvider): SwtContext {
+//    val display = Display()
+//    val shell = Shell(display).apply {
+//        layout = GridLayout(3, false)
+//    }
 //
-//    createScrollableByteBuffer(shell, parentHeight).apply {
-////        layoutData = GridData(GridData.FILL_BOTH, GridData.FILL_BOTH, true, true)
-//    }
-    val folder = TabFolder(shell, SWT.NONE).apply {
-//        layoutData = FormData(500, parentHeight).apply {
-//            top = FormAttachment(shell)
-//            left = FormAttachment(mainWindow)
+//    val mainContainer = Composite(shell, SWT.NONE).apply {
+//        background = blue(display)
+//        layoutData = GridData().apply {
+//            verticalAlignment = SWT.BEGINNING
+//            widthHint = ACTUAL_WIDTH
+//            heightHint = ACTUAL_HEIGHT
 //        }
-        layoutData = GridData(GridData.FILL, GridData.FILL, true, true).apply {
-            grabExcessVerticalSpace = true
-//            heightHint = parentHeight
-        }
-    }
-
-    val diskWindow = DiskWindow(folder)
-    TabItem(folder, SWT.NONE).apply {
-        text = "DISK"
-        control = diskWindow
-    }
-    TabItem(folder, SWT.NONE).apply {
-        text = "DEBUGGER"
-        control = DebuggerWindow(folder)
-    }
-
-//    val hiResWindow = HiResWindow(folder)
-//    TabItem(folder, SWT.NONE).apply {
-//        text = "\$2000"
-//        control = hiResWindow
+//        display.addFilter(SWT.KeyDown) { e ->
+//            if (e.keyCode != 0xd) {
+//                val av = if (Character.isAlphabetic(e.keyCode)) e.character.toUpperCase().toInt()
+//                    else e.keyCode
+//                keyProvider.keyPressed(memory(), av)
+//            }
+//        }
+//        display.addFilter(SWT.Traverse) { e ->
+//            if (e.keyCode == 0xd && e.widget is Shell) {
+//                keyProvider.keyPressed(memory(), e.keyCode)
+//                e.doit = false
+//            }
+//        }
 //    }
-    folder.setSelection(0)
-
-
-//    folder.setSize(500, 900)
-
-//    mainWindow.pack()
-//    folder.pack()
-    shell.pack()
-    shell.setSize(text1Window.bounds.width + folder.bounds.width, parentHeight)
-    val result = SwtContext(display, shell, text1Window, hiResWindow)
-    result.apply {
-        rebootButton.addListener(SWT.Selection) { e ->
-            computer.reboot()
-        }
-    }
-
-    return result
-}
+//
+//    //
+//    // Main screen of the emulator
+//    //
+//
+//    val text1Window = TextWindow(mainContainer).apply {
+//        bounds = Rectangle(0, 0, ACTUAL_WIDTH, ACTUAL_HEIGHT)
+//    }
+//    text1Window.pack()
+//
+//    //
+//    // Graphic screens
+//    //
+//    val hiResWindow = HiResWindow(0x2000, mainContainer).apply {
+//        bounds = Rectangle(0, 0, ACTUAL_WIDTH, ACTUAL_HEIGHT)
+//    }
+//
+//    //
+//    // Middle panel, where the buttons live
+//    //
+//    val buttonContainer = Composite(shell, SWT.BORDER)
+//    val rebootButton = button(buttonContainer, "Reboot")
+//    buttonContainer.apply {
+//        layoutData = GridData(SWT.FILL, SWT.FILL, false, true)
+//        layout = GridLayout(1, true)
+//        listOf(
+//                rebootButton,
+//                fileDialog(shell, button(this, "Disk 1", SWT.WRAP), UiState.currentDisk1File),
+//                button(this, "Swap\ndisks", SWT.WRAP),
+//                fileDialog(shell, button(this, "Disk 2", SWT.WRAP), UiState.currentDisk2File)
+//        ).forEach {
+//            it.layoutData = GridData().apply {
+//                widthHint = 50
+//                heightHint = 50
+//            }
+//        }
+//    }
+//
+//    //
+//    // Right panel
+//    //
+//    val parentHeight = text1Window.bounds.height + 120
+////
+////    createScrollableByteBuffer(shell, parentHeight).apply {
+//////        layoutData = GridData(GridData.FILL_BOTH, GridData.FILL_BOTH, true, true)
+////    }
+//    val folder = TabFolder(shell, SWT.NONE).apply {
+////        layoutData = FormData(500, parentHeight).apply {
+////            top = FormAttachment(shell)
+////            left = FormAttachment(mainWindow)
+////        }
+//        layoutData = GridData(GridData.FILL, GridData.FILL, true, true).apply {
+//            grabExcessVerticalSpace = true
+////            heightHint = parentHeight
+//        }
+//    }
+//
+//    val diskWindow = DiskWindow(folder)
+//    TabItem(folder, SWT.NONE).apply {
+//        text = "DISK"
+//        control = diskWindow
+//    }
+//    TabItem(folder, SWT.NONE).apply {
+//        text = "DEBUGGER"
+//        control = DebuggerWindow(folder)
+//    }
+//
+////    val hiResWindow = HiResWindow(folder)
+////    TabItem(folder, SWT.NONE).apply {
+////        text = "\$2000"
+////        control = hiResWindow
+////    }
+//    folder.setSelection(0)
+//
+//
+////    folder.setSize(500, 900)
+//
+////    mainWindow.pack()
+////    folder.pack()
+//    shell.pack()
+//    shell.setSize(text1Window.bounds.width + folder.bounds.width, parentHeight)
+//    val result = SwtContext(display, shell, text1Window, hiResWindow)
+//    result.apply {
+//        rebootButton.addListener(SWT.Selection) { e ->
+//            computer.reboot()
+//        }
+//    }
+//
+//    return result
+//}
 
 fun createScrollableByteBuffer(parent: Composite): ScrolledComposite {
 //    val composite = Composite(parent, SWT.NONE).apply {

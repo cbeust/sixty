@@ -35,7 +35,11 @@ class DiskWindow(parent: Composite): Composite(parent, NONE) {
             }
         }
 
-        UiState.currentDisk1File.addListener { _, new -> diskLabel.text = new?.name }
+        UiState.currentDisk1File.addListener { _, new ->
+            display.asyncExec {
+                diskLabel.text = new?.name
+            }
+        }
         UiState.currentBytes.addListener { _, _ -> updateInspector() }
     }
 

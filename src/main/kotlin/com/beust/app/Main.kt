@@ -1,11 +1,10 @@
 package com.beust.app
 
-import com.beust.app.app.TextPanel
-import com.beust.sixty.*
-import com.beust.swt.ACTUAL_HEIGHT
-import com.beust.swt.SwtContext
-import com.beust.swt.createWindows
-import org.eclipse.swt.widgets.Control
+import A2Computer
+import GraphicContext
+import com.beust.sixty.Computer
+import com.beust.sixty.FileWatcher
+import com.beust.sixty.PulseManager
 import java.io.File
 
 val RUN = true
@@ -33,7 +32,7 @@ val disks = listOf(
         disk("/Force 7.woz") // 8
 )
 
-val DISK = disks[3]
+val DISK = disks[0]
 //val DISK = if (disk == 0)
 //    WOZ_DOS_3_3
 //else if (disk == 1)
@@ -90,28 +89,41 @@ fun main() {
 //        }
 //    }
 
-    val p = Apple2Computer().run(pulseManager)
-    val swtContext = p.first
-    val computer = { -> p.second }
+    var c = A2Computer()
+    val gc = GraphicContext({ -> c }) { ->
+        c.memory
+    }
+    val memoryListener = Apple2MemoryListener({ -> c.memory }, gc.textScreen, gc.hiResWindow)
+    c.memory.listeners.add(memoryListener)
+
+    c.pulseListeners.forEach { pulseManager.addListener(it) }
+    c.memoryListeners.forEach { c.memory.listeners.add(it) }
+
+//    val p = Apple2Computer().run(pulseManager)
+//    val swtContext = p.first
+//    val computer = { -> p.second }
     if (RUN) {
         Thread {
             var stop = false
-            var c = computer()
-            pulseManager.addListener(c)
             while (! stop) {
                 val status = pulseManager.run()
                 if (status == Computer.RunStatus.STOP) {
                     stop = true
                 } else {
-                    pulseManager.removeListener(c)
-                    c = computer()
-                    swtContext?.computer = c
+                    pulseManager.removeListeners()
+                    println("Creating a new A2Computer")
+                    gc.clear()
+                    c = A2Computer()
+                    c.memory.listeners.add(memoryListener)
+                    c.pulseListeners.forEach { pulseManager.addListener(it) }
+                    c.memoryListeners.forEach { c.memory.listeners.add(it) }
+                    println("Done")
                     pulseManager.addListener(c)
                 }
             }
         }.start()
     }
-    swtContext?.run()
+    gc.run()
     fw.stop = true
     pulseManager.stop()
 }

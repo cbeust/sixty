@@ -1,9 +1,7 @@
 package com.beust.sixty
 
-import com.beust.app.DEBUG
-import com.beust.app.createApple2Memory
+import createApple2Memory
 import org.assertj.core.api.Assertions.assertThat
-import org.testng.Assert
 import org.testng.annotations.Test
 import java.io.File
 

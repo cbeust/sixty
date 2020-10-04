@@ -154,9 +154,11 @@ class ByteBufferWindow(parent: Composite) : Composite(parent, SWT.NONE) {
                         byteText.append("\n")
                         row += rowSize
                     }
-                    offsets.text = offsetText.toString()
-                    bytes.text = byteText.toString()
-                    bytes.styleRanges = ranges.toTypedArray()
+                    display.asyncExec {
+                        offsets.text = offsetText.toString()
+                        bytes.text = byteText.toString()
+                        bytes.styleRanges = ranges.toTypedArray()
+                    }
 //                } else {
 //                    println("NO OFFSET HERE")
 //                }

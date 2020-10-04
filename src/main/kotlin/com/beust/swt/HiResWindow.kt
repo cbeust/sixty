@@ -47,6 +47,18 @@ class HiResWindow(private val startLocation: Int, parent: Composite, style: Int 
         stop = true
     }
 
+    fun clear() {
+        display.syncExec {
+            imageDatas.forEach { id ->
+                repeat(ACTUAL_HEIGHT) { y ->
+                    repeat(ACTUAL_WIDTH) { x ->
+                        id.setPixel(x, y, 0)
+                    }
+                }
+            }
+        }
+    }
+
     private fun drawSquare(imageData: ImageData, xx: Int, yy: Int, color: Int) {
         val x = xx * WIDTH_FACTOR
         val y = yy * HEIGHT_FACTOR
@@ -175,4 +187,5 @@ class HiResWindow(private val startLocation: Int, parent: Composite, style: Int 
         repeat(2) { drawPixel(x + i++, y, BitPattern.color(bitPattern.p1, bitPattern.ff, x + 5), page) }
         repeat(2) { drawPixel(x + i++, y, BitPattern.color(bitPattern.p1, bitPattern.gg, x + 6), page) }
     }
+
 }
