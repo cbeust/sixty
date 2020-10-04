@@ -5,9 +5,11 @@ import com.beust.app.SColor
 import com.beust.sixty.IMemory
 import com.beust.sixty.hh
 import org.eclipse.swt.SWT
-import org.eclipse.swt.graphics.*
+import org.eclipse.swt.graphics.Image
+import org.eclipse.swt.graphics.ImageData
+import org.eclipse.swt.graphics.PaletteData
+import org.eclipse.swt.graphics.RGB
 import org.eclipse.swt.layout.FillLayout
-import org.eclipse.swt.layout.GridLayout
 import org.eclipse.swt.widgets.Canvas
 import org.eclipse.swt.widgets.Composite
 
@@ -31,17 +33,10 @@ class HiResWindow(private val startLocation: Int, parent: Composite, style: Int 
 
     private val content = Array(WIDTH * HEIGHT) { SColor.BLACK }
     private fun index(x: Int, y: Int) = y * WIDTH + x
-    private val blockWidth = WIDTH_FACTOR
-    private val blockHeight = HEIGHT_FACTOR
     // https://mrob.com/pub/xapple2/colors.html
-    private val PALETTE_DATA = PaletteData(*arrayOf(
-            RGB(0, 0, 0), // black
-            RGB(0xff, 0xff, 0xff), // white
-            RGB(20, 245, 60), // green
-            RGB(255, 106, 60), // orange
-            RGB(255, 68, 253), // magenta
-            RGB(20, 207, 254) // blue
-    ))
+    private val PALETTE_DATA = PaletteData(
+            RGB(0, 0, 0), RGB(0xff, 0xff, 0xff), RGB(20, 245, 60), RGB(255, 106, 60), RGB(255, 68, 253),
+            RGB(20, 207, 254))
     private var stop = false
     fun stop() {
         stop = true
@@ -71,11 +66,11 @@ class HiResWindow(private val startLocation: Int, parent: Composite, style: Int 
 
     private fun newImageData() = ImageData(ACTUAL_WIDTH, ACTUAL_HEIGHT, 4, PALETTE_DATA)
 
-    private fun newImage(): Image {
-        val imageData = newImageData()
-        drawSquare(imageData, 0, 0, 4)
-        return Image(display, imageData)
-    }
+//    private fun newImage(): Image {
+//        val imageData = newImageData()
+//        drawSquare(imageData, 0, 0, 4)
+//        return Image(display, imageData)
+//    }
 
     var page = 0 // or 1
     private fun imageData() = if (page == 0) imageDatas[0] else imageDatas[1]

@@ -6,13 +6,11 @@ import java.io.InputStream
 
 @Suppress("UnnecessaryVariable", "BooleanLiteralArgument")
 class Apple2Memory(val size: Int? = null): IMemory {
-    var interceptor: MemoryInterceptor? = null
     override val lastMemDebug = arrayListOf<String>()
     override val listeners = arrayListOf<MemoryListener>()
 
     var init = true
 
-    var lastMem: String? = null
     var store80On = false
     private var readAux = false
     private var writeAux = false
@@ -21,7 +19,7 @@ class Apple2Memory(val size: Int? = null): IMemory {
             field = f
             UiState.mainScreenText.value = f
         }
-    var mixed  = false
+    private var mixed  = false
         set(f) {
             field = f
             UiState.mainScreenMixed.value = f
@@ -102,11 +100,11 @@ class Apple2Memory(val size: Int? = null): IMemory {
             }
         }
 
-        fun loadInSlot(bytes: ByteArray, offset: Int = 0, size: Int = bytes.size, destOffset: Int = 0) {
-            repeat(size) { index ->
-                slot[index + destOffset] = bytes[index + offset].toInt().and(0xff)
-            }
-        }
+//        fun loadInSlot(bytes: ByteArray, offset: Int = 0, size: Int = bytes.size, destOffset: Int = 0) {
+//            repeat(size) { index ->
+//                slot[index + destOffset] = bytes[index + offset].toInt().and(0xff)
+//            }
+//        }
 
         fun loadInInternal(bytes: ByteArray, offset: Int = 0, size: Int = bytes.size, destOffset: Int = 0) {
             repeat(size) { index ->
@@ -473,11 +471,11 @@ class Apple2Memory(val size: Int? = null): IMemory {
         init = false
     }
 
-    fun loadCxxxInSlot(bytes: ByteArray, offset: Int = 0, size: Int = bytes.size, destOffset: Int = 0) {
-        c0Memory.loadInSlot(bytes, offset, size, destOffset)
-    }
+//    fun loadCxxxInSlot(bytes: ByteArray, offset: Int = 0, size: Int = bytes.size, destOffset: Int = 0) {
+//        c0Memory.loadInSlot(bytes, offset, size, destOffset)
+//    }
 
-    fun loadCxxxInInternal(bytes: ByteArray, offset: Int = 0, size: Int = bytes.size, destOffset: Int = 0) {
+    private fun loadCxxxInInternal(bytes: ByteArray, offset: Int = 0, size: Int = bytes.size, destOffset: Int = 0) {
         c0Memory.loadInInternal(bytes, offset, size, destOffset)
     }
 

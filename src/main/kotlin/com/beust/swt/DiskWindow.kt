@@ -1,6 +1,9 @@
 package com.beust.swt
 
-import com.beust.app.*
+import com.beust.app.ByteAlgorithm
+import com.beust.app.SixAndTwo
+import com.beust.app.UiState
+import com.beust.app.word
 import com.beust.sixty.h
 import com.beust.sixty.hh
 import org.eclipse.swt.SWT
@@ -8,9 +11,10 @@ import org.eclipse.swt.SWT.NONE
 import org.eclipse.swt.custom.ScrolledComposite
 import org.eclipse.swt.events.SelectionEvent
 import org.eclipse.swt.events.SelectionListener
-import org.eclipse.swt.layout.*
+import org.eclipse.swt.graphics.Point
+import org.eclipse.swt.layout.GridData
+import org.eclipse.swt.layout.GridLayout
 import org.eclipse.swt.widgets.*
-import java.io.File
 
 class DiskWindow(parent: Composite): Composite(parent, NONE) {
     private lateinit var diskLabel: Label
@@ -22,8 +26,8 @@ class DiskWindow(parent: Composite): Composite(parent, NONE) {
     init {
         layout = GridLayout(3, false)
 
-        val header = createHeader(this)
-        val dataInspector = createDataInspector(this)
+        createHeader()
+        createDataInspector(this)
 
         scrolledComposite = createScrollableByteBuffer(this).apply {
             layoutData = GridData(GridData.FILL, GridData.FILL, true, true).apply {
@@ -53,7 +57,7 @@ class DiskWindow(parent: Composite): Composite(parent, NONE) {
 
     }
     private fun createLabelText(parent: Composite, label: String): Pair<Composite, Text> {
-        val result = Composite(parent, SWT.NONE).apply {
+        val result = Composite(parent, NONE).apply {
             layoutData = GridData(GridData.FILL, GridData.FILL, true, false)
             layout = GridLayout(2, false)
         }
@@ -86,7 +90,7 @@ class DiskWindow(parent: Composite): Composite(parent, NONE) {
         return result
     }
 
-    private fun createHeader(parent: Composite): Composite {
+    private fun createHeader(): Composite {
         val header = Composite(this, NONE).apply {
             layout = GridLayout(6, false)
 //            background = grey(display)
@@ -175,4 +179,24 @@ class DiskWindow(parent: Composite): Composite(parent, NONE) {
 
         return header
     }
+
+    private fun createScrollableByteBuffer(parent: Composite): ScrolledComposite {
+        val result = ScrolledComposite(parent, SWT.BORDER or SWT.V_SCROLL or SWT.H_SCROLL).apply {
+            background = black(display)
+        }
+
+        ByteBufferWindow(result).let {
+            it.pack()
+            with(it.bounds) {
+                result.setMinSize(Point(500, 4000))
+            }
+            result.content = it
+            result.expandHorizontal = true
+            result.expandVertical = true
+        }
+        parent.layout()
+        return result
+    }
+
 }
+

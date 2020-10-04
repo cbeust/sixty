@@ -1,8 +1,10 @@
 package com.beust.swt
 
-import com.beust.app.*
+import com.beust.app.ByteAlgorithm
+import com.beust.app.IDisk
+import com.beust.app.UiState
+import com.beust.app.Woz
 import com.beust.sixty.h
-import com.beust.sixty.hh
 import com.beust.sixty.log
 import org.eclipse.swt.SWT
 import org.eclipse.swt.custom.StyleRange
@@ -87,7 +89,7 @@ class ByteBufferWindow(parent: Composite) : Composite(parent, SWT.NONE) {
 
     private fun updateBuffer(track: Int = 0, byteAlgorithm: ByteAlgorithm = ByteAlgorithm.SHIFTED) {
         currentBytes.clear()
-        UiState.currentDisk1File?.let { df ->
+        UiState.currentDisk1File.let { df ->
             val disk = IDisk.create(df.value!!)
             repeat (track * 4) {
                 disk.incTrack()
@@ -125,9 +127,7 @@ class ByteBufferWindow(parent: Composite) : Composite(parent, SWT.NONE) {
                     val state = State()
                     val ranges = arrayListOf<StyleRange>()
                     var addressStart = -1
-                    var addressEnd = -1
                     var dataStart = -1
-                    var dataEnd = -1
                     repeat(6000) {
                         offsetText.append("\$" + String.format("%04X", row) + "\n")
                         repeat(rowSize) {

@@ -3,20 +3,15 @@ package com.beust.swt
 import com.beust.app.LineCalculator
 import com.beust.app.app.ITextScreen
 import com.beust.sixty.h
-import com.beust.sixty.log
 import com.beust.sixty.logText
-import org.eclipse.jface.resource.FontDescriptor
-import org.eclipse.jface.resource.JFaceResources
-import org.eclipse.jface.resource.LocalResourceManager
 import org.eclipse.swt.SWT
 import org.eclipse.swt.graphics.Font
-import org.eclipse.swt.graphics.GC
 import org.eclipse.swt.layout.GridData
 import org.eclipse.swt.layout.GridLayout
 import org.eclipse.swt.widgets.Composite
 import org.eclipse.swt.widgets.Label
 
-class TextWindow(parent: Composite, private val start: Int): Composite(parent, SWT.NONE), ITextScreen {
+class TextWindow(parent: Composite, start: Int): Composite(parent, SWT.NONE), ITextScreen {
 
     private val textFont: Font
     private val labels = arrayListOf<Label>()
@@ -31,9 +26,9 @@ class TextWindow(parent: Composite, private val start: Int): Composite(parent, S
 
 
     init {
-        val isFontLoaded = shell.display.loadFont("fonts/PrintChar21.ttf");
+        val isFontLoaded = shell.display.loadFont("fonts/PrintChar21.ttf")
         textFont = if (isFontLoaded) {
-            Font(shell.display, "Print Char 21", 12, SWT.NORMAL);
+            Font(shell.display, "Print Char 21", 12, SWT.NORMAL)
         } else {
             font(shell, "Arial", 9, SWT.BOLD)
         }

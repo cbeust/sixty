@@ -1,6 +1,5 @@
 package com.beust.sixty
 
-import createApple2Memory
 import org.assertj.core.api.Assertions.assertThat
 import org.testng.annotations.Test
 import java.io.File
@@ -31,7 +30,7 @@ class MemoryTest {
         var message: String? = null
 
 //        DEBUG = true
-        val mem = createApple2Memory().apply {
+        val mem = Apple2Memory().apply {
             val ins2 = File("asm/$fileName").inputStream()
             load(ins2.readAllBytes(), start)
             listeners.add(DebugMemoryListener(this))

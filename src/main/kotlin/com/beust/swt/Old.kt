@@ -17,31 +17,31 @@ import org.eclipse.swt.widgets.*
 
 private const val STYLE = SWT.BORDER or SWT.H_SCROLL or SWT.V_SCROLL
 
-fun main() {
-    works()
-}
+//fun main() {
+//    works()
+//}
 
-fun works() {
-    val display = Display()
-    val shell = Shell(display)
-    shell.text = "ScrolledComposite in 'scroll' and 'browser' mode"
-    shell.layout = FillLayout()
-
-    val folder = CTabFolder(shell, SWT.TOP)
-
-    val tab = CTabItem(folder, SWT.NONE).apply {
-        text = "DISK"
-        control = createScrollableByteBuffer(folder)
-    }
-
-    shell.setSize(600, 100)
-    shell.open()
-    while (!shell.isDisposed) {
-        if (!display.readAndDispatch()) display.sleep()
-    }
-    display.dispose()
-
-}
+//fun works() {
+//    val display = Display()
+//    val shell = Shell(display)
+//    shell.text = "ScrolledComposite in 'scroll' and 'browser' mode"
+//    shell.layout = FillLayout()
+//
+//    val folder = CTabFolder(shell, SWT.TOP)
+//
+//    val tab = CTabItem(folder, SWT.NONE).apply {
+//        text = "DISK"
+//        control = createScrollableByteBuffer(folder)
+//    }
+//
+//    shell.setSize(600, 100)
+//    shell.open()
+//    while (!shell.isDisposed) {
+//        if (!display.readAndDispatch()) display.sleep()
+//    }
+//    display.dispose()
+//
+//}
 
 fun multipleWays() {
     val display = Display()
@@ -337,28 +337,28 @@ fun runWithShell(init: (display: Display, shell: Shell) -> Unit) {
 }
 
 
-class HexText(parent: Composite) : Composite(parent, SWT.NONE) {
-
-    private fun buildControls() {
-        layout = FillLayout()
-        val text = Text(this, SWT.MULTI or SWT.V_SCROLL).apply {
-            text = "Foo"
-            setSelection(40, 30)
-        }
-        text.addVerifyListener { e ->
-            if (isHex(e.character)) {
-                e.doit = true
-                e.text = e.text.toUpperCase()
-            } else {
-                e.doit = false
-            }
-        }
-    }
-
-    init {
-        buildControls()
-    }
-}
+//class HexText(parent: Composite) : Composite(parent, SWT.NONE) {
+//
+//    private fun buildControls() {
+//        layout = FillLayout()
+//        val text = Text(this, SWT.MULTI or SWT.V_SCROLL).apply {
+//            text = "Foo"
+//            setSelection(40, 30)
+//        }
+//        text.addVerifyListener { e ->
+//            if (isHex(e.character)) {
+//                e.doit = true
+//                e.text = e.text.toUpperCase()
+//            } else {
+//                e.doit = false
+//            }
+//        }
+//    }
+//
+//    init {
+//        buildControls()
+//    }
+//}
 
 
 class Ch4_Contributions : ApplicationWindow(null) {
@@ -459,4 +459,8 @@ class SwtWindow : ApplicationWindow(null) {
         // Dispose the display
         Display.getCurrent().dispose()
     }
+
+    val allowed = hashSetOf('a', 'b', 'c', 'd', 'e', 'f', 'A', 'B', 'C', 'D', 'E', 'F')
+    fun isHex(c: Char) = Character.isDigit(c) || allowed.contains(c)
 }
+
