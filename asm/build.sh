@@ -1,5 +1,5 @@
 
-for i in cxxx #auxmem bank-memory #language-card
+for i in keyboard #cxxx #auxmem bank-memory #language-card
 do
    acme  -o $i.bin -r $i.lst -f plain $i.s && cat $i.lst
 done

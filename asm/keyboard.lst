@@ -1,0 +1,27 @@
+
+; ******** Source: keyboard.s
+     1                          * = $300
+     2                          COUT = $fded
+     3                          
+     4                          -
+     5  0300 ad00c0                 lda $c000
+     6  0303 10fb                   bpl -
+     7  0305 48                     pha
+     8  0306 4a                     lsr
+     9  0307 4a                     lsr
+    10  0308 4a                     lsr
+    11  0309 4a                     lsr
+    12  030a 201303                 jsr printChar
+    13  030d 68                     pla
+    14  030e 290f                   and #$f
+    15  0310 4c1303                 jmp printChar
+    16                          
+    17                          printChar:
+    18  0313 aa                     tax
+    19  0314 bd1a03                 lda characters,X
+    20  0317 4cedfd                 jmp COUT
+    21                          
+    22                          characters:
+    23  031a 3031323334353637...    !text "01234567890"
+    24  0325 414243444546           !text "ABCDEF"
+    25                          
