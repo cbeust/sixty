@@ -49,6 +49,10 @@ interface IDisk {
         }
         return result
     }
-
 }
+
+abstract class BaseDisk: IDisk {
+    override fun toString(): String = name
+}
+
 

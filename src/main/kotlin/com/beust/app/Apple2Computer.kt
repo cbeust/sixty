@@ -14,6 +14,9 @@ class Apple2Computer: IPulse {
             UiState.currentDisk1File.value?.let { disk ->
                 loadDisk(IDisk.create(disk), 0)
             }
+            UiState.currentDisk2File.value?.let { disk ->
+                loadDisk(IDisk.create(disk), 1)
+            }
         }
         pulseListeners.add(dc)
         pulseListeners.add(this)

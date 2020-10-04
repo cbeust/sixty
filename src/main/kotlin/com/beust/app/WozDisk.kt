@@ -5,7 +5,7 @@ import com.beust.sixty.h
 import java.io.File
 import java.io.InputStream
 
-class WozDisk(override val name: String, ins: InputStream): IDisk, IByteStream {
+class WozDisk(override val name: String, ins: InputStream): BaseDisk(), IByteStream {
 
     constructor(file: File): this(file.absolutePath, file.inputStream())
 

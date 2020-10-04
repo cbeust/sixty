@@ -9,7 +9,7 @@ fun main() {
     DskDisk("Sherwood.dsk", File("d:/pd/Apple Disks/Sherwood Forest.dsk").inputStream())
 }
 
-class DskDisk(override val name: String, ins: InputStream): IDisk {
+class DskDisk(override val name: String, ins: InputStream): BaseDisk() {
     companion object {
         private const val TRACK_MAX = 70
         const val DISK_IMAGE_SIZE_BYTES = TRACK_MAX * 16 * 256
