@@ -90,79 +90,79 @@ class ByteBufferWindow(parent: Composite) : Composite(parent, SWT.NONE) {
     private fun updateBuffer(track: Int = 0, byteAlgorithm: ByteAlgorithm = ByteAlgorithm.SHIFTED) {
         currentBytes.clear()
         UiState.currentDisk1File.let { df ->
-            val disk = IDisk.create(df.value!!)
-            repeat (track * 4) {
-                disk.incTrack()
+            val disk = IDisk.create(df.value)
+            if (disk == null) {
+                println("Empty disk drive")
+            } else {
+                repeat(track * 4) {
+                    disk.incTrack()
+                }
+                //            Woz(disk.readBytes()).let { woz ->
+                //                val track = UiState.currentTrack.value
+                //                val offset = woz.tmap.offsetFor(track)
+                //                var position = 0
+                //                if (offset != -1) {
+                //                    val bitStream = woz.bitStreamForTrack(track)
+                //                    var bitsToGo = woz.trks.trks[offset].bitCount
+
+                fun nextByte(): Int {
+                    var byte = 0
+                    when (byteAlgorithm) {
+                        ByteAlgorithm.SHIFTED -> {
+                            while (byte and 0x80 == 0) {
+                                val bit = disk.nextBit()
+                                byte = byte.shl(1).or(bit)
+                            }
+                        }
+                        else -> {
+                            repeat(8) {
+                                val bit = disk.nextBit()
+                                byte = byte.shl(1).or(bit)
+                            }
+                        }
+                    }
+                    return byte
+                }
+
+                var row = 0
+                val offsetText = StringBuffer()
+                val byteText = StringBuffer()
+                val state = State()
+                val ranges = arrayListOf<StyleRange>()
+                var addressStart = -1
+                var dataStart = -1
+                repeat(6000) {
+                    offsetText.append("\$" + String.format("%04X", row) + "\n")
+                    repeat(rowSize) {
+                        val nb = nextByte()
+                        state.state(byteText.length, nb)
+                        if (state.foundD5AA96) {
+                            addressStart = state.start
+                        } else if (state.foundD5AAAD) {
+                            dataStart = state.start
+                        } else if (state.foundDEAA) {
+                            if (addressStart > 0) {
+                                ranges.add(StyleRange(addressStart, byteText.length - addressStart + 2, null,
+                                        lightBlue(display)))
+                                addressStart = -1
+                            } else if (dataStart > 0) {
+                                ranges.add(StyleRange(dataStart, byteText.length - dataStart + 2, null,
+                                        lightYellow(display)))
+                                dataStart = -1
+                            }
+                        }
+                        byteText.append(nb.h() + " ")
+                        currentBytes.add(nb)
+                    }
+                    byteText.append("\n")
+                    row += rowSize
+                }
+                display.asyncExec {
+                    offsets.text = offsetText.toString()
+                    bytes.text = byteText.toString()
+                    bytes.styleRanges = ranges.toTypedArray()
+                }
             }
-//            Woz(disk.readBytes()).let { woz ->
-//                val track = UiState.currentTrack.value
-//                val offset = woz.tmap.offsetFor(track)
-//                var position = 0
-//                if (offset != -1) {
-//                    val bitStream = woz.bitStreamForTrack(track)
-//                    var bitsToGo = woz.trks.trks[offset].bitCount
-
-                    fun nextByte(): Int {
-                        var byte = 0
-                        when(byteAlgorithm) {
-                            ByteAlgorithm.SHIFTED -> {
-                                while (byte and 0x80 == 0) {
-                                    val bit = disk.nextBit()
-                                    byte = byte.shl(1).or(bit)
-                                }
-                            }
-                            else -> {
-                                repeat(8) {
-                                    val bit = disk.nextBit()
-                                    byte = byte.shl(1).or(bit)
-                                }
-                            }
-                        }
-                        return byte
-                    }
-
-                    var row = 0
-                    val offsetText = StringBuffer()
-                    val byteText = StringBuffer()
-                    val state = State()
-                    val ranges = arrayListOf<StyleRange>()
-                    var addressStart = -1
-                    var dataStart = -1
-                    repeat(6000) {
-                        offsetText.append("\$" + String.format("%04X", row) + "\n")
-                        repeat(rowSize) {
-                            val nb = nextByte()
-                            state.state(byteText.length, nb)
-                            if (state.foundD5AA96) {
-                                addressStart = state.start
-                            } else if (state.foundD5AAAD) {
-                                dataStart = state.start
-                            } else if (state.foundDEAA) {
-                                if (addressStart > 0) {
-                                    ranges.add(StyleRange(addressStart, byteText.length - addressStart + 2, null,
-                                            lightBlue(display)))
-                                    addressStart = -1
-                                } else if (dataStart > 0) {
-                                    ranges.add(StyleRange(dataStart, byteText.length - dataStart + 2, null,
-                                            lightYellow(display)))
-                                    dataStart = -1
-                                }
-                            }
-                            byteText.append(nb.h() + " ")
-                            currentBytes.add(nb)
-                        }
-                        byteText.append("\n")
-                        row += rowSize
-                    }
-                    display.asyncExec {
-                        offsets.text = offsetText.toString()
-                        bytes.text = byteText.toString()
-                        bytes.styleRanges = ranges.toTypedArray()
-                    }
-//                } else {
-//                    println("NO OFFSET HERE")
-//                }
-//            }
         }
     }
 }

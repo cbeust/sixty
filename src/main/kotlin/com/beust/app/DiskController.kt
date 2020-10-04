@@ -53,7 +53,8 @@ class DiskController(val slot: Int = 6): IPulse, MemoryListener() {
 
     private fun disk() = if (drive1) disk1 else disk2
     /** @param drive 0 for drive 1, 1 for drive 2 */
-    fun loadDisk(disk: IDisk, drive: Int) {
+    fun loadDisk(disk: IDisk?, drive: Int) {
+        logDisk("Loading disk $disk in drive " + (drive + 1))
         when(drive) {
             0 -> disk1 = disk
             1 -> disk2 = disk
@@ -81,22 +82,22 @@ class DiskController(val slot: Int = 6): IPulse, MemoryListener() {
                 value
             }
             0xc088 -> {
-                logDisk("Turning motor off")
+                logTraceDisk("Turning motor off")
                 motorOn = false
                 value
             }
             0xc089 -> {
-                logDisk("Turning motor on")
+                logTraceDisk("Turning motor on")
                 motorOn = true
                 value
             }
             0xc08a -> {
-                logDisk("Turning on drive 1")
+                logTraceDisk("Turning on drive 1")
                 drive1 = true
                 value
             }
             0xc08b -> {
-                logDisk("Turning on drive 2")
+                logTraceDisk("Turning on drive 2")
                 drive1 = false
                 value
             }
@@ -116,8 +117,8 @@ class DiskController(val slot: Int = 6): IPulse, MemoryListener() {
     private var phase = 0
 
     private fun magnet(disk: IDisk, index: Int, state: Boolean) {
-        fun logInc(p1: Int, p2: Int) { logDisk("Phase $p1 -> $p2: Incrementing track")}
-        fun logDec(p1: Int, p2: Int) { logDisk("Phase $p1 -> $p2: Decrementing track")}
+        fun logInc(p1: Int, p2: Int) { logTraceDisk("Phase $p1 -> $p2: Incrementing track")}
+        fun logDec(p1: Int, p2: Int) { logTraceDisk("Phase $p1 -> $p2: Decrementing track")}
         if (state) {
             when(phase) {
                 0 -> {
@@ -128,7 +129,6 @@ class DiskController(val slot: Int = 6): IPulse, MemoryListener() {
                     } else if (index == 3) {
                         phase = 3
                         logDec(0, 3)
-                        logDisk("Phase 0 -> 1, decrementing track")
                         disk.decTrack()
                     }
                 }

@@ -1,26 +1,24 @@
 package com.beust.app
 
 import com.beust.sixty.*
+import java.io.File
 
 class Apple2Computer: IPulse {
     val pulseListeners = arrayListOf<IPulse>()
     val memoryListeners = arrayListOf<MemoryListener>()
     var memory: Apple2Memory
     var computer: IComputer
-    
+
     init {
         memory = Apple2Memory()
-        val dc = DiskController(6).apply {
-            UiState.currentDisk1File.value?.let { disk ->
-                loadDisk(IDisk.create(disk), 0)
-            }
-            UiState.currentDisk2File.value?.let { disk ->
-                loadDisk(IDisk.create(disk), 1)
-            }
+        val diskController = DiskController(6).apply {
+            loadDisk(IDisk.create(UiState.currentDisk1File.value), 0)
+            UiState.currentDisk1File.addListener { _, new -> loadDisk(IDisk.create(new), 0) }
+            UiState.currentDisk2File.addListener { _, new -> loadDisk(IDisk.create(new), 1) }
         }
-        pulseListeners.add(dc)
+        pulseListeners.add(diskController)
         pulseListeners.add(this)
-        memoryListeners.add(dc)
+        memoryListeners.add(diskController)
 
         val a2Memory = memory
         computer = Computer.create {
@@ -39,6 +37,7 @@ class Apple2Computer: IPulse {
     override fun stop() {
         TODO("Not yet implemented")
     }
+
 }
 
 //private fun runWatcher(memory: IMemory) {

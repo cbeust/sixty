@@ -20,7 +20,8 @@ interface IByteStream {
 }
 interface IDisk {
     companion object {
-        fun create(file: File): IDisk = when {
+        fun create(file: File?): IDisk? = when {
+                file == null -> null
                 file.name.endsWith(".woz") -> WozDisk(file.absolutePath, file.inputStream())
                 file.name.endsWith(".dsk") -> DskDisk(file.absolutePath, file.inputStream())
                 else -> ERROR("Unsupported disk format: $file")

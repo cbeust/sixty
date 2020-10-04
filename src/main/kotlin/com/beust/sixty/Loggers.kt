@@ -15,6 +15,7 @@ fun logMem(s: String) = Loggers.memory.debug("[MEM] $s")
 fun logText(s: String) = Loggers.text.debug("[TEXT] $s")
 fun logGraphics(s: String) = Loggers.graphics.debug("[GFX] $s")
 fun logDisk(s: String) = Loggers.disk.debug("[DISK] $s")
-fun logUiStatus(s: String) = Loggers.disk.debug("[UI] $s")
+fun logTraceDisk(s: String) = Loggers.disk.trace("[DISK] $s")
+fun logUiStatus(s: String) = Loggers.uiStatus.debug("[UI] $s")
 fun log(s: String) = Loggers.def.debug(s)
 

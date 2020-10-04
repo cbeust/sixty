@@ -27,7 +27,7 @@ val disks = listOf(
         disk("Masquerade-1.dsk") // 9
 )
 
-val DISK = disks[0]
+val DISK = disks[7]
 
 fun main() {
     val pulseManager = PulseManager()
