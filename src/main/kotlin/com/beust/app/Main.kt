@@ -26,14 +26,15 @@ val disks = listOf(
         WOZ_DOS_3_3,
         File("src/test/resources/audit.dsk"),
         disk("Blade_of_Blackpoole_A.dsk"), // 3
-        disk("/Sherwood_Forest.dsk") ,       // 4
+        disk("Sherwood_Forest.dsk") ,       // 4
         File("d:/pd/Apple disks/Ultima I - The Beginning.woz"), // 5
-        disk("/Rescue Raiders.dsk"), // 6
-        disk("/Ultima4.dsk") , // 7
-        disk("/Force 7.woz") // 8
+        disk("Rescue Raiders.dsk"), // 6
+        disk("Ultima4.dsk") , // 7
+        disk("Force 7.woz"), // 8
+        disk("Masquerade-1.dsk") // 9
 )
 
-val DISK = disks[3]
+val DISK = disks[9]
 //val DISK = if (disk == 0)
 //    WOZ_DOS_3_3
 //else if (disk == 1)
