@@ -25,13 +25,12 @@ class PulseManager {
     fun run(): Computer.RunStatus {
         runStatus = Computer.RunStatus.RUN
         while (runStatus == Computer.RunStatus.RUN) {
+            var start = System.nanoTime()
             pulseListeners.forEach {
                 val r = it.onPulse(this)
-                if (r.runStatus == Computer.RunStatus.REBOOT) {
-                    println("REBOOT")
-                }
                 runStatus = r.runStatus
             }
+//            while (System.nanoTime() - start < 800);
         }
         return runStatus
     }
