@@ -1,6 +1,7 @@
 package com.beust.sixty
 
 import com.beust.app.LineCalculator
+import com.beust.app.app.ITextScreen
 import org.assertj.core.api.Assertions.assertThat
 import org.testng.annotations.DataProvider
 import org.testng.annotations.Test
@@ -18,7 +19,7 @@ class TextScreenTest {
         val result = Array<Array<Any>>(24) { Array(40) { 0 } }
         repeat(24) { y ->
             val start = addresses[y]
-            repeat(40) { x ->
+            repeat(ITextScreen.WIDTH) { x ->
                 val l = arrayListOf<Any>()
                 l.add(x)
                 l.add(y)
