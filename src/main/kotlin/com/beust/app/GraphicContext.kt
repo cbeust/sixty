@@ -12,13 +12,13 @@ import org.eclipse.swt.widgets.*
 
 class GraphicContext(val computer: () -> Apple2Computer, memory: () -> Apple2Memory) {
     val hiResWindow: HiResWindow
-    val textScreen: TextWindow
+    val textWindow: TextWindow
     private val display: Display = Display()
     private val shell: Shell
 
     fun clear() {
         hiResWindow.clear()
-        textScreen.clear()
+        textWindow.clear()
     }
 
     private val keyProvider = object: IKeyProvider {
@@ -64,44 +64,68 @@ class GraphicContext(val computer: () -> Apple2Computer, memory: () -> Apple2Mem
             layout = GridLayout(3, false)
         }
 
-        val mainContainer = Composite(shell, SWT.NONE).apply {
-            background = blue(display)
+        //
+        // Contains the text/graphic windows and below it, the drive1/swap/drive2 buttons
+        //
+        Composite(shell, SWT.NONE).apply {
+            layout = GridLayout(3, false)
             layoutData = GridData().apply {
                 verticalAlignment = SWT.BEGINNING
                 widthHint = ACTUAL_WIDTH
                 heightHint = ACTUAL_HEIGHT
             }
-            display.addFilter(SWT.KeyDown) { e ->
-                if (e.keyCode != 0xd) {
-                    val av = if (Character.isAlphabetic(e.keyCode)) e.character.toUpperCase().toInt()
-                    else e.keyCode
-                    keyProvider.keyPressed(memory(), av)
+
+            //
+            // Contains the drive1/swap/drive2 buttons
+            //
+            button(this, "Drive 1").apply {
+                background = red(display)
+                layoutData = GridData(GridData.FILL, GridData.FILL)
+            }
+            button(this, "Swap")
+            button(this, "Drive 2")
+
+
+            //
+            // Contains the text/graphic windows
+            // Span over the three columns
+            //
+            Composite(this, SWT.NONE).apply {
+                background = blue(display)
+                display.addFilter(SWT.KeyDown) { e ->
+                    if (e.keyCode != 0xd) {
+                        val av = if (Character.isAlphabetic(e.keyCode)) e.character.toUpperCase().toInt()
+                        else e.keyCode
+                        keyProvider.keyPressed(memory(), av)
+                    }
+                }
+                display.addFilter(SWT.Traverse) { e ->
+                    if (e.keyCode == 0xd && e.widget is Shell) {
+                        keyProvider.keyPressed(memory(), e.keyCode)
+                        e.doit = false
+                    }
+                }
+
+
+                //
+                // Text screens
+                //
+                textWindow = TextWindow(this, 0x400).apply {
+                    bounds = Rectangle(0, 0, ACTUAL_WIDTH, ACTUAL_HEIGHT)
+                }
+                //                    .apply {
+                //                pack()
+                //            }
+
+                //
+                // Graphic screens
+                //
+                hiResWindow = HiResWindow(0x2000, this).apply {
+                    bounds = Rectangle(0, 0, ACTUAL_WIDTH, ACTUAL_HEIGHT)
                 }
             }
-            display.addFilter(SWT.Traverse) { e ->
-                if (e.keyCode == 0xd && e.widget is Shell) {
-                    keyProvider.keyPressed(memory(), e.keyCode)
-                    e.doit = false
-                }
-            }
         }
 
-        //
-        // Main screen of the emulator
-        //
-
-        textScreen = TextWindow(mainContainer, 0x400).apply {
-            bounds = Rectangle(0, 0, ACTUAL_WIDTH, ACTUAL_HEIGHT)
-        }.apply {
-            pack()
-        }
-
-        //
-        // Graphic screens
-        //
-        hiResWindow = HiResWindow(0x2000, mainContainer).apply {
-            bounds = Rectangle(0, 0, ACTUAL_WIDTH, ACTUAL_HEIGHT)
-        }
 
         //
         // Middle panel, where the buttons live
@@ -132,7 +156,7 @@ class GraphicContext(val computer: () -> Apple2Computer, memory: () -> Apple2Mem
         //
         // Right panel
         //
-        val parentHeight = textScreen.bounds.height + 120
+        val parentHeight = textWindow.bounds.height + 120
 //
 //    createScrollableByteBuffer(shell, parentHeight).apply {
 ////        layoutData = GridData(GridData.FILL_BOTH, GridData.FILL_BOTH, true, true)
@@ -171,7 +195,7 @@ class GraphicContext(val computer: () -> Apple2Computer, memory: () -> Apple2Mem
 //    mainWindow.pack()
 //    folder.pack()
         shell.pack()
-        shell.setSize(textScreen.bounds.width + folder.bounds.width, parentHeight)
+        shell.setSize(textWindow.bounds.width + folder.bounds.width, parentHeight)
 //        rebootButton.addListener(SWT.Selection) { e ->
 //            computer.reboot()
 //        }
@@ -182,14 +206,14 @@ class GraphicContext(val computer: () -> Apple2Computer, memory: () -> Apple2Mem
         UiState.mainScreenPage2.addAfterListener { _, _ ->
             if (!memory().store80On) {
                 if (UiState.mainScreenText.value) {
-                    show(textScreen)
+                    show(textWindow)
                 } else {
                     show(hiResWindow)
                 }
             }
         }
         UiState.mainScreenText.addListener { _, new ->
-            if (new) show(textScreen)
+            if (new) show(textWindow)
         }
         UiState.mainScreenMixed.addAfterListener { _, new ->
             maybeResize(hiResWindow)

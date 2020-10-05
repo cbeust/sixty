@@ -36,7 +36,7 @@ fun main() {
     val gc = GraphicContext({ -> c }) { ->
         c.memory
     }
-    val memoryListener = Apple2MemoryListener({ -> c.memory }, gc.textScreen, gc.hiResWindow)
+    val memoryListener = Apple2MemoryListener({ -> c.memory }, gc.textWindow, gc.hiResWindow)
     c.memory.listeners.add(memoryListener)
 
     c.pulseListeners.forEach { pulseManager.addListener(it) }
