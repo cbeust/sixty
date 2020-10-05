@@ -32,7 +32,7 @@ class GraphicContext(val computer: () -> Apple2Computer, memory: () -> Apple2Mem
         if (control == hiResWindow) {
             control.display.asyncExec {
                 val fullHeight = ACTUAL_HEIGHT
-                val shortHeight = ACTUAL_HEIGHT * 5 / 6
+                val shortHeight = ACTUAL_MIXED_HEIGHT
                 val b = control.bounds
                 val newHeight = if (UiState.mainScreenMixed.value) shortHeight else fullHeight
                 control.setBounds(b.x, b.y, b.width, newHeight)
@@ -71,19 +71,17 @@ class GraphicContext(val computer: () -> Apple2Computer, memory: () -> Apple2Mem
             layout = GridLayout(3, false)
             layoutData = GridData().apply {
                 verticalAlignment = SWT.BEGINNING
-                widthHint = ACTUAL_WIDTH
-                heightHint = ACTUAL_HEIGHT
             }
 
             //
             // Contains the drive1/swap/drive2 buttons
             //
-            button(this, "Drive 1").apply {
-                background = red(display)
-                layoutData = GridData(GridData.FILL, GridData.FILL)
-            }
-            button(this, "Swap")
-            button(this, "Drive 2")
+//            button(this, "Drive 1").apply {
+//                background = red(display)
+//                layoutData = GridData(GridData.FILL, GridData.FILL)
+//            }
+//            button(this, "Swap")
+//            button(this, "Drive 2")
 
 
             //
@@ -111,7 +109,7 @@ class GraphicContext(val computer: () -> Apple2Computer, memory: () -> Apple2Mem
                 // Text screens
                 //
                 textWindow = TextWindow(this, 0x400).apply {
-                    bounds = Rectangle(0, 0, ACTUAL_WIDTH, ACTUAL_HEIGHT)
+                    bounds = Rectangle(0, 0, ACTUAL_WIDTH, ACTUAL_HEIGHT + 10)
                 }
                 //                    .apply {
                 //                pack()
@@ -121,7 +119,7 @@ class GraphicContext(val computer: () -> Apple2Computer, memory: () -> Apple2Mem
                 // Graphic screens
                 //
                 hiResWindow = HiResWindow(0x2000, this).apply {
-                    bounds = Rectangle(0, 0, ACTUAL_WIDTH, ACTUAL_HEIGHT)
+                    bounds = Rectangle(0, 0, ACTUAL_WIDTH, ACTUAL_HEIGHT + 10)
                 }
             }
         }

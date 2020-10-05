@@ -42,17 +42,15 @@ class TextWindow(parent: Composite, start: Int): Composite(parent, SWT.NONE), IT
 
     fun clear() {
         display.syncExec {
-            background = black2(display)
-            repeat(ITextScreen.HEIGHT) {
+            background = black(display)
+            repeat(ITextScreen.HEIGHT) { y ->
                 repeat(ITextScreen.WIDTH) { x ->
                     labels.add(Label(this, SWT.NONE).apply {
                         font = textFont
                         background = display.getSystemColor(SWT.COLOR_BLACK)
                         foreground = display.getSystemColor(SWT.COLOR_GREEN)
-                        text = 0xa0.toChar().toString() // (x % 10).toString()
-                        layoutData = GridData().apply {
-                            widthHint = (ACTUAL_WIDTH / 40) - 1
-                        }
+                        val c = if (x == 0) (y % 10) else (x % 10)
+                        text = c.toString()//0x20.toChar().toString() // (x % 10).toString()
                     })
                 }
             }
