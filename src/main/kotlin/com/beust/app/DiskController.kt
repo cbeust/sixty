@@ -1,13 +1,55 @@
 package com.beust.app
 
 import com.beust.sixty.*
+import java.util.*
 
 class DiskController(val slot: Int = 6): IPulse, MemoryListener() {
     private val slot16 = slot * 16
     private var latch: Int = 0
 
-    private var motorOn = false
+    enum class MotorState {
+        ON, OFF, SPINNING_DOWN;
+    }
+
+    class Motor(private val drive1: Boolean) {
+        private fun updateUi(b: Boolean) {
+            if (drive1) UiState.motor1.value = b
+            else UiState.motor2.value = b
+        }
+
+        private var status: MotorState = MotorState.OFF
+            set(f) {
+                if (f == MotorState.ON) {
+                    println("Turning motor ON")
+                    updateUi(true)
+                    field = MotorState.ON
+                } else if (f == MotorState.OFF) {
+                    if (field == MotorState.ON) {
+                        // Turn off the motor after a second, unless it was turned on in the meantime
+                        val task = object: TimerTask() {
+                            override fun run() {
+                                if (field == MotorState.SPINNING_DOWN) {
+                                    logDisk("Turning motor OFF after a second")
+                                    updateUi(false)
+                                    field = MotorState.OFF
+                                } // Motor was turned on while spinning down, nothing to do
+                            }
+                        }
+                        Timer().schedule(task, 1000)
+                        logDisk("Motor spinning down")
+                        field = MotorState.SPINNING_DOWN
+                    } // we're already OFF or SPINNING_DOWN, nothing to do
+                }
+            }
+
+        fun turn(on: Boolean) {
+            status = if (on) MotorState.ON else MotorState.OFF
+        }
+        val isOn: Boolean get() = status == MotorState.ON || status == MotorState.SPINNING_DOWN
+    }
+
     private var drive1 = true
+    private var motor = Motor(drive1)
 
     private fun c(address: Int) = address + slot16
     override fun isInRange(address:Int) = address in (c(0xc080)..c(0xc08c))
@@ -17,7 +59,7 @@ class DiskController(val slot: Int = 6): IPulse, MemoryListener() {
     override fun onPulse(manager: PulseManager): PulseResult {
         // Faster way for unprotected disks
         disk()?.let {
-            if (motorOn && latch.and(0x80) == 0) {
+            if (motor.isOn && latch.and(0x80) == 0) {
 //                latch = latch.shl(1).or(it.nextBit())
                 latch = it.nextByte()
             }
@@ -63,17 +105,15 @@ class DiskController(val slot: Int = 6): IPulse, MemoryListener() {
     }
 
     private fun changeMotor(on: Boolean) {
-        motorOn = on
-        if (drive1) UiState.motor1.value = on
-        else UiState.motor2.value = on
+        motor.turn(on)
     }
 
     override fun onWrite(location: Int, value: Int) {
         handle(location, value)
     }
 
-    override fun onRead(i: Int, value: Int): Int? {
-        return handle(i, value)
+    override fun onRead(location: Int, value: Int): Int? {
+        return handle(location, value)
     }
 
     private fun handle(i: Int, value: Int): Int? {
@@ -91,9 +131,6 @@ class DiskController(val slot: Int = 6): IPulse, MemoryListener() {
                    0xc086 -> 3 to false
                    0xc087 -> 3 to true
                     else -> ERROR("SHOULD NEVER HAPPEN")
-                }
-                if (! motorOn) {
-                    changeMotor(true)
                 }
                 disk()?.let { magnet(it, phase, state) }
                 value
@@ -130,7 +167,7 @@ class DiskController(val slot: Int = 6): IPulse, MemoryListener() {
         return result
     }
 
-    private var magnets = BooleanArray(4) { _ -> false }
+    private var magnets = BooleanArray(4) { false }
     private var phase = 0
 
     private fun magnet(disk: IDisk, index: Int, state: Boolean) {
