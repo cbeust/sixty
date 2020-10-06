@@ -20,7 +20,6 @@ class DiskController(val slot: Int = 6): IPulse, MemoryListener() {
         private var status: MotorState = MotorState.OFF
             set(f) {
                 if (f == MotorState.ON) {
-                    println("Turning motor ON")
                     updateUi(true)
                     field = MotorState.ON
                 } else if (f == MotorState.OFF) {
