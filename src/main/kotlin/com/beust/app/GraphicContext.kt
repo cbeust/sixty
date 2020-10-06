@@ -135,6 +135,7 @@ class GraphicContext(val computer: () -> Apple2Computer, memory: () -> Apple2Mem
                     }
                    fillOval(42, 102, 13, 13)
                 } }
+                fileDialog(shell, this, if (drive == 1) UiState.currentDisk1File else UiState.currentDisk2File)
                 UiState.motor1.addListener { _, _ -> display.asyncExec { redraw() } }
                 UiState.motor2.addListener { _, _ -> display.asyncExec { redraw() } }
                 layoutData = GridData().apply {
@@ -151,10 +152,7 @@ class GraphicContext(val computer: () -> Apple2Computer, memory: () -> Apple2Mem
                 }
             }
             driveButton(this, 2)
-
-
         }
-
 
         //
         // Middle panel, where the buttons live
@@ -169,12 +167,7 @@ class GraphicContext(val computer: () -> Apple2Computer, memory: () -> Apple2Mem
         buttonContainer.apply {
             layoutData = GridData(SWT.FILL, SWT.FILL, false, true)
             layout = GridLayout(1, true)
-            listOf(
-                    rebootButton,
-                    fileDialog(shell, button(this, "Disk 1", SWT.WRAP), UiState.currentDisk1File),
-                    button(this, "Swap\ndisks", SWT.WRAP),
-                    fileDialog(shell, button(this, "Disk 2", SWT.WRAP), UiState.currentDisk2File)
-            ).forEach {
+            listOf(rebootButton).forEach {
                 it.layoutData = GridData().apply {
                     widthHint = 50
                     heightHint = 50
