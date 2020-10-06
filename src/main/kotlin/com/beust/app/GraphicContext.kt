@@ -74,22 +74,12 @@ class GraphicContext(val computer: () -> Apple2Computer, memory: () -> Apple2Mem
             }
 
             //
-            // Contains the drive1/swap/drive2 buttons
-            //
-//            button(this, "Drive 1").apply {
-//                background = red(display)
-//                layoutData = GridData(GridData.FILL, GridData.FILL)
-//            }
-//            button(this, "Swap")
-//            button(this, "Drive 2")
-
-
-            //
             // Contains the text/graphic windows
             // Span over the three columns
             //
             Composite(this, SWT.NONE).apply {
                 background = blue(display)
+                layoutData = GridData().apply { horizontalSpan = 3 }
                 display.addFilter(SWT.KeyDown) { e ->
                     if (e.keyCode != 0xd) {
                         val av = if (Character.isAlphabetic(e.keyCode)) e.character.toUpperCase().toInt()
@@ -122,6 +112,28 @@ class GraphicContext(val computer: () -> Apple2Computer, memory: () -> Apple2Mem
                     bounds = Rectangle(0, 0, ACTUAL_WIDTH, ACTUAL_HEIGHT + 10)
                 }
             }
+
+            //
+            // Drive 1 / swap / Drive2 buttons
+            //
+            val height = 100
+            val width = 150
+            fun driveButton(parent: Composite, title: String) = button(parent, title, SWT.WRAP).apply {
+                layoutData = GridData().apply {
+                    heightHint = height
+                    widthHint = width
+                }
+            }
+            driveButton(this, "Drive 1\nSecond line")
+            button(this, "Swap").apply {
+                layoutData = GridData().apply {
+                    heightHint = height
+                    widthHint = 50
+                }
+            }
+            driveButton(this, "Drive 2")
+
+
         }
 
 
