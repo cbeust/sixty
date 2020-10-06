@@ -5,10 +5,8 @@ import com.beust.sixty.IKeyProvider
 import com.beust.sixty.IMemory
 import com.beust.swt.*
 import org.eclipse.swt.SWT
-import org.eclipse.swt.graphics.GC
-import org.eclipse.swt.graphics.Image
-import org.eclipse.swt.graphics.ImageData
-import org.eclipse.swt.graphics.Rectangle
+import org.eclipse.swt.graphics.*
+import org.eclipse.swt.layout.FillLayout
 import org.eclipse.swt.layout.GridData
 import org.eclipse.swt.layout.GridLayout
 import org.eclipse.swt.widgets.*
@@ -62,9 +60,29 @@ class GraphicContext(val computer: () -> Apple2Computer, memory: () -> Apple2Mem
 //        display.dispose()
     }
 
+    companion object {
+        lateinit var textFont: Font
+        lateinit var textFontSmaller: Font
+    }
+
     init {
         shell = Shell(display).apply {
-            layout = GridLayout(3, false)
+            layout = GridLayout(3, false).apply {
+                marginWidth = 0
+                marginHeight = 0
+            }
+        }
+
+        val isFontLoaded = shell.display.loadFont("fonts/PrintChar21.ttf")
+        textFont = if (isFontLoaded) {
+            Font(shell.display, "Print Char 21", 12, SWT.NORMAL)
+        } else {
+            font(shell, "Arial", 9, SWT.BOLD)
+        }
+        textFontSmaller = if (isFontLoaded) {
+            Font(shell.display, "Print Char 21", 10, SWT.NORMAL)
+        } else {
+            font(shell, "Arial", 8, SWT.BOLD)
         }
 
         //
@@ -121,26 +139,42 @@ class GraphicContext(val computer: () -> Apple2Computer, memory: () -> Apple2Mem
             //
             val width = 250
             val height = 150
-            fun driveButton(parent: Composite, drive: Int) = Button(parent, SWT.WRAP).apply {
-                val ins = this::class.java.classLoader.getResource("disk-04.png")!!.openStream()
-                val imageData = ImageData(ins)
-                image = Image(display, imageData)
-                addPaintListener { e -> with(e.gc) {
-                    if ((drive == 1 && UiState.motor1.value) || (drive == 2 && UiState.motor2.value)) {
-                        background = red(display)
-                        foreground = red(display)
-                    } else {
-                        background = black(display)
-                        foreground = black(display)
+            fun driveButton(parent: Composite, drive: Int) = Composite(parent, SWT.NONE).apply {
+                background = black(display)
+                layout = GridLayout(1, true).apply {
+                    marginWidth = 0
+//                    marginHeight = 0
+                }
+                Label(this, SWT.CENTER).apply {
+                    text = "File 1"
+                    font = textFontSmaller
+                    foreground = green(display)
+                    background = black(display)
+                    layoutData = GridData(SWT.FILL, SWT.FILL, true, false)
+                }
+                Button(this, SWT.WRAP).apply {
+                    val ins = this::class.java.classLoader.getResource("disk-04.png")!!.openStream()
+                    val imageData = ImageData(ins)
+                    image = Image(display, imageData)
+                    layoutData = GridData().apply {
+                        widthHint = width
+                        heightHint = height
                     }
-                   fillOval(42, 102, 13, 13)
-                } }
-                fileDialog(shell, this, if (drive == 1) UiState.currentDisk1File else UiState.currentDisk2File)
-                UiState.motor1.addListener { _, _ -> display.asyncExec { redraw() } }
-                UiState.motor2.addListener { _, _ -> display.asyncExec { redraw() } }
-                layoutData = GridData().apply {
-                    heightHint = height
-                    widthHint = width
+                    addPaintListener { e ->
+                        with(e.gc) {
+                            if ((drive == 1 && UiState.motor1.value) || (drive == 2 && UiState.motor2.value)) {
+                                background = red(display)
+                                foreground = red(display)
+                            } else {
+                                background = black(display)
+                                foreground = black(display)
+                            }
+                            fillOval(42, 102, 13, 13)
+                        }
+                    }
+                    fileDialog(shell, this, if (drive == 1) UiState.currentDisk1File else UiState.currentDisk2File)
+                    UiState.motor1.addListener { _, _ -> display.asyncExec { redraw() } }
+                    UiState.motor2.addListener { _, _ -> display.asyncExec { redraw() } }
                 }
             }
 

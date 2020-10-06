@@ -1,5 +1,6 @@
 package com.beust.swt
 
+import com.beust.app.GraphicContext
 import com.beust.app.LineCalculator
 import com.beust.app.app.ITextScreen
 import com.beust.sixty.h
@@ -13,7 +14,6 @@ import org.eclipse.swt.widgets.Label
 
 class TextWindow(parent: Composite, start: Int): Composite(parent, SWT.NONE), ITextScreen {
 
-    private val textFont: Font
     private val labels = arrayListOf<Label>()
     private val calculator = LineCalculator(start)
 
@@ -26,13 +26,6 @@ class TextWindow(parent: Composite, start: Int): Composite(parent, SWT.NONE), IT
 
 
     init {
-        val isFontLoaded = shell.display.loadFont("fonts/PrintChar21.ttf")
-        textFont = if (isFontLoaded) {
-            Font(shell.display, "Print Char 21", 12, SWT.NORMAL)
-        } else {
-            font(shell, "Arial", 9, SWT.BOLD)
-        }
-
         layout = GridLayout(40, true).apply {
             horizontalSpacing = 0
             verticalSpacing = 0
@@ -46,7 +39,7 @@ class TextWindow(parent: Composite, start: Int): Composite(parent, SWT.NONE), IT
             repeat(ITextScreen.HEIGHT) { y ->
                 repeat(ITextScreen.WIDTH) { x ->
                     labels.add(Label(this, SWT.NONE).apply {
-                        font = textFont
+                        font = GraphicContext.textFont
                         background = display.getSystemColor(SWT.COLOR_BLACK)
                         foreground = display.getSystemColor(SWT.COLOR_GREEN)
                         val c = if (x == 0) (y % 10) else (x % 10)
