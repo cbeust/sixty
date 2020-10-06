@@ -61,8 +61,8 @@ class TextWindow(parent: Composite, start: Int): Composite(parent, SWT.NONE), IT
      * Reference:  https://en.wikipedia.org/wiki/Apple_II_character_set
      */
     override fun drawCharacter(x: Int, y: Int, value: Int) {
-        display.asyncExec {
-            if (shell.display != null) {
+        if (display != null) {
+            display.asyncExec {
 //                GC(this).let { gc ->
 //                    gc.background = red(display)
 //                    gc.drawString("FOO", x * WIDTH_FACTOR, y)

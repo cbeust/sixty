@@ -5,6 +5,8 @@ import com.beust.sixty.IKeyProvider
 import com.beust.sixty.IMemory
 import com.beust.swt.*
 import org.eclipse.swt.SWT
+import org.eclipse.swt.graphics.Image
+import org.eclipse.swt.graphics.ImageData
 import org.eclipse.swt.graphics.Rectangle
 import org.eclipse.swt.layout.GridData
 import org.eclipse.swt.layout.GridLayout
@@ -116,9 +118,12 @@ class GraphicContext(val computer: () -> Apple2Computer, memory: () -> Apple2Mem
             //
             // Drive 1 / swap / Drive2 buttons
             //
-            val height = 100
-            val width = 150
-            fun driveButton(parent: Composite, title: String) = button(parent, title, SWT.WRAP).apply {
+            val width = 250
+            val height = 150
+            fun driveButton(parent: Composite, title: String) = Button(parent, SWT.WRAP).apply {
+                val ins = this::class.java.classLoader.getResource("disk-04.png")!!.openStream()
+                val imageData = ImageData(ins)
+                image = Image(display, imageData)
                 layoutData = GridData().apply {
                     heightHint = height
                     widthHint = width
