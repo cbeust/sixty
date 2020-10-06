@@ -5,6 +5,7 @@ import com.beust.sixty.IKeyProvider
 import com.beust.sixty.IMemory
 import com.beust.swt.*
 import org.eclipse.swt.SWT
+import org.eclipse.swt.graphics.GC
 import org.eclipse.swt.graphics.Image
 import org.eclipse.swt.graphics.ImageData
 import org.eclipse.swt.graphics.Rectangle
@@ -120,23 +121,36 @@ class GraphicContext(val computer: () -> Apple2Computer, memory: () -> Apple2Mem
             //
             val width = 250
             val height = 150
-            fun driveButton(parent: Composite, title: String) = Button(parent, SWT.WRAP).apply {
+            fun driveButton(parent: Composite, drive: Int) = Button(parent, SWT.WRAP).apply {
                 val ins = this::class.java.classLoader.getResource("disk-04.png")!!.openStream()
                 val imageData = ImageData(ins)
                 image = Image(display, imageData)
+                addPaintListener { e -> with(e.gc) {
+                    if ((drive == 1 && UiState.motor1.value) || (drive == 2 && UiState.motor2.value)) {
+                        background = red(display)
+                        foreground = red(display)
+                    } else {
+                        background = black(display)
+                        foreground = black(display)
+                    }
+                   fillOval(42, 102, 13, 13)
+                } }
+                UiState.motor1.addListener { _, _ -> display.asyncExec { redraw() } }
+                UiState.motor2.addListener { _, _ -> display.asyncExec { redraw() } }
                 layoutData = GridData().apply {
                     heightHint = height
                     widthHint = width
                 }
             }
-            driveButton(this, "Drive 1\nSecond line")
+
+            driveButton(this, 1)
             button(this, "Swap").apply {
                 layoutData = GridData().apply {
                     heightHint = height
                     widthHint = 50
                 }
             }
-            driveButton(this, "Drive 2")
+            driveButton(this, 2)
 
 
         }
@@ -171,7 +185,7 @@ class GraphicContext(val computer: () -> Apple2Computer, memory: () -> Apple2Mem
         //
         // Right panel
         //
-        val parentHeight = textWindow.bounds.height + 120
+        val parentHeight = textWindow.bounds.height + 220
 //
 //    createScrollableByteBuffer(shell, parentHeight).apply {
 ////        layoutData = GridData(GridData.FILL_BOTH, GridData.FILL_BOTH, true, true)

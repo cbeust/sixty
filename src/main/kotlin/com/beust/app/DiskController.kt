@@ -84,11 +84,15 @@ class DiskController(val slot: Int = 6): IPulse, MemoryListener() {
             0xc088 -> {
                 logTraceDisk("Turning motor off")
                 motorOn = false
+                if (drive1) UiState.motor1.value = false
+                    else UiState.motor2.value = false
                 value
             }
             0xc089 -> {
                 logTraceDisk("Turning motor on")
                 motorOn = true
+                if (drive1) UiState.motor1.value = true
+                    else UiState.motor2.value = true
                 value
             }
             0xc08a -> {
