@@ -62,6 +62,12 @@ class DiskController(val slot: Int = 6): IPulse, MemoryListener() {
         }
     }
 
+    private fun changeMotor(on: Boolean) {
+        motorOn = on
+        if (drive1) UiState.motor1.value = on
+        else UiState.motor2.value = on
+    }
+
     override fun onRead(i: Int, value: Int): Int? {
         val a = i - slot16
         val result = when(a) {
@@ -78,21 +84,20 @@ class DiskController(val slot: Int = 6): IPulse, MemoryListener() {
                    0xc087 -> 3 to true
                     else -> ERROR("SHOULD NEVER HAPPEN")
                 }
+                if (! motorOn) {
+                    changeMotor(true)
+                }
                 disk()?.let { magnet(it, phase, state) }
                 value
             }
             0xc088 -> {
                 logTraceDisk("Turning motor off")
-                motorOn = false
-                if (drive1) UiState.motor1.value = false
-                    else UiState.motor2.value = false
+                changeMotor(false)
                 value
             }
             0xc089 -> {
                 logTraceDisk("Turning motor on")
-                motorOn = true
-                if (drive1) UiState.motor1.value = true
-                    else UiState.motor2.value = true
+                changeMotor(true)
                 value
             }
             0xc08a -> {
