@@ -17,7 +17,7 @@ class DiskController(val slot: Int = 6): IPulse, MemoryListener() {
     override fun onPulse(manager: PulseManager): PulseResult {
         // Faster way for unprotected disks
         disk()?.let {
-            if (latch.and(0x80) == 0) {
+            if (motorOn && latch.and(0x80) == 0) {
 //                latch = latch.shl(1).or(it.nextBit())
                 latch = it.nextByte()
             }
@@ -68,7 +68,15 @@ class DiskController(val slot: Int = 6): IPulse, MemoryListener() {
         else UiState.motor2.value = on
     }
 
+    override fun onWrite(location: Int, value: Int) {
+        handle(location, value)
+    }
+
     override fun onRead(i: Int, value: Int): Int? {
+        return handle(i, value)
+    }
+
+    private fun handle(i: Int, value: Int): Int? {
         val a = i - slot16
         val result = when(a) {
             in (0xc080..0xc087) -> {
