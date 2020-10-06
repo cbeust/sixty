@@ -150,6 +150,11 @@ class GraphicContext(val computer: () -> Apple2Computer, memory: () -> Apple2Mem
                     heightHint = height
                     widthHint = 50
                 }
+                addListener(SWT.Selection) { e ->
+                    val d1 = UiState.currentDisk1File.value
+                    UiState.currentDisk1File.value = UiState.currentDisk2File.value
+                    UiState.currentDisk2File.value = d1
+                }
             }
             driveButton(this, 2)
         }
