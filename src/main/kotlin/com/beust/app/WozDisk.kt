@@ -54,12 +54,10 @@ class WozDisk(override val name: String, ins: InputStream): BaseDisk(), IByteStr
         moveTrack {
             track++
             if (track >= MAX_TRACK) track = MAX_TRACK - 1
-            track++
         }
     }
 
     override fun decTrack() = moveTrack {
-        if (track > 0) track--
         if (track > 0) track--
     }
 
