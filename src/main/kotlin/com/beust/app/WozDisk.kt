@@ -5,6 +5,11 @@ import com.beust.sixty.h
 import java.io.File
 import java.io.InputStream
 
+fun main() {
+    val d = WozDisk(disk("Bouncing Kamungas - Disk 1, Side A.woz"))
+    ""
+}
+
 class WozDisk(override val name: String, ins: InputStream): BaseDisk(), IByteStream {
 
     constructor(file: File): this(file.absolutePath, file.inputStream())
