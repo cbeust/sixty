@@ -6,15 +6,17 @@ import java.util.*
 class DiskController(val slot: Int = 6): IPulse, MemoryListener() {
     private val slot16 = slot * 16
     private var latch: Int = 0
+    private var drive1 = true
+    private var motor = Motor { -> drive1 }
 
     enum class MotorState {
         ON, OFF, SPINNING_DOWN;
     }
 
-    class Motor(private val drive1: Boolean) {
+    class Motor(private val drive1: () -> Boolean) {
         private fun updateUi(b: Boolean) {
-            if (drive1) UiState.motor1.value = b
-            else UiState.motor2.value = b
+            if (drive1()) UiState.motor1.value = b
+                else UiState.motor2.value = b
         }
 
         private var status: MotorState = MotorState.OFF
@@ -46,9 +48,6 @@ class DiskController(val slot: Int = 6): IPulse, MemoryListener() {
         }
         val isOn: Boolean get() = status == MotorState.ON || status == MotorState.SPINNING_DOWN
     }
-
-    private var drive1 = true
-    private var motor = Motor(drive1)
 
     private fun c(address: Int) = address + slot16
     override fun isInRange(address:Int) = address in (c(0xc080)..c(0xc08c))
@@ -103,10 +102,6 @@ class DiskController(val slot: Int = 6): IPulse, MemoryListener() {
         }
     }
 
-    private fun changeMotor(on: Boolean) {
-        motor.turn(on)
-    }
-
     override fun onWrite(location: Int, value: Int) {
         handle(location, value)
     }
@@ -136,12 +131,12 @@ class DiskController(val slot: Int = 6): IPulse, MemoryListener() {
             }
             0xc088 -> {
                 logTraceDisk("Turning motor off")
-                changeMotor(false)
+                motor.turn(false)
                 value
             }
             0xc089 -> {
                 logTraceDisk("Turning motor on")
-                changeMotor(true)
+                motor.turn(true)
                 value
             }
             0xc08a -> {

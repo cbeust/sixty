@@ -10,6 +10,7 @@ import org.eclipse.swt.layout.FillLayout
 import org.eclipse.swt.layout.GridData
 import org.eclipse.swt.layout.GridLayout
 import org.eclipse.swt.widgets.*
+import java.io.File
 
 class GraphicContext(val computer: () -> Apple2Computer, memory: () -> Apple2Memory) {
     val hiResWindow: HiResWindow
@@ -80,7 +81,7 @@ class GraphicContext(val computer: () -> Apple2Computer, memory: () -> Apple2Mem
             font(shell, "Arial", 9, SWT.BOLD)
         }
         textFontSmaller = if (isFontLoaded) {
-            Font(shell.display, "Print Char 21", 10, SWT.NORMAL)
+            Font(shell.display, "Print Char 21", 8, SWT.NORMAL)
         } else {
             font(shell, "Arial", 8, SWT.BOLD)
         }
@@ -139,14 +140,17 @@ class GraphicContext(val computer: () -> Apple2Computer, memory: () -> Apple2Mem
             //
             val width = 250
             val height = 150
-            fun driveButton(parent: Composite, drive: Int) = Composite(parent, SWT.NONE).apply {
+            fun driveButton(parent: Composite, drive: Int, obs: Obs<Boolean>) = Composite(parent, SWT.NONE).apply {
                 background = black(display)
                 layout = GridLayout(1, true).apply {
                     marginWidth = 0
 //                    marginHeight = 0
                 }
                 Label(this, SWT.CENTER).apply {
-                    text = "File 1"
+                    val obs = if (drive == 1) UiState.currentDisk1File else UiState.currentDisk2File
+                    obs.addListener { _, new ->
+                        text = new?.name
+                    }
                     font = textFontSmaller
                     foreground = green(display)
                     background = black(display)
@@ -173,12 +177,11 @@ class GraphicContext(val computer: () -> Apple2Computer, memory: () -> Apple2Mem
                         }
                     }
                     fileDialog(shell, this, if (drive == 1) UiState.currentDisk1File else UiState.currentDisk2File)
-                    UiState.motor1.addListener { _, _ -> display.asyncExec { redraw() } }
-                    UiState.motor2.addListener { _, _ -> display.asyncExec { redraw() } }
+                    obs.addListener { _, _ -> display.asyncExec { redraw() } }
                 }
             }
 
-            driveButton(this, 1)
+            driveButton(this, 1, UiState.motor1)
             button(this, "Swap").apply {
                 layoutData = GridData().apply {
                     heightHint = height
@@ -190,7 +193,7 @@ class GraphicContext(val computer: () -> Apple2Computer, memory: () -> Apple2Mem
                     UiState.currentDisk2File.value = d1
                 }
             }
-            driveButton(this, 2)
+            driveButton(this, 2, UiState.motor2)
         }
 
         //
