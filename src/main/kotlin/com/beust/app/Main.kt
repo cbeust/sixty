@@ -24,7 +24,8 @@ val disks = listOf(
         disk("Rescue Raiders.dsk"), // 6
         disk("Ultima4.dsk") , // 7
         disk("Force 7.woz"), // 8
-        disk("Masquerade-1.dsk") // 9
+        disk("Masquerade-1.dsk"), // 9
+        disk("Bouncing Kamungas - Disk 1, Side A.woz") // 10
 )
 
 val DISK = disks[0]
