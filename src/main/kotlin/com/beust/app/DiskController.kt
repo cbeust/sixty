@@ -114,19 +114,22 @@ class DiskController(val slot: Int = 6): IPulse, MemoryListener() {
         val a = i - slot16
         val result = when(a) {
             in (0xc080..0xc087) -> {
-                // Seek address: $b9a0
-                val (phase, state) = when (a) {
-                   0xc080 -> 0 to false
-                   0xc081 -> 0 to true
-                   0xc082 -> 1 to false
-                   0xc083 -> 1 to true
-                   0xc084 -> 2 to false
-                   0xc085 -> 2 to true
-                   0xc086 -> 3 to false
-                   0xc087 -> 3 to true
-                    else -> ERROR("SHOULD NEVER HAPPEN")
+                if (motor.isOn) {
+                    // Seek address: $b9a0
+                    val (phase, state) = when (a) {
+                        0xc080 -> 0 to false
+                        0xc081 -> 0 to true
+                        0xc082 -> 1 to false
+                        0xc083 -> 1 to true
+                        0xc084 -> 2 to false
+                        0xc085 -> 2 to true
+                        0xc086 -> 3 to false
+                        0xc087 -> 3 to true
+                        else -> ERROR("SHOULD NEVER HAPPEN")
+                    }
+//                    magnet2(disk()!!, phase, state)
+                    disk()?.let { magnet(it, phase, state) }
                 }
-                disk()?.let { magnet(it, phase, state) }
                 value
             }
             0xc088 -> {
@@ -163,6 +166,35 @@ class DiskController(val slot: Int = 6): IPulse, MemoryListener() {
 
     private var magnets = BooleanArray(4) { false }
     private var phase = 0
+
+    private var currentPhase = 0
+    private var currentTrack = 0
+    private val phaseDeltas = listOf(
+            listOf(0, 1, 2, -1),
+            listOf(-1, 0, 1, 2),
+            listOf(-2, -1, 0, 1),
+            listOf(1, -2, -1, 0)
+    )
+
+    private fun magnet2(disk: IDisk, phase: Int, on: Boolean) {
+        if (on) {
+            val delta = phaseDeltas[currentPhase][phase]
+            val oldTrack = currentTrack
+            currentTrack += delta
+            currentPhase = phase
+            if (delta > 0) {
+                repeat(delta) { disk.incTrack() }
+            } else if (delta < 0) {
+                repeat(-delta) { disk.decTrack() }
+            }
+            if (currentTrack < 0) currentTrack = 0
+            if (currentTrack > 35) currentTrack = 35
+            if (oldTrack != currentTrack) {
+                println("*** phase($phase, $on)    delta: $delta newTrack: $currentTrack")
+            }
+        }
+    }
+
 
     private fun magnet(disk: IDisk, index: Int, state: Boolean) {
         fun logInc(p1: Int, p2: Int) { logTraceDisk("Phase $p1 -> $p2: Incrementing track")}
