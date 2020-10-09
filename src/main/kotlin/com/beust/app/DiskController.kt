@@ -8,6 +8,8 @@ class DiskController(val slot: Int = 6): IPulse, MemoryListener() {
     private var latch: Int = 0
     private var drive1 = true
     private var motor = Motor { -> drive1 }
+    private var q6 = 0
+    private var q7 = 0
 
     enum class MotorState {
         ON, OFF, SPINNING_DOWN;
@@ -30,9 +32,9 @@ class DiskController(val slot: Int = 6): IPulse, MemoryListener() {
                         val task = object: TimerTask() {
                             override fun run() {
                                 if (field == MotorState.SPINNING_DOWN) {
-                                    logDisk("Turning motor OFF after a second")
-                                    updateUi(false)
-                                    field = MotorState.OFF
+//                                    logDisk("Turning motor OFF after a second")
+//                                    updateUi(false)
+//                                    field = MotorState.OFF
                                 } // Motor was turned on while spinning down, nothing to do
                             }
                         }
@@ -61,7 +63,6 @@ class DiskController(val slot: Int = 6): IPulse, MemoryListener() {
 //                latch = latch.shl(1).or(it.nextBit())
                 latch = it.nextByte()
             }
-//            println("new latch: " + latch.h())
         }
 
 //        if (motorOn && disk != null) {
@@ -110,6 +111,25 @@ class DiskController(val slot: Int = 6): IPulse, MemoryListener() {
         return handle(location, value)
     }
 
+    /** 4 bits, one for each phase */
+    private val phaseBits = arrayListOf(0, 0, 0, 0)
+
+    private val transitions = listOf(
+        //fr\to       9  8  D  C  4  E  6  2  7  3  1  B  0  5  A  F
+        /*9*/ listOf( 0,-1,-1,-2,-3,-3, 0,+3,+3,+2,+1,+1, 0, 0, 0, 0),
+        /*8*/ listOf(+1, 0, 0,-1,-2,-2,-3, 0, 0,+3,+2,+2, 0, 0, 0, 0),
+        /*D*/ listOf(+1, 0, 0,-1,-2,-2,-3, 0, 0,+3,+2,+2, 0, 0, 0, 0),
+        /*C*/ listOf(+2,+1,+1, 0,-1,-1,-2,-3,-3, 0,+3,+3, 0, 0, 0, 0),
+        /*4*/ listOf(+3,+2,+2,+1, 0, 0,-1,-2,-2,-3, 0, 0, 0, 0, 0, 0),
+        /*E*/ listOf(+3,+2,+2,+1, 0, 0,-1,-2,-2,-3, 0, 0, 0, 0, 0, 0),
+        /*6*/ listOf( 0,+3,+3,+2,+1,+1, 0,-1,-1,-2,-3,-3, 0, 0, 0, 0),
+        /*2*/ listOf(-3, 0, 0,+3,+2,+2,+1, 0, 0,-1,-2,-2, 0, 0, 0, 0),
+        /*7*/ listOf(-3, 0, 0,+3,+2,+2,+1, 0, 0,-1,-2,-2, 0, 0, 0, 0),
+        /*3*/ listOf(-2,-3,-3, 0,+3,+3,+2,+1,+1, 0,-1,-1, 0, 0, 0, 0),
+        /*1*/ listOf(-1,-2,-2,-3, 0, 0,+3,+2,+2,+1, 0, 0, 0, 0, 0, 0),
+        /*B*/ listOf(-1,-2,-2,-3, 0, 0,+3,+2,+2,+1, 0, 0, 0, 0, 0, 0)
+    )
+
     private fun handle(i: Int, value: Int): Int? {
         val a = i - slot16
         val result = when(a) {
@@ -128,6 +148,11 @@ class DiskController(val slot: Int = 6): IPulse, MemoryListener() {
                         else -> ERROR("SHOULD NEVER HAPPEN")
                     }
 //                    magnet2(disk()!!, phase, state)
+//                    val oldPhase = phaseBits.int()
+//                    phaseBits[phase] = if (state) 1 else 0
+//                    val newPhase = phaseBits.int()
+//                    val delta = transitions[oldPhase][newPhase]
+//                    println("@@@ Transitioning from $oldPhase to $newPhase, delta: $delta")
                     disk()?.let { magnet(it, phase, state) }
                 }
                 value
@@ -154,9 +179,19 @@ class DiskController(val slot: Int = 6): IPulse, MemoryListener() {
             }
             0xc08c -> {
 //                latch = disk!!.nextByte()
+                q6 = 0
                 val result = latch
                 if (latch.and(0x80) != 0) latch = 0//latch.and(0x7f) // clear bit 7
                 result
+            }
+            0xc08d -> {
+                q6 = 1
+            }
+            0xc08e -> {
+                q7 = 0
+            }
+            0xc08f -> {
+                q7 = 1
             }
             else -> value
         }

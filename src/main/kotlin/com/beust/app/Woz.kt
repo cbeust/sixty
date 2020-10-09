@@ -150,7 +150,8 @@ class Woz(private val bytes: ByteArray,
                 val trackOffset = trk.startingBlock * 512
                 try {
                     val slice = bytes.slice(trackOffset..(trackOffset + streamSizeInBytes))
-                    logDisk("Phase $phase starts at ${trackOffset.hh()}")
+                    logDisk("Phase $phase (track $trackNumber) starts at block ${trk.startingBlock} " +
+                            "offset ${trackOffset.hh()}")
                     bitStreamFactory(slice)
                 } catch (ex: Exception) {
                     println("PROBLEM")
@@ -171,6 +172,30 @@ abstract class IBitStream {
 }
 
 class BitStream(val bytes: List<Byte>): IBitStream() {
+    private val bits = arrayListOf<Int>()
+    init {
+        bytes.forEach { byte ->
+            repeat(8) {
+                val bit = byte.bit(7 - it)
+                bits.add(bit)
+            }
+        }
+    }
+    override fun next(position: Int): Pair<Int, Int> {
+        return Pair((position + 1) % bits.size, bits[position])
+//        val byteIndex = position / 8
+//        val bitIndex = position % 8
+//        if (byteIndex > bytes.size) {
+//            TODO("ERROR")
+//        }
+//        val byte = bytes[byteIndex]
+//        val result = byte.bit(7 - bitIndex)
+//        return Pair((position + 1) % (bytes.size * 8), result)
+    }
+}
+
+
+class _BitStream(val bytes: List<Byte>): IBitStream() {
     override fun next(position: Int): Pair<Int, Int> {
         val byteIndex = position / 8
         val bitIndex = position % 8

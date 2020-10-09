@@ -160,6 +160,10 @@ class Computer(override val memory: IMemory, override val cpu: Cpu, val pcListen
                     previousPc = cpu.PC
                     if (cpu.PC == BREAKPOINT) {
                         println("BREAKPOINT $memory")
+//                        if (cpu.A != 0) {
+                            println("A: " + cpu.A + " track: " + memory[0x2e] + " sector: " + memory[0x2d] + " checksum: "
+                                    + memory[0xc])
+//                        }
                         ""
                     }
                     cpu.PC += SIZES[opCode]

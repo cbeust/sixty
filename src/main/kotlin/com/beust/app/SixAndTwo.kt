@@ -9,12 +9,14 @@ fun word(b1: Int, b2: Int): Int = b1.or(b2.shl(8))
 object SixAndTwo {
     fun pair4And4(b1: Int, b2: Int) = b1.shl(1).or(1).and(b2).and(0xff)
 
-    fun dump(disk: IDisk) {
+    fun dump(disk: IDisk,
+            closingAddress: List<Int> = listOf(0xde, 0xaa, 0xeb),
+            closingData: List<Int> = listOf(0xde, 0xaa, 0xeb)) {
         val sectors = hashMapOf<Int, Sector>()
         val result = arrayListOf<IntArray>()
         fun pair4And4() = pair4And4(disk.nextByte(), disk.nextByte())
         repeat(35) { expectedTrack ->
-            repeat(16) { expectedSector ->
+            repeat(32) { expectedSector ->
                 while (disk.peekBytes(3) != listOf(0xd5, 0xaa, 0x96)) {
                     disk.nextByte()
                 }
@@ -32,8 +34,7 @@ object SixAndTwo {
                 if (volume.xor(track).xor(sector) != checksumAddress) {
                     ERROR("Checksum doesn't match")
                 }
-                logDisk("   Volume: $volume Track: $track Sector: $sector checksum: $checksumAddress")
-                if (disk.nextBytes(3) != listOf(0xde, 0xaa, 0xeb)) {
+                if (disk.nextBytes(3) != closingAddress) {
                     ERROR("Didn't find closing for address")
                 }
 
@@ -45,11 +46,20 @@ object SixAndTwo {
                 val buffer = IntArray(342)
                 var checksum = 0
                 for (i in buffer.indices) {
-                    val b = disk.nextByte()
-                    if (READ_TABLE[b] == null) {
-                        println("INVALID NIBBLE")
+                    if (disk.peekBytes(1).first() == 0x94) {
+                        println("PROBLEM")
                     }
-                    checksum = checksum xor READ_TABLE[b]!!
+                    val b = disk.nextByte()
+                    val rt = READ_TABLE[b]
+                    if (READ_TABLE[b] == null) {
+                    }
+                    if (rt != null) {
+                        checksum = checksum xor rt
+                    } else {
+                        ERROR("Couldn't find a READ_TABLE for index ${b.h()} at offset "
+                                + ((disk as WozDisk).position / 8))
+                        ""
+                    }
                     if (i < 86) {
                         buffer[buffer.size - i - 1] = checksum
                     } else {
@@ -57,7 +67,9 @@ object SixAndTwo {
                     }
                 }
                 val bh = disk.peekBytes(1).first().h()
-                checksum = checksum xor READ_TABLE[disk.nextByte()]!!
+                val readChecksum = READ_TABLE[disk.nextByte()]!!
+                logDisk("   Volume:$volume Track:$track Sector:$sector checksum2:$checksumAddress $readChecksum")
+                checksum = checksum xor readChecksum
                 if (checksum != 0) {
                     TODO("BAD CHECKSUM")
                 }
@@ -76,13 +88,15 @@ object SixAndTwo {
                     sectorData[i] = b
                 }
 
-                if (disk.nextBytes(3) != listOf(0xde, 0xaa, 0xeb)) {
+                val nb = disk.nextBytes(3)
+                if (nb != closingData) {
                     TODO("Didn't find closing for data")
                 }
                 val ls = DskDisk.LOGICAL_SECTORS[sector]
                 sectors[ls] = Sector(ls, sectorData)
 //                println("  Successfully read sector $sector (logical: $ls)")
             }
+            disk.incTrack()
             disk.incTrack()
         }
         repeat(40) { disk.decTrack() }

@@ -7,7 +7,7 @@ import java.io.File
 
 val RUN = true
 var DEBUG = false
-val BREAKPOINT: Int? = null//0xc2de // 0xc2db
+val BREAKPOINT: Int? = 0x5f8 // 0x5a0 //0x5f8 // 0x59e // null//0x556//0xc2de // 0xc2db
 
 val DISK_DOS_3_3 = File("D:\\pd\\Apple disks\\Apple DOS 3.3.dsk") // File("src/test/resources/Apple DOS 3.3.dsk")
 val WOZ_DOS_3_3 = File("src/test/resources/woz2/DOS 3.3 System Master.woz")
@@ -28,7 +28,7 @@ val disks = listOf(
         disk("Bouncing Kamungas - Disk 1, Side A.woz") // 10
 )
 
-val DISK = disks[0]
+val DISK = disks[10]
 
 fun main() {
     val pulseManager = PulseManager()

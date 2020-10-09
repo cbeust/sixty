@@ -7,6 +7,7 @@ import java.io.InputStream
 
 fun main() {
     val d = WozDisk(disk("Bouncing Kamungas - Disk 1, Side A.woz"))
+    SixAndTwo.dump(d, closingAddress = listOf(0xda, 0xaa, 0xeb), closingData = listOf(0xda, 0xaa, 0xeb))
     ""
 }
 
@@ -38,12 +39,12 @@ class WozDisk(override val name: String, ins: InputStream): BaseDisk(), IByteStr
     }
 
     private fun updatePosition(oldTrack: Int, newTrack: Int) {
-//        val oldTrackLength = woz.trks.trks[oldTrack].bitCount / 8
-//        val newTrackLength = woz.trks.trks[newTrack].bitCount / 8
-//        if (oldTrackLength != 0 && newTrack != 0) {
-//            position = position * newTrackLength / oldTrackLength
-////            println("Update position oldTrack: $oldTrack -> $newTrack, new position: $position")
-//        }
+        val oldTrackLength = woz.trks.trks[oldTrack].bitCount / 8
+        val newTrackLength = woz.trks.trks[newTrack].bitCount / 8
+        if (oldTrackLength != 0 && newTrack != 0) {
+            position = position * newTrackLength / oldTrackLength
+//            println("Update position oldTrack: $oldTrack -> $newTrack, new position: $position")
+        }
     }
 
     private fun moveTrack(block: () -> Unit) {
@@ -68,7 +69,6 @@ class WozDisk(override val name: String, ins: InputStream): BaseDisk(), IByteStr
 
     override fun peekBytes(count: Int): ArrayList<Int> {
         val result = arrayListOf<Int>()
-        val b = bitStream
         save()
         repeat(count) {
             result.add(nextByte())

@@ -49,7 +49,7 @@ class DiskWindow(parent: Composite): Composite(parent, NONE) {
 
     private fun updateInspector() {
         val bytes = UiState.currentBytes.value
-        display.asyncExec {
+        if (bytes.isNotEmpty()) display.asyncExec {
             byteText?.text = bytes[0].h()
             wordText?.text = word(bytes[0], bytes[1]).hh()
             fourAndFourText?.text = SixAndTwo.pair4And4(bytes[0], bytes[1]).h()
