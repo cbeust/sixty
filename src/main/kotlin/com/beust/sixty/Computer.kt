@@ -162,7 +162,7 @@ class Computer(override val memory: IMemory, override val cpu: Cpu, val pcListen
                     }
                     cpu.PC += SIZES[opCode]
                     timing = cpu.nextInstruction(previousPc)
-                    if (debugAsm) println(debugString + " " + cpu.toString() + " " + cycles)
+                    if (debugAsm) logAsm(debugString + " " + cpu.toString() + " " + cycles)
                     if (true) { // debugMemory) {
                         memory.listeners.forEach {
                             it.logLines.forEach { println(it) }

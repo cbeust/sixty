@@ -13,7 +13,9 @@
     <logger name="Memory" level="info" />
     <logger name="UiStatus" level="info" />
 
-    <logger name="Disk" level="info" />
+    <logger name="Disk" level="debug" />
+
+    <logger name="Asm" level="debug" />
     <logger name="Graphics" level="debug" />
     <logger name="Breakpoint" level="debug" />
     <logger name="Default" level="debug" />

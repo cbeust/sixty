@@ -50,6 +50,7 @@ object SixAndTwo {
         if (checksum != 0) {
             ERROR("BAD CHECKSUM: $checksum at track $track sector $sector")
         }
+        println("   checksum: " + last.h())
         var kdx = 0
         jdx = 0x55
         while (kdx < 0x100) {
@@ -80,6 +81,7 @@ object SixAndTwo {
         }
         val bh = disk.peekBytes(1).first().h()
         val readChecksum = READ_TABLE[disk.nextByte()]!!
+        println("  readChecksum: ${readChecksum.h()}")
         checksum = checksum xor readChecksum
         if (checksum != 0) {
             ERROR("BAD CHECKSUM: $checksum at track $track sector $sector")
@@ -109,7 +111,7 @@ object SixAndTwo {
         val result = arrayListOf<IntArray>()
         fun pair4And4() = pair4And4(disk.nextByte(), disk.nextByte())
         repeat(35) { expectedTrack ->
-            repeat(32) { expectedSector ->
+            repeat(16) { expectedSector ->
                 while (disk.peekBytes(3) != listOf(0xd5, 0xaa, 0x96)) {
                     disk.nextByte()
                 }
@@ -136,9 +138,9 @@ object SixAndTwo {
                 }
                 disk.nextBytes(3)
 
-//                val sectorData = decodeData2(disk, track, sector)
-                val sectorData = decodeData(disk, track, sector)
-                println("Successfully decoded track $expectedTrack sector $expectedSector")
+                val sectorData = decodeData2(disk, track, sector)
+//                val sectorData = decodeData(disk, track, sector)
+                println("Successfully decoded track $expectedTrack sector \$" + expectedSector.h())
 
                 val nb = disk.nextBytes(3)
                 if (nb != closingData) {

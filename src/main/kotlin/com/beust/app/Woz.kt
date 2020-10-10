@@ -151,7 +151,7 @@ class Woz(private val bytes: ByteArray,
                 try {
                     val slice = bytes.slice(trackOffset..(trackOffset + streamSizeInBytes))
                     logDisk("Phase $phase (track $trackNumber) starts at block ${trk.startingBlock} " +
-                            "offset ${trackOffset.hh()}")
+                            "offset ${trackOffset.hh()} size ${streamSizeInBytes.h()}")
                     bitStreamFactory(slice)
                 } catch (ex: Exception) {
                     println("PROBLEM")
@@ -165,6 +165,8 @@ class Woz(private val bytes: ByteArray,
 }
 
 abstract class IBitStream {
+    abstract val sizeInBytes: Int
+
     /**
      * @return a pair of the new index and the returned bit.
      */
@@ -181,6 +183,10 @@ class BitStream(val bytes: List<Byte>): IBitStream() {
             }
         }
     }
+
+    override val sizeInBytes: Int
+        get() = bits.size / 8
+
     override fun next(position: Int): Pair<Int, Int> {
         return Pair((position + 1) % bits.size, bits[position])
 //        val byteIndex = position / 8
@@ -196,6 +202,9 @@ class BitStream(val bytes: List<Byte>): IBitStream() {
 
 
 class _BitStream(val bytes: List<Byte>): IBitStream() {
+    override val sizeInBytes: Int
+        get() = bytes.size
+
     override fun next(position: Int): Pair<Int, Int> {
         val byteIndex = position / 8
         val bitIndex = position % 8
@@ -208,7 +217,7 @@ class _BitStream(val bytes: List<Byte>): IBitStream() {
     }
 }
 
-class FakeBitStream: IBitStream() {
+class FakeBitStream(override val sizeInBytes: Int = 0) : IBitStream() {
     override fun next(position: Int): Pair<Int, Int> {
         val result = if (Random.nextInt() % 10 < 3) 1 else 0
         return Pair(position, result)

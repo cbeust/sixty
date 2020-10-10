@@ -12,13 +12,32 @@ import org.eclipse.swt.custom.ScrolledComposite
 import org.eclipse.swt.events.SelectionEvent
 import org.eclipse.swt.events.SelectionListener
 import org.eclipse.swt.graphics.Point
+import org.eclipse.swt.graphics.Rectangle
+import org.eclipse.swt.layout.FillLayout
 import org.eclipse.swt.layout.GridData
 import org.eclipse.swt.layout.GridLayout
 import org.eclipse.swt.widgets.*
 
+fun main(args: Array<String>) {
+    val display = Display()
+    val shell = Shell(display).apply {
+        text = "Nibble viewer"
+        layout = GridLayout()
+    }
+
+    DiskWindow(shell)
+    shell.bounds = Rectangle(0, 0, 1000, 800)
+
+//    shell.pack()
+    shell.open()
+    while (!shell.isDisposed) {
+        if (!display.readAndDispatch()) display.sleep()
+    }
+}
+
 class DiskWindow(parent: Composite): Composite(parent, NONE) {
     private lateinit var diskLabel: Label
-    private val scrolledComposite: ScrolledComposite
+//    private val scrolledComposite: ScrolledComposite
     private var byteText: Text? = null
     private var wordText: Text? = null
     private var fourAndFourText: Text? = null
@@ -26,18 +45,37 @@ class DiskWindow(parent: Composite): Composite(parent, NONE) {
     init {
         layout = GridLayout(3, false)
 
-        createHeader()
+        createHeader(this)
         createDataInspector(this)
-
-        scrolledComposite = createScrollableByteBuffer(this).apply {
-            layoutData = GridData(GridData.FILL, GridData.FILL, true, true).apply {
-//                horizontalAlignment = GridData.FILL
-//                verticalAlignment = GridData.FILL
-                horizontalSpan = 2
-                grabExcessVerticalSpace = true
-                grabExcessHorizontalSpace = false
+        ScrolledComposite(this, SWT.V_SCROLL).apply {
+            layoutData = GridData().apply {
+                heightHint = 600
             }
+            val bbw = ByteBufferWindow(this).apply {
+                layoutData = GridData(GridData.FILL, GridData.FILL, true, true).apply {
+                    //                horizontalAlignment = GridData.FILL
+                    //                verticalAlignment = GridData.FILL
+                    heightHint = 1000
+                    horizontalSpan = 2
+                    //                grabExcessVerticalSpace = true
+                    //                grabExcessHorizontalSpace = false
+                }
+                setMinSize(Point(500, 10000))
+                expandHorizontal = true
+                expandVertical = true
+
+            }
+            content = bbw
         }
+//        scrolledComposite = createScrollableByteBuffer(this).apply {
+//            layoutData = GridData(GridData.FILL, GridData.FILL, true, true).apply {
+////                horizontalAlignment = GridData.FILL
+////                verticalAlignment = GridData.FILL
+//                horizontalSpan = 2
+//                grabExcessVerticalSpace = true
+//                grabExcessHorizontalSpace = false
+//            }
+//        }
 
         UiState.currentDisk1File.addListener { _, new ->
             display.asyncExec {
@@ -90,8 +128,8 @@ class DiskWindow(parent: Composite): Composite(parent, NONE) {
         return result
     }
 
-    private fun createHeader(): Composite {
-        val header = Composite(this, NONE).apply {
+    private fun createHeader(parent: Composite): Composite {
+        val header = Composite(parent, NONE).apply {
             layout = GridLayout(6, false)
 //            background = grey(display)
             layoutData = GridData().apply {

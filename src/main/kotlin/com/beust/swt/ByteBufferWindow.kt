@@ -47,10 +47,10 @@ class ByteBufferWindow(parent: Composite) : Composite(parent, SWT.NONE) {
             editable = false
             font = thisFont
             layoutData = GridData(SWT.FILL, SWT.FILL, true, true)
-//            .apply {
+            .apply {
 //                widthHint = 300
-//                heightHint = Int.MAX_VALUE
-//            }
+                heightHint = Int.MAX_VALUE
+            }
         }
         bytes.addCaretListener { e ->
             val o = e.caretOffset
@@ -73,9 +73,11 @@ class ByteBufferWindow(parent: Composite) : Composite(parent, SWT.NONE) {
 //        })
         UiState.currentDisk1File.addListener { _, new ->
             if (new != null) {
-                disk = IDisk.create(new)
                 UiState.currentTrack.value = 0
-                updateBuffer()
+                disk = IDisk.create(new)
+                disk?.let {
+                    updateBuffer(it)
+                }
             }
         }
         UiState.currentTrack.addListener { _, new ->
@@ -87,81 +89,73 @@ class ByteBufferWindow(parent: Composite) : Composite(parent, SWT.NONE) {
         updateBuffer()
     }
 
-    private fun updateBuffer(track: Int = 0, byteAlgorithm: ByteAlgorithm = ByteAlgorithm.SHIFTED) {
+    private fun updateBuffer(passedDisk: IDisk? = null, track: Int = 0,
+            byteAlgorithm: ByteAlgorithm = ByteAlgorithm.SHIFTED) {
+        println("Updating buffer with file "+ UiState.currentDisk1File)
         currentBytes.clear()
-        UiState.currentDisk1File.let { df ->
-            val disk = IDisk.create(df.value)
-            if (disk == null) {
-                println("Empty disk drive")
-            } else {
-                repeat(track * 4) {
-                    disk.incTrack()
-                }
-                //            Woz(disk.readBytes()).let { woz ->
-                //                val track = UiState.currentTrack.value
-                //                val offset = woz.tmap.offsetFor(track)
-                //                var position = 0
-                //                if (offset != -1) {
-                //                    val bitStream = woz.bitStreamForTrack(track)
-                //                    var bitsToGo = woz.trks.trks[offset].bitCount
+        val disk = passedDisk ?: IDisk.create(UiState.currentDisk1File.value)
+        if (disk != null) {
+            repeat(160) { disk.decTrack() }
+            repeat(track * 4) {
+                disk.incTrack()
+            }
 
-                fun nextByte(): Int {
-                    var byte = 0
-                    when (byteAlgorithm) {
-                        ByteAlgorithm.SHIFTED -> {
-                            while (byte and 0x80 == 0) {
-                                val bit = disk.nextBit()
-                                byte = byte.shl(1).or(bit)
-                            }
-                        }
-                        else -> {
-                            repeat(8) {
-                                val bit = disk.nextBit()
-                                byte = byte.shl(1).or(bit)
-                            }
+            fun nextByte(): Int {
+                var byte = 0
+                when (byteAlgorithm) {
+                    ByteAlgorithm.SHIFTED -> {
+                        while (byte and 0x80 == 0) {
+                            val bit = disk.nextBit()
+                            byte = byte.shl(1).or(bit)
                         }
                     }
-                    return byte
-                }
-
-                var row = 0
-                val offsetText = StringBuffer()
-                val byteText = StringBuffer()
-                val state = State()
-                val ranges = arrayListOf<StyleRange>()
-                var addressStart = -1
-                var dataStart = -1
-                repeat(6000) {
-                    offsetText.append("\$" + String.format("%04X", row) + "\n")
-                    repeat(rowSize) {
-                        val nb = nextByte()
-                        state.state(byteText.length, nb)
-                        if (state.foundD5AA96) {
-                            addressStart = state.start
-                        } else if (state.foundD5AAAD) {
-                            dataStart = state.start
-                        } else if (state.foundDEAA) {
-                            if (addressStart > 0) {
-                                ranges.add(StyleRange(addressStart, byteText.length - addressStart + 2, null,
-                                        lightBlue(display)))
-                                addressStart = -1
-                            } else if (dataStart > 0) {
-                                ranges.add(StyleRange(dataStart, byteText.length - dataStart + 2, null,
-                                        lightYellow(display)))
-                                dataStart = -1
-                            }
+                    else -> {
+                        repeat(8) {
+                            val bit = disk.nextBit()
+                            byte = byte.shl(1).or(bit)
                         }
-                        byteText.append(nb.h() + " ")
-                        currentBytes.add(nb)
                     }
-                    byteText.append("\n")
-                    row += rowSize
                 }
-                display.asyncExec {
-                    offsets.text = offsetText.toString()
-                    bytes.text = byteText.toString()
-                    bytes.styleRanges = ranges.toTypedArray()
+                return byte
+            }
+
+            var row = 0
+            val offsetText = StringBuffer()
+            val byteText = StringBuffer()
+            val state = State()
+            val ranges = arrayListOf<StyleRange>()
+            var addressStart = -1
+            var dataStart = -1
+            repeat(disk.phaseSizeInBytes(track) / 16 + 20) {
+                offsetText.append("\$" + String.format("%04X", row) + "\n")
+                repeat(rowSize) {
+                    val nb = nextByte()
+                    state.state(byteText.length, nb)
+                    if (state.foundD5AA96) {
+                        addressStart = state.start
+                    } else if (state.foundD5AAAD) {
+                        dataStart = state.start
+                    } else if (state.foundDEAA) {
+                        if (addressStart > 0) {
+                            ranges.add(StyleRange(addressStart, byteText.length - addressStart + 2, null,
+                                    lightBlue(display)))
+                            addressStart = -1
+                        } else if (dataStart > 0) {
+                            ranges.add(StyleRange(dataStart, byteText.length - dataStart + 2, null,
+                                    lightYellow(display)))
+                            dataStart = -1
+                        }
+                    }
+                    byteText.append(nb.h() + " ")
+                    currentBytes.add(nb)
                 }
+                byteText.append("\n")
+                row += rowSize
+            }
+            display.asyncExec {
+                offsets.text = offsetText.toString()
+                bytes.text = byteText.toString()
+                bytes.styleRanges = ranges.toTypedArray()
             }
         }
     }

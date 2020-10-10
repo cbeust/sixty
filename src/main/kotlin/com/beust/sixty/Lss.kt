@@ -39,7 +39,7 @@ class Lss {
             pulse = disk.nextBit()
             if (pulse == 0) {
                 if (++zeros > 2) {
-                    pulse = if (Math.random() > 0.5) 1 else 0
+                    pulse = 0//if (Math.random() > 0.5) 1 else 0
                 }
             } else {
                 zeros = 0

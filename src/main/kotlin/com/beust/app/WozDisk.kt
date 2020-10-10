@@ -39,13 +39,18 @@ class WozDisk(override val name: String, ins: InputStream): BaseDisk(), IByteStr
         return result
     }
 
+    override fun phaseSizeInBytes(phase: Int): Int {
+        return woz.bitStreamForTrack(phase).sizeInBytes
+    }
+
+
     private fun updatePosition(oldTrack: Int, newTrack: Int) {
-        val oldTrackLength = woz.trks.trks[oldTrack].bitCount / 8
-        val newTrackLength = woz.trks.trks[newTrack].bitCount / 8
-        if (oldTrackLength != 0 && newTrack != 0) {
-            position = position * newTrackLength / oldTrackLength
-//            println("Update position oldTrack: $oldTrack -> $newTrack, new position: $position")
-        }
+//        val oldTrackLength = woz.trks.trks[oldTrack].bitCount / 8
+//        val newTrackLength = woz.trks.trks[newTrack].bitCount / 8
+//        if (oldTrackLength != 0 && newTrack != 0) {
+//            position = position * newTrackLength / oldTrackLength
+////            println("Update position oldTrack: $oldTrack -> $newTrack, new position: $position")
+//        }
     }
 
     private fun moveTrack(block: () -> Unit) {

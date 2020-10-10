@@ -58,7 +58,11 @@ class DskDisk(override val name: String, ins: InputStream): BaseDisk() {
         return result
     }
 
-//    private val byteStream: IByteStream
+    override fun phaseSizeInBytes(phase: Int): Int {
+        return 16 * 256
+    }
+
+    //    private val byteStream: IByteStream
     init {
         val bytes = ins.readAllBytes()
         bytes.forEach { source.add(it.toInt()) }

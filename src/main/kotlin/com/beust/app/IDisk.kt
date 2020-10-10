@@ -34,6 +34,8 @@ interface IDisk {
     fun incTrack()
     fun decTrack()
     fun peekBytes(n: Int): List<Int>
+    /** Phase: 0-159 */
+    fun phaseSizeInBytes(phase: Int): Int
 
     fun nextByte(): Int {
         var result = 0
