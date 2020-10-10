@@ -18,7 +18,7 @@ class ByteBufferWindow(parent: Composite) : Composite(parent, SWT.NONE) {
     private var woz: Woz? = null
     private val rowSize = 16
     private val offsets: StyledText
-    private val bytes: StyledText
+    private val bytesStyledText: StyledText
     private val thisFont = font(shell, "Courier New", 10)
     private val thisFontBold = font(shell, "Courier New", 10, SWT.BOLD)
     private val currentBytes = arrayListOf<Int>()
@@ -43,7 +43,7 @@ class ByteBufferWindow(parent: Composite) : Composite(parent, SWT.NONE) {
             }
 
         }
-        bytes = StyledText(this, SWT.NONE).apply {
+        bytesStyledText = StyledText(this, SWT.NONE).apply {
             editable = false
             font = thisFont
             layoutData = GridData(SWT.FILL, SWT.FILL, true, true)
@@ -52,9 +52,9 @@ class ByteBufferWindow(parent: Composite) : Composite(parent, SWT.NONE) {
                 heightHint = Int.MAX_VALUE
             }
         }
-        bytes.addCaretListener { e ->
+        bytesStyledText.addCaretListener { e ->
             val o = e.caretOffset
-            val line = bytes.getLineAtOffset(e.caretOffset)
+            val line = bytesStyledText.getLineAtOffset(e.caretOffset)
             val mod = (if (line == 0) o else (o - line)) % 48
             val index = line * 16 + (mod / 3)
             UiState.currentBytes.value = listOf(currentBytes[index], currentBytes[index + 1])
@@ -89,6 +89,23 @@ class ByteBufferWindow(parent: Composite) : Composite(parent, SWT.NONE) {
         updateBuffer()
     }
 
+    class GraphicBuffer(private val sizeInBytes: Int, nextByte: () -> Int) {
+        var index = 0
+        private val bytes = arrayListOf<Int>()
+        init {
+            repeat(sizeInBytes) {
+                bytes.add(nextByte())
+            }
+        }
+
+        fun hasNext() = index < sizeInBytes
+        fun next(): Int = bytes[index++]
+
+        fun peek(n: Int): List<Int>
+            = if (index + n < sizeInBytes) bytes.slice(index..index + n - 1)
+               else emptyList()
+    }
+
     private fun updateBuffer(passedDisk: IDisk? = null, track: Int = 0,
             byteAlgorithm: ByteAlgorithm = ByteAlgorithm.SHIFTED) {
         println("Updating buffer with file "+ UiState.currentDisk1File)
@@ -119,99 +136,43 @@ class ByteBufferWindow(parent: Composite) : Composite(parent, SWT.NONE) {
                 return byte
             }
 
+            val bytes = GraphicBuffer(disk.phaseSizeInBytes(track)) { -> nextByte() }
+
             var row = 0
             val offsetText = StringBuffer()
             val byteText = StringBuffer()
-            val state = State()
             val ranges = arrayListOf<StyleRange>()
             var addressStart = -1
             var dataStart = -1
-            repeat(disk.phaseSizeInBytes(track) / 16 + 20) {
-                offsetText.append("\$" + String.format("%04X", row) + "\n")
-                repeat(rowSize) {
-                    val nb = nextByte()
-                    state.state(byteText.length, nb)
-                    if (state.foundD5AA96) {
-                        addressStart = state.start
-                    } else if (state.foundD5AAAD) {
-                        dataStart = state.start
-                    } else if (state.foundDEAA) {
-                        if (addressStart > 0) {
-                            ranges.add(StyleRange(addressStart, byteText.length - addressStart + 2, null,
-                                    lightBlue(display)))
-                            addressStart = -1
-                        } else if (dataStart > 0) {
-                            ranges.add(StyleRange(dataStart, byteText.length - dataStart + 2, null,
-                                    lightYellow(display)))
-                            dataStart = -1
-                        }
-                    }
-                    byteText.append(nb.h() + " ")
-                    currentBytes.add(nb)
+            while (bytes.hasNext()) {
+                if (bytes.index > 0 && bytes.index % rowSize == 0) {
+                    offsetText.append("\$" + String.format("%04X", row) + "\n")
+                    byteText.append("\n")
+                    row += rowSize
                 }
-                byteText.append("\n")
-                row += rowSize
+                val p2 = bytes.peek(2)
+                val p3 = bytes.peek(3)
+                if (p3 == UiState.addressPrologue.value) {
+                    addressStart = byteText.length
+                } else if (p2 == UiState.addressEpilogue.value && addressStart > 0) {
+                    ranges.add(StyleRange(addressStart, byteText.length - addressStart + 5, null,
+                            lightBlue(display)))
+                    addressStart = -1
+                } else if (p3 == UiState.dataPrologue.value) {
+                    dataStart = byteText.length
+                } else if (p2 == UiState.addressEpilogue.value && dataStart > 0) {
+                    ranges.add(StyleRange(dataStart, byteText.length - dataStart + 5, null,
+                            lightYellow(display)))
+                    dataStart = -1
+                }
+                val nb = bytes.next()
+                byteText.append(nb.h() + " ")
+                currentBytes.add(nb)
             }
             display.asyncExec {
                 offsets.text = offsetText.toString()
-                bytes.text = byteText.toString()
-                bytes.styleRanges = ranges.toTypedArray()
-            }
-        }
-    }
-}
-
-class State {
-    private var fD5 = false
-    private var fD5AA = false
-    var foundD5AAAD = false
-    var foundD5AA96 = false
-    private var fDE = false
-    var foundDEAA = false
-    var start = -1
-
-    private fun reset() {
-        fD5 = false
-        fD5AA = false
-        foundD5AA96 = false
-        foundD5AAAD = false
-        fDE = false
-        foundDEAA = false
-        start = -1
-    }
-
-    fun state(position: Int, byte: Int) {
-        when(byte) {
-            0xd5 -> {
-                start = position
-                fD5 = true
-            }
-            0xaa -> if (fD5) {
-                fD5 = false
-                fD5AA = true
-            } else if (fDE) {
-                fDE = false
-                foundDEAA = true
-            } else {
-                reset()
-            }
-            0x96 -> if (fD5AA) {
-                foundD5AA96 = true
-            } else {
-                reset()
-            }
-            0xad -> if (fD5AA) {
-                fD5AA = false
-                foundD5AAAD = true
-            } else {
-                reset()
-            }
-            0xde -> {
-                start = position
-                fDE = true
-            }
-            else -> {
-                reset()
+                bytesStyledText.text = byteText.toString()
+                bytesStyledText.styleRanges = ranges.toTypedArray()
             }
         }
     }

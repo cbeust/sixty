@@ -38,6 +38,10 @@ object UiState {
     val currentTrack = Obs("Current track", 0)
     val byteAlgorithn = Obs("Byte algorithm", ByteAlgorithm.SHIFTED)
     val currentBytes: Obs<List<Int>> = Obs("Current bytes", emptyList())
+    val addressPrologue: Obs<ArrayList<Int>> = Obs("Address prologue", arrayListOf(0xd5, 0xaa, 0x96))
+    val addressEpilogue: Obs<ArrayList<Int>> = Obs("Address epilogue", arrayListOf(0xde, 0xaa))
+    val dataPrologue: Obs<ArrayList<Int>> = Obs("Address prologue", arrayListOf(0xd5, 0xaa, 0xad))
+    val dataEpilogue: Obs<ArrayList<Int>> = Obs("Address epilogue", arrayListOf(0xde, 0xaa))
 
     //
     // DEBUGGER tab
