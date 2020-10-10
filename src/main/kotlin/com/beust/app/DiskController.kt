@@ -8,8 +8,9 @@ class DiskController(val slot: Int = 6): IPulse, MemoryListener() {
     private var latch: Int = 0
     private var drive1 = true
     private var motor = Motor { -> drive1 }
-    private var q6 = 0
-    private var q7 = 0
+    private var q6 = false
+    private var q7 = false
+    private val lss = Lss()
 
     enum class MotorState {
         ON, OFF, SPINNING_DOWN;
@@ -32,10 +33,10 @@ class DiskController(val slot: Int = 6): IPulse, MemoryListener() {
                         val task = object: TimerTask() {
                             override fun run() {
                                 if (field == MotorState.SPINNING_DOWN) {
-//                                    logDisk("Turning motor OFF after a second")
-//                                    updateUi(false)
-//                                    field = MotorState.OFF
-                                } // Motor was turned on while spinning down, nothing to do
+                                    logDisk("Turning motor OFF after a second")
+                                    updateUi(false)
+                                    field = MotorState.OFF
+                                } // Motor was turned on while spinning down: not turning it off
                             }
                         }
                         Timer().schedule(task, 1000)
@@ -52,16 +53,29 @@ class DiskController(val slot: Int = 6): IPulse, MemoryListener() {
     }
 
     private fun c(address: Int) = address + slot16
-    override fun isInRange(address:Int) = address in (c(0xc080)..c(0xc08c))
+    override fun isInRange(address:Int) = address in (c(0xc080)..c(0xc08f))
 
     override fun stop() {}
 
+    private val useLss = true
+
     override fun onPulse(manager: PulseManager): PulseResult {
-        // Faster way for unprotected disks
-        disk()?.let {
-            if (motor.isOn && latch.and(0x80) == 0) {
-//                latch = latch.shl(1).or(it.nextBit())
-                latch = it.nextByte()
+        // Use the LSS
+        if (useLss) {
+            disk()?.let { disk ->
+                repeat(2) {
+                    lss.onPulse(q6, q7, { -> motor.isOn }, disk)
+                }
+                latch = lss.latch
+            }
+        } else {
+
+            // Faster way for unprotected disks
+            disk()?.let {
+                if (motor.isOn && latch.and(0x80) == 0) {
+                    //                latch = latch.shl(1).or(it.nextBit())
+                    latch = it.nextByte()
+                }
             }
         }
 
@@ -178,20 +192,25 @@ class DiskController(val slot: Int = 6): IPulse, MemoryListener() {
                 value
             }
             0xc08c -> {
-//                latch = disk!!.nextByte()
-                q6 = 0
+                if (! useLss) {
+                    latch = disk()!!.nextByte()
+                }
+                q6 = false
                 val result = latch
-                if (latch.and(0x80) != 0) latch = 0//latch.and(0x7f) // clear bit 7
+//                if (latch.and(0x80) != 0) latch = 0//latch.and(0x7f) // clear bit 7
                 result
             }
             0xc08d -> {
-                q6 = 1
+                q6 = true
+                value
             }
             0xc08e -> {
-                q7 = 0
+                q7 = false
+                value
             }
             0xc08f -> {
-                q7 = 1
+                q7 = true
+                value
             }
             else -> value
         }

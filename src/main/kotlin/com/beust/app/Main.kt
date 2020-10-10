@@ -9,14 +9,11 @@ val RUN = true
 var DEBUG = false
 val BREAKPOINT: Int? = null//0xc6a6//0x5f8 // 0x5f8 // 0x5a0 //0x5f8 // 0x59e // null//0x556//0xc2de // 0xc2db
 
-val DISK_DOS_3_3 = File("D:\\pd\\Apple disks\\Apple DOS 3.3.dsk") // File("src/test/resources/Apple DOS 3.3.dsk")
-val WOZ_DOS_3_3 = File("src/test/resources/woz2/DOS 3.3 System Master.woz")
-
 fun disk(s: String) = File("disks/$s")
 
 val disks = listOf(
-        DISK_DOS_3_3,
-        WOZ_DOS_3_3,
+        disk("Apple DOS 3.3.dsk"), // 0
+        disk("Apple DOS 3.3.woz"), // 1
         File("src/test/resources/audit.dsk"), // 2
         disk("Blade_of_Blackpoole_A.dsk"), // 3
         disk("Sherwood_Forest.dsk") ,       // 4
@@ -28,7 +25,7 @@ val disks = listOf(
         disk("Bouncing Kamungas - Disk 1, Side A.woz") // 10
 )
 
-val DISK = disks[4]
+val DISK = disks[10]
 
 fun main() {
     val pulseManager = PulseManager()
