@@ -55,7 +55,7 @@ class DiskWindow(parent: Composite): Composite(parent, NONE) {
                 diskLabel.text = new?.name
             }
         }
-        UiState.currentBytes.addAfterListener { _, _ -> byteBufferWindow.updateBuffer() }
+        UiState.currentBytes.addAfterListener { _, _ -> updateInspector() }
     }
 
     private fun updateInspector() {

@@ -53,15 +53,17 @@ class ByteBufferWindow(parent: Composite) : Composite(parent, SWT.NONE) {
             }
         }
         bytesStyledText.addCaretListener { e ->
-            val o = e.caretOffset
-            val line = bytesStyledText.getLineAtOffset(e.caretOffset)
-            val mod = (if (line == 0) o else (o - line)) % 48
-            val index = line * 16 + (mod / 3)
-            UiState.currentBytes.value = listOf(currentBytes[index], currentBytes[index + 1])
-//            val result = bytes.getText(e.caretOffset + pair.first, e.caretOffset+ pair.second)
-//                    .split(" ")
-//                    .map { Integer.parseInt(it, 16) }
-            log("o:${o} line:$line mod:$mod index:${index.h()} byte:${currentBytes[index].h()}")
+            if (e.caretOffset < bytesStyledText.text.length) {
+                val o = e.caretOffset
+                val line = bytesStyledText.getLineAtOffset(e.caretOffset)
+                val mod = (if (line == 0) o else (o - line)) % 48
+                val index = line * 16 + (mod / 3)
+                UiState.currentBytes.value = listOf(currentBytes[index], currentBytes[index + 1])
+                //            val result = bytes.getText(e.caretOffset + pair.first, e.caretOffset+ pair.second)
+                //                    .split(" ")
+                //                    .map { Integer.parseInt(it, 16) }
+                log("o:${o} line:$line mod:$mod index:${index.h()} byte:${currentBytes[index].h()}")
+            }
         }
 //        bytes.addFocusListener(object: FocusAdapter() {
 //            override fun focusGained(e: FocusEvent) {
