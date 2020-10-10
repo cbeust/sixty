@@ -86,6 +86,11 @@ class ByteBufferWindow(parent: Composite) : Composite(parent, SWT.NONE) {
         UiState.byteAlgorithn.addListener { _, new ->
             updateBuffer(byteAlgorithm = new)
         }
+        UiState.addressPrologue.addAfterListener { _, _ -> updateBuffer() }
+        UiState.addressEpilogue.addAfterListener { _, _ -> updateBuffer() }
+        UiState.addressPrologue.addAfterListener { _, _ -> updateBuffer() }
+        UiState.addressEpilogue.addAfterListener { _, _ -> updateBuffer() }
+
         updateBuffer()
     }
 
@@ -106,9 +111,10 @@ class ByteBufferWindow(parent: Composite) : Composite(parent, SWT.NONE) {
                else emptyList()
     }
 
-    private fun updateBuffer(passedDisk: IDisk? = null, track: Int = 0,
+    fun updateBuffer(passedDisk: IDisk? = null, track: Int = 0,
             byteAlgorithm: ByteAlgorithm = ByteAlgorithm.SHIFTED) {
         println("Updating buffer with file "+ UiState.currentDisk1File)
+        bytesStyledText.text = ""
         currentBytes.clear()
         val disk = passedDisk ?: IDisk.create(UiState.currentDisk1File.value)
         if (disk != null) {
@@ -160,7 +166,7 @@ class ByteBufferWindow(parent: Composite) : Composite(parent, SWT.NONE) {
                     addressStart = -1
                 } else if (p3 == UiState.dataPrologue.value) {
                     dataStart = byteText.length
-                } else if (p2 == UiState.addressEpilogue.value && dataStart > 0) {
+                } else if (p2 == UiState.dataEpilogue.value && dataStart > 0) {
                     ranges.add(StyleRange(dataStart, byteText.length - dataStart + 5, null,
                             lightYellow(display)))
                     dataStart = -1

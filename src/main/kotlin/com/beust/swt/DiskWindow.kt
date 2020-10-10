@@ -16,7 +16,6 @@ import org.eclipse.swt.graphics.Rectangle
 import org.eclipse.swt.layout.FillLayout
 import org.eclipse.swt.layout.GridData
 import org.eclipse.swt.layout.GridLayout
-import org.eclipse.swt.layout.RowLayout
 import org.eclipse.swt.widgets.*
 
 fun main(args: Array<String>) {
@@ -42,20 +41,21 @@ class DiskWindow(parent: Composite): Composite(parent, NONE) {
     private var byteText: Text? = null
     private var wordText: Text? = null
     private var fourAndFourText: Text? = null
+    private val byteBufferWindow: ByteBufferWindow
 
     init {
         layout = GridLayout(3, false)
 
         createHeader(this)
         createRightSide(this)
-        createScrollableByteBuffer(this)
+        byteBufferWindow = createScrollableByteBuffer(this)
 
         UiState.currentDisk1File.addListener { _, new ->
             display.asyncExec {
                 diskLabel.text = new?.name
             }
         }
-        UiState.currentBytes.addListener { _, _ -> updateInspector() }
+        UiState.currentBytes.addAfterListener { _, _ -> byteBufferWindow.updateBuffer() }
     }
 
     private fun updateInspector() {
@@ -97,6 +97,29 @@ class DiskWindow(parent: Composite): Composite(parent, NONE) {
         }
     }
 
+    private fun textToHex(s: String): List<Int> {
+        val allowed = hashSetOf('a', 'b', 'c', 'd', 'e', 'f', 'A', 'B', 'C', 'D', 'E', 'F')
+        fun isHex(c: Char) = Character.isDigit(c) || allowed.contains(c)
+
+        val result = arrayListOf<Int>()
+        var current = 0
+        var first = true
+        s.forEach { c ->
+            if (isHex(c)) {
+                val value = Integer.parseInt(c.toString(), 16)
+                if (! first) {
+                    current = current.shl(4).or(value)
+                    result.add(current)
+                    current = 0
+                } else {
+                    current = value
+                }
+                first = ! first
+            }
+        }
+        return result
+    }
+
     private fun createTrackInfo(parent: Composite): Composite {
         val result = Group(parent, NONE).apply {
             layout = GridLayout()
@@ -104,15 +127,27 @@ class DiskWindow(parent: Composite): Composite(parent, NONE) {
         }
         createLabelText(result, "Address prologue").second.apply {
             text = "D5 AA 96"
+            addListener(SWT.FocusOut) { e ->
+                UiState.addressPrologue.value = textToHex(text)
+            }
         }
         createLabelText(result, "Address epilogue").second.apply {
             text = "DE AA"
+            addListener(SWT.FocusOut) { e ->
+                UiState.addressEpilogue.value = textToHex(text)
+            }
         }
         createLabelText(result, "Data prologue").second.apply {
             text = "D5 AA AD"
+            addListener(SWT.FocusOut) { e ->
+                UiState.dataPrologue.value = textToHex(text)
+            }
         }
         createLabelText(result, "Data epilogue").second.apply {
             text = "DE AA"
+            addListener(SWT.FocusOut) { e ->
+                UiState.dataEpilogue.value = textToHex(text)
+            }
         }
 
         return result
@@ -220,29 +255,31 @@ class DiskWindow(parent: Composite): Composite(parent, NONE) {
         return header
     }
 
-    private fun createScrollableByteBuffer(parent: Composite): ScrolledComposite {
-        val result = ScrolledComposite(parent, SWT.BORDER or SWT.V_SCROLL or SWT.H_SCROLL).apply {
+    private fun createScrollableByteBuffer(parent: Composite): ByteBufferWindow {
+        val scrolled = ScrolledComposite(parent, SWT.BORDER or SWT.V_SCROLL or SWT.H_SCROLL).apply {
             background = black(display)
 
             layoutData = GridData().apply {
                 heightHint = 600
-            }
-            val bbw = ByteBufferWindow(this).apply {
-                layoutData = GridData(GridData.FILL, GridData.FILL, true, true).apply {
-                    //                horizontalAlignment = GridData.FILL
-                    //                verticalAlignment = GridData.FILL
-                    heightHint = 1000
-                    horizontalSpan = 2
-                    //                grabExcessVerticalSpace = true
-                    //                grabExcessHorizontalSpace = false
-                }
                 setMinSize(Point(500, 10000))
                 expandHorizontal = true
                 expandVertical = true
-
             }
-            content = bbw
         }
+
+        val result = ByteBufferWindow(scrolled).apply {
+            layoutData = GridData(GridData.FILL, GridData.FILL, true, true).apply {
+                //                horizontalAlignment = GridData.FILL
+                //                verticalAlignment = GridData.FILL
+                heightHint = 1000
+                horizontalSpan = 2
+                //                grabExcessVerticalSpace = true
+                //                grabExcessHorizontalSpace = false
+            }
+
+        }
+        scrolled.content = result
+
         return result
     }
 
