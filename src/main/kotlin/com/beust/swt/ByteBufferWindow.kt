@@ -90,15 +90,17 @@ class ByteBufferWindow(parent: Composite) : Composite(parent, SWT.NONE) {
         }
         UiState.addressPrologue.addAfterListener { _, _ -> updateBuffer() }
         UiState.addressEpilogue.addAfterListener { _, _ -> updateBuffer() }
-        UiState.addressPrologue.addAfterListener { _, _ -> updateBuffer() }
-        UiState.addressEpilogue.addAfterListener { _, _ -> updateBuffer() }
+        UiState.dataPrologue.addAfterListener { _, _ -> updateBuffer() }
+        UiState.dataEpilogue.addAfterListener { _, _ -> updateBuffer() }
 
         updateBuffer()
     }
 
-    class GraphicBuffer(private val sizeInBytes: Int, nextByte: () -> Int) {
+    class TimedByte(val byte: Int, val timingBit: Boolean = false)
+
+    class GraphicBuffer(private val sizeInBytes: Int, nextByte: () -> TimedByte) {
         var index = 0
-        private val bytes = arrayListOf<Int>()
+        private val bytes = arrayListOf<TimedByte>()
         init {
             repeat(sizeInBytes) {
                 bytes.add(nextByte())
@@ -106,9 +108,9 @@ class ByteBufferWindow(parent: Composite) : Composite(parent, SWT.NONE) {
         }
 
         fun hasNext() = index < sizeInBytes
-        fun next(): Int = bytes[index++]
+        fun next(): TimedByte = bytes[index++]
 
-        fun peek(n: Int): List<Int>
+        fun peek(n: Int): List<TimedByte>
             = if (index + n < sizeInBytes) bytes.slice(index..index + n - 1)
                else emptyList()
     }
@@ -125,12 +127,24 @@ class ByteBufferWindow(parent: Composite) : Composite(parent, SWT.NONE) {
                 disk.incTrack()
             }
 
-            fun nextByte(): Int {
+            fun nextByte(): TimedByte {
+                var timed = false
                 var byte = 0
                 when (byteAlgorithm) {
                     ByteAlgorithm.SHIFTED -> {
+                        var bitCount = 0
                         while (byte and 0x80 == 0) {
                             val bit = disk.nextBit()
+                            if (bit == 0) {
+                                if (bitCount == 1) {
+                                    timed = true
+                                    bitCount = -1
+                                } else if (bitCount == 0) {
+                                    bitCount = 1
+                                }
+                            } else {
+                                bitCount = -1
+                            }
                             byte = byte.shl(1).or(bit)
                         }
                     }
@@ -141,7 +155,7 @@ class ByteBufferWindow(parent: Composite) : Composite(parent, SWT.NONE) {
                         }
                     }
                 }
-                return byte
+                return TimedByte(byte, timed)
             }
 
             val bytes = GraphicBuffer(disk.phaseSizeInBytes(track)) { -> nextByte() }
@@ -158,24 +172,25 @@ class ByteBufferWindow(parent: Composite) : Composite(parent, SWT.NONE) {
                     byteText.append("\n")
                     row += rowSize
                 }
-                val p2 = bytes.peek(2)
-                val p3 = bytes.peek(3)
+                val p2 = bytes.peek(2).map { it.byte }
+                val p3 = bytes.peek(3).map { it.byte }
                 if (p3 == UiState.addressPrologue.value) {
-                    addressStart = byteText.length
+                    addressStart = byteText.length + 1
                 } else if (p2 == UiState.addressEpilogue.value && addressStart > 0) {
-                    ranges.add(StyleRange(addressStart, byteText.length - addressStart + 5, null,
+                    ranges.add(StyleRange(addressStart, byteText.length - addressStart + 6, null,
                             lightBlue(display)))
                     addressStart = -1
                 } else if (p3 == UiState.dataPrologue.value) {
-                    dataStart = byteText.length
+                    dataStart = byteText.length + 1
                 } else if (p2 == UiState.dataEpilogue.value && dataStart > 0) {
-                    ranges.add(StyleRange(dataStart, byteText.length - dataStart + 5, null,
+                    ranges.add(StyleRange(dataStart, byteText.length - dataStart + 6, null,
                             lightYellow(display)))
                     dataStart = -1
                 }
                 val nb = bytes.next()
-                byteText.append(nb.h() + " ")
-                currentBytes.add(nb)
+                byteText.append(if (nb.timingBit) "+" else " ")
+                byteText.append(nb.byte.h())
+                currentBytes.add(nb.byte)
             }
             display.asyncExec {
                 offsets.text = offsetText.toString()
