@@ -93,7 +93,6 @@ class Computer(override val memory: IMemory, override val cpu: Cpu, val pcListen
         if (wait == 0) {
             wait = step() - 1
         } else {
-//            println("----")
             wait--
         }
         return PulseResult(runStatus)
@@ -121,12 +120,6 @@ class Computer(override val memory: IMemory, override val cpu: Cpu, val pcListen
         if (opCode == 0x60 && cpu.SP.isEmpty()) {
             done = true
         } else {
-//                if (cycles >= 1156500) {
-//                    DEBUG = true
-//                }
-//            if (memory[cpu.PC + 1] == 0x44) {
-//                println("BREAKPOINT")
-//            }
             if (BREAKPOINT != null) {
                 if (cpu.PC in (BREAKPOINT - 20)..BREAKPOINT) {
                     DEBUG = true
@@ -160,10 +153,11 @@ class Computer(override val memory: IMemory, override val cpu: Cpu, val pcListen
                     previousPc = cpu.PC
                     if (cpu.PC == BREAKPOINT) {
                         println("BREAKPOINT $memory")
-//                        if (cpu.A != 0) {
-                            println("A: " + cpu.A + " track: " + memory[0x2e] + " sector: " + memory[0x2d] + " checksum: "
-                                    + memory[0xc])
-//                        }
+                        println("A: " + cpu.A + " track: " + memory[0x2e] + " sector: " + memory[0x2d]
+                                + " checksum: "  + memory[0x2d6 + cpu.Y].h())
+                        if (cpu.A != 0) {
+                            println("FAILURE")
+                        }
                         ""
                     }
                     cpu.PC += SIZES[opCode]

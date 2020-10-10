@@ -6,8 +6,9 @@ import java.io.File
 import java.io.InputStream
 
 fun main() {
-    val d = WozDisk(disk("Bouncing Kamungas - Disk 1, Side A.woz"))
+    val d = IDisk.create(disks[10])!!
     SixAndTwo.dump(d, closingAddress = listOf(0xda, 0xaa, 0xeb), closingData = listOf(0xda, 0xaa, 0xeb))
+//    SixAndTwo.dump(d)
     ""
 }
 
@@ -108,21 +109,34 @@ class WozDisk(override val name: String, ins: InputStream): BaseDisk(), IByteStr
 
     override fun nextByte() = nextByte(false)
 
+    private var zeroCount = 0
     fun nextByte(peek: Boolean = false): Int {
+        var bits = arrayListOf(0)
         var result = 0
         if (peek) {
             save()
         }
         while (result and 0x80 == 0) {
             val (newPosition, nb) = bitStream.next(position)
+            bits.add(nb)
             position = newPosition
 //            val nb = nextBit(peek, ahead * 8)
             result = result.shl(1).or(nb)
+            if (nb == 0) {
+                if (zeroCount >= 2) {
+                    result = 0
+                }
+                zeroCount++
+            } else {
+                zeroCount = 0
+            }
         }
         if (peek) {
             restore()
         }
-        val rh = result.h()
+        if (result == 0x94) {
+            println("PROBLEM")
+        }
         return result
     }
 

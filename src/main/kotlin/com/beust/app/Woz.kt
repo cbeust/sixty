@@ -143,7 +143,7 @@ class Woz(private val bytes: ByteArray,
             if (tmapOffset == -1) {
                 val trk = trks.trks[trackNumber]
                 val streamSizeInBytes = (trk.bitCount / 8)
-                FakeBitStream(streamSizeInBytes)
+                FakeBitStream()
             } else {
                 val trk = trks.trks[tmapOffset]
                 val streamSizeInBytes = (trk.bitCount / 8)
@@ -208,10 +208,10 @@ class _BitStream(val bytes: List<Byte>): IBitStream() {
     }
 }
 
-class FakeBitStream(val trackSize: Int): IBitStream() {
+class FakeBitStream: IBitStream() {
     override fun next(position: Int): Pair<Int, Int> {
         val result = if (Random.nextInt() % 10 < 3) 1 else 0
-        return Pair((position + 1) % trackSize, result)
+        return Pair(position, result)
     }
 
     fun next(): Int {
