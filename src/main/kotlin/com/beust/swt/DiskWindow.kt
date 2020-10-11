@@ -93,6 +93,7 @@ class DiskWindow(parent: Composite): Composite(parent, NONE) {
                 verticalSpan = 2
             }
             createTrackInfo(this)
+            createSectorInfo(this)
             createDataInspector(this)
         }
     }
@@ -147,6 +148,35 @@ class DiskWindow(parent: Composite): Composite(parent, NONE) {
             text = "DE AA"
             addListener(SWT.FocusOut) { e ->
                 UiState.dataEpilogue.value = textToHex(text)
+            }
+        }
+
+        return result
+    }
+
+    private fun createSectorInfo(parent: Composite): Composite {
+        val result = Group(parent, NONE).apply {
+            layout = GridLayout()
+            text = "Sector info"
+        }
+        createLabelText(result, "Volume").second.apply {
+            UiState.caretSectorInfo.addAfterListener { _, new ->
+                text = new?.volume?.h() ?: ""
+            }
+        }
+        createLabelText(result, "Track").second.apply {
+            UiState.caretSectorInfo.addAfterListener { _, new ->
+                text = new?.track?.h() ?: ""
+            }
+        }
+        createLabelText(result, "Sector").second.apply {
+            UiState.caretSectorInfo.addAfterListener { _, new ->
+                text = new?.sector?.h() ?: ""
+            }
+        }
+        createLabelText(result, "Checksum").second.apply {
+            UiState.caretSectorInfo.addAfterListener { _, new ->
+                text = new?.checksum?.h() ?: ""
             }
         }
 

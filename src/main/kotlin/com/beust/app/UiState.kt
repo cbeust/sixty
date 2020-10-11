@@ -1,6 +1,7 @@
 package com.beust.app
 
 import com.beust.sixty.logUiStatus
+import com.beust.swt.ByteBufferWindow
 import java.io.File
 
 typealias ObsListener<T> = (T, T) -> Unit
@@ -42,6 +43,7 @@ object UiState {
     val addressEpilogue: Obs<List<Int>> = Obs("Address epilogue", listOf(0xde, 0xaa))
     val dataPrologue: Obs<List<Int>> = Obs("Address prologue", listOf(0xd5, 0xaa, 0xad))
     val dataEpilogue: Obs<List<Int>> = Obs("Address epilogue", listOf(0xde, 0xaa))
+    val caretSectorInfo: Obs<ByteBufferWindow.SectorInfo?> = Obs("Current sector info", null)
 
     //
     // DEBUGGER tab

@@ -1,9 +1,6 @@
 package com.beust.swt
 
-import com.beust.app.ByteAlgorithm
-import com.beust.app.IDisk
-import com.beust.app.UiState
-import com.beust.app.Woz
+import com.beust.app.*
 import com.beust.sixty.h
 import com.beust.sixty.log
 import org.eclipse.swt.SWT
@@ -21,7 +18,7 @@ class ByteBufferWindow(parent: Composite) : Composite(parent, SWT.NONE) {
     private val bytesStyledText: StyledText
     private val thisFont = font(shell, "Courier New", 10)
     private val thisFontBold = font(shell, "Courier New", 10, SWT.BOLD)
-    private val currentBytes = arrayListOf<Int>()
+    private var graphicBuffer: GraphicBuffer? = null
 
     init {
 //        background = display.getSystemColor(SWT.COLOR_BLUE)
@@ -46,23 +43,23 @@ class ByteBufferWindow(parent: Composite) : Composite(parent, SWT.NONE) {
         bytesStyledText = StyledText(this, SWT.NONE).apply {
             editable = false
             font = thisFont
-            layoutData = GridData(SWT.FILL, SWT.FILL, true, true)
-            .apply {
-//                widthHint = 300
+            layoutData = GridData(SWT.FILL, SWT.FILL, true, true).apply {
                 heightHint = Int.MAX_VALUE
             }
-        }
-        bytesStyledText.addCaretListener { e ->
-            if (e.caretOffset < bytesStyledText.text.length) {
-                val o = e.caretOffset
-                val line = bytesStyledText.getLineAtOffset(e.caretOffset)
-                val mod = (if (line == 0) o else (o - line)) % 48
-                val index = line * 16 + (mod / 3)
-                UiState.currentBytes.value = listOf(currentBytes[index], currentBytes[index + 1])
-                //            val result = bytes.getText(e.caretOffset + pair.first, e.caretOffset+ pair.second)
-                //                    .split(" ")
-                //                    .map { Integer.parseInt(it, 16) }
-                log("o:${o} line:$line mod:$mod index:${index.h()} byte:${currentBytes[index].h()}")
+            addCaretListener { e ->
+                val caretOffset = e.caretOffset
+                if (caretOffset < text.length) {
+                    val line = getLineAtOffset(caretOffset)
+                    val mod = (if (line == 0) caretOffset else (caretOffset - line)) % 48
+                    val currentBytes = graphicBuffer!!.bytes.map { it.byte }
+                    val index = line * 16 + (mod / 3)
+                    UiState.currentBytes.value = listOf(currentBytes[index], currentBytes[index + 1])
+                    //            val result = bytes.getText(e.caretOffset + pair.first, e.caretOffset+ pair.second)
+                    //                    .split(" ")
+                    //                    .map { Integer.parseInt(it, 16) }
+                    log("position:${caretOffset} line:$line mod:$mod index:${index.h()} byte:${currentBytes[index].h()}")
+                }
+                UiState.caretSectorInfo.value = graphicBuffer?.currentSectorInfo(caretOffset / 3)
             }
         }
 //        bytes.addFocusListener(object: FocusAdapter() {
@@ -97,10 +94,13 @@ class ByteBufferWindow(parent: Composite) : Composite(parent, SWT.NONE) {
     }
 
     class TimedByte(val byte: Int, val timingBit: Boolean = false)
+    data class SectorInfo(val volume: Int, val track: Int, val sector: Int, val checksum: Int)
 
     class GraphicBuffer(private val sizeInBytes: Int, nextByte: () -> TimedByte) {
         var index = 0
-        private val bytes = arrayListOf<TimedByte>()
+        val bytes = arrayListOf<TimedByte>()
+        private val ranges = arrayListOf<IntRange>()
+
         init {
             repeat(sizeInBytes) {
                 bytes.add(nextByte())
@@ -113,13 +113,34 @@ class ByteBufferWindow(parent: Composite) : Composite(parent, SWT.NONE) {
         fun peek(n: Int): List<TimedByte>
             = if (index + n < sizeInBytes) bytes.slice(index..index + n - 1)
                else emptyList()
+
+        fun addRange(start: Int, end: Int) {
+            ranges.add(IntRange(start, end))
+        }
+
+        fun currentSectorInfo(position: Int) : SectorInfo? {
+            val range = ranges.firstOrNull { position in it}
+            val result =
+                if (range != null) {
+                    println("Found range: " + range + " should be d5: " + bytes[range.start])
+                    var start = range.start + UiState.addressPrologue.value.size
+                    val values = arrayListOf<Int>()
+                    repeat(4) {
+                        values.add(SixAndTwo.pair4And4(bytes[start].byte, bytes[start + 1].byte))
+                        start += 2
+                    }
+                    SectorInfo(values[0], values[1], values[2], values[3])
+                } else {
+                    null
+                }
+            return result
+        }
     }
 
     fun updateBuffer(passedDisk: IDisk? = null, track: Int = 0,
             byteAlgorithm: ByteAlgorithm = ByteAlgorithm.SHIFTED) {
         println("Updating buffer with file "+ UiState.currentDisk1File)
         bytesStyledText.text = ""
-        currentBytes.clear()
         val disk = passedDisk ?: IDisk.create(UiState.currentDisk1File.value)
         if (disk != null) {
             repeat(160) { disk.decTrack() }
@@ -158,7 +179,8 @@ class ByteBufferWindow(parent: Composite) : Composite(parent, SWT.NONE) {
                 return TimedByte(byte, timed)
             }
 
-            val bytes = GraphicBuffer(disk.phaseSizeInBytes(track)) { -> nextByte() }
+            graphicBuffer = GraphicBuffer(disk.phaseSizeInBytes(track)) { -> nextByte() }
+            val gb = graphicBuffer!!
 
             var row = 0
             val offsetText = StringBuffer()
@@ -166,16 +188,18 @@ class ByteBufferWindow(parent: Composite) : Composite(parent, SWT.NONE) {
             val ranges = arrayListOf<StyleRange>()
             var addressStart = -1
             var dataStart = -1
-            while (bytes.hasNext()) {
-                if (bytes.index > 0 && bytes.index % rowSize == 0) {
+            var byteSectorStart = -1
+            while (gb.hasNext()) {
+                if (gb.index > 0 && gb.index % rowSize == 0) {
                     offsetText.append("\$" + String.format("%04X", row) + "\n")
                     byteText.append("\n")
                     row += rowSize
                 }
-                val p2 = bytes.peek(2).map { it.byte }
-                val p3 = bytes.peek(3).map { it.byte }
+                val p2 = gb.peek(2).map { it.byte }
+                val p3 = gb.peek(3).map { it.byte }
                 if (p3 == UiState.addressPrologue.value) {
                     addressStart = byteText.length + 1
+                    byteSectorStart = gb.index
                 } else if (p2 == UiState.addressEpilogue.value && addressStart > 0) {
                     ranges.add(StyleRange(addressStart, byteText.length - addressStart + 6, null,
                             lightBlue(display)))
@@ -186,11 +210,11 @@ class ByteBufferWindow(parent: Composite) : Composite(parent, SWT.NONE) {
                     ranges.add(StyleRange(dataStart, byteText.length - dataStart + 6, null,
                             lightYellow(display)))
                     dataStart = -1
+                    gb.addRange(byteSectorStart, gb.index)
                 }
-                val nb = bytes.next()
+                val nb = gb.next()
                 byteText.append(if (nb.timingBit) "+" else " ")
                 byteText.append(nb.byte.h())
-                currentBytes.add(nb.byte)
             }
             display.asyncExec {
                 offsets.text = offsetText.toString()
