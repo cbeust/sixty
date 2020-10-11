@@ -57,7 +57,7 @@ class ByteBufferWindow(parent: Composite) : Composite(parent, SWT.NONE) {
                     //            val result = bytes.getText(e.caretOffset + pair.first, e.caretOffset+ pair.second)
                     //                    .split(" ")
                     //                    .map { Integer.parseInt(it, 16) }
-                    log("position:${caretOffset} line:$line mod:$mod index:${index.h()} byte:${currentBytes[index].h()}")
+//                    log("position:${caretOffset} line:$line mod:$mod index:${index.h()} byte:${currentBytes[index].h()}")
                 }
                 UiState.caretSectorInfo.value = graphicBuffer?.currentSectorInfo(caretOffset / 3)
             }
@@ -122,7 +122,6 @@ class ByteBufferWindow(parent: Composite) : Composite(parent, SWT.NONE) {
             val range = ranges.firstOrNull { position in it}
             val result =
                 if (range != null) {
-                    println("Found range: " + range + " should be d5: " + bytes[range.start])
                     var start = range.start + 3
                     val values = arrayListOf<Int>()
                     repeat(4) {
