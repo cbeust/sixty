@@ -31,6 +31,8 @@ interface IDisk {
     val name: String
 
     fun nextBit(): Int
+    fun peekZeroBitCount(): Int
+
     fun incTrack()
     fun decTrack()
     fun peekBytes(n: Int): List<Int>

@@ -36,6 +36,8 @@ class DskDisk(override val name: String, ins: InputStream): BaseDisk() {
         }
     }
 
+    override fun peekZeroBitCount() = 0
+
     override fun incTrack() {
         if (track < TRACK_MAX - 1) {
             track++

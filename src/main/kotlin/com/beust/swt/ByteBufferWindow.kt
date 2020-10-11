@@ -93,7 +93,7 @@ class ByteBufferWindow(parent: Composite) : Composite(parent, SWT.NONE) {
         updateBuffer()
     }
 
-    class TimedByte(val byte: Int, val timingBit: Boolean = false)
+    class TimedByte(val byte: Int, val timingBitCount: Int = 0)
     data class SectorInfo(val volume: Int, val track: Int, val sector: Int, val checksum: Int)
 
     class GraphicBuffer(private val sizeInBytes: Int, nextByte: () -> TimedByte) {
@@ -148,25 +148,15 @@ class ByteBufferWindow(parent: Composite) : Composite(parent, SWT.NONE) {
             }
 
             fun nextByte(): TimedByte {
-                var timed = false
+                var timed = 0
                 var byte = 0
                 when (byteAlgorithm) {
                     ByteAlgorithm.SHIFTED -> {
-                        var bitCount = 0
                         while (byte and 0x80 == 0) {
                             val bit = disk.nextBit()
-                            if (bit == 0) {
-                                if (bitCount == 1) {
-                                    timed = true
-                                    bitCount = -1
-                                } else if (bitCount == 0) {
-                                    bitCount = 1
-                                }
-                            } else {
-                                bitCount = -1
-                            }
                             byte = byte.shl(1).or(bit)
                         }
+                        timed = disk.peekZeroBitCount()
                     }
                     else -> {
                         repeat(8) {
@@ -215,7 +205,7 @@ class ByteBufferWindow(parent: Composite) : Composite(parent, SWT.NONE) {
                     gb.addRange(byteSectorStart, gb.index)
                 }
                 val nb = gb.next()
-                byteText.append(if (nb.timingBit) "+" else " ")
+                byteText.append(if (nb.timingBitCount > 0) "+" else " ")
                 byteText.append(nb.byte.h())
             }
             display.asyncExec {

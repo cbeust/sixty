@@ -73,6 +73,14 @@ class WozDisk(override val name: String, ins: InputStream): BaseDisk(), IByteStr
         if (track > 0) track--
     }
 
+    override fun peekZeroBitCount(): Int {
+        var result = 0
+        save()
+        while (nextBit() == 0) result++
+        restore()
+        return result
+    }
+
     override fun peekBytes(count: Int): ArrayList<Int> {
         val result = arrayListOf<Int>()
         save()
