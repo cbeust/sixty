@@ -124,30 +124,30 @@ class DiskWindow(parent: Composite): Composite(parent, NONE) {
     private fun createTrackInfo(parent: Composite): Composite {
         val result = Group(parent, NONE).apply {
             layout = GridLayout()
-            text = "Track info"
+            text = "Track info (regular expressions)"
         }
         createLabelText(result, "Address prologue").second.apply {
-            text = "D5 AA 96"
+            text = "D5AA96"
             addListener(SWT.FocusOut) { e ->
-                UiState.addressPrologue.value = textToHex(text)
+                UiState.addressPrologue.value = text
             }
         }
         createLabelText(result, "Address epilogue").second.apply {
-            text = "DE AA"
+            text = "DEAA"
             addListener(SWT.FocusOut) { e ->
-                UiState.addressEpilogue.value = textToHex(text)
+                UiState.addressEpilogue.value = text
             }
         }
         createLabelText(result, "Data prologue").second.apply {
-            text = "D5 AA AD"
+            text = "D5AAAD"
             addListener(SWT.FocusOut) { e ->
-                UiState.dataPrologue.value = textToHex(text)
+                UiState.dataPrologue.value = text
             }
         }
         createLabelText(result, "Data epilogue").second.apply {
-            text = "DE AA"
+            text = "DEAA"
             addListener(SWT.FocusOut) { e ->
-                UiState.dataEpilogue.value = textToHex(text)
+                UiState.dataEpilogue.value = text
             }
         }
 

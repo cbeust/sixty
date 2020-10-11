@@ -123,7 +123,7 @@ class ByteBufferWindow(parent: Composite) : Composite(parent, SWT.NONE) {
             val result =
                 if (range != null) {
                     println("Found range: " + range + " should be d5: " + bytes[range.start])
-                    var start = range.start + UiState.addressPrologue.value.size
+                    var start = range.start + 3
                     val values = arrayListOf<Int>()
                     repeat(4) {
                         values.add(SixAndTwo.pair4And4(bytes[start].byte, bytes[start + 1].byte))
@@ -144,7 +144,7 @@ class ByteBufferWindow(parent: Composite) : Composite(parent, SWT.NONE) {
         val disk = passedDisk ?: IDisk.create(UiState.currentDisk1File.value)
         if (disk != null) {
             repeat(160) { disk.decTrack() }
-            repeat(track * 4) {
+            repeat(track) {
                 disk.incTrack()
             }
 
@@ -195,18 +195,21 @@ class ByteBufferWindow(parent: Composite) : Composite(parent, SWT.NONE) {
                     byteText.append("\n")
                     row += rowSize
                 }
-                val p2 = gb.peek(2).map { it.byte }
-                val p3 = gb.peek(3).map { it.byte }
-                if (p3 == UiState.addressPrologue.value) {
+                val p2 = gb.peek(2).map { it.byte.h() }.joinToString("")
+                val p3 = gb.peek(3).map { it.byte.h() }.joinToString("")
+
+                fun matches(v: Obs<String>, actual: String) = v.value.toRegex(RegexOption.IGNORE_CASE).matches(actual)
+
+                if (matches(UiState.addressPrologue, p3)) {
                     addressStart = byteText.length + 1
                     byteSectorStart = gb.index
-                } else if (p2 == UiState.addressEpilogue.value && addressStart > 0) {
+                } else if (matches(UiState.addressEpilogue, p2) && addressStart > 0) {
                     ranges.add(StyleRange(addressStart, byteText.length - addressStart + 6, null,
                             lightBlue(display)))
                     addressStart = -1
-                } else if (p3 == UiState.dataPrologue.value) {
+                } else if (matches(UiState.dataPrologue, p3)) {
                     dataStart = byteText.length + 1
-                } else if (p2 == UiState.dataEpilogue.value && dataStart > 0) {
+                } else if (matches(UiState.dataEpilogue, p2) && dataStart > 0) {
                     ranges.add(StyleRange(dataStart, byteText.length - dataStart + 6, null,
                             lightYellow(display)))
                     dataStart = -1

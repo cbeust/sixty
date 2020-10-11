@@ -39,10 +39,10 @@ object UiState {
     val currentTrack = Obs("Current track", 0)
     val byteAlgorithn = Obs("Byte algorithm", ByteAlgorithm.SHIFTED)
     val currentBytes: Obs<List<Int>> = Obs("Current bytes", emptyList())
-    val addressPrologue: Obs<List<Int>> = Obs("Address prologue", listOf(0xd5, 0xaa, 0x96))
-    val addressEpilogue: Obs<List<Int>> = Obs("Address epilogue", listOf(0xde, 0xaa))
-    val dataPrologue: Obs<List<Int>> = Obs("Address prologue", listOf(0xd5, 0xaa, 0xad))
-    val dataEpilogue: Obs<List<Int>> = Obs("Address epilogue", listOf(0xde, 0xaa))
+    val addressPrologue: Obs<String> = Obs("Address prologue", "d5aa96")
+    val addressEpilogue: Obs<String> = Obs("Address epilogue", "deaa")
+    val dataPrologue: Obs<String> = Obs("Address prologue", "d5aaad")
+    val dataEpilogue: Obs<String> = Obs("Address epilogue", "deaa")
     val caretSectorInfo: Obs<ByteBufferWindow.SectorInfo?> = Obs("Current sector info", null)
 
     //
