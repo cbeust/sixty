@@ -1,6 +1,6 @@
 package com.beust.sixty
 
-import com.beust.app.BitStream
+import com.beust.app.BitBitStream
 import com.beust.app.IBitStream
 import com.beust.app.Woz
 import com.beust.app.WozDisk
@@ -13,7 +13,7 @@ class WozTest {
         val ins = Woz::class.java.classLoader.getResource("woz2/DOS 3.3 System Master.woz")!!.openStream()
         val bytes: ByteArray = ins.readAllBytes()
         val slice = bytes.slice(0x600 until bytes.size)
-        val bitStream = BitStream(slice)
+        val bitStream = BitBitStream(slice)
         val bitStream2 = BitStream2(slice.toByteArray())
         var position1 = 0
         var position2 = 0
@@ -56,7 +56,7 @@ class WozTest {
     }
 }
 
-class BitStream2(val bytes: ByteArray): IBitStream() {
+class BitStream2(val bytes: ByteArray, override val sizeInBytes: Int = bytes.size): IBitStream() {
     private val bits = arrayListOf<Int>()
 
     init {

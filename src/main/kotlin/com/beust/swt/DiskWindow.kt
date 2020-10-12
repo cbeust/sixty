@@ -12,44 +12,55 @@ import org.eclipse.swt.custom.ScrolledComposite
 import org.eclipse.swt.events.SelectionEvent
 import org.eclipse.swt.events.SelectionListener
 import org.eclipse.swt.graphics.Point
+import org.eclipse.swt.graphics.Rectangle
+import org.eclipse.swt.layout.FillLayout
 import org.eclipse.swt.layout.GridData
 import org.eclipse.swt.layout.GridLayout
 import org.eclipse.swt.widgets.*
 
+fun main(args: Array<String>) {
+    val display = Display()
+    val shell = Shell(display).apply {
+        text = "Nibble viewer"
+        layout = GridLayout()
+    }
+
+    DiskWindow(shell)
+    shell.bounds = Rectangle(0, 0, 1000, 800)
+
+//    shell.pack()
+    shell.open()
+    while (!shell.isDisposed) {
+        if (!display.readAndDispatch()) display.sleep()
+    }
+}
+
 class DiskWindow(parent: Composite): Composite(parent, NONE) {
     private lateinit var diskLabel: Label
-    private val scrolledComposite: ScrolledComposite
+//    private val scrolledComposite: ScrolledComposite
     private var byteText: Text? = null
     private var wordText: Text? = null
     private var fourAndFourText: Text? = null
+    private val byteBufferWindow: ByteBufferWindow
 
     init {
         layout = GridLayout(3, false)
 
-        createHeader()
-        createDataInspector(this)
-
-        scrolledComposite = createScrollableByteBuffer(this).apply {
-            layoutData = GridData(GridData.FILL, GridData.FILL, true, true).apply {
-//                horizontalAlignment = GridData.FILL
-//                verticalAlignment = GridData.FILL
-                horizontalSpan = 2
-                grabExcessVerticalSpace = true
-                grabExcessHorizontalSpace = false
-            }
-        }
+        createHeader(this)
+        createRightSide(this)
+        byteBufferWindow = createScrollableByteBuffer(this)
 
         UiState.currentDisk1File.addListener { _, new ->
             display.asyncExec {
                 diskLabel.text = new?.name
             }
         }
-        UiState.currentBytes.addListener { _, _ -> updateInspector() }
+        UiState.currentBytes.addAfterListener { _, _ -> updateInspector() }
     }
 
     private fun updateInspector() {
         val bytes = UiState.currentBytes.value
-        display.asyncExec {
+        if (bytes.isNotEmpty()) display.asyncExec {
             byteText?.text = bytes[0].h()
             wordText?.text = word(bytes[0], bytes[1]).hh()
             fourAndFourText?.text = SixAndTwo.pair4And4(bytes[0], bytes[1]).h()
@@ -74,14 +85,108 @@ class DiskWindow(parent: Composite): Composite(parent, NONE) {
         return result to text
     }
 
-    private fun createDataInspector(parent: Composite): Composite {
-        val result = Group(parent, NONE).apply {
-            layout = GridLayout(1, false)
-            text = "Data inspector"
+    private fun createRightSide(parent: Composite): Composite {
+        return Composite(parent, SWT.NONE).apply {
+            layout = FillLayout(SWT.VERTICAL)
             layoutData = GridData(SWT.FILL, SWT.FILL, true, true).apply {
                 widthHint = 400
                 verticalSpan = 2
             }
+            createTrackInfo(this)
+            createSectorInfo(this)
+            createDataInspector(this)
+        }
+    }
+
+    private fun textToHex(s: String): List<Int> {
+        val allowed = hashSetOf('a', 'b', 'c', 'd', 'e', 'f', 'A', 'B', 'C', 'D', 'E', 'F')
+        fun isHex(c: Char) = Character.isDigit(c) || allowed.contains(c)
+
+        val result = arrayListOf<Int>()
+        var current = 0
+        var first = true
+        s.forEach { c ->
+            if (isHex(c)) {
+                val value = Integer.parseInt(c.toString(), 16)
+                if (! first) {
+                    current = current.shl(4).or(value)
+                    result.add(current)
+                    current = 0
+                } else {
+                    current = value
+                }
+                first = ! first
+            }
+        }
+        return result
+    }
+
+    private fun createTrackInfo(parent: Composite): Composite {
+        val result = Group(parent, NONE).apply {
+            layout = GridLayout()
+            text = "Track info (regular expressions)"
+        }
+        createLabelText(result, "Address prologue").second.apply {
+            text = "D5AA96"
+            addListener(SWT.FocusOut) { e ->
+                UiState.addressPrologue.value = text
+            }
+        }
+        createLabelText(result, "Address epilogue").second.apply {
+            text = "DEAA"
+            addListener(SWT.FocusOut) { e ->
+                UiState.addressEpilogue.value = text
+            }
+        }
+        createLabelText(result, "Data prologue").second.apply {
+            text = "D5AAAD"
+            addListener(SWT.FocusOut) { e ->
+                UiState.dataPrologue.value = text
+            }
+        }
+        createLabelText(result, "Data epilogue").second.apply {
+            text = "DEAA"
+            addListener(SWT.FocusOut) { e ->
+                UiState.dataEpilogue.value = text
+            }
+        }
+
+        return result
+    }
+
+    private fun createSectorInfo(parent: Composite): Composite {
+        val result = Group(parent, NONE).apply {
+            layout = GridLayout()
+            text = "Sector info"
+        }
+        createLabelText(result, "Volume").second.apply {
+            UiState.caretSectorInfo.addAfterListener { _, new ->
+                text = new?.volume?.h() ?: ""
+            }
+        }
+        createLabelText(result, "Track").second.apply {
+            UiState.caretSectorInfo.addAfterListener { _, new ->
+                text = new?.track?.h() ?: ""
+            }
+        }
+        createLabelText(result, "Sector").second.apply {
+            UiState.caretSectorInfo.addAfterListener { _, new ->
+                text = new?.sector?.h() ?: ""
+            }
+        }
+        createLabelText(result, "Checksum").second.apply {
+            UiState.caretSectorInfo.addAfterListener { _, new ->
+                text = new?.checksum?.h() ?: ""
+            }
+        }
+
+        return result
+    }
+
+    private fun createDataInspector(parent: Composite): Composite {
+        val result = Group(parent, NONE).apply {
+            layout = GridLayout()
+            text = "Data inspector"
         }
         byteText = createLabelText(result, "Byte").second
         wordText = createLabelText(result, "Word").second
@@ -90,8 +195,8 @@ class DiskWindow(parent: Composite): Composite(parent, NONE) {
         return result
     }
 
-    private fun createHeader(): Composite {
-        val header = Composite(this, NONE).apply {
+    private fun createHeader(parent: Composite): Composite {
+        val header = Composite(parent, NONE).apply {
             layout = GridLayout(6, false)
 //            background = grey(display)
             layoutData = GridData().apply {
@@ -180,21 +285,31 @@ class DiskWindow(parent: Composite): Composite(parent, NONE) {
         return header
     }
 
-    private fun createScrollableByteBuffer(parent: Composite): ScrolledComposite {
-        val result = ScrolledComposite(parent, SWT.BORDER or SWT.V_SCROLL or SWT.H_SCROLL).apply {
+    private fun createScrollableByteBuffer(parent: Composite): ByteBufferWindow {
+        val scrolled = ScrolledComposite(parent, SWT.BORDER or SWT.V_SCROLL or SWT.H_SCROLL).apply {
             background = black(display)
+
+            layoutData = GridData().apply {
+                heightHint = 600
+                setMinSize(Point(500, 10000))
+                expandHorizontal = true
+                expandVertical = true
+            }
         }
 
-        ByteBufferWindow(result).let {
-            it.pack()
-            with(it.bounds) {
-                result.setMinSize(Point(500, 4000))
+        val result = ByteBufferWindow(scrolled).apply {
+            layoutData = GridData(GridData.FILL, GridData.FILL, true, true).apply {
+                //                horizontalAlignment = GridData.FILL
+                //                verticalAlignment = GridData.FILL
+                heightHint = 1000
+                horizontalSpan = 2
+                //                grabExcessVerticalSpace = true
+                //                grabExcessHorizontalSpace = false
             }
-            result.content = it
-            result.expandHorizontal = true
-            result.expandVertical = true
+
         }
-        parent.layout()
+        scrolled.content = result
+
         return result
     }
 

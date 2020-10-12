@@ -8,6 +8,9 @@ class DiskController(val slot: Int = 6): IPulse, MemoryListener() {
     private var latch: Int = 0
     private var drive1 = true
     private var motor = Motor { -> drive1 }
+    private var q6 = false
+    private var q7 = false
+    private val lss = Lss()
 
     enum class MotorState {
         ON, OFF, SPINNING_DOWN;
@@ -33,7 +36,7 @@ class DiskController(val slot: Int = 6): IPulse, MemoryListener() {
                                     logDisk("Turning motor OFF after a second")
                                     updateUi(false)
                                     field = MotorState.OFF
-                                } // Motor was turned on while spinning down, nothing to do
+                                } // Motor was turned on while spinning down: not turning it off
                             }
                         }
                         Timer().schedule(task, 1000)
@@ -50,18 +53,30 @@ class DiskController(val slot: Int = 6): IPulse, MemoryListener() {
     }
 
     private fun c(address: Int) = address + slot16
-    override fun isInRange(address:Int) = address in (c(0xc080)..c(0xc08c))
+    override fun isInRange(address:Int) = address in (c(0xc080)..c(0xc08f))
 
     override fun stop() {}
 
+    private val useLss = true
+
     override fun onPulse(manager: PulseManager): PulseResult {
-        // Faster way for unprotected disks
-        disk()?.let {
-            if (motor.isOn && latch.and(0x80) == 0) {
-//                latch = latch.shl(1).or(it.nextBit())
-                latch = it.nextByte()
+        // Use the LSS
+        if (useLss) {
+            disk()?.let { disk ->
+                repeat(2) {
+                    lss.onPulse(q6, q7, { -> motor.isOn }, disk)
+                }
+                latch = lss.latch
             }
-//            println("new latch: " + latch.h())
+        } else {
+
+            // Faster way for unprotected disks
+            disk()?.let {
+                if (motor.isOn && latch.and(0x80) == 0) {
+                    //                latch = latch.shl(1).or(it.nextBit())
+                    latch = it.nextByte()
+                }
+            }
         }
 
 //        if (motorOn && disk != null) {
@@ -110,6 +125,25 @@ class DiskController(val slot: Int = 6): IPulse, MemoryListener() {
         return handle(location, value)
     }
 
+    /** 4 bits, one for each phase */
+    private val phaseBits = arrayListOf(0, 0, 0, 0)
+
+    private val transitions = listOf(
+        //fr\to       9  8  D  C  4  E  6  2  7  3  1  B  0  5  A  F
+        /*9*/ listOf( 0,-1,-1,-2,-3,-3, 0,+3,+3,+2,+1,+1, 0, 0, 0, 0),
+        /*8*/ listOf(+1, 0, 0,-1,-2,-2,-3, 0, 0,+3,+2,+2, 0, 0, 0, 0),
+        /*D*/ listOf(+1, 0, 0,-1,-2,-2,-3, 0, 0,+3,+2,+2, 0, 0, 0, 0),
+        /*C*/ listOf(+2,+1,+1, 0,-1,-1,-2,-3,-3, 0,+3,+3, 0, 0, 0, 0),
+        /*4*/ listOf(+3,+2,+2,+1, 0, 0,-1,-2,-2,-3, 0, 0, 0, 0, 0, 0),
+        /*E*/ listOf(+3,+2,+2,+1, 0, 0,-1,-2,-2,-3, 0, 0, 0, 0, 0, 0),
+        /*6*/ listOf( 0,+3,+3,+2,+1,+1, 0,-1,-1,-2,-3,-3, 0, 0, 0, 0),
+        /*2*/ listOf(-3, 0, 0,+3,+2,+2,+1, 0, 0,-1,-2,-2, 0, 0, 0, 0),
+        /*7*/ listOf(-3, 0, 0,+3,+2,+2,+1, 0, 0,-1,-2,-2, 0, 0, 0, 0),
+        /*3*/ listOf(-2,-3,-3, 0,+3,+3,+2,+1,+1, 0,-1,-1, 0, 0, 0, 0),
+        /*1*/ listOf(-1,-2,-2,-3, 0, 0,+3,+2,+2,+1, 0, 0, 0, 0, 0, 0),
+        /*B*/ listOf(-1,-2,-2,-3, 0, 0,+3,+2,+2,+1, 0, 0, 0, 0, 0, 0)
+    )
+
     private fun handle(i: Int, value: Int): Int? {
         val a = i - slot16
         val result = when(a) {
@@ -128,6 +162,11 @@ class DiskController(val slot: Int = 6): IPulse, MemoryListener() {
                         else -> ERROR("SHOULD NEVER HAPPEN")
                     }
 //                    magnet2(disk()!!, phase, state)
+//                    val oldPhase = phaseBits.int()
+//                    phaseBits[phase] = if (state) 1 else 0
+//                    val newPhase = phaseBits.int()
+//                    val delta = transitions[oldPhase][newPhase]
+//                    println("@@@ Transitioning from $oldPhase to $newPhase, delta: $delta")
                     disk()?.let { magnet(it, phase, state) }
                 }
                 value
@@ -153,10 +192,25 @@ class DiskController(val slot: Int = 6): IPulse, MemoryListener() {
                 value
             }
             0xc08c -> {
-//                latch = disk!!.nextByte()
+                if (! useLss) {
+                    latch = disk()!!.nextByte()
+                }
+                q6 = false
                 val result = latch
-                if (latch.and(0x80) != 0) latch = 0//latch.and(0x7f) // clear bit 7
+//                if (latch.and(0x80) != 0) latch = 0//latch.and(0x7f) // clear bit 7
                 result
+            }
+            0xc08d -> {
+                q6 = true
+                value
+            }
+            0xc08e -> {
+                q7 = false
+                value
+            }
+            0xc08f -> {
+                q7 = true
+                value
             }
             else -> value
         }
@@ -176,7 +230,7 @@ class DiskController(val slot: Int = 6): IPulse, MemoryListener() {
             listOf(1, -2, -1, 0)
     )
 
-    private fun magnet2(disk: IDisk, phase: Int, on: Boolean) {
+    private fun magnet(disk: IDisk, phase: Int, on: Boolean) {
         if (on) {
             val delta = phaseDeltas[currentPhase][phase]
             val oldTrack = currentTrack
@@ -190,13 +244,13 @@ class DiskController(val slot: Int = 6): IPulse, MemoryListener() {
             if (currentTrack < 0) currentTrack = 0
             if (currentTrack > 35) currentTrack = 35
             if (oldTrack != currentTrack) {
-                println("*** phase($phase, $on)    delta: $delta newTrack: $currentTrack")
+                logDisk("*** phase($phase, $on)    delta: $delta newTrack: $currentTrack")
             }
         }
     }
 
 
-    private fun magnet(disk: IDisk, index: Int, state: Boolean) {
+    private fun magnet2(disk: IDisk, index: Int, state: Boolean) {
         fun logInc(p1: Int, p2: Int) { logTraceDisk("Phase $p1 -> $p2: Incrementing track")}
         fun logDec(p1: Int, p2: Int) { logTraceDisk("Phase $p1 -> $p2: Decrementing track")}
         if (state) {
@@ -248,10 +302,6 @@ class DiskController(val slot: Int = 6): IPulse, MemoryListener() {
             }
         }
 
-//        println("=== Track: "+ disk.track + " magnet $index=$state")
-        if (index == -1) {
-            println("PROBLEM")
-        }
         magnets[index] = state
     }
 }

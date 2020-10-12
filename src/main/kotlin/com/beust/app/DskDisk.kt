@@ -36,6 +36,8 @@ class DskDisk(override val name: String, ins: InputStream): BaseDisk() {
         }
     }
 
+    override fun peekZeroBitCount() = 0
+
     override fun incTrack() {
         if (track < TRACK_MAX - 1) {
             track++
@@ -58,7 +60,11 @@ class DskDisk(override val name: String, ins: InputStream): BaseDisk() {
         return result
     }
 
-//    private val byteStream: IByteStream
+    override fun phaseSizeInBytes(phase: Int): Int {
+        return 6800
+    }
+
+    //    private val byteStream: IByteStream
     init {
         val bytes = ins.readAllBytes()
         bytes.forEach { source.add(it.toInt()) }

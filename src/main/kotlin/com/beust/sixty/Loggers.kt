@@ -9,6 +9,8 @@ object Loggers {
     val graphics = LoggerFactory.getLogger("Graphics")
     val disk = LoggerFactory.getLogger("Disk")
     val uiStatus = LoggerFactory.getLogger("UiStatus")
+    val asm = LoggerFactory.getLogger("Asm")
+    val woz = LoggerFactory.getLogger("Woz")
 }
 
 fun logMem(s: String) = Loggers.memory.debug("[MEM] $s")
@@ -17,5 +19,7 @@ fun logGraphics(s: String) = Loggers.graphics.debug("[GFX] $s")
 fun logDisk(s: String) = Loggers.disk.debug("[DISK] $s")
 fun logTraceDisk(s: String) = Loggers.disk.trace("[DISK] $s")
 fun logUiStatus(s: String) = Loggers.uiStatus.debug("[UI] $s")
+fun logAsm(s: String) = Loggers.asm.debug("$s")
+fun logWoz(s: String) = Loggers.woz.debug("$s")
 fun log(s: String) = Loggers.def.debug(s)
 

@@ -6,14 +6,13 @@ import java.io.File
 import java.io.InputStream
 
 fun main() {
-    val d = WozDisk(disk("Bouncing Kamungas - Disk 1, Side A.woz"))
+    val d = IDisk.create(disks[10])!!
+    SixAndTwo.dump(d, closingAddress = listOf(0xda, 0xaa, 0xeb), closingData = listOf(0xda, 0xaa, 0xeb))
+//    SixAndTwo.dump(d)
     ""
 }
 
 class WozDisk(override val name: String, ins: InputStream): BaseDisk(), IByteStream {
-
-    constructor(file: File): this(file.absolutePath, file.inputStream())
-
     private val MAX_TRACK = 160
 
     override var position: Int = 0
@@ -36,6 +35,11 @@ class WozDisk(override val name: String, ins: InputStream): BaseDisk(), IByteStr
         }
         return result
     }
+
+    override fun phaseSizeInBytes(phase: Int): Int {
+        return woz.bitStreamForPhase(phase).sizeInBytes
+    }
+
 
     private fun updatePosition(oldTrack: Int, newTrack: Int) {
 //        val oldTrackLength = woz.trks.trks[oldTrack].bitCount / 8
@@ -64,11 +68,19 @@ class WozDisk(override val name: String, ins: InputStream): BaseDisk(), IByteStr
 
     override fun decTrack() = moveTrack {
         if (track > 0) track--
+
+    }
+
+    override fun peekZeroBitCount(): Int {
+        var result = 0
+        save()
+        while (nextBit() == 0) result++
+        restore()
+        return result
     }
 
     override fun peekBytes(count: Int): ArrayList<Int> {
         val result = arrayListOf<Int>()
-        val b = bitStream
         save()
         repeat(count) {
             result.add(nextByte())
@@ -108,21 +120,33 @@ class WozDisk(override val name: String, ins: InputStream): BaseDisk(), IByteStr
 
     override fun nextByte() = nextByte(false)
 
+    private var zeroCount = 0
     fun nextByte(peek: Boolean = false): Int {
+        var bits = arrayListOf(0)
         var result = 0
         if (peek) {
             save()
         }
+        var iterated = 0
         while (result and 0x80 == 0) {
             val (newPosition, nb) = bitStream.next(position)
+            iterated++
+            bits.add(nb)
             position = newPosition
 //            val nb = nextBit(peek, ahead * 8)
             result = result.shl(1).or(nb)
+            if (nb == 0) {
+                if (zeroCount >= 2) {
+                    result = 0
+                }
+                zeroCount++
+            } else {
+                zeroCount = 0
+            }
         }
         if (peek) {
             restore()
         }
-        val rh = result.h()
         return result
     }
 

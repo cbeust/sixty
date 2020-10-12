@@ -1,6 +1,7 @@
 package com.beust.app
 
 import com.beust.sixty.logUiStatus
+import com.beust.swt.ByteBufferWindow
 import java.io.File
 
 typealias ObsListener<T> = (T, T) -> Unit
@@ -38,6 +39,11 @@ object UiState {
     val currentTrack = Obs("Current track", 0)
     val byteAlgorithn = Obs("Byte algorithm", ByteAlgorithm.SHIFTED)
     val currentBytes: Obs<List<Int>> = Obs("Current bytes", emptyList())
+    val addressPrologue: Obs<String> = Obs("Address prologue", "d5aa96")
+    val addressEpilogue: Obs<String> = Obs("Address epilogue", "deaa")
+    val dataPrologue: Obs<String> = Obs("Address prologue", "d5aaad")
+    val dataEpilogue: Obs<String> = Obs("Address epilogue", "deaa")
+    val caretSectorInfo: Obs<ByteBufferWindow.SectorInfo?> = Obs("Current sector info", null)
 
     //
     // DEBUGGER tab

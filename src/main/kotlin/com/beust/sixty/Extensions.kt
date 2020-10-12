@@ -1,6 +1,7 @@
 package com.beust.sixty
 
 import org.eclipse.swt.graphics.Color
+import java.util.*
 
 fun Byte.h(): String = String.format("%02x", this).toUpperCase()
 fun Int.h(): String = String.format("%02x", this).toUpperCase()
@@ -32,7 +33,16 @@ fun Boolean.int(): Int = if (this) 1 else 0
 fun Int.toBoolean(): Boolean = if (this == 0) false else if (this == 1) true
     else TODO("Illegal boolean: $this")
 
-fun List<Int>.b(): String {
+/** List of 0/1 to int */
+fun List<Int>.int(): Int {
+    var result = 0
+    repeat(size) {
+        result = result * 2 + get(it)
+    }
+    return result
+}
+
+fun Collection<Int>.b(): String {
     val result = StringBuffer()
     var i = 0
     this.forEach {
