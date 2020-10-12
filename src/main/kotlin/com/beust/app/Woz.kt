@@ -172,7 +172,7 @@ abstract class IBitStream {
     abstract fun next(position: Int): Pair<Int, Int>
 }
 
-class BitBitStream(val bytes: List<Byte>, bitCount: Int): IBitStream() {
+class BitBitStream(val bytes: List<Byte>, bitCount: Int = bytes.size * 8): IBitStream() {
     private val bits = arrayListOf<Int>()
     init {
         var i = 0
