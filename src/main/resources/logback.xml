@@ -1,4 +1,10 @@
-<configuration>
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration
+        xmlns="http://ch.qos.logback/xml/ns/logback"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://ch.qos.logback/xml/ns/logback
+         https://raw.githubusercontent.com/enricopulatzo/logback-XSD/master/src/main/xsd/logback.xsd
+         ">
 
     <appender name="DEBUG" class="ch.qos.logback.core.ConsoleAppender">
         <!-- encoders are assigned the type
@@ -8,14 +14,20 @@
         </encoder>
     </appender>
 
+    <appender name="BARE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%msg%n</pattern>
+        </encoder>
+    </appender>
+
     <!-- set to debug to display, info to hide -->
     <logger name="Text" level="info" />
     <logger name="Memory" level="info" />
     <logger name="UiStatus" level="info" />
     <logger name="Disk" level="info" />
-    <logger name="Woz" level="info" />
+    <logger name="Woz" level="trace" />
 
-    <logger name="Asm" level="debug" />
+    <logger name="Asm" level="debug"/>
     <logger name="Graphics" level="debug" />
     <logger name="Breakpoint" level="debug" />
     <logger name="Default" level="debug" />
