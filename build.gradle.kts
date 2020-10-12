@@ -51,6 +51,7 @@ dependencies {
 
 application {
     mainClassName = "com.beust.app.MainKt"
+    applicationDefaultJvmArgs = listOf("-XstartOnFirstThread")
 }
 
 tasks {
