@@ -107,8 +107,8 @@ class ByteBufferWindow(parent: Composite) : Composite(parent, SWT.NONE) {
             }
         }
 
-        fun hasNext() = index < sizeInBytes
-        fun next(): TimedByte = bytes[index++]
+        operator fun hasNext() = index < sizeInBytes
+        operator fun next(): TimedByte = bytes[index++]
 
         fun peek(n: Int): List<TimedByte>
             = if (index + n < sizeInBytes) bytes.slice(index..index + n - 1)
@@ -136,7 +136,7 @@ class ByteBufferWindow(parent: Composite) : Composite(parent, SWT.NONE) {
         }
     }
 
-    fun updateBuffer(passedDisk: IDisk? = null, track: Int = 0,
+    private fun updateBuffer(passedDisk: IDisk? = null, track: Int = 0,
             byteAlgorithm: ByteAlgorithm = ByteAlgorithm.SHIFTED) {
         println("Updating buffer with file "+ UiState.currentDisk1File)
         bytesStyledText.text = ""
@@ -152,9 +152,17 @@ class ByteBufferWindow(parent: Composite) : Composite(parent, SWT.NONE) {
                 var byte = 0
                 when (byteAlgorithm) {
                     ByteAlgorithm.SHIFTED -> {
-                        while (byte and 0x80 == 0) {
-                            val bit = disk.nextBit()
-                            byte = byte.shl(1).or(bit)
+                        var waitForOne = true
+                        while (byte.and(0x80) == 0) {
+                            var bit = disk.nextBit()
+                            if (bit == 1) {
+                                byte = byte.shl(1).or(1)
+                                waitForOne = false
+                            } else {
+                                if (! waitForOne) {
+                                    byte = byte.shl(1)
+                                }
+                            }
                         }
                         timed = disk.peekZeroBitCount()
                     }
@@ -178,14 +186,22 @@ class ByteBufferWindow(parent: Composite) : Composite(parent, SWT.NONE) {
             var addressStart = -1
             var dataStart = -1
             var byteSectorStart = -1
+            val timingBits = arrayListOf<Int>()
             while (gb.hasNext()) {
                 if (gb.index > 0 && gb.index % rowSize == 0) {
+                    // Timing bits
+//                    byteText.append("\n")
+//                    timingBits.forEach {
+//                        byteText.append(String.format("%2d ", it))
+//                    }
+                    timingBits.clear()
+                    // New offset
                     offsetText.append("\$" + String.format("%04X", row) + "\n")
                     byteText.append("\n")
                     row += rowSize
                 }
-                val p2 = gb.peek(2).map { it.byte.h() }.joinToString("")
-                val p3 = gb.peek(3).map { it.byte.h() }.joinToString("")
+                val p2 = gb.peek(2).joinToString("") { it.byte.h() }
+                val p3 = gb.peek(3).joinToString("") { it.byte.h() }
 
                 fun matches(v: Obs<String>, actual: String) = v.value.toRegex(RegexOption.IGNORE_CASE).matches(actual)
 
@@ -206,6 +222,7 @@ class ByteBufferWindow(parent: Composite) : Composite(parent, SWT.NONE) {
                 }
                 val nb = gb.next()
                 byteText.append(if (nb.timingBitCount > 0) "+" else " ")
+                timingBits.add(nb.timingBitCount)
                 byteText.append(nb.byte.h())
             }
             display.asyncExec {

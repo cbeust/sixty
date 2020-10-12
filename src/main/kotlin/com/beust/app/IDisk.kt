@@ -44,9 +44,6 @@ interface IDisk {
         while (result < 0x80) {
             result = result.shl(1).or(nextBit()).and(0xff)
         }
-        if (result == 0x94) {
-            println("PROBLEM")
-        }
         return result
     }
 

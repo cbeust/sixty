@@ -13,9 +13,6 @@ fun main() {
 }
 
 class WozDisk(override val name: String, ins: InputStream): BaseDisk(), IByteStream {
-
-    constructor(file: File): this(file.absolutePath, file.inputStream())
-
     private val MAX_TRACK = 160
 
     override var position: Int = 0
@@ -40,7 +37,7 @@ class WozDisk(override val name: String, ins: InputStream): BaseDisk(), IByteStr
     }
 
     override fun phaseSizeInBytes(phase: Int): Int {
-        return woz.bitStreamForTrack(phase).sizeInBytes
+        return woz.bitStreamForPhase(phase).sizeInBytes
     }
 
 
@@ -71,6 +68,7 @@ class WozDisk(override val name: String, ins: InputStream): BaseDisk(), IByteStr
 
     override fun decTrack() = moveTrack {
         if (track > 0) track--
+
     }
 
     override fun peekZeroBitCount(): Int {
@@ -129,8 +127,10 @@ class WozDisk(override val name: String, ins: InputStream): BaseDisk(), IByteStr
         if (peek) {
             save()
         }
+        var iterated = 0
         while (result and 0x80 == 0) {
             val (newPosition, nb) = bitStream.next(position)
+            iterated++
             bits.add(nb)
             position = newPosition
 //            val nb = nextBit(peek, ahead * 8)
@@ -146,9 +146,6 @@ class WozDisk(override val name: String, ins: InputStream): BaseDisk(), IByteStr
         }
         if (peek) {
             restore()
-        }
-        if (result == 0x94) {
-            println("PROBLEM")
         }
         return result
     }

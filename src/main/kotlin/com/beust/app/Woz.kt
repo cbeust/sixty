@@ -1,13 +1,10 @@
 package com.beust.app
 
-import com.beust.sixty.bit
-import com.beust.sixty.h
-import com.beust.sixty.hh
-import com.beust.sixty.logDisk
+import com.beust.sixty.*
 import kotlin.random.Random
 
 class Woz(private val bytes: ByteArray,
-        val bitStreamFactory: (bytes: List<Byte>) -> IBitStream = { bytes -> BitStream(bytes) }) {
+        val bitStreamFactory: (bytes: List<Byte>, bitCount: Int) -> IBitStream = ::BitBitStream) {
     lateinit var info: ChunkInfo
     lateinit var tmap: ChunkTmap
     lateinit var trks: ChunkTrks
@@ -87,6 +84,8 @@ class Woz(private val bytes: ByteArray,
             repeat(160) {
                 map[it] = stream.read1()
             }
+            logWoz("TMAP: ")
+            map.keys.filter { map[it] != -1 }.forEach { logWoz("  Phase $it -> " + map[it]) }
         }
 
         /**
@@ -136,25 +135,25 @@ class Woz(private val bytes: ByteArray,
 
     private val bitStreams = mutableMapOf<Int, IBitStream>()
 
-    fun bitStreamForTrack(phase: Int): IBitStream {
-        val trackNumber = phase * 2
-        return bitStreams.getOrPut(trackNumber) {
-            val tmapOffset = tmap.offsetFor(trackNumber)
+    fun bitStreamForTrack(track: Int) = bitStreamForPhase(track * 2)
+
+    fun bitStreamForPhase(phase: Int): IBitStream {
+        return bitStreams.getOrPut(phase) {
+            val tmapOffset = tmap.offsetFor(phase)
             if (tmapOffset == -1) {
-                val trk = trks.trks[trackNumber]
-                val streamSizeInBytes = (trk.bitCount / 8)
+                val trk = trks.trks[phase]
                 FakeBitStream()
             } else {
                 val trk = trks.trks[tmapOffset]
-                val streamSizeInBytes = (trk.bitCount / 8)
+                val streamSizeInBytes = (trk.bitCount / 8) + 1
                 val trackOffset = trk.startingBlock * 512
                 try {
                     val slice = bytes.slice(trackOffset..(trackOffset + streamSizeInBytes))
-                    logDisk("Phase $phase (track $trackNumber) starts at block ${trk.startingBlock} " +
-                            "offset ${trackOffset.hh()} size ${streamSizeInBytes.h()}")
-                    bitStreamFactory(slice)
+                    logWoz("Phase $phase (track $phase) starts at block ${trk.startingBlock} " +
+                            "offset ${trackOffset.hh()} size ${streamSizeInBytes} bytes" +
+                            " ${trk.bitCount} bits")
+                    bitStreamFactory(slice, trk.bitCount)
                 } catch (ex: Exception) {
-                    println("PROBLEM")
                     throw ex
                 }
             }
@@ -173,15 +172,24 @@ abstract class IBitStream {
     abstract fun next(position: Int): Pair<Int, Int>
 }
 
-class BitStream(val bytes: List<Byte>): IBitStream() {
+class BitBitStream(val bytes: List<Byte>, bitCount: Int): IBitStream() {
     private val bits = arrayListOf<Int>()
     init {
-        bytes.forEach { byte ->
-            repeat(8) {
-                val bit = byte.bit(7 - it)
-                bits.add(bit)
+        var i = 0
+        var bitIndex = 0
+        var byteIndex = 0
+        var currentByte = bytes[0]
+        while (i < bitCount) {
+            bits.add(currentByte.bit(7 - bitIndex))
+            bitIndex++
+            if (bitIndex == 8) {
+                bitIndex = 0
+                byteIndex++
+                currentByte = bytes[byteIndex]
             }
+            i++
         }
+        ""
     }
 
     override val sizeInBytes: Int
@@ -189,6 +197,14 @@ class BitStream(val bytes: List<Byte>): IBitStream() {
 
     override fun next(position: Int): Pair<Int, Int> {
         return Pair((position + 1) % bits.size, bits[position])
+    }
+}
+
+//class ByteBitStream(val bytes: List<Byte>): IBitStream() {
+//    override val sizeInBytes: Int
+//        get() = bytes.size
+//
+//    override fun next(position: Int): Pair<Int, Int> {
 //        val byteIndex = position / 8
 //        val bitIndex = position % 8
 //        if (byteIndex > bytes.size) {
@@ -196,26 +212,12 @@ class BitStream(val bytes: List<Byte>): IBitStream() {
 //        }
 //        val byte = bytes[byteIndex]
 //        val result = byte.bit(7 - bitIndex)
+//        if (position + 1 >= bytes.size * 8) {
+//            println("LOOPING AROUND")
+//        }
 //        return Pair((position + 1) % (bytes.size * 8), result)
-    }
-}
-
-
-class _BitStream(val bytes: List<Byte>): IBitStream() {
-    override val sizeInBytes: Int
-        get() = bytes.size
-
-    override fun next(position: Int): Pair<Int, Int> {
-        val byteIndex = position / 8
-        val bitIndex = position % 8
-        if (byteIndex > bytes.size) {
-            TODO("ERROR")
-        }
-        val byte = bytes[byteIndex]
-        val result = byte.bit(7 - bitIndex)
-        return Pair((position + 1) % (bytes.size * 8), result)
-    }
-}
+//    }
+//}
 
 class FakeBitStream(override val sizeInBytes: Int = 0) : IBitStream() {
     override fun next(position: Int): Pair<Int, Int> {

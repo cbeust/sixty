@@ -230,7 +230,7 @@ class DiskController(val slot: Int = 6): IPulse, MemoryListener() {
             listOf(1, -2, -1, 0)
     )
 
-    private fun magnet2(disk: IDisk, phase: Int, on: Boolean) {
+    private fun magnet(disk: IDisk, phase: Int, on: Boolean) {
         if (on) {
             val delta = phaseDeltas[currentPhase][phase]
             val oldTrack = currentTrack
@@ -244,13 +244,13 @@ class DiskController(val slot: Int = 6): IPulse, MemoryListener() {
             if (currentTrack < 0) currentTrack = 0
             if (currentTrack > 35) currentTrack = 35
             if (oldTrack != currentTrack) {
-                println("*** phase($phase, $on)    delta: $delta newTrack: $currentTrack")
+                logDisk("*** phase($phase, $on)    delta: $delta newTrack: $currentTrack")
             }
         }
     }
 
 
-    private fun magnet(disk: IDisk, index: Int, state: Boolean) {
+    private fun magnet2(disk: IDisk, index: Int, state: Boolean) {
         fun logInc(p1: Int, p2: Int) { logTraceDisk("Phase $p1 -> $p2: Incrementing track")}
         fun logDec(p1: Int, p2: Int) { logTraceDisk("Phase $p1 -> $p2: Decrementing track")}
         if (state) {
@@ -302,10 +302,6 @@ class DiskController(val slot: Int = 6): IPulse, MemoryListener() {
             }
         }
 
-//        println("=== Track: "+ disk.track + " magnet $index=$state")
-        if (index == -1) {
-            println("PROBLEM")
-        }
         magnets[index] = state
     }
 }
