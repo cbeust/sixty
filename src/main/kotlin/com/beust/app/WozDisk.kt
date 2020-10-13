@@ -1,12 +1,10 @@
 package com.beust.app
 
 import com.beust.sixty.bit
-import com.beust.sixty.h
-import java.io.File
 import java.io.InputStream
 
 fun main() {
-    val d = IDisk.create(disks[10])!!
+    val d = IDisk.create(DISKS[10])!!
     SixAndTwo.dump(d, closingAddress = listOf(0xda, 0xaa, 0xeb), closingData = listOf(0xda, 0xaa, 0xeb))
 //    SixAndTwo.dump(d)
     ""

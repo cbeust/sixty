@@ -30,8 +30,8 @@ fun main(args: Array<String>) {
         layout = GridLayout()
     }
 
-    test4(shell)
-//    DiskWindow(shell)
+//    test4(shell)
+    DiskWindow(shell)
     shell.bounds = Rectangle(0, 0, 1000, 800)
 
 //    shell.pack()
