@@ -184,15 +184,15 @@ class Woz(private val bytes: ByteArray,
 //}
 
 class FakeBitStream(override val sizeInBits: Int = 0) : IBitStream {
-    override fun next(position: Int): Pair<Int, Int> {
-        val result = if (Random.nextInt() % 10 < 3) 1 else 0
-        return Pair(position, result)
+    override fun save() {
     }
 
-    fun next(): Int {
-        val index = 0
-        val p = next(index)
-        return p.second
+    override fun restore() {
+    }
+
+    override fun nextBit(): Pair<Int, Int> {
+        val result = if (Random.nextInt() % 10 < 3) 1 else 0
+        return Pair(0, result)
     }
 }
 

@@ -237,9 +237,9 @@ class DiskController(val slot: Int = 6): IPulse, MemoryListener() {
             currentTrack += delta
             currentPhase = phase
             if (delta > 0) {
-                repeat(delta) { disk.incTrack() }
+                repeat(delta) { disk.incPhase() }
             } else if (delta < 0) {
-                repeat(-delta) { disk.decTrack() }
+                repeat(-delta) { disk.decPhase() }
             }
             if (currentTrack < 0) currentTrack = 0
             if (currentTrack > 35) currentTrack = 35
@@ -259,44 +259,44 @@ class DiskController(val slot: Int = 6): IPulse, MemoryListener() {
                     if (index == 1) {
                         phase = 1
                         logInc(0, 1)
-                        disk.incTrack()
+                        disk.incPhase()
                     } else if (index == 3) {
                         phase = 3
                         logDec(0, 3)
-                        disk.decTrack()
+                        disk.decPhase()
                     }
                 }
                 1 -> {
                     if (index == 2) {
                         phase = 2
                         logInc(1, 2)
-                        disk.incTrack()
+                        disk.incPhase()
                     } else if (index == 0) {
                         phase = 0
                         logDec(1, 0)
-                        disk.decTrack()
+                        disk.decPhase()
                     }
                 }
                 2 -> {
                     if (index == 3) {
                         phase = 3
                         logInc(2, 3)
-                        disk.incTrack()
+                        disk.incPhase()
                     } else if (index == 1) {
                         phase = 1
                         logDec(2, 1)
-                        disk.decTrack()
+                        disk.decPhase()
                     }
                 }
                 3 -> {
                     if (index == 0) {
                         phase = 0
                         logInc(3, 4)
-                        disk.incTrack()
+                        disk.incPhase()
                     } else if (index == 2) {
                         phase = 2
                         logDec(3, 2)
-                        disk.decTrack()
+                        disk.decPhase()
                     }
                 }
             }

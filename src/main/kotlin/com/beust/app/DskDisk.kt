@@ -9,11 +9,12 @@ fun main() {
     DskDisk("Sherwood.dsk", File("d:/pd/Apple Disks/Sherwood Forest.dsk").inputStream())
 }
 
-class DskDisk(override val name: String, ins: InputStream): BaseDisk() {
+class DskDisk(override val name: String, ins: InputStream, override val sizeInBits: Int = TRACK_SIZE_BITS): BaseDisk() {
     companion object {
         private const val TRACK_MAX = 70
         const val DISK_IMAGE_SIZE_BYTES = TRACK_MAX * 16 * 256
         const val TRACK_SIZE_BYTES = 16 * 256
+        const val TRACK_SIZE_BITS = TRACK_SIZE_BYTES * 8
         val LOGICAL_SECTORS = listOf(0, 7, 14, 6, 13, 5, 12, 4, 11, 3, 10, 2, 9, 1, 8, 15)
         private val DEST_SIZE = 343
     }
@@ -28,23 +29,15 @@ class DskDisk(override val name: String, ins: InputStream): BaseDisk() {
     private val TRACK_SIZE_ENCODED = 6028
     private var track: Int = 0
 
-    override fun nextBit(): Int {
-        bitBuffers[track / 2].let { bitBuffer ->
-            val result = bitBuffer[positionInTrack]
-            positionInTrack = (positionInTrack + 1) % bitBuffer.size
-            return result
-        }
-    }
-
     override fun peekZeroBitCount() = 0
 
-    override fun incTrack() {
+    override fun incPhase() {
         if (track < TRACK_MAX - 1) {
             track++
         }
     }
 
-    override fun decTrack() {
+    override fun decPhase() {
         if (track > 0) {
             track--
         }
@@ -62,6 +55,22 @@ class DskDisk(override val name: String, ins: InputStream): BaseDisk() {
 
     override fun phaseSizeInBits(phase: Int): Int {
         return 6800 * 8
+    }
+
+    override fun nextByte(): Int {
+        TODO("Not yet implemented")
+    }
+
+    override fun save() {
+        TODO("Not yet implemented")
+    }
+
+    override fun restore() {
+        TODO("Not yet implemented")
+    }
+
+    override fun nextBit(): Pair<Int, Int> {
+        TODO("Not yet implemented")
     }
 
     //    private val byteStream: IByteStream

@@ -2,7 +2,6 @@ package com.beust.app
 
 import com.beust.sixty.ERROR
 import com.beust.sixty.h
-import com.beust.sixty.logDisk
 
 fun word(b1: Int, b2: Int): Int = b1.or(b2.shl(8))
 
@@ -153,10 +152,10 @@ object SixAndTwo {
                 sectors[ls] = Sector(ls, sectorData)
 //                println("  Successfully read sector $sector (logical: $ls)")
             }
-            disk.incTrack()
-            disk.incTrack()
+            disk.incPhase()
+            disk.incPhase()
         }
-        repeat(40) { disk.decTrack() }
+        repeat(40) { disk.decPhase() }
     }
 }
 

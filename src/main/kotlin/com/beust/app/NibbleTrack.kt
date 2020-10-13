@@ -25,18 +25,21 @@ class BouncingMarkFinders: IMarkFinders {
 
 class NibbleTrack(bitStream: IBitStream, private val sizeInBits: Int,
         private val markFinders: IMarkFinders = DefaultMarkFinders()) {
-    private val tmpBytes = arrayListOf<ByteBufferWindow.TimedByte>()
-    private val bytes = arrayListOf<ByteBufferWindow.TimedByte>()
-    init {
-        var position = 0
 
+    val addressRanges = arrayListOf<IntRange>()
+    val dataRanges = arrayListOf<IntRange>()
+    val bytes = arrayListOf<ByteBufferWindow.TimedByte>()
+
+    private val tmpBytes = arrayListOf<ByteBufferWindow.TimedByte>()
+
+    init {
         fun peekZeros(): Int {
             var result = 0
-            var p = position
-            while (bitStream.next(p).second == 0) {
+            bitStream.save()
+            while (bitStream.nextBit().second == 0) {
                 result++
-                p = (p + 1) % sizeInBits
             }
+            bitStream.restore()
             return result
         }
 
@@ -48,7 +51,7 @@ class NibbleTrack(bitStream: IBitStream, private val sizeInBits: Int,
         while(! done) {
             var byte = 0
             while (byte and 0x80 == 0) {
-                val pair = bitStream.next(position)
+                val pair = bitStream.nextBit()
                 bitsRead++
                 if (bitsRead % sizeInBits == 0) {
                     readCounts++
@@ -60,7 +63,6 @@ class NibbleTrack(bitStream: IBitStream, private val sizeInBits: Int,
                     }
                 }
                 byte = byte.shl(1).or(pair.second)
-                position = pair.first
             }
             val zeros = peekZeros()
             tmpBytes.add(ByteBufferWindow.TimedByte(byte, zeros))
@@ -83,13 +85,29 @@ class NibbleTrack(bitStream: IBitStream, private val sizeInBits: Int,
     }
 
     private fun findNextChunk(position: Int,
-            isPrologue: (List<Int>) -> Boolean, isEpilogue: (List<Int>) -> Boolean): IntRange
+            isPrologue: (List<Int>) -> Boolean, isEpilogue: (List<Int>) -> Boolean): IntRange?
     {
         var i = position
-        while (! isPrologue(peek(i, 3))) i = (i + 1) % bytes.size
-        val start = i + 3
-        while (! isEpilogue(peek(i, 2))) i = (i + 1) % bytes.size
-        return IntRange(start, i - 1)
+        var tries = 0
+        while (tries < bytes.size && ! isPrologue(peek(i, 3))) {
+            i = (i + 1) % bytes.size
+            tries++
+        }
+        return if (tries < bytes.size) {
+            tries = 0
+            val start = i + 3
+            while (tries < bytes.size && !isEpilogue(peek(i, 2))) {
+                i = (i + 1) % bytes.size
+                tries++
+            }
+            if (tries < bytes.size) {
+                IntRange(start, i - 1)
+            } else {
+                null
+            }
+        } else {
+            null
+        }
     }
 
     private fun analyze() {
@@ -97,18 +115,33 @@ class NibbleTrack(bitStream: IBitStream, private val sizeInBits: Int,
         var sectors = 0
         while (sectors < 16) {
             val addressRange = findNextChunk(i, markFinders::isAddressPrologue, markFinders::isAddressEpilogue)
-            i = addressRange.endInclusive
-            val dataRange = findNextChunk(i, markFinders::isDataPrologue, markFinders::isDataEpilogue)
-            i = addressRange.endInclusive
-            var chesksum = 0
-            val start = dataRange.start
-            val end = dataRange.endInclusive
-            for (j in start..end) {
-                chesksum = chesksum.xor(READ_TABLE[bytes[j].byte]!!)
+            if (addressRange != null) {
+                i = addressRange.endInclusive
+                addressRanges.add(addressRange)
             }
-            println("Sector $sectors, address: $addressRange, data: $dataRange checksum: $chesksum")
+
+            val dataRange = findNextChunk(i, markFinders::isDataPrologue, markFinders::isDataEpilogue)
+            if (dataRange != null) {
+                i = dataRange.endInclusive
+                dataRanges.add(dataRange)
+
+                // Verify checksum
+                var chesksum = 0
+                val start = dataRange.start
+                val end = dataRange.endInclusive
+                for (j in start..end) {
+                    chesksum = chesksum.xor(READ_TABLE[bytes[j].byte]!!)
+                }
+                println("Sector $sectors, address: $addressRange, data: $dataRange checksum: $chesksum")
+            }
             sectors++
         }
     }
 
+    private var byteIndex = 0
+    fun nextByte(): ByteBufferWindow.TimedByte {
+        val result = bytes[byteIndex]
+        byteIndex = (byteIndex + 1) % bytes.size
+        return result
+    }
 }

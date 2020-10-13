@@ -10,19 +10,17 @@ fun main() {
     ""
 }
 
-class WozDisk(override val name: String, ins: InputStream): BaseDisk(), IByteStream {
+class WozDisk(override val name: String, ins: InputStream): BaseDisk() {
     private val MAX_TRACK = 160
 
-    override var position: Int = 0
-    private var saved: Int = 0
-
-    var track = 0
-//    var bitPosition = 0
+    /** 0..159 */
+    var phase = 0
     private val bytes: ByteArray = ins.readAllBytes()
     private val woz = Woz(bytes)
 
-    private fun save() { saved = position }
-    private fun restore() { position = saved }
+    private var saved: Int = 0
+    override fun save() { bitStream.save() }
+    override fun restore() { bitStream.restore() }
 
     fun createBits(bytes: ByteArray): List<Int> {
         val result = arrayListOf<Int>()
@@ -48,33 +46,24 @@ class WozDisk(override val name: String, ins: InputStream): BaseDisk(), IByteStr
 //        }
     }
 
-    private fun moveTrack(block: () -> Unit) {
-        val t = track
+    private fun movePhase(block: () -> Unit) {
+        val t = phase
         block()
-        if (t != track) {
-            updatePosition(t, track)
+        if (t != phase) {
+            updatePosition(t, phase)
 //            println("New track: $" + track.h() + " (" + track / 4.0 + ")")
         }
     }
 
-    override fun incTrack() {
-        moveTrack {
-            track++
-            if (track >= MAX_TRACK) track = MAX_TRACK - 1
+    override fun incPhase() {
+        movePhase {
+            phase++
+            if (phase >= MAX_TRACK) phase = MAX_TRACK - 1
         }
     }
 
-    override fun decTrack() = moveTrack {
-        if (track > 0) track--
-
-    }
-
-    override fun peekZeroBitCount(): Int {
-        var result = 0
-        save()
-        while (nextBit() == 0) result++
-        restore()
-        return result
+    override fun decPhase() = movePhase {
+        if (phase > 0) phase--
     }
 
     override fun peekBytes(count: Int): ArrayList<Int> {
@@ -97,15 +86,28 @@ class WozDisk(override val name: String, ins: InputStream): BaseDisk(), IByteStr
         return result
     }
 
+    override val sizeInBits: Int
+        get() = phaseSizeInBits(phase)
+
+
     val bitStream: IBitStream
-        get() = woz.bitStreamForTrack(track)
+        get() = woz.bitStreamForTrack(phase)
 
     private var headWindow = 0
 
-    override fun nextBit(): Int {
-        bitStream.next(position).let { (newPosition, bit) ->
-            position = newPosition
-            return bit
+    override fun peekZeroBitCount(): Int {
+        bitStream.save()
+        var result = 0
+        while (bitStream.nextBit().second == 0) result++
+        bitStream.restore()
+        return result
+    }
+
+    override fun nextBit(): Pair<Int, Int> {
+        return bitStream.nextBit()
+//        bitStream.nextBit(position).let { result ->
+//            bitPosition = result.component1()
+//            return result
 //            headWindow = headWindow shl 1
 //            headWindow = headWindow or bit
 //            return if (headWindow and 0x0f !== 0x00) {
@@ -113,7 +115,7 @@ class WozDisk(override val name: String, ins: InputStream): BaseDisk(), IByteStr
 //            } else {
 //                FAKE_BIT_STREAM.next()
 //            }
-        }
+//        }
     }
 
     override fun nextByte() = nextByte(false)
@@ -127,10 +129,9 @@ class WozDisk(override val name: String, ins: InputStream): BaseDisk(), IByteStr
         }
         var iterated = 0
         while (result and 0x80 == 0) {
-            val (newPosition, nb) = bitStream.next(position)
+            val (newPosition, nb) = bitStream.nextBit()
             iterated++
             bits.add(nb)
-            position = newPosition
 //            val nb = nextBit(peek, ahead * 8)
             result = result.shl(1).or(nb)
             if (nb == 0) {

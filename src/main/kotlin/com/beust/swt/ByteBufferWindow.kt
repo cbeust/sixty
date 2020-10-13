@@ -2,7 +2,6 @@ package com.beust.swt
 
 import com.beust.app.*
 import com.beust.sixty.h
-import com.beust.sixty.log
 import org.eclipse.jface.text.TextPresentation
 import org.eclipse.jface.text.TextViewer
 import org.eclipse.swt.SWT
@@ -144,38 +143,38 @@ class ByteBufferWindow(parent: Composite) : Composite(parent, SWT.NONE) {
         bytesStyledText.text = ""
         val disk = passedDisk ?: IDisk.create(UiState.currentDisk1File.value)
         if (disk != null) {
-            repeat(160) { disk.decTrack() }
+            val nibbleTrack = NibbleTrack(disk, disk.sizeInBits)
+            repeat(160) { disk.decPhase() }
             repeat(track) {
-                disk.incTrack()
+                disk.incPhase()
             }
 
             fun nextByte(): TimedByte {
                 var timed = 0
                 var byte = 0
-                when (byteAlgorithm) {
-                    ByteAlgorithm.SHIFTED -> {
-                        var waitForOne = true
-                        while (byte.and(0x80) == 0) {
-                            var bit = disk.nextBit()
-                            if (bit == 1) {
-                                byte = byte.shl(1).or(1)
-                                waitForOne = false
-                            } else {
-                                if (! waitForOne) {
-                                    byte = byte.shl(1)
-                                }
-                            }
+                val result =
+                    when (byteAlgorithm) {
+                        ByteAlgorithm.SHIFTED -> {
+                            nibbleTrack.nextByte()
+    //                        var waitForOne = true
+    //                        while (byte.and(0x80) == 0) {
+    //                            var bit = disk.nextBit()
+    //                            if (bit == 1) {
+    //                                byte = byte.shl(1).or(1)
+    //                                waitForOne = false
+    //                            } else {
+    //                                if (! waitForOne) {
+    //                                    byte = byte.shl(1)
+    //                                }
+    //                            }
+    //                        }
+    //                        timed = disk.peekZeroBitCount()
                         }
-                        timed = disk.peekZeroBitCount()
-                    }
-                    else -> {
-                        repeat(8) {
-                            val bit = disk.nextBit()
-                            byte = byte.shl(1).or(bit)
+                        else -> {
+                            TimedByte(disk.nextByte(), 0)
                         }
                     }
-                }
-                return TimedByte(byte, timed)
+                return result
             }
 
             graphicBuffer = GraphicBuffer(disk.phaseSizeInBits(track) * 8) { -> nextByte() }

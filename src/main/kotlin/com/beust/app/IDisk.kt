@@ -3,22 +3,7 @@ package com.beust.app
 import com.beust.sixty.ERROR
 import java.io.File
 
-interface IByteStream {
-    /** Position in bytes */
-    var position: Int
-
-    fun nextBytes(n: Int): List<Int>
-
-    fun peekBytes(n: Int): List<Int> {
-        val saved = position
-        val result = nextBytes(n)
-        position = saved
-        return result
-    }
-
-    fun nextByte() = nextBytes(1).first()
-}
-interface IDisk {
+interface IDisk: IBitStream {
     companion object {
         fun create(file: File?): IDisk? = when {
                 file == null -> null
@@ -30,22 +15,15 @@ interface IDisk {
 
     val name: String
 
-    fun nextBit(): Int
     fun peekZeroBitCount(): Int
 
-    fun incTrack()
-    fun decTrack()
+    fun incPhase()
+    fun decPhase()
     fun peekBytes(n: Int): List<Int>
     /** Phase: 0-159 */
     fun phaseSizeInBits(phase: Int): Int
 
-    fun nextByte(): Int {
-        var result = 0
-        while (result < 0x80) {
-            result = result.shl(1).or(nextBit()).and(0xff)
-        }
-        return result
-    }
+    fun nextByte(): Int
 
     fun nextBytes(n: Int): List<Int> {
         val result = arrayListOf<Int>()

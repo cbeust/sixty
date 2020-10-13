@@ -18,8 +18,8 @@ class WozTest {
         var position1 = 0
         var position2 = 0
         repeat(slice.size) {
-            val (a, b) = bitStream.next(position1)
-            val (c, d) = bitStream2.next(position2)
+            val (a, b) = bitStream.nextBit(position1)
+            val (c, d) = bitStream2.nextBit(position2)
             assertThat(b).isEqualTo(d)
             position1 = a
             position2 = c
@@ -41,7 +41,7 @@ class WozTest {
                 val byte = disk.nextByte()
                 if (latch and 0x80 != 0) latch = 0
                 while (latch and 0x80 == 0) {
-                    val (newPosition, bit) = bitStream.next(position1)
+                    val (newPosition, bit) = bitStream.nextBit(position1)
                     latch = latch.shl(1).or(bit)
                     position1 = newPosition
                 }
@@ -50,13 +50,13 @@ class WozTest {
                         .withFailMessage("Failure at track $track, position $position1")
                         .isEqualTo(byte2)
             }
-            disk.incTrack()
-            disk.incTrack()
+            disk.incPhase()
+            disk.incPhase()
         }
     }
 }
 
-class BitStream2(val bytes: ByteArray, override val sizeInBits: Int = bytes.size * 8): IBitStream() {
+class BitStream2(val bytes: ByteArray, override val sizeInBits: Int = bytes.size * 8): IBitStream {
     private val bits = arrayListOf<Int>()
 
     init {
@@ -68,7 +68,7 @@ class BitStream2(val bytes: ByteArray, override val sizeInBits: Int = bytes.size
         }
     }
 
-    override fun next(position: Int): Pair<Int, Int> {
+    override fun nextBit(position: Int): Pair<Int, Int> {
         val result = bits[position]
         val newPosition = (position + 1) % bytes.size
         return Pair(newPosition, result)
