@@ -4,15 +4,31 @@ import com.beust.swt.ByteBufferWindow
 
 fun main() {
     val disk = WozDisk("", DISKS[10].inputStream())
-    NibbleTrack(disk.bitStream, disk.phaseSizeInBits(0))
+    NibbleTrack(disk.bitStream, disk.phaseSizeInBits(0), BouncingMarkFinders())
 }
 
-class NibbleTrack(bitStream: IBitStream, sizeInBits: Int) {
+interface IMarkFinders {
+    fun isAddressPrologue(bytes: List<Int>): Boolean = bytes == listOf(0xd5, 0xaa, 0x96)
+    fun isAddressEpilogue(bytes: List<Int>): Boolean = bytes == listOf(0xde, 0xaa)
+    fun isDataPrologue(bytes: List<Int>): Boolean = bytes == listOf(0xd5, 0xaa, 0xad)
+    fun isDataEpilogue(bytes: List<Int>): Boolean = bytes == listOf(0xde, 0xaa)
+}
+
+class DefaultMarkFinders: IMarkFinders
+
+class BouncingMarkFinders: IMarkFinders {
+    override fun isAddressPrologue(bytes: List<Int>)
+        = (bytes[0] == 0xd4 || bytes[0] == 0xd5) && bytes[1] == 0xaa && bytes[2] == 0x96
+    override fun isAddressEpilogue(bytes: List<Int>) = bytes == listOf(0xda, 0xaa)
+    override fun isDataEpilogue(bytes: List<Int>) = bytes == listOf(0xda, 0xaa)
+}
+
+class NibbleTrack(bitStream: IBitStream, private val sizeInBits: Int,
+        private val markFinders: IMarkFinders = DefaultMarkFinders()) {
     private val tmpBytes = arrayListOf<ByteBufferWindow.TimedByte>()
     private val bytes = arrayListOf<ByteBufferWindow.TimedByte>()
     init {
         var position = 0
-        var index = 0
 
         fun peekZeros(): Int {
             var result = 0
@@ -36,7 +52,6 @@ class NibbleTrack(bitStream: IBitStream, sizeInBits: Int) {
                 bitsRead++
                 if (bitsRead % sizeInBits == 0) {
                     readCounts++
-                    println("Wrapping around")
                     if (readCounts == 1) {
                         start = tmpBytes.size
                     } else if (readCounts == 2) {
@@ -57,22 +72,43 @@ class NibbleTrack(bitStream: IBitStream, sizeInBits: Int) {
     }
 
     private fun peek(pos: Int, count: Int): List<Int> {
-        return bytes.slice(pos..pos + count - 1).map { it.byte }
+        val result = arrayListOf<Int>()
+        var i = pos % bytes.size
+        repeat(count) {
+            result.add(bytes[i].byte)
+            i = (i + 1) % bytes.size
+
+        }
+        return result
+    }
+
+    private fun findNextChunk(position: Int,
+            isPrologue: (List<Int>) -> Boolean, isEpilogue: (List<Int>) -> Boolean): IntRange
+    {
+        var i = position
+        while (! isPrologue(peek(i, 3))) i = (i + 1) % bytes.size
+        val start = i + 3
+        while (! isEpilogue(peek(i, 2))) i = (i + 1) % bytes.size
+        return IntRange(start, i - 1)
     }
 
     private fun analyze() {
         var i = 0
         var sectors = 0
-        while (sectors <= 16) {
-            var p3 = peek(i, 3)
-            while (p3 != listOf(0xd5, 0xaa, 0xad)) {
-                i = (i + 1) % bytes.size
-                p3 = peek(i, 3)
+        while (sectors < 16) {
+            val addressRange = findNextChunk(i, markFinders::isAddressPrologue, markFinders::isAddressEpilogue)
+            i = addressRange.endInclusive
+            val dataRange = findNextChunk(i, markFinders::isDataPrologue, markFinders::isDataEpilogue)
+            i = addressRange.endInclusive
+            var chesksum = 0
+            val start = dataRange.start
+            val end = dataRange.endInclusive
+            for (j in start..end) {
+                chesksum = chesksum.xor(READ_TABLE[bytes[j].byte]!!)
             }
-            val start = i
-            while (peek(i, 2) != listOf(0xda, 0xaa)) i = (i + 1) % bytes.size
-            println("Found sector $sectors at " + start + "-" + i)
+            println("Sector $sectors, address: $addressRange, data: $dataRange checksum: $chesksum")
             sectors++
         }
     }
+
 }
