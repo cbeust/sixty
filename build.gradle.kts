@@ -45,7 +45,8 @@ object This {
 
 dependencies {
     impl(kotlin("stdlib"), "com.beust:jcommander:1.72", "ch.qos.logback:logback-classic:1.2.3",
-            "org.eclipse.platform:org.eclipse.jface:3.21.0")
+            "org.eclipse.platform:org.eclipse.jface:3.21.0",
+            "org.eclipse.platform:org.eclipse.jface.text:3.16.400")
     testImpl(kotlin("test"), "org.testng:testng:7.0.0", "org.assertj:assertj-core:3.10.0")
 }
 

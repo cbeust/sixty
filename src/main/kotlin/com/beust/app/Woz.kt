@@ -163,42 +163,6 @@ class Woz(private val bytes: ByteArray,
 
 }
 
-abstract class IBitStream {
-    abstract val sizeInBits: Int
-
-    /**
-     * @return a pair of the new index and the returned bit.
-     */
-    abstract fun next(position: Int): Pair<Int, Int>
-}
-
-class BitBitStream(val bytes: List<Byte>, bitCount: Int = bytes.size * 8): IBitStream() {
-    private val bits = arrayListOf<Int>()
-    init {
-        var i = 0
-        var bitIndex = 0
-        var byteIndex = 0
-        var currentByte = bytes[0]
-        while (i < bitCount) {
-            bits.add(currentByte.bit(7 - bitIndex))
-            bitIndex++
-            if (bitIndex == 8) {
-                bitIndex = 0
-                byteIndex++
-                currentByte = bytes[byteIndex]
-            }
-            i++
-        }
-        ""
-    }
-
-    override val sizeInBits: Int
-        get() = bits.size
-
-    override fun next(position: Int): Pair<Int, Int> {
-        return Pair((position + 1) % bits.size, bits[position])
-    }
-}
 
 //class ByteBitStream(val bytes: List<Byte>): IBitStream() {
 //    override val sizeInBytes: Int
@@ -219,7 +183,7 @@ class BitBitStream(val bytes: List<Byte>, bitCount: Int = bytes.size * 8): IBitS
 //    }
 //}
 
-class FakeBitStream(override val sizeInBits: Int = 0) : IBitStream() {
+class FakeBitStream(override val sizeInBits: Int = 0) : IBitStream {
     override fun next(position: Int): Pair<Int, Int> {
         val result = if (Random.nextInt() % 10 < 3) 1 else 0
         return Pair(position, result)

@@ -18,7 +18,7 @@ interface IByteStream {
 
     fun nextByte() = nextBytes(1).first()
 }
-interface IDisk {
+interface IDisk: IBitStream {
     companion object {
         fun create(file: File?): IDisk? = when {
                 file == null -> null
