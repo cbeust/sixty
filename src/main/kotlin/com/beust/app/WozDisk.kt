@@ -36,8 +36,8 @@ class WozDisk(override val name: String, ins: InputStream): BaseDisk(), IByteStr
         return result
     }
 
-    override fun phaseSizeInBytes(phase: Int): Int {
-        return woz.bitStreamForPhase(phase).sizeInBytes
+    override fun phaseSizeInBits(phase: Int): Int {
+        return woz.bitStreamForPhase(phase).sizeInBits
     }
 
 

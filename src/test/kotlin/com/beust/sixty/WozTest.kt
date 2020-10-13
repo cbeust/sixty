@@ -56,7 +56,7 @@ class WozTest {
     }
 }
 
-class BitStream2(val bytes: ByteArray, override val sizeInBytes: Int = bytes.size): IBitStream() {
+class BitStream2(val bytes: ByteArray, override val sizeInBits: Int = bytes.size * 8): IBitStream() {
     private val bits = arrayListOf<Int>()
 
     init {

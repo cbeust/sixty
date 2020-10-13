@@ -4,11 +4,16 @@ import com.beust.app.ByteAlgorithm
 import com.beust.app.SixAndTwo
 import com.beust.app.UiState
 import com.beust.app.word
+import com.beust.sixty.Loggers.text
 import com.beust.sixty.h
 import com.beust.sixty.hh
+import org.eclipse.jface.text.TextPresentation
+import org.eclipse.jface.text.TextViewer
 import org.eclipse.swt.SWT
 import org.eclipse.swt.SWT.NONE
 import org.eclipse.swt.custom.ScrolledComposite
+import org.eclipse.swt.custom.StyleRange
+import org.eclipse.swt.custom.StyledText
 import org.eclipse.swt.events.SelectionEvent
 import org.eclipse.swt.events.SelectionListener
 import org.eclipse.swt.graphics.Point
@@ -25,7 +30,8 @@ fun main(args: Array<String>) {
         layout = GridLayout()
     }
 
-    DiskWindow(shell)
+    test4(shell)
+//    DiskWindow(shell)
     shell.bounds = Rectangle(0, 0, 1000, 800)
 
 //    shell.pack()
@@ -34,6 +40,81 @@ fun main(args: Array<String>) {
         if (!display.readAndDispatch()) display.sleep()
     }
 }
+
+fun test4(shell: Shell) {
+    val tb = listOf(0xff to 2, 0xff to 2, 0xd5 to 0, 0xff to 10, 0xd5 to 0, 0xaa to 0).map {
+        ByteBufferWindow.TimedByte(it.first, it.second)
+    }
+//    createTextViewer(shell, tb.iterator())
+}
+
+fun test3(shell: Shell) {
+    val f = font(shell, "Courier New", 14)
+    val f2 = font(shell, "Courier New", 8)
+    val st = listOf(12, 16, 20, 24).map {
+        StyleRange().apply {
+            start = it
+            length = 2
+            background = red(shell.display)
+            rise = 5
+            font = f2
+        }
+    }.toTypedArray()
+    val text1 = "FF FF D5 FF"
+    val text2 = " 2   2   0   3 "
+    TextViewer(shell, SWT.NONE).apply {
+        with(textWidget) {
+            text = "$text1\n$text2"
+            font = f
+            styleRanges = st
+        }
+    }
+}
+
+
+fun test2(shell: Shell) {
+    val f = font(shell, "Courier New", 14)
+    val f2 = font(shell, "Courier New", 8)
+    Composite(shell, SWT.NONE).apply {
+        background = yellow(display)
+        layout = GridLayout(1, false).apply {
+            marginHeight = 0
+            verticalSpacing = 0
+            marginBottom = 30
+        }
+        label(this, "FF FF D5 FF").apply {
+            font = f
+        }
+        label(this, "2  2  0  3").apply {
+//            background = blue(display)
+            layoutData = GridData(SWT.CENTER, SWT.BEGINNING, true, true)
+            font = f2
+        }
+    }
+}
+
+
+fun test1(shell: Shell) {
+    val f = font(shell, "Courier New", 14)
+    val f2 = font(shell, "Courier New", 8)
+    val st = listOf(3).map {
+        StyleRange().apply {
+            start = it
+            length = 2
+            rise = 5
+            font = f2
+        }
+    }.toTypedArray()
+    Composite(shell, SWT.NONE).apply {
+        layout = FillLayout()
+        StyledText(this, SWT.BORDER).apply {
+            font = f
+            text = "FF\n 2"
+            styleRanges = st
+        }
+    }
+}
+
 
 class DiskWindow(parent: Composite): Composite(parent, NONE) {
     private lateinit var diskLabel: Label

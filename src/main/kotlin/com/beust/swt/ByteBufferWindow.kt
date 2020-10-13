@@ -3,6 +3,8 @@ package com.beust.swt
 import com.beust.app.*
 import com.beust.sixty.h
 import com.beust.sixty.log
+import org.eclipse.jface.text.TextPresentation
+import org.eclipse.jface.text.TextViewer
 import org.eclipse.swt.SWT
 import org.eclipse.swt.custom.StyleRange
 import org.eclipse.swt.custom.StyledText
@@ -176,7 +178,7 @@ class ByteBufferWindow(parent: Composite) : Composite(parent, SWT.NONE) {
                 return TimedByte(byte, timed)
             }
 
-            graphicBuffer = GraphicBuffer(disk.phaseSizeInBytes(track)) { -> nextByte() }
+            graphicBuffer = GraphicBuffer(disk.phaseSizeInBits(track) * 8) { -> nextByte() }
             val gb = graphicBuffer!!
 
             var row = 0
@@ -232,4 +234,45 @@ class ByteBufferWindow(parent: Composite) : Composite(parent, SWT.NONE) {
             }
         }
     }
+}
+
+fun createTextViewer(parent: Composite, gb: ByteBufferWindow.GraphicBuffer) {
+    val f = font(parent.shell, "Courier New", 14)
+    val f2 = font(parent.shell, "Courier New", 8)
+    TextViewer(parent, SWT.BORDER).apply { with(textWidget) {
+        val sb = StringBuffer()
+        val ranges = arrayListOf<StyleRange>()
+        while (gb.hasNext()) {
+
+            val tb = gb.next()
+            ranges.add(StyleRange().apply {
+                start = sb.toString().length
+                length = 2
+                font = f
+            })
+            sb.append(tb.byte.h())
+            ranges.add(StyleRange().apply {
+                start = sb.toString().length
+                length = 2
+                font = f2
+                rise = 4
+            })
+            tb.timingBitCount.let { b ->
+                sb.append((if (b != 0) String.format("%-2d", b) else " ") + " ")
+            }
+        }
+        text = sb.toString()
+        ranges.add(StyleRange().apply {
+            start = 0
+            length = 5
+            background = yellow(display)
+        })
+        val tp = TextPresentation().apply {
+            ranges.forEach {
+                mergeStyleRange(it)
+            }
+        }
+        TextPresentation.applyTextPresentation(tp, this)
+//        styleRanges = ranges.toTypedArray()
+    } }
 }
