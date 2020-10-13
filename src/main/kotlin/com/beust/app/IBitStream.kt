@@ -9,11 +9,7 @@ interface IBitStream {
     val sizeInBits: Int
     fun save()
     fun restore()
-
-    /**
-     * @return a pair of the new index (which might wrap around) and the returned bit.
-     */
-    fun nextBit(): Pair<Int, Int>
+    fun nextBit(): Int
 }
 
 /**
@@ -46,9 +42,8 @@ class BitBitStream(val bytes: List<Byte>, bitCount: Int = bytes.size * 8): IBitS
 
     override fun save() { saved = bitPosition}
     override fun restore() { bitPosition = saved }
-    override fun nextBit(): Pair<Int, Int> {
-        val bit = bits[bitPosition]
-        bitPosition = (bitPosition + 1) % bits.size
-        return Pair(bitPosition, bit)
-    }
+    override fun nextBit(): Int = bits[bitPosition].let {
+            bitPosition = (bitPosition + 1) % bits.size
+            return it
+        }
 }

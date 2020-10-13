@@ -190,9 +190,8 @@ class FakeBitStream(override val sizeInBits: Int = 0) : IBitStream {
     override fun restore() {
     }
 
-    override fun nextBit(): Pair<Int, Int> {
-        val result = if (Random.nextInt() % 10 < 3) 1 else 0
-        return Pair(0, result)
+    override fun nextBit(): Int {
+        return if (Random.nextInt() % 10 < 3) 1 else 0
     }
 }
 

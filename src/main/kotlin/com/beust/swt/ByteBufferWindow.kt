@@ -16,10 +16,13 @@ class ByteBufferWindow(parent: Composite) : Composite(parent, SWT.NONE) {
     private var woz: Woz? = null
     private val rowSize = 16
     private val offsets: StyledText
-    private val bytesStyledText: StyledText
+    private val textViewer: TextViewer
     private val thisFont = font(shell, "Courier New", 10)
     private val thisFontBold = font(shell, "Courier New", 10, SWT.BOLD)
     private var graphicBuffer: GraphicBuffer? = null
+    private var nibbleTrack: NibbleTrack? = null
+    /** Map a byte on the track to its offset in the TextViewer */
+    private val offsetMap = hashMapOf<Int, Int>()
 
     init {
 //        background = display.getSystemColor(SWT.COLOR_BLUE)
@@ -41,7 +44,7 @@ class ByteBufferWindow(parent: Composite) : Composite(parent, SWT.NONE) {
             }
 
         }
-        bytesStyledText = StyledText(this, SWT.NONE).apply {
+        textViewer = TextViewer(this, SWT.NONE).apply { with(textWidget) {
             editable = false
             font = thisFont
             layoutData = GridData(SWT.FILL, SWT.FILL, true, true).apply {
@@ -62,7 +65,7 @@ class ByteBufferWindow(parent: Composite) : Composite(parent, SWT.NONE) {
                 }
                 UiState.caretSectorInfo.value = graphicBuffer?.currentSectorInfo(caretOffset / 3)
             }
-        }
+        }}
 //        bytes.addFocusListener(object: FocusAdapter() {
 //            override fun focusGained(e: FocusEvent) {
 //                val st = (e.source as StyledText)
@@ -76,22 +79,22 @@ class ByteBufferWindow(parent: Composite) : Composite(parent, SWT.NONE) {
                 UiState.currentTrack.value = 0
                 disk = IDisk.create(new)
                 disk?.let {
-                    updateBuffer(it)
+                    updateBufferContent(it)
                 }
             }
         }
         UiState.currentTrack.addListener { _, new ->
-            updateBuffer(track = new)
+            updateBufferContent(track = new)
         }
         UiState.byteAlgorithn.addListener { _, new ->
-            updateBuffer(byteAlgorithm = new)
+            updateBufferContent(byteAlgorithm = new)
         }
-        UiState.addressPrologue.addAfterListener { _, _ -> updateBuffer() }
-        UiState.addressEpilogue.addAfterListener { _, _ -> updateBuffer() }
-        UiState.dataPrologue.addAfterListener { _, _ -> updateBuffer() }
-        UiState.dataEpilogue.addAfterListener { _, _ -> updateBuffer() }
+        UiState.addressPrologue.addAfterListener { _, _ -> updateBufferStyles() }
+        UiState.addressEpilogue.addAfterListener { _, _ -> updateBufferStyles() }
+        UiState.dataPrologue.addAfterListener { _, _ -> updateBufferStyles() }
+        UiState.dataEpilogue.addAfterListener { _, _ -> updateBufferStyles() }
 
-        updateBuffer()
+        updateBufferContent()
     }
 
     class TimedByte(val byte: Int, val timingBitCount: Int = 0)
@@ -137,38 +140,23 @@ class ByteBufferWindow(parent: Composite) : Composite(parent, SWT.NONE) {
         }
     }
 
-    private fun updateBuffer(passedDisk: IDisk? = null, track: Int = 0,
+    private fun updateBufferContent(passedDisk: IDisk? = null, track: Int = 0,
             byteAlgorithm: ByteAlgorithm = ByteAlgorithm.SHIFTED) {
         println("Updating buffer with file "+ UiState.currentDisk1File)
-        bytesStyledText.text = ""
+        textViewer.textWidget.text = ""
         val disk = passedDisk ?: IDisk.create(UiState.currentDisk1File.value)
         if (disk != null) {
-            val nibbleTrack = NibbleTrack(disk, disk.sizeInBits)
+            nibbleTrack = NibbleTrack(disk, disk.sizeInBits)
             repeat(160) { disk.decPhase() }
             repeat(track) {
                 disk.incPhase()
             }
 
             fun nextByte(): TimedByte {
-                var timed = 0
-                var byte = 0
                 val result =
                     when (byteAlgorithm) {
                         ByteAlgorithm.SHIFTED -> {
-                            nibbleTrack.nextByte()
-    //                        var waitForOne = true
-    //                        while (byte.and(0x80) == 0) {
-    //                            var bit = disk.nextBit()
-    //                            if (bit == 1) {
-    //                                byte = byte.shl(1).or(1)
-    //                                waitForOne = false
-    //                            } else {
-    //                                if (! waitForOne) {
-    //                                    byte = byte.shl(1)
-    //                                }
-    //                            }
-    //                        }
-    //                        timed = disk.peekZeroBitCount()
+                            nibbleTrack!!.nextByte()
                         }
                         else -> {
                             TimedByte(disk.nextByte(), 0)
@@ -187,7 +175,7 @@ class ByteBufferWindow(parent: Composite) : Composite(parent, SWT.NONE) {
             var addressStart = -1
             var dataStart = -1
             var byteSectorStart = -1
-            val timingBits = arrayListOf<Int>()
+//            val timingBits = arrayListOf<Int>()
             while (gb.hasNext()) {
                 if (gb.index > 0 && gb.index % rowSize == 0) {
                     // Timing bits
@@ -195,55 +183,75 @@ class ByteBufferWindow(parent: Composite) : Composite(parent, SWT.NONE) {
 //                    timingBits.forEach {
 //                        byteText.append(String.format("%2d ", it))
 //                    }
-                    timingBits.clear()
+//                    timingBits.clear()
                     // New offset
                     offsetText.append("\$" + String.format("%04X", row) + "\n")
                     byteText.append("\n")
                     row += rowSize
                 }
-                val p2 = gb.peek(2).joinToString("") { it.byte.h() }
-                val p3 = gb.peek(3).joinToString("") { it.byte.h() }
-
-                fun matches(v: Obs<String>, actual: String) = v.value.toRegex(RegexOption.IGNORE_CASE).matches(actual)
-
-                if (matches(UiState.addressPrologue, p3)) {
-                    addressStart = byteText.length + 1
-                    byteSectorStart = gb.index
-                } else if (matches(UiState.addressEpilogue, p2) && addressStart > 0) {
-                    ranges.add(StyleRange(addressStart, byteText.length - addressStart + 6, null,
-                            lightBlue(display)))
-                    addressStart = -1
-                } else if (matches(UiState.dataPrologue, p3)) {
-                    dataStart = byteText.length + 1
-                } else if (matches(UiState.dataEpilogue, p2) && dataStart > 0) {
-                    ranges.add(StyleRange(dataStart, byteText.length - dataStart + 6, null,
-                            lightYellow(display)))
-                    dataStart = -1
-                    gb.addRange(byteSectorStart, gb.index)
-                }
+//                val p2 = gb.peek(2).joinToString("") { it.byte.h() }
+//                val p3 = gb.peek(3).joinToString("") { it.byte.h() }
+//
+//                fun matches(v: Obs<String>, actual: String) = v.value.toRegex(RegexOption.IGNORE_CASE).matches(actual)
+//
+//                if (matches(UiState.addressPrologue, p3)) {
+//                    addressStart = byteText.length + 1
+//                    byteSectorStart = gb.index
+//                } else if (matches(UiState.addressEpilogue, p2) && addressStart > 0) {
+//                    ranges.add(StyleRange(addressStart, byteText.length - addressStart + 6, null,
+//                            lightBlue(display)))
+//                    addressStart = -1
+//                } else if (matches(UiState.dataPrologue, p3)) {
+//                    dataStart = byteText.length + 1
+//                } else if (matches(UiState.dataEpilogue, p2) && dataStart > 0) {
+//                    ranges.add(StyleRange(dataStart, byteText.length - dataStart + 6, null,
+//                            lightYellow(display)))
+//                    dataStart = -1
+//                    gb.addRange(byteSectorStart, gb.index)
+//                }
                 val nb = gb.next()
                 byteText.append(if (nb.timingBitCount > 0) "+" else " ")
-                timingBits.add(nb.timingBitCount)
+//                timingBits.add(nb.timingBitCount)
                 byteText.append(nb.byte.h())
+                offsetMap[gb.index] = byteText.length + 1
             }
             display.asyncExec {
                 offsets.text = offsetText.toString()
-                bytesStyledText.text = byteText.toString()
-                bytesStyledText.styleRanges = ranges.toTypedArray()
+                textViewer.textWidget.text = byteText.toString()
+                updateBufferStyles()
             }
         }
     }
+
+    fun updateBufferStyles() {
+        println("Updating styles with " + nibbleTrack)
+        val r = nibbleTrack!!.analyze()
+        val ranges = arrayListOf<StyleRange>().apply {
+            r.forEach { trackRange ->
+                add(StyleRange().apply {
+                    start = offsetMap[trackRange.range.start]!!
+                    length = offsetMap[trackRange.range.endInclusive + 1]!! - start - 1
+                    background = if (trackRange.isAddress) yellow(display) else lightBlue(display)
+                })
+            }
+        }
+        val tp = TextPresentation().apply {
+            ranges.forEach {
+                mergeStyleRange(it)
+            }
+        }
+        TextPresentation.applyTextPresentation(tp, textViewer.textWidget)
+    }
+
 }
 
-fun createTextViewer(parent: Composite, gb: ByteBufferWindow.GraphicBuffer) {
+fun createTextViewer(parent: Composite, bytes: List<ByteBufferWindow.TimedByte>) {
     val f = font(parent.shell, "Courier New", 14)
     val f2 = font(parent.shell, "Courier New", 8)
     TextViewer(parent, SWT.BORDER).apply { with(textWidget) {
         val sb = StringBuffer()
         val ranges = arrayListOf<StyleRange>()
-        while (gb.hasNext()) {
-
-            val tb = gb.next()
+        bytes.forEach { tb ->
             ranges.add(StyleRange().apply {
                 start = sb.toString().length
                 length = 2

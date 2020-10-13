@@ -98,13 +98,12 @@ class WozDisk(override val name: String, ins: InputStream): BaseDisk() {
     override fun peekZeroBitCount(): Int {
         bitStream.save()
         var result = 0
-        while (bitStream.nextBit().second == 0) result++
+        while (bitStream.nextBit() == 0) result++
         bitStream.restore()
         return result
     }
 
-    override fun nextBit(): Pair<Int, Int> {
-        return bitStream.nextBit()
+    override fun nextBit(): Int = bitStream.nextBit()
 //        bitStream.nextBit(position).let { result ->
 //            bitPosition = result.component1()
 //            return result
@@ -116,7 +115,6 @@ class WozDisk(override val name: String, ins: InputStream): BaseDisk() {
 //                FAKE_BIT_STREAM.next()
 //            }
 //        }
-    }
 
     override fun nextByte() = nextByte(false)
 
@@ -129,7 +127,7 @@ class WozDisk(override val name: String, ins: InputStream): BaseDisk() {
         }
         var iterated = 0
         while (result and 0x80 == 0) {
-            val (newPosition, nb) = bitStream.nextBit()
+            val nb = bitStream.nextBit()
             iterated++
             bits.add(nb)
 //            val nb = nextBit(peek, ahead * 8)

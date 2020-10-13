@@ -69,7 +69,7 @@ class DskDisk(override val name: String, ins: InputStream, override val sizeInBi
         TODO("Not yet implemented")
     }
 
-    override fun nextBit(): Pair<Int, Int> {
+    override fun nextBit(): Int {
         TODO("Not yet implemented")
     }
 

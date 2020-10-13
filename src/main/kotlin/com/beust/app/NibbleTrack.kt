@@ -3,8 +3,8 @@ package com.beust.app
 import com.beust.swt.ByteBufferWindow
 
 fun main() {
-    val disk = WozDisk("", DISKS[10].inputStream())
-    NibbleTrack(disk.bitStream, disk.phaseSizeInBits(0), BouncingMarkFinders())
+    val disk = WozDisk("", DISKS[1].inputStream())
+    NibbleTrack(disk.bitStream, disk.phaseSizeInBits(0))
 }
 
 interface IMarkFinders {
@@ -23,11 +23,7 @@ class BouncingMarkFinders: IMarkFinders {
     override fun isDataEpilogue(bytes: List<Int>) = bytes == listOf(0xda, 0xaa)
 }
 
-class NibbleTrack(bitStream: IBitStream, private val sizeInBits: Int,
-        private val markFinders: IMarkFinders = DefaultMarkFinders()) {
-
-    val addressRanges = arrayListOf<IntRange>()
-    val dataRanges = arrayListOf<IntRange>()
+class NibbleTrack(bitStream: IBitStream, val sizeInBits: Int) {
     val bytes = arrayListOf<ByteBufferWindow.TimedByte>()
 
     private val tmpBytes = arrayListOf<ByteBufferWindow.TimedByte>()
@@ -36,7 +32,7 @@ class NibbleTrack(bitStream: IBitStream, private val sizeInBits: Int,
         fun peekZeros(): Int {
             var result = 0
             bitStream.save()
-            while (bitStream.nextBit().second == 0) {
+            while (bitStream.nextBit() == 0) {
                 result++
             }
             bitStream.restore()
@@ -62,7 +58,7 @@ class NibbleTrack(bitStream: IBitStream, private val sizeInBits: Int,
                         done = true
                     }
                 }
-                byte = byte.shl(1).or(pair.second)
+                byte = byte.shl(1).or(pair)
             }
             val zeros = peekZeros()
             tmpBytes.add(ByteBufferWindow.TimedByte(byte, zeros))
@@ -70,7 +66,6 @@ class NibbleTrack(bitStream: IBitStream, private val sizeInBits: Int,
         bytes.addAll(tmpBytes.slice(start..end))
         println("Final track: " + bytes.size*8 + " bitCount:" + sizeInBits)
         tmpBytes.clear()
-        analyze()
     }
 
     private fun peek(pos: Int, count: Int): List<Int> {
@@ -110,20 +105,23 @@ class NibbleTrack(bitStream: IBitStream, private val sizeInBits: Int,
         }
     }
 
-    private fun analyze() {
+    data class TrackRange(val isAddress: Boolean, val range: IntRange)
+
+    fun analyze(markFinders: IMarkFinders = DefaultMarkFinders()): List<TrackRange> {
+        val result = arrayListOf<TrackRange>()
         var i = 0
         var sectors = 0
         while (sectors < 16) {
             val addressRange = findNextChunk(i, markFinders::isAddressPrologue, markFinders::isAddressEpilogue)
             if (addressRange != null) {
                 i = addressRange.endInclusive
-                addressRanges.add(addressRange)
+                result.add(TrackRange(true, addressRange))
             }
 
             val dataRange = findNextChunk(i, markFinders::isDataPrologue, markFinders::isDataEpilogue)
             if (dataRange != null) {
                 i = dataRange.endInclusive
-                dataRanges.add(dataRange)
+                result.add(TrackRange(false, dataRange))
 
                 // Verify checksum
                 var chesksum = 0
@@ -136,6 +134,8 @@ class NibbleTrack(bitStream: IBitStream, private val sizeInBits: Int,
             }
             sectors++
         }
+
+        return result
     }
 
     private var byteIndex = 0

@@ -15,14 +15,10 @@ class WozTest {
         val slice = bytes.slice(0x600 until bytes.size)
         val bitStream = BitBitStream(slice)
         val bitStream2 = BitStream2(slice.toByteArray())
-        var position1 = 0
-        var position2 = 0
         repeat(slice.size) {
-            val (a, b) = bitStream.nextBit(position1)
-            val (c, d) = bitStream2.nextBit(position2)
+            val b = bitStream.nextBit()
+            val d = bitStream2.nextBit()
             assertThat(b).isEqualTo(d)
-            position1 = a
-            position2 = c
         }
     }
 

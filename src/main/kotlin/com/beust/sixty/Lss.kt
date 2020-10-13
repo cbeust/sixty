@@ -36,7 +36,7 @@ class Lss {
         var pulse = 0
         if (clock == 4) {
 
-            pulse = disk.nextBit().second
+            pulse = disk.nextBit()
             if (pulse == 0) {
                 if (++zeros > 2) {
                     pulse = if (Math.random() > 0.3) 0 else 1
