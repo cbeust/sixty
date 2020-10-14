@@ -7,6 +7,8 @@ fun main() {
     NibbleTrack(disk.bitStream, disk.phaseSizeInBits(0))
 }
 
+class TimedByte(val byte: Int, val timingBitCount: Int = 0)
+
 interface IMarkFinders {
     fun isAddressPrologue(bytes: List<Int>): Boolean = bytes == listOf(0xd5, 0xaa, 0x96)
     fun isAddressEpilogue(bytes: List<Int>): Boolean = bytes == listOf(0xde, 0xaa)
@@ -24,9 +26,9 @@ class BouncingMarkFinders: IMarkFinders {
 }
 
 class NibbleTrack(bitStream: IBitStream, val sizeInBits: Int) {
-    val bytes = arrayListOf<ByteBufferWindow.TimedByte>()
+    val bytes = arrayListOf<TimedByte>()
 
-    private val tmpBytes = arrayListOf<ByteBufferWindow.TimedByte>()
+    private val tmpBytes = arrayListOf<TimedByte>()
 
     init {
         fun peekZeros(): Int {
@@ -61,7 +63,7 @@ class NibbleTrack(bitStream: IBitStream, val sizeInBits: Int) {
                 byte = byte.shl(1).or(pair)
             }
             val zeros = peekZeros()
-            tmpBytes.add(ByteBufferWindow.TimedByte(byte, zeros))
+            tmpBytes.add(TimedByte(byte, zeros))
         }
         bytes.addAll(tmpBytes.slice(start..end))
         println("Final track: " + bytes.size*8 + " bitCount:" + sizeInBits)
@@ -148,7 +150,7 @@ class NibbleTrack(bitStream: IBitStream, val sizeInBits: Int) {
     }
 
     private var byteIndex = 0
-    fun nextByte(): ByteBufferWindow.TimedByte {
+    fun nextByte(): TimedByte {
         val result = bytes[byteIndex]
         byteIndex = (byteIndex + 1) % bytes.size
         return result

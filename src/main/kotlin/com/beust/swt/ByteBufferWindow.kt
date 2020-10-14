@@ -54,48 +54,7 @@ class ByteBufferWindow(parent: Composite) : Composite(parent, SWT.NONE) {
         updateBufferContent()
     }
 
-    class TimedByte(val byte: Int, val timingBitCount: Int = 0)
     data class SectorInfo(val volume: Int, val track: Int, val sector: Int, val checksum: Int)
-
-    class GraphicBuffer(private val sizeInBytes: Int, nextByte: () -> TimedByte) {
-        var index = 0
-        val bytes = arrayListOf<TimedByte>()
-        private val ranges = arrayListOf<IntRange>()
-
-        init {
-            repeat(sizeInBytes) {
-                bytes.add(nextByte())
-            }
-        }
-
-        operator fun hasNext() = index < sizeInBytes
-        operator fun next(): TimedByte = bytes[index++]
-
-//        fun peek(n: Int): List<TimedByte>
-//            = if (index + n < sizeInBytes) bytes.slice(index..index + n - 1)
-//               else emptyList()
-
-        fun addRange(start: Int, end: Int) {
-            ranges.add(IntRange(start, end))
-        }
-
-        fun currentSectorInfo(position: Int) : SectorInfo? {
-            val range = ranges.firstOrNull { position in it}
-            val result =
-                if (range != null) {
-                    var start = range.start + 3
-                    val values = arrayListOf<Int>()
-                    repeat(4) {
-                        values.add(SixAndTwo.pair4And4(bytes[start].byte, bytes[start + 1].byte))
-                        start += 2
-                    }
-                    SectorInfo(values[0], values[1], values[2], values[3])
-                } else {
-                    null
-                }
-            return result
-        }
-    }
 
     private fun updateBufferContent(passedDisk: IDisk? = null, track: Int = 0,
             byteAlgorithm: ByteAlgorithm = ByteAlgorithm.SHIFTED) {

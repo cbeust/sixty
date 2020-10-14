@@ -1,9 +1,6 @@
 package com.beust.swt
 
-import com.beust.app.ByteAlgorithm
-import com.beust.app.SixAndTwo
-import com.beust.app.UiState
-import com.beust.app.word
+import com.beust.app.*
 import com.beust.sixty.h
 import com.beust.sixty.hh
 import org.eclipse.jface.text.TextViewer
@@ -41,12 +38,12 @@ fun main(args: Array<String>) {
 
 fun test6(parent: Composite) {
     val row1 = listOf(0xff to 2, 0xff to 2, 0xda to 0)
-            .map { ByteBufferWindow.TimedByte(it.first, it.second)}
+            .map { TimedByte(it.first, it.second) }
             .map { "<td>" + it.byte.h() +
                   (if (it.timingBitCount > 0) "<sup>${it.timingBitCount}</sup>" else "") }
             .joinToString("")
     val row2 = listOf(0xff to 2, 0xda to 0, 0xff to 2)
-            .map { ByteBufferWindow.TimedByte(it.first, it.second)}
+            .map { TimedByte(it.first, it.second)}
             .map { "<td class=\"address\">" + it.byte.h() +
                     (if (it.timingBitCount > 0) "<sup>${it.timingBitCount}</sup>" else "") }
             .joinToString("")
@@ -107,7 +104,7 @@ fun test5(parent: Shell) {
 
 fun test4(shell: Shell) {
     val tb = listOf(0xff to 2, 0xff to 2, 0xd5 to 0, 0xff to 10, 0xd5 to 0, 0xaa to 0).map {
-        ByteBufferWindow.TimedByte(it.first, it.second)
+        TimedByte(it.first, it.second)
     }
 //    createTextViewer(shell, tb.iterator())
 }
