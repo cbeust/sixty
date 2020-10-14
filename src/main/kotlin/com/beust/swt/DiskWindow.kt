@@ -178,7 +178,7 @@ fun test1(shell: Shell) {
 
 
 class DiskWindow(parent: Composite): Composite(parent, NONE) {
-    private lateinit var diskLabel: Label
+    private lateinit var diskLabel: Button
     private var byteText: Text? = null
     private var wordText: Text? = null
     private var fourAndFourText: Text? = null
@@ -355,27 +355,25 @@ class DiskWindow(parent: Composite): Composite(parent, NONE) {
         //
         // Name of the disk
         //
-        diskLabel = label(header, UiState.currentDisk1File.value?.name ?: "<none>").apply {
-            layoutData = GridData(SWT.BEGINNING, SWT.CENTER, false, false)
+        diskLabel = button(header, UiState.currentDisk1File.value?.name ?: "<none>").apply {
+            layoutData = GridData(SWT.BEGINNING, SWT.CENTER, false, false).apply {
 ////                background = grey(display)
-////                horizontalSpan = 2
+                horizontalSpan = 2
 //                horizontalAlignment = GridData.FILL
 //                grabExcessHorizontalSpace = true
-//            }
+            }
+
         }
 
         //
         // Button to open a different disk
         //
-        val b = button(header, "...").apply {
-            layoutData = GridData(SWT.BEGINNING, SWT.CENTER, false, false)
-        }
-        fileDialog(shell, b, UiState.currentDisk1File)
+        fileDialog(shell, diskLabel, UiState.currentDisk1File)
 
         //
-        // Track number label
+        // Phase number label
         //
-        label(header, "Track number:").apply {
+        label(header, "Phase number:").apply {
             layoutData = GridData(SWT.BEGINNING, SWT.CENTER, false, false)
         }
 
