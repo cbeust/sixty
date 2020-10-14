@@ -4,34 +4,34 @@ import com.beust.app.ByteAlgorithm
 import com.beust.app.SixAndTwo
 import com.beust.app.UiState
 import com.beust.app.word
-import com.beust.sixty.Loggers.text
 import com.beust.sixty.h
 import com.beust.sixty.hh
-import org.eclipse.jface.text.TextPresentation
 import org.eclipse.jface.text.TextViewer
 import org.eclipse.swt.SWT
 import org.eclipse.swt.SWT.NONE
+import org.eclipse.swt.browser.Browser
+import org.eclipse.swt.custom.CLabel
 import org.eclipse.swt.custom.ScrolledComposite
 import org.eclipse.swt.custom.StyleRange
 import org.eclipse.swt.custom.StyledText
 import org.eclipse.swt.events.SelectionEvent
 import org.eclipse.swt.events.SelectionListener
-import org.eclipse.swt.graphics.Point
-import org.eclipse.swt.graphics.Rectangle
+import org.eclipse.swt.graphics.*
 import org.eclipse.swt.layout.FillLayout
 import org.eclipse.swt.layout.GridData
 import org.eclipse.swt.layout.GridLayout
 import org.eclipse.swt.widgets.*
 
+
 fun main(args: Array<String>) {
     val display = Display()
     val shell = Shell(display).apply {
         text = "Nibble viewer"
-        layout = GridLayout()
+        layout = FillLayout()
     }
 
-//    test4(shell)
-    DiskWindow(shell)
+    test6(shell)
+//    DiskWindow(shell)
     shell.bounds = Rectangle(0, 0, 1000, 800)
 
 //    shell.pack()
@@ -39,6 +39,71 @@ fun main(args: Array<String>) {
     while (!shell.isDisposed) {
         if (!display.readAndDispatch()) display.sleep()
     }
+}
+
+fun test6(parent: Composite) {
+    val row1 = listOf(0xff to 2, 0xff to 2, 0xda to 0)
+            .map { ByteBufferWindow.TimedByte(it.first, it.second)}
+            .map { "<td>" + it.byte.h() +
+                  (if (it.timingBitCount > 0) "<sup>${it.timingBitCount}</sup>" else "") }
+            .joinToString("")
+    val row2 = listOf(0xff to 2, 0xda to 0, 0xff to 2)
+            .map { ByteBufferWindow.TimedByte(it.first, it.second)}
+            .map { "<td class=\"address\">" + it.byte.h() +
+                    (if (it.timingBitCount > 0) "<sup>${it.timingBitCount}</sup>" else "") }
+            .joinToString("")
+    val html = """
+            <head>
+                <style>
+                    table { font: 16px Courier; border-spacing: 0 }
+                    td { vertical-align:bottom }
+                    .superscript {color: red; vertical-align: 30%; font-size: 80%}
+                    .address { background-color: yellow }
+                    .data { background-color: lightblue}
+                </style>
+            </head>
+            <table>
+            <tr>$row1</tr>
+            <tr>$row2</tr>
+            </table>
+            """
+    println(html)
+    Browser(parent, NONE).apply {
+        text = html
+
+    }
+}
+
+fun test5(parent: Shell) {
+    val display = parent.display
+//    val font1 = Font(display, "Tahoma", 14, SWT.BOLD)
+//    val font2 = Font(display, "MS Mincho", 20, SWT.ITALIC)
+//    val font3 = Font(display, "Arabic Transparent", 18, SWT.NORMAL)
+    val big = Font(display, "Courier New", 12, SWT.NORMAL)
+    val small = Font(display, "Courier New", 6, SWT.NORMAL)
+
+    val blue: Color = display.getSystemColor(SWT.COLOR_BLUE)
+    val green: Color = display.getSystemColor(SWT.COLOR_GREEN)
+    val yellow: Color = display.getSystemColor(SWT.COLOR_YELLOW)
+    val gray: Color = display.getSystemColor(SWT.COLOR_GRAY)
+
+    val layout = TextLayout(display).apply {
+        font = big
+    }
+    val style1 = TextStyle().apply {
+        rise = 4
+        font = small
+    }
+//    val style2 = TextStyle(font2, green, null)
+//    val style3 = TextStyle(font3, blue, gray)
+
+    layout.setText("FF2 FF2 D5\nFF FF2 AA")
+    layout.setStyle(style1, 2, 3)
+    layout.setStyle(style1, 6, 7)
+    layout.setStyle(style1, 16, 17)
+    parent.setBackground(display.getSystemColor(SWT.COLOR_WHITE))
+    parent.addListener(SWT.Paint, Listener { event -> layout.draw(event.gc, 10, 10) })
+
 }
 
 fun test4(shell: Shell) {
@@ -326,7 +391,7 @@ class DiskWindow(parent: Composite): Composite(parent, NONE) {
             }
             setItems(*tracks.toTypedArray())
             select(0)
-            addSelectionListener(object: SelectionListener {
+            addSelectionListener(object : SelectionListener {
                 override fun widgetSelected(e: SelectionEvent) {
                     val track = (e.widget as Combo).selectionIndex
                     UiState.currentTrack.value = track
@@ -350,9 +415,9 @@ class DiskWindow(parent: Composite): Composite(parent, NONE) {
             layoutData = GridData(SWT.BEGINNING, SWT.CENTER, false, false)
             setItems(ByteAlgorithm.RAW.toString(), ByteAlgorithm.SHIFTED.toString())
             select(1)
-            addSelectionListener(object: SelectionListener {
+            addSelectionListener(object : SelectionListener {
                 override fun widgetSelected(e: SelectionEvent) {
-                    val newAlgo = when((e.widget as Combo).selectionIndex) {
+                    val newAlgo = when ((e.widget as Combo).selectionIndex) {
                         0 -> ByteAlgorithm.RAW
                         else -> ByteAlgorithm.SHIFTED
                     }
