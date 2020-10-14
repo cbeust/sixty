@@ -14,76 +14,23 @@ import org.eclipse.swt.widgets.Composite
 
 class ByteBufferWindow(parent: Composite) : Composite(parent, SWT.NONE) {
     private var disk: IDisk? = null
-    private var woz: Woz? = null
     private val rowSize = 16
-    private val offsets: StyledText
-//    private val textViewer: TextViewer
     private val browser: Browser
-    private val thisFont = font(shell, "Courier New", 12, SWT.NORMAL)
     private val thisSmallFont = font(shell, "Courier New", 8, SWT.NORMAL)
-    private val thisFontBold = font(shell, "Courier New", 10, SWT.BOLD)
-    private var graphicBuffer: GraphicBuffer? = null
     private var nibbleTrack: NibbleTrack? = null
     private val timingBitRanges = arrayListOf<StyleRange>()
-    /** Map a byte on the track to its offset in the TextViewer */
-    private val offsetMap = hashMapOf<Int, Int>()
 
     init {
-//        background = display.getSystemColor(SWT.COLOR_BLUE)
         // Create a child composite to hold the controls
-        layoutData = GridData(SWT.FILL, SWT.FILL, true, true).apply {
-            widthHint = Int.MAX_VALUE
-        }
+        layoutData = GridData(SWT.FILL, SWT.FILL, true, true)
         layout = GridLayout(2, false)
         background = white(display)
 
-        offsets = StyledText(this, SWT.NONE).apply {
-//            editable = false
-            font = thisFontBold
-            foreground = blue(display)
-            layoutData = GridData(SWT.FILL, SWT.FILL).apply {
-                widthHint = 50
-                heightHint = Int.MAX_VALUE
-                grabExcessVerticalSpace = true
-            }
 
-        }
         browser = Browser(this, SWT.NONE).apply {
-//            background = blue(display)
-            layoutData = GridData(SWT.FILL, SWT.FILL, true, true).apply {
-                heightHint = Int.MAX_VALUE
-            }
+            layoutData = GridData(SWT.FILL, SWT.FILL, true, true)
         }
-//        textViewer = TextViewer(this, SWT.NONE).apply { with(textWidget) {
-//            editable = false
-//            font = thisFont
-//            layoutData = GridData(SWT.FILL, SWT.FILL, true, true).apply {
-//                heightHint = Int.MAX_VALUE
-//            }
-//            addCaretListener { e ->
-//                val caretOffset = e.caretOffset
-//                if (caretOffset < text.length) {
-//                    val line = getLineAtOffset(caretOffset)
-//                    val mod = (if (line == 0) caretOffset else (caretOffset - line)) % 48
-//                    val currentBytes = graphicBuffer!!.bytes.map { it.byte }
-//                    val index = line * 16 + (mod / 3)
-//                    UiState.currentBytes.value = listOf(currentBytes[index], currentBytes[index + 1])
-//                    //            val result = bytes.getText(e.caretOffset + pair.first, e.caretOffset+ pair.second)
-//                    //                    .split(" ")
-//                    //                    .map { Integer.parseInt(it, 16) }
-////                    log("position:${caretOffset} line:$line mod:$mod index:${index.h()} byte:${currentBytes[index].h()}")
-//                }
-//                UiState.caretSectorInfo.value = graphicBuffer?.currentSectorInfo(caretOffset / 3)
-//            }
-//        }}
-//        bytes.addFocusListener(object: FocusAdapter() {
-//            override fun focusGained(e: FocusEvent) {
-//                val st = (e.source as StyledText)
-//                val line = bytes.getLineAtOffset(bytes.caretOffset)
-//                println("Caret position:" + bytes.caretOffset + " line: " + line)
-//            }
-//
-//        })
+
         UiState.currentDisk1File.addListener { _, new ->
             if (new != null) {
                 UiState.currentTrack.value = 0
@@ -175,52 +122,43 @@ class ByteBufferWindow(parent: Composite) : Composite(parent, SWT.NONE) {
                 return result
             }
 
-            graphicBuffer = GraphicBuffer(disk.phaseSizeInBits(track) * 8) { -> nextByte() }
-            val gb = graphicBuffer!!
-
             var row = 0
-            val offsetText = StringBuffer()
             val byteText = StringBuffer()
-            val ranges = arrayListOf<StyleRange>()
             val html = StringBuffer("""
                 <head>
                     <style>
-                        table { font: 16px Courier; border-spacing: 0 }
+                        table { font: 14px Courier; border-spacing: 0 }
                         td { vertical-align:bottom }
-                        .superscript {color: red; vertical-align: 30%; font-size: 80%}
+                        .superscript { color: red; vertical-align: 30%; font-size: 80%}
                         .address { background-color: yellow }
                         .data { background-color: lightblue}
+                        .offset { color: blue; font-weight: bold; padding-right: 15px; }
                     </style>
                 </head>
-                <table>
+                <body>
+                    <table>
             """.trimIndent())
             timingBitRanges.clear()
             val analyzedTrack = nibbleTrack!!.analyze()
-            while (gb.hasNext()) {
-                if (gb.index > 0 && gb.index % rowSize == 0) {
-                    // Timing bits
-//                    byteText.append("\n")
-//                    timingBits.forEach {
-//                        byteText.append(String.format("%2d ", it))
-//                    }
-//                    timingBits.clear()
+            var byteCount = 0
+            while (byteCount < analyzedTrack.sizeInBits / 8 + 1) {
+                if (byteCount % rowSize == 0) {
                     // New offset
-                    offsetText.append("\$" + String.format("%04X", row) + "\n")
-                    byteText.append("\n")
-                    html.append("</tr>\n<tr>")
+                    if (byteCount > 0) html.append("</tr>\n")
+                    html.append("<tr>")
+                        .append("<td class=\"offset\">\$" + String.format("%04X", row) + "</td>")
                     row += rowSize
                 }
 
-                val nb = gb.next()
+                val nb = nextByte()
                 byteText.append(nb.byte.h())
-                val cls = when(analyzedTrack.typeFor(gb.index)) {
+                val cls = when(analyzedTrack.typeFor(byteCount)) {
                     NibbleTrack.AnalyzedTrack.Type.ADDRESS -> " class=\"address\""
                     NibbleTrack.AnalyzedTrack.Type.DATA -> " class=\"data\""
                     else -> ""
                 }
                 val sup = if (nb.timingBitCount > 0) "<sup>${nb.timingBitCount}</sup>" else ""
                 html.append("<td$cls>" + nb.byte.h() + sup + "</td>")
-                offsetMap[gb.index] = byteText.length + 1
 
                 // Add the timing bit count
                 if (nb.timingBitCount > 0) {
@@ -230,78 +168,12 @@ class ByteBufferWindow(parent: Composite) : Composite(parent, SWT.NONE) {
                     })
                 }
                 byteText.append(if (nb.timingBitCount > 0) String.format("%-2d", nb.timingBitCount) else "  ")
+                byteCount++
             }
             html.append("</table></body></html>")
             display.asyncExec {
-                offsets.text = offsetText.toString()
                 browser.text = html.toString()
-//                textViewer.textWidget.text = byteText.toString()
-//                updateBufferStyles()
             }
         }
     }
-
-//    fun updateBufferStyles() {
-//        println("Updating styles with " + nibbleTrack)
-//        val r = nibbleTrack!!.analyze()
-//        val ranges = arrayListOf<StyleRange>().apply {
-//            r.forEach { trackRange ->
-//                add(StyleRange().apply {
-//                    start = offsetMap[trackRange.range.start]!!
-//                    length = offsetMap[trackRange.range.endInclusive + 1]!! - start - 1
-//                    background = if (trackRange.isAddress) yellow(display) else lightBlue(display)
-//                })
-//            }
-//        }
-//        textViewer.textWidget.styleRanges = emptyArray()
-//        val tp = TextPresentation().apply {
-//            timingBitRanges.forEach {
-//                mergeStyleRange(it)
-//            }
-//            ranges.forEach {
-//                mergeStyleRange(it)
-//            }
-//        }
-//        TextPresentation.applyTextPresentation(tp, textViewer.textWidget)
-//    }
-
-}
-
-fun createTextViewer(parent: Composite, bytes: List<ByteBufferWindow.TimedByte>) {
-    val f = font(parent.shell, "Courier New", 14)
-    val f2 = font(parent.shell, "Courier New", 8)
-    TextViewer(parent, SWT.BORDER).apply { with(textWidget) {
-        val sb = StringBuffer()
-        val ranges = arrayListOf<StyleRange>()
-        bytes.forEach { tb ->
-            ranges.add(StyleRange().apply {
-                start = sb.toString().length
-                length = 2
-                font = f
-            })
-            sb.append(tb.byte.h())
-            ranges.add(StyleRange().apply {
-                start = sb.toString().length
-                length = 2
-                font = f2
-                rise = 4
-            })
-            tb.timingBitCount.let { b ->
-                sb.append((if (b != 0) String.format("%-2d", b) else " ") + " ")
-            }
-        }
-        text = sb.toString()
-        ranges.add(StyleRange().apply {
-            start = 0
-            length = 5
-            background = yellow(display)
-        })
-        val tp = TextPresentation().apply {
-            ranges.forEach {
-                mergeStyleRange(it)
-            }
-        }
-        TextPresentation.applyTextPresentation(tp, this)
-//        styleRanges = ranges.toTypedArray()
-    } }
 }

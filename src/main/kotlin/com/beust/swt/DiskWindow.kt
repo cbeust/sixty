@@ -10,8 +10,6 @@ import org.eclipse.jface.text.TextViewer
 import org.eclipse.swt.SWT
 import org.eclipse.swt.SWT.NONE
 import org.eclipse.swt.browser.Browser
-import org.eclipse.swt.custom.CLabel
-import org.eclipse.swt.custom.ScrolledComposite
 import org.eclipse.swt.custom.StyleRange
 import org.eclipse.swt.custom.StyledText
 import org.eclipse.swt.events.SelectionEvent
@@ -60,6 +58,7 @@ fun test6(parent: Composite) {
                     .superscript {color: red; vertical-align: 30%; font-size: 80%}
                     .address { background-color: yellow }
                     .data { background-color: lightblue}
+                    .offset { color: blue; font-weight: bold; padding-right: 10px; }
                 </style>
             </head>
             <table>
@@ -183,7 +182,6 @@ fun test1(shell: Shell) {
 
 class DiskWindow(parent: Composite): Composite(parent, NONE) {
     private lateinit var diskLabel: Label
-//    private val scrolledComposite: ScrolledComposite
     private var byteText: Text? = null
     private var wordText: Text? = null
     private var fourAndFourText: Text? = null
@@ -194,7 +192,11 @@ class DiskWindow(parent: Composite): Composite(parent, NONE) {
 
         createHeader(this)
         createRightSide(this)
-        byteBufferWindow = createScrollableByteBuffer(this)
+        byteBufferWindow = ByteBufferWindow(this).apply {
+            layoutData = GridData(GridData.FILL, GridData.FILL, true, true).apply {
+                horizontalSpan = 2
+            }
+        }
 
         UiState.currentDisk1File.addListener { _, new ->
             display.asyncExec {
@@ -430,34 +432,5 @@ class DiskWindow(parent: Composite): Composite(parent, NONE) {
 
         return header
     }
-
-    private fun createScrollableByteBuffer(parent: Composite): ByteBufferWindow {
-        val scrolled = ScrolledComposite(parent, SWT.BORDER or SWT.V_SCROLL or SWT.H_SCROLL).apply {
-            background = black(display)
-
-            layoutData = GridData().apply {
-                heightHint = BYTE_BUFFER_HEIGHT
-                setMinSize(Point(550, 10000))
-                expandHorizontal = true
-                expandVertical = true
-            }
-        }
-
-        val result = ByteBufferWindow(scrolled).apply {
-            layoutData = GridData(GridData.FILL, GridData.FILL, true, true).apply {
-                //                horizontalAlignment = GridData.FILL
-                //                verticalAlignment = GridData.FILL
-                heightHint = 1000
-                horizontalSpan = 2
-                //                grabExcessVerticalSpace = true
-                //                grabExcessHorizontalSpace = false
-            }
-
-        }
-        scrolled.content = result
-
-        return result
-    }
-
 }
 

@@ -225,10 +225,6 @@ class GraphicContext(val computer: () -> Apple2Computer, memory: () -> Apple2Mem
 ////        layoutData = GridData(GridData.FILL_BOTH, GridData.FILL_BOTH, true, true)
 //    }
         val folder = TabFolder(shell, SWT.NONE).apply {
-//        layoutData = FormData(500, parentHeight).apply {
-//            top = FormAttachment(shell)
-//            left = FormAttachment(mainWindow)
-//        }
             layoutData = GridData(GridData.FILL, GridData.FILL, true, true).apply {
                 grabExcessVerticalSpace = true
 //            heightHint = parentHeight
@@ -258,7 +254,7 @@ class GraphicContext(val computer: () -> Apple2Computer, memory: () -> Apple2Mem
 //    mainWindow.pack()
 //    folder.pack()
         shell.pack()
-        shell.setSize(textWindow.bounds.width + folder.bounds.width, MAIN_WINDOW_HEIGHT)
+        shell.setSize(shell.bounds.width, MAIN_WINDOW_HEIGHT)
 //        rebootButton.addListener(SWT.Selection) { e ->
 //            computer.reboot()
 //        }

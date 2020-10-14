@@ -106,7 +106,7 @@ class NibbleTrack(bitStream: IBitStream, val sizeInBits: Int) {
     }
 
     data class TrackRange(val isAddress: Boolean, val range: IntRange)
-    class AnalyzedTrack(val trackRanges: List<TrackRange>) {
+    class AnalyzedTrack(val trackRanges: List<TrackRange>, val sizeInBits: Int) {
         enum class Type { ADDRESS, DATA, NONE }
         fun typeFor(index: Int): Type {
             val tr = trackRanges.firstOrNull { index in it.range }
@@ -144,7 +144,7 @@ class NibbleTrack(bitStream: IBitStream, val sizeInBits: Int) {
             sectors++
         }
 
-        return AnalyzedTrack(result)
+        return AnalyzedTrack(result, sizeInBits)
     }
 
     private var byteIndex = 0
