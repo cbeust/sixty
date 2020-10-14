@@ -1,7 +1,6 @@
 package com.beust.app
 
 import com.beust.sixty.bit
-import com.beust.sixty.h
 import java.io.File
 import java.io.InputStream
 
@@ -11,7 +10,7 @@ fun main() {
 
 class DskDisk(override val name: String, ins: InputStream, override val sizeInBits: Int = TRACK_SIZE_BITS): BaseDisk() {
     companion object {
-        private const val TRACK_MAX = 70
+        private const val TRACK_MAX = 160
         const val DISK_IMAGE_SIZE_BYTES = TRACK_MAX * 16 * 256
         const val TRACK_SIZE_BYTES = 16 * 256
         const val TRACK_SIZE_BITS = TRACK_SIZE_BYTES * 8
@@ -27,19 +26,19 @@ class DskDisk(override val name: String, ins: InputStream, override val sizeInBi
 
     private val isProdos = false
     private val TRACK_SIZE_ENCODED = 6028
-    private var track: Int = 0
+    private var phase: Int = 0
 
     override fun peekZeroBitCount() = 0
 
     override fun incPhase() {
-        if (track < TRACK_MAX - 1) {
-            track++
+        if (phase < TRACK_MAX - 1) {
+            phase++
         }
     }
 
     override fun decPhase() {
-        if (track > 0) {
-            track--
+        if (phase > 0) {
+            phase--
         }
     }
 
@@ -61,16 +60,14 @@ class DskDisk(override val name: String, ins: InputStream, override val sizeInBi
         TODO("Not yet implemented")
     }
 
-    override fun save() {
-        TODO("Not yet implemented")
-    }
-
-    override fun restore() {
-        TODO("Not yet implemented")
-    }
+    private var saved = 0
+    override fun save() { saved = positionInTrack }
+    override fun restore() { positionInTrack = saved }
 
     override fun nextBit(): Int {
-        TODO("Not yet implemented")
+        val result = bitBuffers[phase / 2][positionInTrack]
+        positionInTrack = (positionInTrack + 1) % bitBuffers[phase / 2].size
+        return result
     }
 
     //    private val byteStream: IByteStream

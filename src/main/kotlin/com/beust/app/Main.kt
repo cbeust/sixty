@@ -25,7 +25,7 @@ val DISKS = listOf(
         disk("Bouncing Kamungas - Disk 1, Side A.woz") // 10
 )
 
-val DISK = DISKS[1]
+val DISK = DISKS[0]
 
 fun main() {
     val pulseManager = PulseManager()

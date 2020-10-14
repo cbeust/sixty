@@ -244,7 +244,7 @@ class DiskController(val slot: Int = 6): IPulse, MemoryListener() {
             if (currentTrack < 0) currentTrack = 0
             if (currentTrack > 35) currentTrack = 35
             if (oldTrack != currentTrack) {
-                logDisk("*** phase($phase, $on)    delta: $delta newTrack: $currentTrack")
+                logDisk("*** phase($phase, $on) delta: $delta newTrack: $currentTrack")
             }
         }
     }

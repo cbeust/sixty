@@ -33,9 +33,14 @@ class Lss {
     var latch = 0
 
     fun onPulse(q6: Boolean, q7: Boolean, motorOn: () -> Boolean, disk: IDisk) {
+        if (motorOn()) {
+            step(q6, q7, motorOn, disk)
+        }
+    }
+
+    private fun step(q6: Boolean, q7: Boolean, motorOn: () -> Boolean, disk: IDisk) {
         var pulse = 0
         if (clock == 4) {
-
             pulse = disk.nextBit()
             if (pulse == 0) {
                 if (++zeros > 2) {
