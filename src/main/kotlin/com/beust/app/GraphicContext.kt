@@ -220,7 +220,6 @@ class GraphicContext(val computer: () -> Apple2Computer, memory: () -> Apple2Mem
         //
         // Right panel
         //
-        val parentHeight = textWindow.bounds.height + 220
 //
 //    createScrollableByteBuffer(shell, parentHeight).apply {
 ////        layoutData = GridData(GridData.FILL_BOTH, GridData.FILL_BOTH, true, true)
@@ -259,7 +258,7 @@ class GraphicContext(val computer: () -> Apple2Computer, memory: () -> Apple2Mem
 //    mainWindow.pack()
 //    folder.pack()
         shell.pack()
-        shell.setSize(textWindow.bounds.width + folder.bounds.width, parentHeight)
+        shell.setSize(textWindow.bounds.width + folder.bounds.width, MAIN_WINDOW_HEIGHT)
 //        rebootButton.addListener(SWT.Selection) { e ->
 //            computer.reboot()
 //        }

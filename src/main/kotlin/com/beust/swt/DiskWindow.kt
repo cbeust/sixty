@@ -371,8 +371,8 @@ class DiskWindow(parent: Composite): Composite(parent, NONE) {
             background = black(display)
 
             layoutData = GridData().apply {
-                heightHint = 600
-                setMinSize(Point(500, 10000))
+                heightHint = BYTE_BUFFER_HEIGHT
+                setMinSize(Point(550, 10000))
                 expandHorizontal = true
                 expandVertical = true
             }

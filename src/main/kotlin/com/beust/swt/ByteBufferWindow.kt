@@ -18,9 +18,11 @@ class ByteBufferWindow(parent: Composite) : Composite(parent, SWT.NONE) {
     private val offsets: StyledText
     private val textViewer: TextViewer
     private val thisFont = font(shell, "Courier New", 10)
+    private val thisSmallFont = font(shell, "Courier New", 8)
     private val thisFontBold = font(shell, "Courier New", 10, SWT.BOLD)
     private var graphicBuffer: GraphicBuffer? = null
     private var nibbleTrack: NibbleTrack? = null
+    private val timingBitRanges = arrayListOf<StyleRange>()
     /** Map a byte on the track to its offset in the TextViewer */
     private val offsetMap = hashMapOf<Int, Int>()
 
@@ -114,9 +116,9 @@ class ByteBufferWindow(parent: Composite) : Composite(parent, SWT.NONE) {
         operator fun hasNext() = index < sizeInBytes
         operator fun next(): TimedByte = bytes[index++]
 
-        fun peek(n: Int): List<TimedByte>
-            = if (index + n < sizeInBytes) bytes.slice(index..index + n - 1)
-               else emptyList()
+//        fun peek(n: Int): List<TimedByte>
+//            = if (index + n < sizeInBytes) bytes.slice(index..index + n - 1)
+//               else emptyList()
 
         fun addRange(start: Int, end: Int) {
             ranges.add(IntRange(start, end))
@@ -172,10 +174,7 @@ class ByteBufferWindow(parent: Composite) : Composite(parent, SWT.NONE) {
             val offsetText = StringBuffer()
             val byteText = StringBuffer()
             val ranges = arrayListOf<StyleRange>()
-            var addressStart = -1
-            var dataStart = -1
-            var byteSectorStart = -1
-//            val timingBits = arrayListOf<Int>()
+            timingBitRanges.clear()
             while (gb.hasNext()) {
                 if (gb.index > 0 && gb.index % rowSize == 0) {
                     // Timing bits
@@ -189,31 +188,19 @@ class ByteBufferWindow(parent: Composite) : Composite(parent, SWT.NONE) {
                     byteText.append("\n")
                     row += rowSize
                 }
-//                val p2 = gb.peek(2).joinToString("") { it.byte.h() }
-//                val p3 = gb.peek(3).joinToString("") { it.byte.h() }
-//
-//                fun matches(v: Obs<String>, actual: String) = v.value.toRegex(RegexOption.IGNORE_CASE).matches(actual)
-//
-//                if (matches(UiState.addressPrologue, p3)) {
-//                    addressStart = byteText.length + 1
-//                    byteSectorStart = gb.index
-//                } else if (matches(UiState.addressEpilogue, p2) && addressStart > 0) {
-//                    ranges.add(StyleRange(addressStart, byteText.length - addressStart + 6, null,
-//                            lightBlue(display)))
-//                    addressStart = -1
-//                } else if (matches(UiState.dataPrologue, p3)) {
-//                    dataStart = byteText.length + 1
-//                } else if (matches(UiState.dataEpilogue, p2) && dataStart > 0) {
-//                    ranges.add(StyleRange(dataStart, byteText.length - dataStart + 6, null,
-//                            lightYellow(display)))
-//                    dataStart = -1
-//                    gb.addRange(byteSectorStart, gb.index)
-//                }
+
                 val nb = gb.next()
-                byteText.append(if (nb.timingBitCount > 0) "+" else " ")
-//                timingBits.add(nb.timingBitCount)
                 byteText.append(nb.byte.h())
                 offsetMap[gb.index] = byteText.length + 1
+
+                // Add the timing bit count
+                if (nb.timingBitCount > 0) {
+                    timingBitRanges.add(StyleRange(byteText.length, 2, black(display), white(display)).apply {
+                        font = thisSmallFont
+                        rise = 4
+                    })
+                }
+                byteText.append(if (nb.timingBitCount > 0) String.format("%-2d", nb.timingBitCount) else "  ")
             }
             display.asyncExec {
                 offsets.text = offsetText.toString()
@@ -235,7 +222,11 @@ class ByteBufferWindow(parent: Composite) : Composite(parent, SWT.NONE) {
                 })
             }
         }
+        textViewer.textWidget.styleRanges = emptyArray()
         val tp = TextPresentation().apply {
+            timingBitRanges.forEach {
+                mergeStyleRange(it)
+            }
             ranges.forEach {
                 mergeStyleRange(it)
             }
