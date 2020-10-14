@@ -106,8 +106,17 @@ class NibbleTrack(bitStream: IBitStream, val sizeInBits: Int) {
     }
 
     data class TrackRange(val isAddress: Boolean, val range: IntRange)
+    class AnalyzedTrack(val trackRanges: List<TrackRange>) {
+        enum class Type { ADDRESS, DATA, NONE }
+        fun typeFor(index: Int): Type {
+            val tr = trackRanges.firstOrNull { index in it.range }
+            return if (tr == null) Type.NONE
+            else if (tr.isAddress) Type.ADDRESS
+            else Type.DATA
+        }
+    }
 
-    fun analyze(markFinders: IMarkFinders = DefaultMarkFinders()): List<TrackRange> {
+    fun analyze(markFinders: IMarkFinders = DefaultMarkFinders()): AnalyzedTrack {
         val result = arrayListOf<TrackRange>()
         var i = 0
         var sectors = 0
@@ -135,7 +144,7 @@ class NibbleTrack(bitStream: IBitStream, val sizeInBits: Int) {
             sectors++
         }
 
-        return result
+        return AnalyzedTrack(result)
     }
 
     private var byteIndex = 0
