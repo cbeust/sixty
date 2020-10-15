@@ -1,5 +1,6 @@
 package com.beust.app
 
+import com.beust.sixty.logDisk
 import com.beust.swt.ByteBufferWindow
 
 fun main() {
@@ -141,7 +142,7 @@ class NibbleTrack(bitStream: IBitStream, val sizeInBits: Int) {
                 for (j in start..end) {
                     chesksum = chesksum.xor(READ_TABLE[bytes[j].byte]!!)
                 }
-                println("Sector $sectors, address: $addressRange, data: $dataRange checksum: $chesksum")
+                logDisk("Sector $sectors, address: $addressRange, data: $dataRange checksum: $chesksum")
             }
             sectors++
         }

@@ -98,7 +98,7 @@ class ByteBufferWindow(parent: Composite) : Composite(parent, SWT.NONE) {
                     <table>
             """.trimIndent())
             timingBitRanges.clear()
-            val analyzedTrack = nibbleTrack!!.analyze()
+            val analyzedTrack = nibbleTrack!!.analyze(createMarkFinders())
             var byteCount = 0
             while (byteCount < analyzedTrack.sizeInBits / 8 + 1) {
                 if (byteCount % rowSize == 0) {
@@ -134,5 +134,15 @@ class ByteBufferWindow(parent: Composite) : Composite(parent, SWT.NONE) {
                 browser.text = html.toString()
             }
         }
+    }
+
+    private fun createMarkFinders() = object: IMarkFinders {
+        private fun matches(regexp: String, bytes: List<Int>)
+            = bytes.joinToString("", transform = Int::h).matches(regexp.toRegex(RegexOption.IGNORE_CASE))
+
+        override fun isAddressPrologue(bytes: List<Int>) = matches(UiState.addressPrologue.value, bytes)
+        override fun isAddressEpilogue(bytes: List<Int>) = matches(UiState.addressEpilogue.value, bytes)
+        override fun isDataPrologue(bytes: List<Int>) = matches(UiState.dataPrologue.value, bytes)
+        override fun isDataEpilogue(bytes: List<Int>)  = matches(UiState.dataEpilogue.value, bytes)
     }
 }
