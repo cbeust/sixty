@@ -63,9 +63,7 @@ class DiskController(val slot: Int = 6): IPulse, MemoryListener() {
         // Use the LSS
         if (useLss) {
             disk()?.let { disk ->
-                repeat(2) {
-                    lss.onPulse(q6, q7, { -> motor.isOn }, disk)
-                }
+                lss.onPulse(q6, q7, { -> motor.isOn }, disk)
                 latch = lss.latch
             }
         } else {

@@ -25,7 +25,7 @@ val DISKS = listOf(
         disk("Bouncing Kamungas - Disk 1, Side A.woz") // 10
 )
 
-val DISK = DISKS[1]
+val DISK = DISKS[6]
 
 fun main() {
     val pulseManager = PulseManager()
@@ -41,25 +41,26 @@ fun main() {
     c.memoryListeners.forEach { c.memory.listeners.add(it) }
 
     if (RUN) {
-        Thread {
-            var stop = false
-            while (! stop) {
-                val status = pulseManager.run()
-                if (status == Computer.RunStatus.STOP) {
-                    stop = true
-                } else if (status == Computer.RunStatus.REBOOT) {
-                    pulseManager.removeListeners()
-                    gc.clear()
-                    c = Apple2Computer()
-                    with(c) {
-                        memory.listeners.add(memoryListener)
-                        pulseListeners.forEach { pulseManager.addListener(it) }
-                        memoryListeners.forEach { c.memory.listeners.add(it) }
-//                        pulseManager.addListener(this)
-                    }
-                } // else STOP
-            }
-        }.start()
+        pulseManager.launch()
+//        Thread {
+//            var stop = false
+//            while (! stop) {
+//                val status = pulseManager.run()
+//                if (status == Computer.RunStatus.STOP) {
+//                    stop = true
+//                } else if (status == Computer.RunStatus.REBOOT) {
+//                    pulseManager.removeListeners()
+//                    gc.clear()
+//                    c = Apple2Computer()
+//                    with(c) {
+//                        memory.listeners.add(memoryListener)
+//                        pulseListeners.forEach { pulseManager.addListener(it) }
+//                        memoryListeners.forEach { c.memory.listeners.add(it) }
+////                        pulseManager.addListener(this)
+//                    }
+//                } // else STOP
+//            }
+//        }.start()
     }
     gc.run()
     fw.stop = true

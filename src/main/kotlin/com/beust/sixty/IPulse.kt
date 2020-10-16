@@ -1,5 +1,8 @@
 package com.beust.sixty
 
+import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
+
 class PulseResult(val runStatus: Computer.RunStatus = Computer.RunStatus.RUN)
 
 class PulseManager {
@@ -21,6 +24,20 @@ class PulseManager {
 //    fun removeListener(listener: IPulse) {
 //        pulseListeners.remove(listener)
 //    }
+
+    fun launch() {
+        val tp = Executors.newScheduledThreadPool(1)
+        val listener = pulseListeners[0]
+        val command = object: Runnable {
+            override fun run() {
+//                log("Launching 100 cycles")
+                repeat(130_000) {
+                    listener.onPulse(this@PulseManager)
+                }
+            }
+        }
+        tp.scheduleWithFixedDelay(command, 0, 100, TimeUnit.MILLISECONDS)
+    }
 
     fun run(): Computer.RunStatus {
         runStatus = Computer.RunStatus.RUN

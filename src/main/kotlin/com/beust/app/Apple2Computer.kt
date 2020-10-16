@@ -8,15 +8,16 @@ class Apple2Computer: IPulse {
     val memoryListeners = arrayListOf<MemoryListener>()
     var memory: Apple2Memory
     var computer: IComputer
+    val diskController: DiskController
 
     init {
         memory = Apple2Memory()
-        val diskController = DiskController(6).apply {
+        diskController = DiskController(6).apply {
             loadDisk(IDisk.create(UiState.currentDisk1File.value), 0)
             UiState.currentDisk1File.addListener { _, new -> loadDisk(IDisk.create(new), 0) }
             UiState.currentDisk2File.addListener { _, new -> loadDisk(IDisk.create(new), 1) }
         }
-        pulseListeners.add(diskController)
+//        pulseListeners.add(diskController)
         pulseListeners.add(this)
         memoryListeners.add(diskController)
 
@@ -32,7 +33,12 @@ class Apple2Computer: IPulse {
         computer.cpu.PC = memory.word(0xfffc)
     }
 
-    override fun onPulse(manager: PulseManager): PulseResult = computer.onPulse(manager)
+    override fun onPulse(manager: PulseManager): PulseResult {
+        repeat(2) {
+            diskController.onPulse(manager)
+        }
+        return computer.onPulse(manager)
+    }
 
     override fun stop() {
         TODO("Not yet implemented")
