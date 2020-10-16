@@ -29,7 +29,7 @@ class BitBitStream(val bytes: List<Byte>, bitCount: Int = bytes.size * 8): IBitS
             bitIndex++
             if (bitIndex == 8) {
                 bitIndex = 0
-                byteIndex++
+                byteIndex = (byteIndex + 1) % bytes.size
                 currentByte = bytes[byteIndex]
             }
             i++

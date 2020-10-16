@@ -33,8 +33,7 @@ abstract class BaseTest {
 
     fun run() {
         PulseManager().apply {
-            addListener(computer)
-            run()
+            run(computer)
         }
     }
 

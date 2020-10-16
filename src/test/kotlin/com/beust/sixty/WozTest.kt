@@ -29,7 +29,6 @@ class WozTest {
         val ins2 = Woz::class.java.classLoader.getResource("woz2/DOS 3.3 System Master.woz")!!.openStream()
         val bytes: ByteArray = ins2.readAllBytes()
         val size = bytes.size - 0x600
-        var position1 = 0
         repeat(35) { track ->
             val bitStream = disk.bitStream
             repeat(size) {
@@ -37,13 +36,12 @@ class WozTest {
                 val byte = disk.nextByte()
                 if (latch and 0x80 != 0) latch = 0
                 while (latch and 0x80 == 0) {
-                    val (newPosition, bit) = bitStream.nextBit(position1)
+                    val bit = bitStream.nextBit()
                     latch = latch.shl(1).or(bit)
-                    position1 = newPosition
                 }
                 val byte2 = latch
                 assertThat(byte)
-                        .withFailMessage("Failure at track $track, position $position1")
+                        .withFailMessage("Failure at track $track")
                         .isEqualTo(byte2)
             }
             disk.incPhase()
@@ -54,6 +52,11 @@ class WozTest {
 
 class BitStream2(val bytes: ByteArray, override val sizeInBits: Int = bytes.size * 8): IBitStream {
     private val bits = arrayListOf<Int>()
+    private var position = 0
+    private var saved = -1
+
+    override fun save() { saved = position }
+    override fun restore() { position = saved }
 
     init {
         bytes.forEach { b ->
@@ -64,10 +67,10 @@ class BitStream2(val bytes: ByteArray, override val sizeInBits: Int = bytes.size
         }
     }
 
-    override fun nextBit(position: Int): Pair<Int, Int> {
+    override fun nextBit(): Int {
         val result = bits[position]
-        val newPosition = (position + 1) % bytes.size
-        return Pair(newPosition, result)
+        position = (position + 1) % bytes.size
+        return result
     }
 
 }

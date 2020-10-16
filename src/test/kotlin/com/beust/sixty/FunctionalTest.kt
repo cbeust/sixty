@@ -23,8 +23,7 @@ class FunctionalTest {
         }.build()
         computer.cpu.PC = 0x400
         PulseManager().apply {
-            addListener(computer)
-            run()
+            run(computer)
         }
     }
 }
