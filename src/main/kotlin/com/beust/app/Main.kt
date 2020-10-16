@@ -4,6 +4,8 @@ import com.beust.sixty.Computer
 import com.beust.sixty.FileWatcher
 import com.beust.sixty.PulseManager
 import java.io.File
+import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
 
 val RUN = true
 var DEBUG = false
@@ -28,7 +30,7 @@ val DISKS = listOf(
         // 10
 )
 
-val DISK = DISKS[7]
+val DISK = DISKS[6]
 
 fun main() {
     val pulseManager = PulseManager()
@@ -38,32 +40,34 @@ fun main() {
         c.memory
     }
     val memoryListener = Apple2MemoryListener({ -> c.memory }, gc.textWindow, gc.hiResWindow)
+
     c.memory.listeners.add(memoryListener)
 
-    c.pulseListeners.forEach { pulseManager.addListener(it) }
     c.memoryListeners.forEach { c.memory.listeners.add(it) }
 
     if (RUN) {
-        pulseManager.launch()
-//        Thread {
-//            var stop = false
-//            while (! stop) {
-//                val status = pulseManager.run()
-//                if (status == Computer.RunStatus.STOP) {
-//                    stop = true
-//                } else if (status == Computer.RunStatus.REBOOT) {
-//                    pulseManager.removeListeners()
-//                    gc.clear()
-//                    c = Apple2Computer()
-//                    with(c) {
-//                        memory.listeners.add(memoryListener)
-//                        pulseListeners.forEach { pulseManager.addListener(it) }
-//                        memoryListeners.forEach { c.memory.listeners.add(it) }
-////                        pulseManager.addListener(this)
-//                    }
-//                } // else STOP
-//            }
-//        }.start()
+        val command = object: Runnable {
+            override fun run() {
+                var stop = false
+                while (! stop)
+                {
+                    val status = pulseManager.run(c)
+                    if (status == Computer.RunStatus.STOP) {
+                        stop = true
+                    } else if (status == Computer.RunStatus.REBOOT) {
+                        gc.clear()
+                        c = Apple2Computer()
+                        with(c) {
+                            memory.listeners.add(memoryListener)
+                            c.memoryListeners.forEach { c.memory.listeners.add(it) }
+                        }
+                    } // else STOP
+                }
+            }
+        }
+        val tp = Executors.newScheduledThreadPool(1)
+        tp.scheduleWithFixedDelay(command, 0, 100, TimeUnit.MILLISECONDS)
+
     }
     gc.run()
     fw.stop = true

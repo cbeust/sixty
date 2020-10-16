@@ -4,7 +4,6 @@ import com.beust.sixty.*
 import java.io.File
 
 class Apple2Computer: IPulse {
-    val pulseListeners = arrayListOf<IPulse>()
     val memoryListeners = arrayListOf<MemoryListener>()
     var memory: Apple2Memory
     var computer: IComputer
@@ -17,8 +16,6 @@ class Apple2Computer: IPulse {
             UiState.currentDisk1File.addListener { _, new -> loadDisk(IDisk.create(new), 0) }
             UiState.currentDisk2File.addListener { _, new -> loadDisk(IDisk.create(new), 1) }
         }
-//        pulseListeners.add(diskController)
-        pulseListeners.add(this)
         memoryListeners.add(diskController)
 
         val a2Memory = memory

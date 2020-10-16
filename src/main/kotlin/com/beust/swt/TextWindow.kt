@@ -23,8 +23,6 @@ class TextWindow(parent: Composite, start: Int): Composite(parent, SWT.NONE), IT
         }
     }
 
-
-
     init {
         layout = GridLayout(40, true).apply {
             horizontalSpacing = 0
@@ -35,17 +33,20 @@ class TextWindow(parent: Composite, start: Int): Composite(parent, SWT.NONE), IT
 
     fun clear() {
         display.syncExec {
-            background = black(display)
-            repeat(ITextScreen.HEIGHT) { y ->
-                repeat(ITextScreen.WIDTH) { x ->
-                    labels.add(Label(this, SWT.NONE).apply {
-                        font = GraphicContext.textFont
-                        background = display.getSystemColor(SWT.COLOR_BLACK)
-                        foreground = display.getSystemColor(SWT.COLOR_GREEN)
-                        val c = if (x == 0) (y % 10) else (x % 10)
-                        text = c.toString()//0x20.toChar().toString() // (x % 10).toString()
-                    })
+            if (labels.isEmpty()) {
+                background = black(display)
+                repeat(ITextScreen.HEIGHT) { y ->
+                    repeat(ITextScreen.WIDTH) { x ->
+                        labels.add(Label(this, SWT.NONE).apply {
+                            font = GraphicContext.textFont
+                            background = display.getSystemColor(SWT.COLOR_BLACK)
+                            foreground = display.getSystemColor(SWT.COLOR_GREEN)
+                        })
+                    }
                 }
+            }
+            labels.forEach {
+                it.text = 0xa0.toChar().toString() // (x % 10).toString()
             }
         }
     }
