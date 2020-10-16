@@ -39,7 +39,7 @@ class DiskController(val slot: Int = 6): IPulse, MemoryListener() {
                                 } // Motor was turned on while spinning down: not turning it off
                             }
                         }
-                        Timer().schedule(task, 1000)
+                        Timer().schedule(task, 7000)
                         logDisk("Motor spinning down")
                         field = MotorState.SPINNING_DOWN
                     } // we're already OFF or SPINNING_DOWN, nothing to do
