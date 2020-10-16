@@ -22,10 +22,13 @@ val DISKS = listOf(
         disk("Ultima4.dsk") , // 7
         disk("Force 7.woz"), // 8
         disk("Masquerade-1.dsk"), // 9
-        disk("Bouncing Kamungas - Disk 1, Side A.woz") // 10
+        disk("Bouncing Kamungas - Disk 1, Side A.woz"), // 10
+        disk("King's Quest - A.woz"), // 11
+        disk("Karateka.dsk") // 12
+        // 10
 )
 
-val DISK = DISKS[6]
+val DISK = DISKS[7]
 
 fun main() {
     val pulseManager = PulseManager()

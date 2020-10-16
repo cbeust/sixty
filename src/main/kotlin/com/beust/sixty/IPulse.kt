@@ -29,11 +29,13 @@ class PulseManager {
         val tp = Executors.newScheduledThreadPool(1)
         val listener = pulseListeners[0]
         val command = object: Runnable {
+            var start = System.currentTimeMillis()
             override fun run() {
-//                log("Launching 100 cycles")
-                repeat(130_000) {
+                var targetCycles = (System.currentTimeMillis() - start) * 1000
+                while (targetCycles-- > 0) {
                     listener.onPulse(this@PulseManager)
                 }
+                start = System.currentTimeMillis()
             }
         }
         tp.scheduleWithFixedDelay(command, 0, 100, TimeUnit.MILLISECONDS)
