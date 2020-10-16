@@ -57,7 +57,11 @@ class DskDisk(override val name: String, ins: InputStream, override val sizeInBi
     }
 
     override fun nextByte(): Int {
-        TODO("Not yet implemented")
+        var result = 0
+        repeat(8) {
+            result = result.shl(1).or(nextBit())
+        }
+        return result
     }
 
     private var saved = 0
@@ -65,8 +69,9 @@ class DskDisk(override val name: String, ins: InputStream, override val sizeInBi
     override fun restore() { positionInTrack = saved }
 
     override fun nextBit(): Int {
-        val result = bitBuffers[phase / 2][positionInTrack]
-        positionInTrack = (positionInTrack + 1) % bitBuffers[phase / 2].size
+        val bitBuffer = bitBuffers[phase / 2]
+        val result = bitBuffer[positionInTrack]
+        positionInTrack = (positionInTrack + 1) % bitBuffer.size
         return result
     }
 

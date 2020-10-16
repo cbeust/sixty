@@ -12,6 +12,13 @@ class PulseManager {
     private var start = System.currentTimeMillis()
 
     fun run(listener: IPulse): Computer.RunStatus {
+        while (runStatus == Computer.RunStatus.RUN) {
+            runStatus = listener.onPulse(this@PulseManager).runStatus
+        }
+        return runStatus
+    }
+
+    fun runSlice(listener: IPulse): Computer.RunStatus {
         runStatus = Computer.RunStatus.RUN
         var targetCycles = (System.currentTimeMillis() - start) * 1000
         while (runStatus == Computer.RunStatus.RUN && targetCycles-- > 0) {

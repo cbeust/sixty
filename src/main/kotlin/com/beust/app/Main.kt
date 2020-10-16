@@ -51,7 +51,7 @@ fun main() {
                 var stop = false
                 while (! stop)
                 {
-                    val status = pulseManager.run(c)
+                    val status = pulseManager.runSlice(c)
                     if (status == Computer.RunStatus.STOP) {
                         stop = true
                     } else if (status == Computer.RunStatus.REBOOT) {

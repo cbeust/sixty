@@ -22,11 +22,13 @@ class WozTest {
         }
     }
 
+    @Test(enabled = false)
     fun bytes() {
-        val ins = Woz::class.java.classLoader.getResource("woz2/DOS 3.3 System Master.woz")!!.openStream()
+        val diskName = "woz2/DOS 3.3 System Master.woz"
+        val ins = Woz::class.java.classLoader.getResource(diskName)!!.openStream()
         val disk = WozDisk("DOS 3.3.woz", ins)
 
-        val ins2 = Woz::class.java.classLoader.getResource("woz2/DOS 3.3 System Master.woz")!!.openStream()
+        val ins2 = Woz::class.java.classLoader.getResource(diskName)!!.openStream()
         val bytes: ByteArray = ins2.readAllBytes()
         val size = bytes.size - 0x600
         repeat(35) { track ->
@@ -43,6 +45,7 @@ class WozTest {
                 assertThat(byte)
                         .withFailMessage("Failure at track $track")
                         .isEqualTo(byte2)
+                println("Matched " + byte.h() + " with " + latch.h())
             }
             disk.incPhase()
             disk.incPhase()

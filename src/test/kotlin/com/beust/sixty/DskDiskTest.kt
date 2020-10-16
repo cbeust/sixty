@@ -22,7 +22,7 @@ class DskDiskTest {
         ""
     }
 
-    @Test(enabled = true)
+    @Test(enabled = false)
     fun disk() {
         val proDos = false
         val expected = ins.readAllBytes()
@@ -57,7 +57,6 @@ class DskDiskTest {
 
 fun getOneTrack(disk: IDisk, track: Int): Track {
     val sectors = hashMapOf<Int, Sector>()
-    val result = arrayListOf<IntArray>()
     fun pair() = disk.nextByte().shl(1).or(1).and(disk.nextByte()).and(0xff)
     repeat(16) { sector ->
         while (disk.peekBytes(3) != listOf(0xd5, 0xaa, 0x96)) {
@@ -69,12 +68,12 @@ fun getOneTrack(disk: IDisk, track: Int): Track {
         if (track != -1 && readTrack != track) {
             ERROR("Tracks should match (expected track: ${track.h()}, got ${readTrack.h()} - sector: ${sector.h()}")
         }
-        val sector = pair()
+        val sectorRead = pair()
         val checksumAddress = pair()
-        if (volume.xor(track).xor(sector) != checksumAddress) {
+        if (volume.xor(track).xor(sectorRead) != checksumAddress) {
             ERROR("Checksum doesn't match")
         }
-        logDisk("Volume: $volume Track: $track Sector: $sector checksum: $checksumAddress")
+        logDisk("Volume: $volume Track: $track Sector: $sectorRead checksum: $checksumAddress")
         if (disk.nextBytes(3) != listOf(0xde, 0xaa, 0xeb)) {
             ERROR("Didn't find closing for address")
         }
@@ -89,7 +88,7 @@ fun getOneTrack(disk: IDisk, track: Int): Track {
         for (i in buffer.indices) {
             val b = disk.nextByte()
             if (READ_TABLE[b] == null) {
-                TODO("INVALID NIBBLE")
+                ERROR("INVALID NIBBLE")
             }
             checksum = checksum xor READ_TABLE[b]!!
             if (i < 86) {
