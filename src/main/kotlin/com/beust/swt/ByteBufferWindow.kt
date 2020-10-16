@@ -59,7 +59,7 @@ class ByteBufferWindow(parent: Composite) : Composite(parent, SWT.NONE) {
     private fun updateBufferContent(passedDisk: IDisk? = null, track: Int = 0,
             byteAlgorithm: ByteAlgorithm = ByteAlgorithm.SHIFTED) {
         println("Updating buffer with file "+ UiState.currentDisk1File)
-        browser.text = ""
+        display.asyncExec { browser.text = "" }
         val disk = passedDisk ?: IDisk.create(UiState.currentDisk1File.value)
         if (disk != null) {
             nibbleTrack = NibbleTrack(disk, disk.sizeInBits)

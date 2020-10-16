@@ -30,36 +30,30 @@ val DISKS = listOf(
         // 10
 )
 
-val DISK = DISKS[6]
+val DISK = DISKS[0]
 
 fun main() {
     val pulseManager = PulseManager()
     val fw = FileWatcher()
-    var c = Apple2Computer()
-    val gc = GraphicContext({ -> c }) { ->
-        c.memory
+    val gc = GraphicContext()
+    var c = Apple2Computer(gc)
+    gc.apply {
+        computer = c
     }
-    val memoryListener = Apple2MemoryListener({ -> c.memory }, gc.textWindow, gc.hiResWindow)
-
-    c.memory.listeners.add(memoryListener)
-
-    c.memoryListeners.forEach { c.memory.listeners.add(it) }
 
     if (RUN) {
         val command = object: Runnable {
             override fun run() {
                 var stop = false
-                while (! stop)
-                {
+                while (! stop) {
                     val status = pulseManager.runSlice(c)
                     if (status == Computer.RunStatus.STOP) {
                         stop = true
                     } else if (status == Computer.RunStatus.REBOOT) {
+                        c = Apple2Computer(gc)
                         gc.clear()
-                        c = Apple2Computer()
-                        with(c) {
-                            memory.listeners.add(memoryListener)
-                            c.memoryListeners.forEach { c.memory.listeners.add(it) }
+                        gc.apply {
+                            computer = c
                         }
                     } // else STOP
                 }

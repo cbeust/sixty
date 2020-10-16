@@ -2,15 +2,18 @@ package com.beust.app
 
 import com.beust.sixty.ERROR
 import java.io.File
+import java.io.InputStream
 
 interface IDisk: IBitStream {
     companion object {
-        fun create(file: File?): IDisk? = when {
-                file == null -> null
-                file.name.endsWith(".woz") -> WozDisk(file.absolutePath, file.inputStream())
-                file.name.endsWith(".dsk") -> DskDisk(file.absolutePath, file.inputStream())
-                else -> ERROR("Unsupported disk format: $file")
-            }
+        fun create(name: String, ins: InputStream?): IDisk? = when {
+            ins == null -> null
+            name.endsWith(".woz") -> WozDisk(name, ins)
+            name.endsWith(".dsk") -> DskDisk(name, ins)
+            else -> ERROR("Unsupported disk format: $name")
+        }
+
+        fun create(file: File?): IDisk? = create(file?.name ?: "<unknown>", file?.inputStream())
     }
 
     val name: String

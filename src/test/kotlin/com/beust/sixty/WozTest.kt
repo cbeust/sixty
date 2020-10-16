@@ -1,16 +1,16 @@
 package com.beust.sixty
 
-import com.beust.app.BitBitStream
-import com.beust.app.IBitStream
-import com.beust.app.Woz
-import com.beust.app.WozDisk
+import com.beust.app.*
 import org.assertj.core.api.Assertions.assertThat
 import org.testng.annotations.Test
 
 @Test
 class WozTest {
+    private fun diskStream(name: String)
+            = Woz::class.java.classLoader.getResource(name)!!.openStream()
+
     fun bits() {
-        val ins = Woz::class.java.classLoader.getResource("woz2/DOS 3.3 System Master.woz")!!.openStream()
+        val ins = diskStream("woz2/DOS 3.3 System Master.woz")!!
         val bytes: ByteArray = ins.readAllBytes()
         val slice = bytes.slice(0x600 until bytes.size)
         val bitStream = BitBitStream(slice)
@@ -20,6 +20,19 @@ class WozTest {
             val d = bitStream2.nextBit()
             assertThat(b).isEqualTo(d)
         }
+    }
+
+    private fun createHeadlessApple2Computer(disk: IDisk) = Apple2Computer().apply {
+        diskController.loadDisk(disk)
+        val pm = PulseManager()
+        repeat(10) {
+            pm.runSlice(this)
+        }
+        ""
+    }
+
+    fun multipleDisks() {
+        createHeadlessApple2Computer(IDisk.create(DISKS[0])!!)
     }
 
     @Test(enabled = false)

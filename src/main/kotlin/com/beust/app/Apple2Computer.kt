@@ -3,20 +3,24 @@ package com.beust.app
 import com.beust.sixty.*
 import java.io.File
 
-class Apple2Computer: IPulse {
-    val memoryListeners = arrayListOf<MemoryListener>()
+class Apple2Computer(private val gc: GraphicContext? = null): IPulse {
     var memory: Apple2Memory
     var computer: IComputer
     val diskController: DiskController
 
     init {
         memory = Apple2Memory()
+        gc?.let { g ->
+            val memoryListener = Apple2MemoryListener({ -> memory }, g.textWindow, g.hiResWindow)
+            memory.listeners.add(memoryListener)
+        }
+
         diskController = DiskController(6).apply {
             loadDisk(IDisk.create(UiState.currentDisk1File.value), 0)
             UiState.currentDisk1File.addListener { _, new -> loadDisk(IDisk.create(new), 0) }
             UiState.currentDisk2File.addListener { _, new -> loadDisk(IDisk.create(new), 1) }
         }
-        memoryListeners.add(diskController)
+        memory.listeners.add(diskController)
 
         val a2Memory = memory
         computer = Computer.create {

@@ -39,7 +39,7 @@ class DiskController(val slot: Int = 6): IPulse, MemoryListener() {
                                 } // Motor was turned on while spinning down: not turning it off
                             }
                         }
-                        Timer().schedule(task, 7000)
+                        Timer().schedule(task, 7500)
                         logDisk("Motor spinning down")
                         field = MotorState.SPINNING_DOWN
                     } // we're already OFF or SPINNING_DOWN, nothing to do
@@ -106,7 +106,7 @@ class DiskController(val slot: Int = 6): IPulse, MemoryListener() {
 
     private fun disk() = if (drive1) disk1 else disk2
     /** @param drive 0 for drive 1, 1 for drive 2 */
-    fun loadDisk(disk: IDisk?, drive: Int) {
+    fun loadDisk(disk: IDisk?, drive: Int = 0) {
         logDisk("Loading disk $disk in drive " + (drive + 1))
         when(drive) {
             0 -> disk1 = disk

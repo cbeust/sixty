@@ -12,7 +12,9 @@ import org.eclipse.swt.layout.GridLayout
 import org.eclipse.swt.widgets.*
 import java.io.File
 
-class GraphicContext(val computer: () -> Apple2Computer, memory: () -> Apple2Memory) {
+class GraphicContext {
+    lateinit var computer: Apple2Computer
+
     val hiResWindow: HiResWindow
     val textWindow: TextWindow
     private val display: Display = Display()
@@ -61,6 +63,11 @@ class GraphicContext(val computer: () -> Apple2Computer, memory: () -> Apple2Mem
 //        display.dispose()
     }
 
+    fun shutdown() {
+        hiResWindow.dispose()
+        textWindow.dispose()
+    }
+
     companion object {
         lateinit var textFont: Font
         lateinit var textFontSmaller: Font
@@ -106,12 +113,12 @@ class GraphicContext(val computer: () -> Apple2Computer, memory: () -> Apple2Mem
                     if (e.keyCode != 0xd) {
                         val av = if (Character.isAlphabetic(e.keyCode)) e.character.toUpperCase().toInt()
                         else e.keyCode
-                        keyProvider.keyPressed(memory(), av)
+                        keyProvider.keyPressed(computer.memory, av)
                     }
                 }
                 display.addFilter(SWT.Traverse) { e ->
                     if (e.keyCode == 0xd && e.widget is Shell) {
-                        keyProvider.keyPressed(memory(), e.keyCode)
+                        keyProvider.keyPressed(computer.memory, e.keyCode)
                         e.doit = false
                     }
                 }
@@ -202,7 +209,7 @@ class GraphicContext(val computer: () -> Apple2Computer, memory: () -> Apple2Mem
         val buttonContainer = Composite(shell, SWT.BORDER)
         val rebootButton = button(buttonContainer, "Reboot").apply {
             addListener(SWT.Selection) { e ->
-                computer().reboot()
+                computer.reboot()
             }
         }
 
@@ -263,7 +270,7 @@ class GraphicContext(val computer: () -> Apple2Computer, memory: () -> Apple2Mem
             if (new) show(hiResWindow)
         }
         UiState.mainScreenPage2.addAfterListener { _, _ ->
-            if (!memory().store80On) {
+            if (! computer.memory.store80On) {
                 if (UiState.mainScreenText.value) {
                     show(textWindow)
                 } else {
