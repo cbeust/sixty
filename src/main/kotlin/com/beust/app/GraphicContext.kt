@@ -154,19 +154,10 @@ class GraphicContext {
             val width = 250
             val height = 150
             fun driveButton(parent: Composite, drive: Int, obs: Obs<Boolean>) = Composite(parent, SWT.NONE).apply {
-                background = black(display)
                 layout = GridLayout(1, true).apply {
                     marginWidth = 0
-//                    marginHeight = 0
                 }
-                Label(this, SWT.CENTER).apply {
-                    val obs = if (drive == 1) UiState.currentDisk1File else UiState.currentDisk2File
-                    obs.addListener { _, new ->
-                        text = new?.name
-                    }
-                    font = textFontSmaller
-                    foreground = green(display)
-                    background = black(display)
+                diskDescription(this, drive).apply {
                     layoutData = GridData(SWT.FILL, SWT.FILL, true, false)
                 }
                 Button(this, SWT.WRAP).apply {
@@ -290,5 +281,83 @@ class GraphicContext {
         UiState.mainScreenMixed.addAfterListener { _, new ->
             maybeResize(hiResWindow)
         }
+    }
+
+    /**
+     * Disk name, the type of the disk, and the current track.
+     */
+    fun diskDescription(parent: Composite, drive: Int): Composite {
+        val columns = 8
+        val fontSize = 12
+        val bg = lightGrey(display)
+        var currentDisk: Label? = null
+        var currentDiskType: Label? = null
+        var currentTrack: Label? = null
+
+        fun nameAndType(drive: Int): Pair<String, String> {
+            val obs = if (drive == 1) UiState.currentDisk1File else UiState.currentDisk2File
+            val dn = obs.value?.name
+            val result = if (dn != null) {
+                val index = dn.lastIndexOf(".")
+                if (index != -1) {
+                    Pair(dn.substring(0, index), dn.substring(index + 1).toUpperCase())
+                } else {
+                    Pair(dn, "?")
+                }
+            } else {
+                Pair("", "")
+            }
+            return result
+        }
+
+        val result = Composite(parent, SWT.BORDER).apply {
+            background = bg
+            layout = GridLayout(columns, false)
+
+            val (diskName, diskType) = nameAndType(drive)
+
+            currentDisk = label(this, diskName).apply {
+                background = bg
+                font = font(shell, "Roboto", fontSize, SWT.BOLD)
+                layoutData = GridData(SWT.CENTER, SWT.CENTER, true, true).apply {
+                    verticalSpan = 2
+                    horizontalSpan = columns - 2
+                }
+            }
+
+            fun c1(c: Control) = with(c) {
+                background = bg
+                font = font(shell, "Helvetica", fontSize - 4)
+                layoutData = GridData().apply {
+                    verticalAlignment = SWT.TOP
+                    horizontalAlignment = SWT.RIGHT
+                }
+            }
+            fun c2(c: Control) = with(c) {
+                background = bg
+                font = font(shell, "Impact", fontSize - 2)
+            }
+            c1(label(this, "Type"))
+            currentDiskType = label(this, diskType)
+            c2(currentDiskType!!)
+            c1(label(this, "Track"))
+            c2(label(this, "14"))
+        }
+
+        //
+        // Add listeners
+        //
+        val obs = if (drive == 1) UiState.currentDisk1File else UiState.currentDisk2File
+        obs.addAfterListener { _, _ ->
+            val (diskName, type) = nameAndType(drive)
+            display.asyncExec {
+                currentDisk?.text = diskName
+                currentDisk?.requestLayout()
+                currentDiskType?.text = type
+                currentDiskType?.requestLayout()
+            }
+        }
+
+        return result
     }
 }

@@ -9,7 +9,9 @@ import org.eclipse.swt.SWT
 import org.eclipse.swt.custom.CTabFolder
 import org.eclipse.swt.custom.CTabItem
 import org.eclipse.swt.custom.ScrolledComposite
+import org.eclipse.swt.graphics.Point
 import org.eclipse.swt.layout.FillLayout
+import org.eclipse.swt.layout.GridData
 import org.eclipse.swt.layout.GridLayout
 import org.eclipse.swt.layout.RowLayout
 import org.eclipse.swt.widgets.*
@@ -17,9 +19,17 @@ import org.eclipse.swt.widgets.*
 
 private const val STYLE = SWT.BORDER or SWT.H_SCROLL or SWT.V_SCROLL
 
-//fun main() {
-//    works()
-//}
+fun main() {
+    disk()
+}
+
+fun disk() {
+    runWithShell { display, shell ->
+        shell.layout = FillLayout()
+//        diskDescription(shell)
+        shell.setSize(300, 200)
+    }
+}
 
 //fun works() {
 //    val display = Display()
