@@ -50,7 +50,6 @@ class ComputerBuilder {
 }
 
 class Computer(override val memory: IMemory, override val cpu: Cpu, val pcListener: PcListener?): IComputer {
-    private val log = LoggerFactory.getLogger("Breakpoint")
     val pc get() = cpu.PC
 
     init {
