@@ -33,7 +33,7 @@ interface PcListener {
 interface IComputer {
     val memory: IMemory
     val cpu : Cpu
-    fun step(): PulseResult
+    fun step(): Computer.RunStatus
     fun reboot()
 }
 
@@ -89,17 +89,13 @@ class Computer(override val memory: IMemory, override val cpu: Cpu, val pcListen
     var sector = 0
     private var wait = 0
 
-    fun onPulse(manager: PulseManager): PulseResult {
-        return step()
-    }
-
-    override fun step(): PulseResult {
+    override fun step(): RunStatus {
         if (wait == 0) {
             wait = advanceCpu() - 1
         } else {
             wait--
         }
-        return PulseResult(runStatus)
+        return runStatus
     }
 
     fun run(debugMemory: Boolean = false, _debugAsm: Boolean = false): RunResult {

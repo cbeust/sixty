@@ -5,8 +5,6 @@ import com.beust.app.GraphicContext
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
-class PulseResult(val runStatus: Computer.RunStatus = Computer.RunStatus.RUN)
-
 class Runner(val gc: GraphicContext? = null) {
     private var runStatus = Computer.RunStatus.RUN
     private var sliceStart = System.currentTimeMillis()
@@ -21,7 +19,7 @@ class Runner(val gc: GraphicContext? = null) {
         runStatus = Computer.RunStatus.RUN
         var targetCycles = (System.currentTimeMillis() - sliceStart) * 1000
         while (runStatus == Computer.RunStatus.RUN && targetCycles-- > 0) {
-            runStatus = computer.step().runStatus
+            runStatus = computer.step()
         }
         sliceStart = System.currentTimeMillis()
         return runStatus
@@ -30,7 +28,7 @@ class Runner(val gc: GraphicContext? = null) {
     private val blocked = Object()
 
     fun runPeriodically(computer: IComputer, maxTimeSeconds: Int = 0, blocking: Boolean = false,
-            onStop: () -> Throwable? = { -> null }): Computer.RunStatus {
+            onStop: () -> Throwable? = { null }): Computer.RunStatus {
         var c = computer
         var result: Throwable? = null
         val command = object: Runnable {
@@ -50,6 +48,7 @@ class Runner(val gc: GraphicContext? = null) {
                         stop = true
                         result = onStop()
                         synchronized(blocked) {
+                            @Suppress("ConvertLambdaToReference")
                             blocked.notify()
                         }
                     }
@@ -69,37 +68,4 @@ class Runner(val gc: GraphicContext? = null) {
 
         return runStatus
     }
-}
-
-class PulseManager {
-    private var runStatus = Computer.RunStatus.RUN
-
-    fun stop() {
-        runStatus = Computer.RunStatus.STOP
-    }
-
-    private var start = System.currentTimeMillis()
-
-    fun run(listener: IPulse): Computer.RunStatus {
-        while (runStatus == Computer.RunStatus.RUN) {
-            runStatus = listener.onPulse(this@PulseManager).runStatus
-        }
-        return runStatus
-    }
-
-    fun runSlice(listener: IPulse): Computer.RunStatus {
-        runStatus = Computer.RunStatus.RUN
-        var targetCycles = (System.currentTimeMillis() - start) * 1000
-        while (runStatus == Computer.RunStatus.RUN && targetCycles-- > 0) {
-            runStatus = listener.onPulse(this@PulseManager).runStatus
-            start = System.currentTimeMillis()
-        }
-        return runStatus
-    }
-}
-
-interface IPulse {
-    fun onPulse(manager: PulseManager): PulseResult
-
-    fun stop()
 }

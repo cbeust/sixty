@@ -3,7 +3,7 @@ package com.beust.app
 import com.beust.sixty.*
 import java.util.*
 
-class DiskController(val slot: Int = 6): IPulse, MemoryListener() {
+class DiskController(val slot: Int = 6): MemoryListener() {
     private val slot16 = slot * 16
     private var latch: Int = 0
     private var drive1 = true
@@ -55,15 +55,9 @@ class DiskController(val slot: Int = 6): IPulse, MemoryListener() {
     private fun c(address: Int) = address + slot16
     override fun isInRange(address:Int) = address in (c(0xc080)..c(0xc08f))
 
-    override fun stop() {}
-
     private val useLss = true
 
-    override fun onPulse(manager: PulseManager): PulseResult {
-        return step()
-    }
-
-    fun step(): PulseResult {
+    fun step(): Computer.RunStatus {
         // Use the LSS
         if (useLss) {
             disk()?.let { disk ->
@@ -93,17 +87,8 @@ class DiskController(val slot: Int = 6): IPulse, MemoryListener() {
 //            }
 //        }
 ////        println("@@@   latch: ${latch.h()}")
-        return PulseResult()
+        return Computer.RunStatus.RUN
     }
-
-//    init {
-//        UiState.currentDisk1File.addListener { _, new ->
-//            if (new != null) loadDisk(IDisk.create(new), 0)
-//        }
-//        UiState.currentDisk2File.addListener { _, new ->
-//            if (new != null) loadDisk(IDisk.create(new), 1)
-//        }
-//    }
 
     private var disk1: IDisk? = null
     private var disk2: IDisk? = null

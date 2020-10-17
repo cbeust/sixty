@@ -35,11 +35,7 @@ class Apple2Computer(private val gc: GraphicContext? = null): IComputer {
         computer.cpu.PC = memory.word(0xfffc)
     }
 
-    fun onPulse(manager: PulseManager): PulseResult {
-        return step()
-    }
-
-    override fun step() : PulseResult {
+    override fun step() : Computer.RunStatus {
         repeat(2) {
             diskController.step()
         }

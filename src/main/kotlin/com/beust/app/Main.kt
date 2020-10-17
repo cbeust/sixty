@@ -2,7 +2,6 @@ package com.beust.app
 
 import com.beust.sixty.Computer
 import com.beust.sixty.FileWatcher
-import com.beust.sixty.PulseManager
 import com.beust.sixty.Runner
 import java.io.File
 import java.util.concurrent.Executors
@@ -34,7 +33,6 @@ val DISKS = listOf(
 val DISK = DISKS[12]
 
 fun main() {
-    val pulseManager = PulseManager()
     val fw = FileWatcher()
     val gc = GraphicContext()
     var c = Apple2Computer(gc)
@@ -42,29 +40,8 @@ fun main() {
 
     if (RUN) {
         Runner(gc).runPeriodically(c)
-//        val command = object: Runnable {
-//            override fun run() {
-//                var stop = false
-//                while (! stop) {
-//                    val status = pulseManager.runSlice(c)
-//                    if (status == Computer.RunStatus.STOP) {
-//                        stop = true
-//                    } else if (status == Computer.RunStatus.REBOOT) {
-//                        c = Apple2Computer(gc)
-//                        gc.clear()
-//                        gc.apply {
-//                            computer = c
-//                        }
-//                    } // else STOP
-//                }
-//            }
-//        }
-//        val tp = Executors.newScheduledThreadPool(1)
-//        tp.scheduleWithFixedDelay(command, 0, 100, TimeUnit.MILLISECONDS)
-
     }
     gc.run()
     fw.stop = true
-    pulseManager.stop()
 }
 
