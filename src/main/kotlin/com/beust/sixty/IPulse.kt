@@ -26,8 +26,9 @@ class Runner(val gc: GraphicContext? = null) {
     private val blocked = Object()
 
     fun runPeriodically(computer: IComputer, maxTimeSeconds: Int = 0, blocking: Boolean = false,
-            onStop: () -> Unit = {}): Computer.RunStatus {
+            onStop: () -> Throwable? = { -> null }): Computer.RunStatus {
         var c = computer
+        var result: Throwable? = null
         val command = object: Runnable {
             var runStart = System.currentTimeMillis()
             var stop = false
@@ -43,7 +44,7 @@ class Runner(val gc: GraphicContext? = null) {
                     } // else STOP
                     if (maxTimeSeconds > 0 && (System.currentTimeMillis() - runStart) / 1000 >= maxTimeSeconds) {
                         stop = true
-                        onStop()
+                        result = onStop()
                         synchronized(blocked) {
                             blocked.notify()
                         }
@@ -54,17 +55,12 @@ class Runner(val gc: GraphicContext? = null) {
 
         val tp = Executors.newScheduledThreadPool(1)
         val task = tp.scheduleWithFixedDelay(command, 0, 100, TimeUnit.MILLISECONDS)
-        try {
-            task.get(5, TimeUnit.SECONDS)
-        } catch(ex: TimeoutException) {
-            ""
-            // do nothing
-        } catch(ex: Exception) {
-            throw ex
-        }
         if (blocking) synchronized(blocked) {
             blocked.wait()
             task.cancel(true)
+            if (result != null) {
+                throw result!!
+            }
         }
 
         return runStatus

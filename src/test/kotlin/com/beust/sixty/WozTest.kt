@@ -4,6 +4,7 @@ import com.beust.app.*
 import org.assertj.core.api.Assertions.assertThat
 import org.testng.annotations.DataProvider
 import org.testng.annotations.Test
+import java.lang.AssertionError
 
 @Test
 class WozTest {
@@ -31,12 +32,16 @@ class WozTest {
 
     @DataProvider(parallel = true)
     private fun dp(): Array<Array<DiskInfo>> {
+        fun create(name: String, addresses: List<Pair<Int, Int>>, seconds: Int = 5)
+            = DiskInfo(IDisk.create(name, diskStream("boot/$name"))!!, addresses, seconds)
+
         val result = listOf(
-                "DOS 3.3.dsk" to listOf(0xa000 to 0xad),
-                "DOS 3.3.woz" to listOf(0xa000 to 0xad),
-                "Bouncing Kamungas.woz" to listOf(0x1a3d to 0xe9)
+                create("DOS 3.3.dsk", listOf(0xa000 to 0xad)),
+                create("DOS 3.3.woz", listOf(0xa000 to 0xad)),
+                create("Bouncing Kamungas.woz", listOf(0x1a3d to 0xe9)),
+                create("Karateka.dsk", listOf(0xd65 to 0xca), 10)
             )
-            .map { arrayOf(DiskInfo(IDisk.create(it.first, diskStream("boot/${it.first}"))!!, it.second)) }
+            .map { arrayOf(it) }
             .toTypedArray()
         return result
     }
@@ -46,15 +51,16 @@ class WozTest {
         val c = createHeadlessApple2Computer(di.disk)
         val runner = Runner()
         log("Booting " + di.disk.name)
+        var result: Throwable? = null
         runner.runPeriodically(c, di.seconds, blocking = true) {
             di.addresses.forEach {
-                assertThat(c.memory[it.first])
-                        .withFailMessage(di.disk.name + " didn't boot correctly")
-                        .isEqualTo(it.second)
+                if (c.memory[it.first] != it.second) {
+                    return@runPeriodically AssertionError(di.disk.name + " didn't boot correctly")
+                }
             }
             log("   " + di.disk.name + " booted correctly")
+            return@runPeriodically null
         }
-
     }
 
     @Test(enabled = false)
