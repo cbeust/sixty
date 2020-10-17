@@ -9,18 +9,23 @@ import org.eclipse.swt.widgets.Button
 import org.eclipse.swt.widgets.Composite
 
 class DebuggerWindow(parent: Composite): Composite(parent, SWT.NONE) {
-    private val debugCheckBox: Button
-
     init {
-        layout = GridLayout()
-        debugCheckBox = Button(this, SWT.CHECK)
-        debugCheckBox.apply {
+        layout = GridLayout(1, false)
+        Button(this, SWT.CHECK).apply {
             text = "Debug"
             addSelectionListener(object: SelectionAdapter() {
                 override fun widgetSelected(e: SelectionEvent?) {
-                    UiState.debug.value = debugCheckBox.selection
+                    UiState.debug.value = selection
                 }
             })
         }
+//        val speedMhz = label(this, "<speed in Mhz>", SWT.BORDER).apply {
+//            font = font(shell, "Arial", 15, SWT.BOLD)
+//        }
+//        UiState.speedMegahertz.addAfterListener { _, new ->
+//            display.asyncExec {
+//                speedMhz.text = String.format("%2.2f Mhz", new)
+//            }
+//        }
     }
 }

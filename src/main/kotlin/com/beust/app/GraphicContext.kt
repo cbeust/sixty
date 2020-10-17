@@ -81,6 +81,12 @@ class GraphicContext {
             }
         }
 
+        UiState.speedMegahertz.addAfterListener { _, new ->
+            display.asyncExec {
+                val diskName = UiState.currentDisk1File.value?.name ?: ""
+                shell.text = String.format("$diskName %2.2f Mhz", new)
+            }
+        }
         val isFontLoaded = shell.display.loadFont("fonts/PrintChar21.ttf")
         textFont = if (isFontLoaded) {
             Font(shell.display, "Print Char 21", 12, SWT.NORMAL)
