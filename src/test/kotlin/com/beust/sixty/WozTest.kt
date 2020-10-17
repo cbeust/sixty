@@ -2,15 +2,16 @@ package com.beust.sixty
 
 import com.beust.app.*
 import org.assertj.core.api.Assertions.assertThat
+import org.testng.annotations.DataProvider
 import org.testng.annotations.Test
 
 @Test
 class WozTest {
     private fun diskStream(name: String)
-            = Woz::class.java.classLoader.getResource(name)!!.openStream()
+            = Woz::class.java.classLoader.getResource(name)!!.openStream()!!
 
     fun bits() {
-        val ins = diskStream("woz2/DOS 3.3 System Master.woz")!!
+        val ins = diskStream("woz2/DOS 3.3 System Master.woz")
         val bytes: ByteArray = ins.readAllBytes()
         val slice = bytes.slice(0x600 until bytes.size)
         val bitStream = BitBitStream(slice)
@@ -24,15 +25,36 @@ class WozTest {
 
     private fun createHeadlessApple2Computer(disk: IDisk) = Apple2Computer().apply {
         diskController.loadDisk(disk)
-        val runner = Runner()
-        repeat(100) {
-            runner.runSlice(this)
-        }
-        ""
     }
 
-    fun multipleDisks() {
-        createHeadlessApple2Computer(IDisk.create(DISKS[0])!!)
+    data class DiskInfo(val disk: IDisk, val addresses: List<Pair<Int, Int>>, val seconds: Int = 5)
+
+    @DataProvider(parallel = true)
+    private fun dp(): Array<Array<DiskInfo>> {
+        val result = listOf(
+                "DOS 3.3.dsk" to listOf(0xa000 to 0xad),
+                "DOS 3.3.woz" to listOf(0xa000 to 0xad),
+                "Bouncing Kamungas.woz" to listOf(0x1a3d to 0xe9)
+            )
+            .map { arrayOf(DiskInfo(IDisk.create(it.first, diskStream("boot/${it.first}"))!!, it.second)) }
+            .toTypedArray()
+        return result
+    }
+
+    @Test(dataProvider = "dp")
+    fun multipleDisks(di: DiskInfo) {
+        val c = createHeadlessApple2Computer(di.disk)
+        val runner = Runner()
+        log("Booting " + di.disk.name)
+        runner.runPeriodically(c, di.seconds, blocking = true) {
+            di.addresses.forEach {
+                assertThat(c.memory[it.first])
+                        .withFailMessage(di.disk.name + " didn't boot correctly")
+                        .isEqualTo(it.second)
+            }
+            log("   " + di.disk.name + " booted correctly")
+        }
+
     }
 
     @Test(enabled = false)
