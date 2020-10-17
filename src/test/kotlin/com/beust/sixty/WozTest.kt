@@ -36,10 +36,14 @@ class WozTest {
             = DiskInfo(IDisk.create(name, diskStream("boot/$name"))!!, addresses, seconds)
 
         val result = listOf(
-                create("DOS 3.3.dsk", listOf(0xa000 to 0xad)),
-                create("DOS 3.3.woz", listOf(0xa000 to 0xad)),
+                create("DOS 3.3.dsk", listOf(0xa000 to 0xad), 10),
+                create("DOS 3.3.woz", listOf(0xa000 to 0xad), 10),
                 create("Bouncing Kamungas.woz", listOf(0x1a3d to 0xe9)),
-                create("Karateka.dsk", listOf(0xd65 to 0xca), 10)
+                create("Karateka.dsk", listOf(0xd65 to 0xca), 10),
+                create("Rescue Raiders.dsk", listOf(0x6105 to 0xad)),
+                create("Ultima4.dsk", listOf(0x6182 to 0x8e), 20),
+                create("Sherwood Forest.dsk", listOf(0x246d to 0x55), 10),
+                create("Blade of Blackpoole.dsk", listOf(0x6067 to 0x88), 10)
             )
             .map { arrayOf(it) }
             .toTypedArray()
@@ -47,7 +51,7 @@ class WozTest {
     }
 
     @Test(dataProvider = "dp")
-    fun multipleDisks(di: DiskInfo) {
+    fun booTest(di: DiskInfo) {
         val c = createHeadlessApple2Computer(di.disk)
         val runner = Runner()
         log("Booting " + di.disk.name)
