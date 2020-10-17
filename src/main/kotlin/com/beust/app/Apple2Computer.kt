@@ -3,13 +3,14 @@ package com.beust.app
 import com.beust.sixty.*
 import java.io.File
 
-class Apple2Computer(private val gc: GraphicContext? = null): IPulse {
-    var memory: Apple2Memory
+class Apple2Computer(private val gc: GraphicContext? = null): IComputer {
+    override var memory = Apple2Memory()
+    override val cpu: Cpu
+        get() = computer.cpu
     var computer: IComputer
     val diskController: DiskController
 
     init {
-        memory = Apple2Memory()
         gc?.let { g ->
             val memoryListener = Apple2MemoryListener({ -> memory }, g.textWindow, g.hiResWindow)
             memory.listeners.add(memoryListener)
@@ -29,22 +30,21 @@ class Apple2Computer(private val gc: GraphicContext? = null): IPulse {
         computer.cpu.PC = memory.word(0xfffc)
     }
 
-    fun reboot() {
+    override fun reboot() {
         computer.reboot()
         computer.cpu.PC = memory.word(0xfffc)
     }
 
-    override fun onPulse(manager: PulseManager): PulseResult {
+    fun onPulse(manager: PulseManager): PulseResult {
+        return step()
+    }
+
+    override fun step() : PulseResult {
         repeat(2) {
-            diskController.onPulse(manager)
+            diskController.step()
         }
-        return computer.onPulse(manager)
+        return computer.step()
     }
-
-    override fun stop() {
-        TODO("Not yet implemented")
-    }
-
 }
 
 //private fun runWatcher(memory: IMemory) {

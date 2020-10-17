@@ -24,9 +24,9 @@ class WozTest {
 
     private fun createHeadlessApple2Computer(disk: IDisk) = Apple2Computer().apply {
         diskController.loadDisk(disk)
-        val pm = PulseManager()
-        repeat(10) {
-            pm.runSlice(this)
+        val runner = Runner()
+        repeat(100) {
+            runner.runSlice(this)
         }
         ""
     }

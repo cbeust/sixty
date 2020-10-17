@@ -1,24 +1,29 @@
 package com.beust.app
 
-import com.beust.sixty.Apple2Memory
 import com.beust.sixty.IKeyProvider
 import com.beust.sixty.IMemory
 import com.beust.swt.*
 import org.eclipse.swt.SWT
-import org.eclipse.swt.graphics.*
-import org.eclipse.swt.layout.FillLayout
+import org.eclipse.swt.graphics.Font
+import org.eclipse.swt.graphics.Image
+import org.eclipse.swt.graphics.ImageData
+import org.eclipse.swt.graphics.Rectangle
 import org.eclipse.swt.layout.GridData
 import org.eclipse.swt.layout.GridLayout
 import org.eclipse.swt.widgets.*
-import java.io.File
 
 class GraphicContext {
-    lateinit var computer: Apple2Computer
+    private lateinit var computer: Apple2Computer
 
     val hiResWindow: HiResWindow
     val textWindow: TextWindow
     private val display: Display = Display()
     private val shell: Shell
+
+    fun reset(c: Apple2Computer) {
+        clear()
+        computer = c
+    }
 
     fun clear() {
         hiResWindow.clear()
@@ -61,11 +66,6 @@ class GraphicContext {
         }
         hiResWindow.stop()
 //        display.dispose()
-    }
-
-    fun shutdown() {
-        hiResWindow.dispose()
-        textWindow.dispose()
     }
 
     companion object {

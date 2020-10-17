@@ -60,6 +60,10 @@ class DiskController(val slot: Int = 6): IPulse, MemoryListener() {
     private val useLss = true
 
     override fun onPulse(manager: PulseManager): PulseResult {
+        return step()
+    }
+
+    fun step(): PulseResult {
         // Use the LSS
         if (useLss) {
             disk()?.let { disk ->

@@ -6,14 +6,14 @@ import com.beust.app.DEBUG
 import com.beust.app.UiState
 import org.slf4j.LoggerFactory
 
-interface MemoryInterceptor {
-    /** If override is true, the returned value should be used instead of the one initially provided */
-    data class Response(val allow: Boolean, val value: Int)
-
-    val computer: Computer
-    fun onRead(location: Int, value: Int): Response
-    fun onWrite(location: Int, value: Int): Response
-}
+//interface MemoryInterceptor {
+//    /** If override is true, the returned value should be used instead of the one initially provided */
+//    data class Response(val allow: Boolean, val value: Int)
+//
+//    val computer: Computer
+//    fun onRead(location: Int, value: Int): Response
+//    fun onWrite(location: Int, value: Int): Response
+//}
 
 interface IKeyProvider {
     fun keyPressed(memory: IMemory, value: Int, shift: Boolean = false, control: Boolean = false)
@@ -30,9 +30,10 @@ interface PcListener {
     fun onPcChanged(c: Computer)
 }
 
-interface IComputer: IPulse {
+interface IComputer {
     val memory: IMemory
     val cpu : Cpu
+    fun step(): PulseResult
     fun reboot()
 }
 
@@ -70,7 +71,7 @@ class Computer(override val memory: IMemory, override val cpu: Cpu, val pcListen
     enum class RunStatus { RUN, STOP, REBOOT }
     private var runStatus = RunStatus.RUN
 
-    override fun stop() {
+    fun stop() {
         runStatus = RunStatus.STOP
     }
 
@@ -89,9 +90,13 @@ class Computer(override val memory: IMemory, override val cpu: Cpu, val pcListen
     var sector = 0
     private var wait = 0
 
-    override fun onPulse(manager: PulseManager): PulseResult {
+    fun onPulse(manager: PulseManager): PulseResult {
+        return step()
+    }
+
+    override fun step(): PulseResult {
         if (wait == 0) {
-            wait = step() - 1
+            wait = advanceCpu() - 1
         } else {
             wait--
         }
@@ -103,13 +108,13 @@ class Computer(override val memory: IMemory, override val cpu: Cpu, val pcListen
         startTime = System.currentTimeMillis()
         while (runStatus == RunStatus.RUN) {
             cycles++
-            val done = step(debugMemory, _debugAsm)
+            val done = advanceCpu(debugMemory, _debugAsm)
         }
 
         return RunResult(System.currentTimeMillis() - startTime, cycles)
     }
 
-    fun step(debugMemory: Boolean = false, _debugAsm: Boolean = false): Int {
+    fun advanceCpu(debugMemory: Boolean = false, _debugAsm: Boolean = false): Int {
         var debugAsm = _debugAsm
         var previousPc = 0
         val opCode = memory[cpu.PC]

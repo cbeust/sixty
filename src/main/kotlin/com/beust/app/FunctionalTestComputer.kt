@@ -2,7 +2,7 @@ package com.beust.app
 
 import com.beust.sixty.*
 
-class SimpleComputer(override val memory: IMemory, override val cpu: Cpu): IComputer, IPulse {
+class SimpleComputer(override val memory: IMemory, override val cpu: Cpu): IComputer {
     val pcListener: PcListener = object: PcListener {
         override fun onPcChanged(c: Computer) {
             val newValue = c.cpu.PC
@@ -19,10 +19,10 @@ class SimpleComputer(override val memory: IMemory, override val cpu: Cpu): IComp
         }
     }
     private val computer = Computer(memory, cpu, pcListener)
-    override fun stop() = computer.stop()
+    fun stop() = computer.stop()
     override fun reboot() {}
 
-    override fun onPulse(manager: PulseManager) = computer.onPulse(manager)
+    override fun step() = computer.step()
 }
 
 fun functionalTestComputer(debugMemory: Boolean): IComputer {

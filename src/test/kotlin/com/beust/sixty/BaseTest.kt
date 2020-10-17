@@ -1,5 +1,6 @@
 package com.beust.sixty
 
+import com.beust.app.Apple2Computer
 import org.assertj.core.api.Assertions.assertThat
 import org.testng.annotations.DataProvider
 import org.testng.annotations.Test
@@ -32,9 +33,7 @@ abstract class BaseTest {
     }
 
     fun run() {
-        PulseManager().apply {
-            run(computer)
-        }
+        Runner().runPeriodically(computer)
     }
 
     fun inxy() {

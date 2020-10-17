@@ -22,8 +22,6 @@ class FunctionalTest {
             }
         }.build()
         computer.cpu.PC = 0x400
-        PulseManager().apply {
-            run(computer)
-        }
+        Runner().runPeriodically(computer)
     }
 }
