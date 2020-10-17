@@ -14,6 +14,7 @@ class Runner(val gc: GraphicContext? = null) {
     fun runSlice(computer: IComputer): Computer.RunStatus {
         runStatus = Computer.RunStatus.RUN
         var targetCycles = (System.currentTimeMillis() - sliceStart) * 1000
+        println("Target cycles: " + targetCycles)
         while (runStatus == Computer.RunStatus.RUN && targetCycles-- > 0) {
             runStatus = computer.step().runStatus
         }

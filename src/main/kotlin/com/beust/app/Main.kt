@@ -31,7 +31,7 @@ val DISKS = listOf(
         // 10
 )
 
-val DISK = DISKS[0]
+val DISK = DISKS[12]
 
 fun main() {
     val pulseManager = PulseManager()
