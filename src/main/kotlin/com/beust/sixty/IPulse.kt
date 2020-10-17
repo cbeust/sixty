@@ -3,9 +3,7 @@ package com.beust.sixty
 import com.beust.app.Apple2Computer
 import com.beust.app.GraphicContext
 import java.util.concurrent.Executors
-import java.util.concurrent.ScheduledFuture
 import java.util.concurrent.TimeUnit
-import java.util.concurrent.TimeoutException
 
 class PulseResult(val runStatus: Computer.RunStatus = Computer.RunStatus.RUN)
 
@@ -13,7 +11,13 @@ class Runner(val gc: GraphicContext? = null) {
     private var runStatus = Computer.RunStatus.RUN
     private var sliceStart = System.currentTimeMillis()
 
-    fun runSlice(computer: IComputer): Computer.RunStatus {
+    fun runCycles(computer: IComputer, cycles: Int) {
+        repeat(cycles) {
+            computer.step()
+        }
+    }
+
+    fun runTimedSlice(computer: IComputer): Computer.RunStatus {
         runStatus = Computer.RunStatus.RUN
         var targetCycles = (System.currentTimeMillis() - sliceStart) * 1000
         while (runStatus == Computer.RunStatus.RUN && targetCycles-- > 0) {
@@ -34,7 +38,7 @@ class Runner(val gc: GraphicContext? = null) {
             var stop = false
             override fun run() {
                 if (! stop) {
-                    val status = runSlice(c)
+                    val status = runTimedSlice(c)
                     if (status == Computer.RunStatus.STOP) {
                         stop = true
                     } else if (status == Computer.RunStatus.REBOOT) {

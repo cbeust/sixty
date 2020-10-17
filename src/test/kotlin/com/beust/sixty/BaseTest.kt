@@ -20,20 +20,20 @@ fun assertNotRegister(register: Int, expected: Int) {
     assertThat(register).isNotEqualTo(expected)
 }
 
-@Test
+@Test(enabled = false)
 abstract class BaseTest {
     abstract fun createComputer(vararg bytes: Int): IComputer
     private lateinit var computer: IComputer
 
     fun computer(vararg bytes: Int): IComputer {
-        val result = with(createComputer(*bytes, BRK)) {
+        val result = with(createComputer(*bytes, RTS)) {
             computer = this
             return this
         }
     }
 
     fun run() {
-        Runner().runPeriodically(computer)
+        Runner().runCycles(computer, 10000)
     }
 
     fun inxy() {
@@ -370,7 +370,7 @@ abstract class BaseTest {
     }
 
     fun asl() {
-        with(computer(0xa9, 2, 0xa)) {
+        with(computer(LDA_IMM, 2, ASL)) {
             assertRegister(cpu.A, 0)
             run()
             assertRegister(cpu.A, 4)
