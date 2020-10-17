@@ -51,7 +51,7 @@ class WozTest {
     }
 
     @Test(dataProvider = "dp")
-    fun booTest(di: DiskInfo) {
+    fun bootTest(di: DiskInfo) {
         val c = createHeadlessApple2Computer(di.disk)
         val runner = Runner()
         log("Booting " + di.disk.name)
