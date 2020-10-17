@@ -52,7 +52,9 @@ dependencies {
 
 application {
     mainClassName = "com.beust.app.MainKt"
-    applicationDefaultJvmArgs = listOf("-XstartOnFirstThread")
+    if (System.getProperty("os.name").toLowerCase().contains("mac")) {
+        applicationDefaultJvmArgs = listOf("-XstartOnFirstThread")
+    }
 }
 
 tasks {
