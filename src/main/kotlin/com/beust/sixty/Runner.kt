@@ -42,7 +42,8 @@ class Runner(val gc: GraphicContext? = null) {
         runInfos.add(RunInfo(start, cycles))
     }
 
-    private fun displayCpuSpeed() {
+    @Suppress("ConvertLambdaToReference")
+    private fun updateCpuSpeed() {
         val timeStart = runInfos[0].start
         val timeEnd = runInfos[runInfos.size - 1].start
         val durationMicroSeconds = (timeEnd - timeStart) * 1000
@@ -61,15 +62,19 @@ class Runner(val gc: GraphicContext? = null) {
                 if (! stop) {
                     val cycleStart = System.currentTimeMillis()
                     val (status, cycles) = runTimedSlice(c)
-                    if (status == Computer.RunStatus.STOP) {
-                        stop = true
-                    } else if (status == Computer.RunStatus.REBOOT) {
-                        val c2 = Apple2Computer(gc)
-                        c = c2
-                        gc?.reset(c2)
-                    }  else {
-                        addRunInfo(cycleStart, cycles)
-                        displayCpuSpeed()
+                    when (status) {
+                        Computer.RunStatus.STOP -> {
+                            stop = true
+                        }
+                        Computer.RunStatus.REBOOT -> {
+                            val c2 = Apple2Computer(gc)
+                            c = c2
+                            gc?.reset(c2)
+                        }
+                        else -> {
+                            addRunInfo(cycleStart, cycles)
+                            updateCpuSpeed()
+                        }
                     }
 
                     if (maxTimeSeconds > 0 && (System.currentTimeMillis() - runStart) / 1000 >= maxTimeSeconds) {
