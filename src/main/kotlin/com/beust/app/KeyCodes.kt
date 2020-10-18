@@ -1,6 +1,10 @@
 package com.beust.app
 
 val KEY_MAP = mapOf(
+        0x27 to listOf('\'', '"'),
+        0x2c to listOf(',', '<'),
+        0x2e to listOf('.', '>'),
+        0x2f to listOf('/', '?'),
         0x31 to listOf('1', '!'),
         0x32 to listOf('2', '@'),
         0x33 to listOf('3', '#'),
@@ -12,7 +16,11 @@ val KEY_MAP = mapOf(
         0x39 to listOf('9', '('),
         0x30 to listOf('0', ')'),
         0x2d to listOf('-', '_'),
-        0x3d to listOf('=', '+')
+        0x3b to listOf(';', ':'),
+        0x3d to listOf('=', '+'),
+        0x5b to listOf('[', '{'),
+        0x5c to listOf('\\', '|'),
+        0x5d to listOf(']', '}')
 )
 
 // From apple2js
