@@ -3,6 +3,11 @@ package com.beust.app
 import com.beust.sixty.*
 import kotlin.random.Random
 
+
+fun main() {
+    IDisk.create(DISKS[13])
+}
+
 class Woz(private val bytes: ByteArray,
         val bitStreamFactory: (bytes: List<Byte>, bitCount: Int) -> IBitStream = ::BitBitStream) {
     lateinit var info: ChunkInfo
@@ -17,6 +22,7 @@ class Woz(private val bytes: ByteArray,
     class Stream(val bytes: ByteArray) {
         var i = 0
 
+        fun advanceTo(index: Int) { i = index }
         fun hasNext() = i < bytes.size
 
         fun read1(): Int {
@@ -30,6 +36,7 @@ class Woz(private val bytes: ByteArray,
         }
         
         fun read4(): Int {
+//            val result = read2().or(read2().shl(16))
             val result = bytes[i].toUByte().toUInt()
                     .or(bytes[i + 1].toUByte().toUInt().shl(8))
                     .or(bytes[i + 2].toUByte().toUInt().shl(16))
@@ -73,8 +80,42 @@ class Woz(private val bytes: ByteArray,
     }
 
     class ChunkInfo(stream: Stream, size: Int): Chunk("INFO", size) {
+        val version: Int
+        val diskType: String
+        val writeProtected: Boolean
+        val synchronized: Boolean
+        val cleaned: Boolean
+        val creator: String
+        val diskSides: Int
+        val bootSectorFormat: Int
+        val optimalBitTiming: Int
+        val compatibleHardware: Int
+        val requiredRam: Int
+        val largestTrack: Int
+
         init {
-            stream.readN(size)
+            version = stream.read1()
+            diskType = if (stream.read1() == 1) "5.25" else "3.5"
+            writeProtected = stream.read1() == 1
+            synchronized = stream.read1() == 1
+            cleaned = stream.read1() == 1
+            creator = stream.readN(32).map { it.toChar() }.joinToString("")
+            if (version == 2) {
+                diskSides = stream.read1()
+                bootSectorFormat = stream.read1()
+                optimalBitTiming = stream.read1()
+                compatibleHardware = stream.read2()
+                requiredRam = stream.read2()
+                largestTrack = stream.read2()
+            } else {
+                diskSides = 0
+                bootSectorFormat = 0
+                optimalBitTiming = 0
+                compatibleHardware = 0
+                requiredRam = 0
+                largestTrack = 0
+            }
+            stream.advanceTo(0x50)
         }
     }
 
@@ -131,6 +172,7 @@ class Woz(private val bytes: ByteArray,
                 else -> Chunk(name, size)
             }
         }
+
     }
 
     private val bitStreams = mutableMapOf<Int, IBitStream>()
@@ -152,6 +194,9 @@ class Woz(private val bytes: ByteArray,
                     logWoz("Phase $phase (track $phase) starts at block ${trk.startingBlock} " +
                             "offset ${trackOffset.hh()} size ${streamSizeInBytes} bytes" +
                             " ${trk.bitCount} bits")
+                    if (slice.isEmpty()) {
+                        println("PROBLEM")
+                    }
                     bitStreamFactory(slice, trk.bitCount)
                 } catch (ex: Exception) {
                     throw ex

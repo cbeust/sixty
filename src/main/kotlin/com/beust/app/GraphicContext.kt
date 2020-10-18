@@ -3,6 +3,7 @@ package com.beust.app
 import com.beust.sixty.IKeyProvider
 import com.beust.sixty.IMemory
 import com.beust.swt.*
+import org.eclipse.jface.dialogs.MessageDialog
 import org.eclipse.swt.SWT
 import org.eclipse.swt.graphics.Font
 import org.eclipse.swt.graphics.Image
@@ -81,6 +82,9 @@ class GraphicContext {
             }
         }
 
+        UiState.error.addAfterListener { _, new ->
+            MessageDialog.openError(shell, "Error", new)
+        }
         UiState.speedMegahertz.addAfterListener { _, new ->
             val diskName = UiState.diskStates[0].file.value?.name ?: ""
             shell.text = String.format("$diskName %2.2f Mhz", new)

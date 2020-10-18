@@ -1,5 +1,6 @@
 package com.beust.sixty
 
+import com.beust.app.UiState
 import org.eclipse.swt.graphics.Color
 import java.util.*
 
@@ -54,5 +55,9 @@ fun Collection<Int>.b(): String {
     return result.toString()
 }
 
-fun ERROR(reason: String): Nothing = throw Error(reason)
+fun ERROR(reason: String): Nothing {
+    UiState.error.value = reason
+    throw Error(reason)
+}
+
 fun NYI(reason: String) = logNyi(reason)

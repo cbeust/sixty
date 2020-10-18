@@ -33,6 +33,11 @@ enum class ByteAlgorithm { RAW, SHIFTED, DISK_CONTENT }
 
 object UiState {
     //
+    // General
+    //
+    val error = Obs("Error", "")
+
+    //
     // Disk drives
     //
     class DiskState(val file: Obs<File?> = Obs("Disk file", null),
