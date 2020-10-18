@@ -2,6 +2,7 @@ package com.beust.app
 
 import com.beust.sixty.logUiStatus
 import com.beust.swt.ByteBufferWindow
+import org.eclipse.swt.widgets.Display
 import java.io.File
 
 typealias ObsListener<T> = (T, T) -> Unit
@@ -18,9 +19,11 @@ class Obs<T>(val name: String, val def: T) {
         get() = _value
         set(f) {
             logUiStatus("$name=$f")
-            listeners.forEach { it.invoke(_value, f) }
-            _value = f
-            afterListeners.forEach { it.invoke(_value, f) }
+            Display.getDefault().asyncExec {
+                listeners.forEach { it.invoke(_value, f) }
+                _value = f
+                afterListeners.forEach { it.invoke(_value, f) }
+            }
         }
 
     override fun toString() = _value.toString()

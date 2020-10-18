@@ -1,7 +1,7 @@
 package com.beust.swt
 
-const val SPEED_FACTOR = 1
-const val PERIOD_MILLISECONDS = 50L
+const val SPEED_FACTOR = 10
+const val PERIOD_MILLISECONDS = 100L
 
 const val WIDTH = 280
 const val HEIGHT = 192

@@ -59,6 +59,7 @@ class Runner(val gc: GraphicContext? = null) {
             var runStart = System.currentTimeMillis()
             var stop = false
             override fun run() {
+                log("RUNNING")
                 if (! stop) {
                     val cycleStart = System.currentTimeMillis()
                     val (status, cycles) = runTimedSlice(c)

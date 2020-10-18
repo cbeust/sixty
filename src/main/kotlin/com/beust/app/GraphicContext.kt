@@ -82,10 +82,8 @@ class GraphicContext {
         }
 
         UiState.speedMegahertz.addAfterListener { _, new ->
-            display.asyncExec {
-                val diskName = UiState.diskStates[0].file.value?.name ?: ""
-                shell.text = String.format("$diskName %2.2f Mhz", new)
-            }
+            val diskName = UiState.diskStates[0].file.value?.name ?: ""
+            shell.text = String.format("$diskName %2.2f Mhz", new)
         }
         val isFontLoaded = shell.display.loadFont("fonts/PrintChar21.ttf")
         textFont = if (isFontLoaded) {
@@ -181,7 +179,7 @@ class GraphicContext {
                         }
                     }
                     fileDialog(shell, this, UiState.diskStates[drive].file)
-                    obs.addListener { _, _ -> display.asyncExec { redraw() } }
+                    obs.addListener { _, _ -> redraw() }
                 }
             }
 
@@ -354,17 +352,15 @@ class GraphicContext {
         //
         UiState.diskStates[drive].file.addAfterListener { _, _ ->
             val (diskName, type) = nameAndType(drive)
-            display.asyncExec {
-                currentDisk?.text = diskName
-                currentDisk?.requestLayout()
-                currentDiskType.text = type
-                currentDiskType.requestLayout()
+            currentDisk?.let {
+                it.text = diskName
+                it.requestLayout()
             }
+            currentDiskType.text = type
+            currentDiskType.requestLayout()
         }
         UiState.diskStates[drive].currentPhase.addAfterListener { _, new ->
-            display.asyncExec {
-                currentTrack.text = new.toString()
-            }
+            currentTrack.text = new.toString()
         }
 
         return result
