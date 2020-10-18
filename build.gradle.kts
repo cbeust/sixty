@@ -7,6 +7,7 @@ plugins {
     java
     id("org.jetbrains.kotlin.jvm") version "1.3.72"
     application
+    id("edu.sc.seis.launch4j") version "2.4.8"
 }
 
 configurations.all {
@@ -62,3 +63,15 @@ tasks {
         useTestNG()
     }
 }
+
+tasks.withType<edu.sc.seis.launch4j.tasks.DefaultLaunch4jTask> {
+    outfile = "sixty.exe"
+    mainClassName = "com.beust.app.MainKt"
+//    icon = "$projectDir/icons/myApp.ico"
+    productName = "Cedric's Humble Apple 2 Emulator"
+}
+
+//launch4j {
+//    mainClassName = "com.beust.app.MainKt"
+////    icon = "${projectDir}/icons/myApp.ico"
+//}
