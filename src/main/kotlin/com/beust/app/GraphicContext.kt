@@ -292,6 +292,7 @@ class GraphicContext {
             if (new) show(hiResWindow)
         }
         UiState.mainScreenPage2.addAfterListener { _, _ ->
+            hiResWindow.page = if (computer.memory.page2) 1 else 0
             if (! computer.memory.store80On) {
                 if (UiState.mainScreenText.value) {
                     show(textWindow)
@@ -300,8 +301,9 @@ class GraphicContext {
                 }
             }
         }
-        UiState.mainScreenText.addListener { _, new ->
+        UiState.mainScreenText.addAfterListener { _, new ->
             if (new) show(textWindow)
+            else show(hiResWindow)
         }
         UiState.mainScreenMixed.addAfterListener { _, new ->
             maybeResize(hiResWindow)
