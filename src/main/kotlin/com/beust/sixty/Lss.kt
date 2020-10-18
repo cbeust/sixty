@@ -76,7 +76,7 @@ class Lss {
 
             }
             0xb -> { // LD
-                TODO("LD command for LSS")
+                NYI("LD command for LSS")
                 // latch = bus
             }
             0xd -> { // SL1
@@ -89,7 +89,7 @@ class Lss {
         if (clock == 4) {
             if (motorOn()) {
                 if (q7) {
-                    TODO("WRITE MODE NOT SUPPORTED)")
+                    NYI("WRITE MODE NOT SUPPORTED)")
                     // track[_cur.head] = _state & 0x8 ? 0x01 : 0x00;
                 }
 

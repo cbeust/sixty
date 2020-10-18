@@ -21,5 +21,6 @@ fun logTraceDisk(s: String) = Loggers.disk.trace("[DISK] $s")
 fun logUiStatus(s: String) = Loggers.uiStatus.debug("[UI] $s")
 fun logAsm(s: String) = Loggers.asm.debug("$s")
 fun logWoz(s: String) = Loggers.woz.debug("$s")
+fun logNyi(s: String) = Loggers.def.warn("!!!!!!!!!!! Not yet implemented: $s")
 fun log(s: String) = Loggers.def.debug(s)
 

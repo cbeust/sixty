@@ -59,33 +59,37 @@ class Runner(val gc: GraphicContext? = null) {
             var runStart = System.currentTimeMillis()
             var stop = false
             override fun run() {
-                log("RUNNING")
-                if (! stop) {
-                    val cycleStart = System.currentTimeMillis()
-                    val (status, cycles) = runTimedSlice(c)
-                    when (status) {
-                        Computer.RunStatus.STOP -> {
-                            stop = true
+                try {
+                    if (! stop) {
+                        val cycleStart = System.currentTimeMillis()
+                        val (status, cycles) = runTimedSlice(c)
+                        when (status) {
+                            Computer.RunStatus.STOP -> {
+                                stop = true
+                            }
+                            Computer.RunStatus.REBOOT -> {
+                                val c2 = Apple2Computer(gc)
+                                c = c2
+                                gc?.reset(c2)
+                            }
+                            else -> {
+                                addRunInfo(cycleStart, cycles)
+                                updateCpuSpeed()
+                            }
                         }
-                        Computer.RunStatus.REBOOT -> {
-                            val c2 = Apple2Computer(gc)
-                            c = c2
-                            gc?.reset(c2)
-                        }
-                        else -> {
-                            addRunInfo(cycleStart, cycles)
-                            updateCpuSpeed()
-                        }
-                    }
 
-                    if (maxTimeSeconds > 0 && (System.currentTimeMillis() - runStart) / 1000 >= maxTimeSeconds) {
-                        stop = true
-                        result = onStop()
-                        synchronized(blocked) {
-                            @Suppress("ConvertLambdaToReference")
-                            blocked.notify()
+                        if (maxTimeSeconds > 0 && (System.currentTimeMillis() - runStart) / 1000 >= maxTimeSeconds) {
+                            stop = true
+                            result = onStop()
+                            synchronized(blocked) {
+                                @Suppress("ConvertLambdaToReference")
+                                blocked.notify()
+                            }
                         }
                     }
+                } catch(ex: Throwable) {
+                    ex.printStackTrace()
+                    throw ex
                 }
             }
         }

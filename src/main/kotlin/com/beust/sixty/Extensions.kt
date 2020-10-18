@@ -55,7 +55,4 @@ fun Collection<Int>.b(): String {
 }
 
 fun ERROR(reason: String): Nothing = throw Error(reason)
-fun NYI(reason: String): Int {
-    println("@@@@@@@@@@@@@@@@@@@@ NYI: $reason")
-    return 0
-}
+fun NYI(reason: String) = logNyi(reason)
