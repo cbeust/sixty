@@ -7,10 +7,6 @@ import java.io.File
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
-val RUN = true
-var DEBUG = false
-val BREAKPOINT: Int? = null // 0x5a0//0xc6a6//0x5f8 // 0x5f8 // 0x5a0 //0x5f8 // 0x59e // null//0x556//0xc2de // 0xc2db
-
 fun disk(s: String) = File("disks/$s")
 
 val DISKS = listOf(
@@ -30,7 +26,10 @@ val DISKS = listOf(
         disk("Karateka.woz") // 13
 )
 
-val DISK = DISKS[13]
+val RUN = true
+var DEBUG = false
+val BREAKPOINT: Int? = null // 0x5a0//0xc6a6//0x5f8 // 0x5f8 // 0x5a0 //0x5f8 // 0x59e // null//0x556//0xc2de // 0xc2db
+val DISK = DISKS[1]
 
 fun main() {
     val fw = FileWatcher()
