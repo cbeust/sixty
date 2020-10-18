@@ -6,6 +6,8 @@ import java.io.InputStream
 
 interface IDisk: IBitStream {
     companion object {
+        const val PHASE_MAX = 160
+
         fun create(name: String, ins: InputStream?): IDisk? = when {
             ins == null -> null
             name.endsWith(".woz") -> WozDisk(name, ins)

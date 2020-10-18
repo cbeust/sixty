@@ -91,6 +91,7 @@ class Runner(val gc: GraphicContext? = null) {
 
         val tp = Executors.newScheduledThreadPool(1)
         val task = tp.scheduleWithFixedDelay(command, 0, PERIOD_MILLISECONDS, TimeUnit.MILLISECONDS)
+        println("Scheduling a new timer thread")
         if (blocking) synchronized(blocked) {
             blocked.wait()
             task.cancel(true)

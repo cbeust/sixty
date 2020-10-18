@@ -83,7 +83,7 @@ class GraphicContext {
 
         UiState.speedMegahertz.addAfterListener { _, new ->
             display.asyncExec {
-                val diskName = UiState.currentDisk1File.value?.name ?: ""
+                val diskName = UiState.diskStates[0].file.value?.name ?: ""
                 shell.text = String.format("$diskName %2.2f Mhz", new)
             }
         }
@@ -170,7 +170,7 @@ class GraphicContext {
                     }
                     addPaintListener { e ->
                         with(e.gc) {
-                            if ((drive == 1 && UiState.motor1.value) || (drive == 2 && UiState.motor2.value)) {
+                            if (UiState.diskStates[drive].motor.value) {
                                 background = red(display)
                                 foreground = red(display)
                             } else {
@@ -180,24 +180,24 @@ class GraphicContext {
                             fillOval(42, 102, 13, 13)
                         }
                     }
-                    fileDialog(shell, this, if (drive == 1) UiState.currentDisk1File else UiState.currentDisk2File)
+                    fileDialog(shell, this, UiState.diskStates[drive].file)
                     obs.addListener { _, _ -> display.asyncExec { redraw() } }
                 }
             }
 
-            driveButton(this, 1, UiState.motor1)
+            driveButton(this, 0, UiState.diskStates[0].motor)
             button(this, "Swap").apply {
                 layoutData = GridData().apply {
                     heightHint = height
                     widthHint = 50
                 }
                 addListener(SWT.Selection) { e ->
-                    val d1 = UiState.currentDisk1File.value
-                    UiState.currentDisk1File.value = UiState.currentDisk2File.value
-                    UiState.currentDisk2File.value = d1
+                    val d1 = UiState.diskStates[0]
+                    UiState.diskStates[0] = UiState.diskStates[1]
+                    UiState.diskStates[1] = d1
                 }
             }
-            driveButton(this, 2, UiState.motor2)
+            driveButton(this, 1, UiState.diskStates[0].motor)
         }
 
         //
@@ -291,11 +291,11 @@ class GraphicContext {
         val fontSize = 12
         val bg = lightGrey(display)
         var currentDisk: Label? = null
-        var currentDiskType: Label? = null
-        var currentTrack: Label? = null
+        lateinit var currentDiskType: Label
+        lateinit var currentTrack: Label
 
         fun nameAndType(drive: Int): Pair<String, String> {
-            val obs = if (drive == 1) UiState.currentDisk1File else UiState.currentDisk2File
+            val obs = UiState.diskStates[drive].file
             val dn = obs.value?.name
             val result = if (dn != null) {
                 val index = dn.lastIndexOf(".")
@@ -329,32 +329,41 @@ class GraphicContext {
                 background = bg
                 font = font(shell, "Helvetica", fontSize - 4)
                 layoutData = GridData().apply {
-                    verticalAlignment = SWT.TOP
                     horizontalAlignment = SWT.RIGHT
+                    grabExcessHorizontalSpace = true
                 }
             }
             fun c2(c: Control) = with(c) {
                 background = bg
-                font = font(shell, "Impact", fontSize - 2)
+                font = font(shell, "Verdana", fontSize - 2, SWT.BOLD)
+                layoutData = GridData().apply {
+                    horizontalAlignment = SWT.FILL
+                    grabExcessHorizontalSpace = true
+                }
             }
-            c1(label(this, "Type"))
+            c1(label(this, "Type:"))
             currentDiskType = label(this, diskType)
             c2(currentDiskType!!)
-            c1(label(this, "Track"))
-            c2(label(this, "14"))
+            c1(label(this, "Track:"))
+            currentTrack = label(this, "0")
+            c2(currentTrack)
         }
 
         //
         // Add listeners
         //
-        val obs = if (drive == 1) UiState.currentDisk1File else UiState.currentDisk2File
-        obs.addAfterListener { _, _ ->
+        UiState.diskStates[drive].file.addAfterListener { _, _ ->
             val (diskName, type) = nameAndType(drive)
             display.asyncExec {
                 currentDisk?.text = diskName
                 currentDisk?.requestLayout()
-                currentDiskType?.text = type
-                currentDiskType?.requestLayout()
+                currentDiskType.text = type
+                currentDiskType.requestLayout()
+            }
+        }
+        UiState.diskStates[drive].currentPhase.addAfterListener { _, new ->
+            display.asyncExec {
+                currentTrack.text = new.toString()
             }
         }
 

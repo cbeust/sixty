@@ -18,8 +18,7 @@ class DiskController(val slot: Int = 6): MemoryListener() {
 
     class Motor(private val drive1: () -> Boolean) {
         private fun updateUi(b: Boolean) {
-            if (drive1()) UiState.motor1.value = b
-                else UiState.motor2.value = b
+            UiState.diskStates[if (drive1()) 0 else 1].motor.value = b
         }
 
         private var status: MotorState = MotorState.OFF
@@ -208,8 +207,8 @@ class DiskController(val slot: Int = 6): MemoryListener() {
     private var magnets = BooleanArray(4) { false }
     private var phase = 0
 
+    private var stepperMotorPhase = 0
     private var currentPhase = 0
-    private var currentTrack = 0
     private val phaseDeltas = listOf(
             listOf(0, 1, 2, -1),
             listOf(-1, 0, 1, 2),
@@ -219,19 +218,20 @@ class DiskController(val slot: Int = 6): MemoryListener() {
 
     private fun magnet(disk: IDisk, phase: Int, on: Boolean) {
         if (on) {
-            val delta = phaseDeltas[currentPhase][phase]
-            val oldTrack = currentTrack
-            currentTrack += delta
-            currentPhase = phase
+            val delta = phaseDeltas[stepperMotorPhase][phase]
+            val oldTrack = currentPhase
+            currentPhase += delta
+            stepperMotorPhase = phase
             if (delta > 0) {
                 repeat(delta) { disk.incPhase() }
             } else if (delta < 0) {
                 repeat(-delta) { disk.decPhase() }
             }
-            if (currentTrack < 0) currentTrack = 0
-            if (currentTrack > 35) currentTrack = 35
-            if (oldTrack != currentTrack) {
-                logDisk("*** phase($phase, $on) delta: $delta newTrack: $currentTrack")
+            if (currentPhase < 0) currentPhase = 0
+            if (currentPhase >= IDisk.PHASE_MAX) currentPhase = IDisk.PHASE_MAX - 1
+            if (oldTrack != currentPhase) {
+                logDisk("*** phase($phase, $on) delta: $delta newTrack: $currentPhase")
+                UiState.diskStates[if (drive1) 0 else 1].currentPhase.value = currentPhase / 2
             }
         }
     }

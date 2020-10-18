@@ -81,7 +81,7 @@ class Woz(private val bytes: ByteArray,
     class ChunkTmap(private val stream: Stream, size: Int): Chunk("TMAP", size) {
         private val map = hashMapOf<Int, Int>()
         init {
-            repeat(160) {
+            repeat(IDisk.PHASE_MAX) {
                 map[it] = stream.read1()
             }
             logWoz("TMAP: ")

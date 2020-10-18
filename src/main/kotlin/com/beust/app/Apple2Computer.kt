@@ -17,9 +17,9 @@ class Apple2Computer(private val gc: GraphicContext? = null): IComputer {
         }
 
         diskController = DiskController(6).apply {
-            loadDisk(IDisk.create(UiState.currentDisk1File.value), 0)
-            UiState.currentDisk1File.addListener { _, new -> loadDisk(IDisk.create(new), 0) }
-            UiState.currentDisk2File.addListener { _, new -> loadDisk(IDisk.create(new), 1) }
+            loadDisk(IDisk.create(UiState.diskStates[0].file.value), 0)
+            UiState.diskStates[0].file.addListener { _, new -> loadDisk(IDisk.create(new), 0) }
+            UiState.diskStates[1].file.addListener { _, new -> loadDisk(IDisk.create(new), 1) }
         }
         memory.listeners.add(diskController)
 

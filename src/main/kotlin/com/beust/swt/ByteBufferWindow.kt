@@ -31,16 +31,16 @@ class ByteBufferWindow(parent: Composite) : Composite(parent, SWT.NONE) {
             layoutData = GridData(SWT.FILL, SWT.FILL, true, true)
         }
 
-        UiState.currentDisk1File.addListener { _, new ->
+        UiState.diskStates[0].file.addListener { _, new ->
             if (new != null) {
-                UiState.currentTrack.value = 0
+                UiState.currentBufferTrack.value = 0
                 disk = IDisk.create(new)
                 disk?.let {
                     updateBufferContent(it)
                 }
             }
         }
-        UiState.currentTrack.addListener { _, new ->
+        UiState.currentBufferTrack.addListener { _, new ->
             updateBufferContent(track = new)
         }
         UiState.byteAlgorithn.addListener { _, new ->
@@ -58,9 +58,9 @@ class ByteBufferWindow(parent: Composite) : Composite(parent, SWT.NONE) {
 
     private fun updateBufferContent(passedDisk: IDisk? = null, track: Int = 0,
             byteAlgorithm: ByteAlgorithm = ByteAlgorithm.SHIFTED) {
-        println("Updating buffer with file "+ UiState.currentDisk1File)
+        println("Updating buffer with file "+ UiState.diskStates[0].file)
         display.asyncExec { browser.text = "" }
-        val disk = passedDisk ?: IDisk.create(UiState.currentDisk1File.value)
+        val disk = passedDisk ?: IDisk.create(UiState.diskStates[0].file.value)
         if (disk != null) {
             nibbleTrack = NibbleTrack(disk, disk.sizeInBits)
             repeat(160) { disk.decPhase() }

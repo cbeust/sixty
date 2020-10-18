@@ -195,7 +195,7 @@ class DiskWindow(parent: Composite): Composite(parent, NONE) {
             }
         }
 
-        UiState.currentDisk1File.addListener { _, new ->
+        UiState.diskStates[0].file.addListener { _, new ->
             display.asyncExec {
                 diskLabel.text = new?.name
             }
@@ -355,7 +355,7 @@ class DiskWindow(parent: Composite): Composite(parent, NONE) {
         //
         // Name of the disk
         //
-        diskLabel = button(header, UiState.currentDisk1File.value?.name ?: "<none>").apply {
+        diskLabel = button(header, UiState.diskStates[0].file.value?.name ?: "<none>").apply {
             layoutData = GridData(SWT.BEGINNING, SWT.CENTER, false, false).apply {
 ////                background = grey(display)
                 horizontalSpan = 2
@@ -368,7 +368,7 @@ class DiskWindow(parent: Composite): Composite(parent, NONE) {
         //
         // Button to open a different disk
         //
-        fileDialog(shell, diskLabel, UiState.currentDisk1File)
+        fileDialog(shell, diskLabel, UiState.diskStates[0].file)
 
         //
         // Phase number label
@@ -391,7 +391,7 @@ class DiskWindow(parent: Composite): Composite(parent, NONE) {
             addSelectionListener(object : SelectionListener {
                 override fun widgetSelected(e: SelectionEvent) {
                     val track = (e.widget as Combo).selectionIndex
-                    UiState.currentTrack.value = track
+                    UiState.currentBufferTrack.value = track
                 }
 
                 override fun widgetDefaultSelected(e: SelectionEvent?) {}

@@ -30,7 +30,7 @@ val DISKS = listOf(
         // 10
 )
 
-val DISK = DISKS[12]
+val DISK = DISKS[7]
 
 fun main() {
     val fw = FileWatcher()

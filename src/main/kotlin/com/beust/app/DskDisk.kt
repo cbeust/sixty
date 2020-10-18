@@ -10,8 +10,6 @@ fun main() {
 
 class DskDisk(override val name: String, ins: InputStream, override val sizeInBits: Int = TRACK_SIZE_BITS): BaseDisk() {
     companion object {
-        private const val TRACK_MAX = 160
-        const val DISK_IMAGE_SIZE_BYTES = TRACK_MAX * 16 * 256
         const val TRACK_SIZE_BYTES = 16 * 256
         const val TRACK_SIZE_BITS = TRACK_SIZE_BYTES * 8
         val LOGICAL_SECTORS = listOf(0, 7, 14, 6, 13, 5, 12, 4, 11, 3, 10, 2, 9, 1, 8, 15)
@@ -31,7 +29,7 @@ class DskDisk(override val name: String, ins: InputStream, override val sizeInBi
     override fun peekZeroBitCount() = 0
 
     override fun incPhase() {
-        if (phase < TRACK_MAX - 1) {
+        if (phase < IDisk.PHASE_MAX - 1) {
             phase++
         }
     }
