@@ -25,7 +25,7 @@
     <logger name="Memory" level="info" />
     <logger name="UiStatus" level="info" />
     <logger name="Disk" level="info" />
-    <logger name="Woz" level="info" />
+    <logger name="Woz" level="debug" />
 
     <logger name="Asm" level="debug"/>
     <logger name="Graphics" level="debug" />
