@@ -119,7 +119,7 @@ class GraphicContext {
                 background = blue(display)
                 layoutData = GridData().apply { horizontalSpan = 3 }
                 display.addFilter(SWT.KeyDown) { e ->
-                    println("Key code: " + e.keyCode.h() + " character: " + e.character)
+//                    println("Key code: " + e.keyCode.h() + " character: " + e.character)
                     val index = when {
                         e.stateMask.and(SWT.SHIFT) != 0 -> 1
 //                        e.stateMask.and(SWT.CONTROL) != 0 -> 2
@@ -127,6 +127,7 @@ class GraphicContext {
                         else -> 0
                     }
 
+                    // http://www.lazilong.com/apple_II/bbros/ascii.jpg
                     if (e.keyCode != 0xd) {
                         val key = when(e.keyCode) {
                             SWT.ARROW_LEFT -> 0x88
