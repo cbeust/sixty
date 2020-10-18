@@ -26,11 +26,11 @@ val DISKS = listOf(
         disk("Masquerade-1.dsk"), // 9
         disk("Bouncing Kamungas - Disk 1, Side A.woz"), // 10
         disk("King's Quest - A.woz"), // 11
-        disk("Karateka.dsk") // 12
-        // 10
+        disk("Karateka.dsk"), // 12
+        disk("Karateka.woz") // 13
 )
 
-val DISK = DISKS[7]
+val DISK = DISKS[13]
 
 fun main() {
     val fw = FileWatcher()
