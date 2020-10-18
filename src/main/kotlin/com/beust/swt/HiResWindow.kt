@@ -2,6 +2,7 @@ package com.beust.swt
 
 import com.beust.app.BitPattern
 import com.beust.app.SColor
+import com.beust.sixty.ERROR
 import com.beust.sixty.IMemory
 import com.beust.sixty.hh
 import org.eclipse.swt.SWT
@@ -13,8 +14,8 @@ import org.eclipse.swt.layout.FillLayout
 import org.eclipse.swt.widgets.Canvas
 import org.eclipse.swt.widgets.Composite
 
-class HiResWindow(private val startLocation: Int, parent: Composite, style: Int = SWT.NONE): Composite(parent, style) {
-    override fun toString() = "HiRes $${startLocation.hh()}"
+class HiResWindow(parent: Composite, style: Int = SWT.NONE): Composite(parent, style) {
+    override fun toString() = "HiRes on page $page"
 
     /**
      * 2000-2027
@@ -136,7 +137,7 @@ class HiResWindow(private val startLocation: Int, parent: Composite, style: Int 
         // Calculate x,y
         //
         val evenLocation = if (even) location else location - 1
-        val loc = evenLocation - startLocation
+        val loc = evenLocation - (if (page == 0) 0x2000 else 0x4000)
         var closest = Integer.MAX_VALUE
         var key = -1
         lineMap.keys.forEach { k ->

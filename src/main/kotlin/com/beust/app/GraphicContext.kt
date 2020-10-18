@@ -168,7 +168,7 @@ class GraphicContext {
                 //
                 // Graphic screens
                 //
-                hiResWindow = HiResWindow(0x2000, this).apply {
+                hiResWindow = HiResWindow(this).apply {
                     bounds = Rectangle(0, 0, ACTUAL_WIDTH, ACTUAL_HEIGHT + 10)
                 }
             }
