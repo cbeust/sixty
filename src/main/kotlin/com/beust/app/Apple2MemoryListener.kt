@@ -26,12 +26,6 @@ class Apple2MemoryListener(private val memory: () -> Apple2Memory,
                     hiresScreen.drawMemoryLocation(memory(), location, 1)
                 }
             }
-            0xc054  -> {
-                hiresScreen.page = 0
-            }
-            0xc055 -> {
-                hiresScreen.page = 1
-            }
         }
     }
 }
