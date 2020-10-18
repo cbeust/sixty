@@ -2,6 +2,7 @@ package com.beust.app
 
 import com.beust.sixty.IKeyProvider
 import com.beust.sixty.IMemory
+import com.beust.sixty.h
 import com.beust.swt.*
 import org.eclipse.jface.dialogs.MessageDialog
 import org.eclipse.swt.SWT
@@ -118,10 +119,31 @@ class GraphicContext {
                 background = blue(display)
                 layoutData = GridData().apply { horizontalSpan = 3 }
                 display.addFilter(SWT.KeyDown) { e ->
+                    println("Key code: " + e.keyCode.h() + " character: " + e.character)
+                    val index = when {
+                        e.stateMask.and(SWT.SHIFT) != 0 -> 1
+//                        e.stateMask.and(SWT.CONTROL) != 0 -> 2
+//                        e.stateMask.and(SWT.ALT) != 0 -> 3
+                        else -> 0
+                    }
+
                     if (e.keyCode != 0xd) {
-                        val av = if (Character.isAlphabetic(e.keyCode)) e.character.toUpperCase().toInt()
-                        else e.keyCode
-                        keyProvider.keyPressed(computer.memory, av)
+                        val key = when(e.keyCode) {
+                            SWT.ARROW_LEFT -> 0x88
+                            SWT.ARROW_RIGHT -> 0x95
+                            SWT.ARROW_UP -> 0x8b
+                            SWT.ARROW_DOWN -> 0x8a
+                            in 0x61..0x7a -> e.keyCode - 0x20
+                            else -> {
+                                val l = KEY_MAP[e.keyCode]
+                                if (l != null) {
+                                    l[index].toInt()
+                                } else {
+                                    e.keyCode
+                                }
+                            }
+                        }
+                        keyProvider.keyPressed(computer.memory, key)
                     }
                 }
                 display.addFilter(SWT.Traverse) { e ->
