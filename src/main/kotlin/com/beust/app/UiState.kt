@@ -74,4 +74,9 @@ object UiState {
     val mainScreenMixed = Obs("mixed", false)
     val mainScreenHires = Obs("hires", false)
     val mainScreenPage2 = Obs("page2", false)
+
+    //
+    // Other memory switches
+    //
+    val store80On = Obs("80StoreOn", false)
 }

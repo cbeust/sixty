@@ -12,6 +12,11 @@ class Apple2Memory(val size: Int? = null): IMemory {
     var init = true
 
     var store80On = false
+        set(f) {
+            field = f
+            UiState.store80On.value = f
+        }
+
     private var readAux = false
     private var writeAux = false
     private var textSet = true

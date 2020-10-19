@@ -6,6 +6,7 @@ import com.beust.app.UiState
 import com.beust.sixty.Apple2Memory
 import com.beust.sixty.h
 import com.beust.sixty.hh
+import org.eclipse.jface.resource.JFaceResources
 import org.eclipse.swt.SWT
 import org.eclipse.swt.events.SelectionAdapter
 import org.eclipse.swt.events.SelectionEvent
@@ -23,7 +24,8 @@ class DebuggerWindow(parent: Composite, private val computer: () -> Apple2Comput
         State("Text", 0xc051, 0xc050, 0xc01a, UiState.mainScreenText),
         State("Mixed", 0xc053, 0xc052, 0xc01b, UiState.mainScreenMixed),
         State("Page 2", 0xc055, 0xc054, 0xc01c, UiState.mainScreenPage2),
-        State("Hires", 0xc057, 0xc056, 0xc01d, UiState.mainScreenHires)
+        State("Hires", 0xc057, 0xc056, 0xc01d, UiState.mainScreenHires),
+        State("Store80", 0xc001, 0xc000, 0xc018, UiState.store80On)
     )
 
     init {
@@ -39,7 +41,7 @@ class DebuggerWindow(parent: Composite, private val computer: () -> Apple2Comput
         Group(this, SWT.NONE).apply {
             layout = GridLayout(1, false)
             layoutData = GridData(SWT.FILL, SWT.FILL, true, false)
-            text = "Graphic switches"
+            text = "Switches"
             createStateWidget(this, states)
         }
 //        val speedMhz = label(this, "<speed in Mhz>", SWT.BORDER).apply {
