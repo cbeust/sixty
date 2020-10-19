@@ -267,7 +267,7 @@ class GraphicContext {
         }
         TabItem(folder, SWT.NONE).apply {
             text = "DEBUGGER"
-            control = DebuggerWindow(folder)
+            control = DebuggerWindow(folder, { -> computer })
         }
 
 //    val hiResWindow = HiResWindow(folder)
@@ -275,7 +275,7 @@ class GraphicContext {
 //        text = "\$2000"
 //        control = hiResWindow
 //    }
-        folder.setSelection(0)
+        folder.setSelection(1)
 
 
 //    folder.setSize(500, 900)
