@@ -9,6 +9,8 @@ import org.eclipse.jface.resource.JFaceResources
 import org.eclipse.jface.resource.LocalResourceManager
 import org.eclipse.swt.SWT
 import org.eclipse.swt.graphics.Color
+import org.eclipse.swt.graphics.Font
+import org.eclipse.swt.graphics.FontData
 import org.eclipse.swt.graphics.RGB
 import org.eclipse.swt.widgets.*
 import java.io.File
@@ -44,7 +46,21 @@ fun lightBlue(d: Display) = Color(d, 0x99, 0xcc, 0xff)
 fun lightYellow(d: Display) = Color(d, 0xff, 0xff, 0x99)
 fun lightGrey(d: Display) = Color(d, 0xe0, 0xe0, 0xe0)
 
-fun font(shell: Shell, name: String, size: Int, style: Int = SWT.NONE)
-    = LocalResourceManager(JFaceResources.getResources(), shell)
-        .createFont(FontDescriptor.createFrom(name, size, style))
+object Fonts {
+    private val toDispose = arrayListOf<Font>()
+
+    fun font(shell: Shell, name: String, size: Int, style: Int = SWT.NONE): Font {
+        val result = LocalResourceManager(JFaceResources.getResources(), shell)
+                .createFont(FontDescriptor.createFrom(name, size, style))
+        toDispose.add(result)
+        return result
+    }
+
+    fun makeBold(display: Display, font: Font): Font {
+        val fontData = font.fontData[0]
+        val result = Font(display, FontData(fontData.name, fontData.height.toInt(), SWT.BOLD))
+        toDispose.add(result)
+        return result
+    }
+}
 

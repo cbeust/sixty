@@ -94,12 +94,12 @@ class GraphicContext {
         textFont = if (isFontLoaded) {
             Font(shell.display, "Print Char 21", 12, SWT.NORMAL)
         } else {
-            font(shell, "Arial", 9, SWT.BOLD)
+            Fonts.font(shell, "Arial", 9, SWT.BOLD)
         }
         textFontSmaller = if (isFontLoaded) {
             Font(shell.display, "Print Char 21", 8, SWT.NORMAL)
         } else {
-            font(shell, "Arial", 8, SWT.BOLD)
+            Fonts.font(shell, "Arial", 8, SWT.BOLD)
         }
 
         //
@@ -345,7 +345,7 @@ class GraphicContext {
 
             currentDisk = label(this, diskName).apply {
                 background = bg
-                font = font(shell, "Roboto", fontSize, SWT.BOLD)
+                font = Fonts.font(shell, "Roboto", fontSize, SWT.BOLD)
                 layoutData = GridData(SWT.CENTER, SWT.CENTER, true, true).apply {
                     verticalSpan = 2
                     horizontalSpan = columns - 2
@@ -354,7 +354,7 @@ class GraphicContext {
 
             fun c1(c: Control) = with(c) {
                 background = bg
-                font = font(shell, "Helvetica", fontSize - 4)
+                font = Fonts.font(shell, "Helvetica", fontSize - 4)
                 layoutData = GridData().apply {
                     horizontalAlignment = SWT.RIGHT
                     grabExcessHorizontalSpace = true
@@ -362,7 +362,7 @@ class GraphicContext {
             }
             fun c2(c: Control) = with(c) {
                 background = bg
-                font = font(shell, "Verdana", fontSize - 2, SWT.BOLD)
+                font = Fonts.font(shell, "Verdana", fontSize - 2, SWT.BOLD)
                 layoutData = GridData().apply {
                     horizontalAlignment = SWT.FILL
                     grabExcessHorizontalSpace = true

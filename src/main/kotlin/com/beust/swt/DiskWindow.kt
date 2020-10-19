@@ -72,11 +72,11 @@ fun test6(parent: Composite) {
 
 fun test5(parent: Shell) {
     val display = parent.display
-//    val font1 = Font(display, "Tahoma", 14, SWT.BOLD)
-//    val font2 = Font(display, "MS Mincho", 20, SWT.ITALIC)
-//    val font3 = Font(display, "Arabic Transparent", 18, SWT.NORMAL)
-    val big = Font(display, "Courier New", 12, SWT.NORMAL)
-    val small = Font(display, "Courier New", 6, SWT.NORMAL)
+//    val font1 = Fonts.font(display, "Tahoma", 14, SWT.BOLD)
+//    val font2 = Fonts.font(display, "MS Mincho", 20, SWT.ITALIC)
+//    val font3 = Fonts.font(display, "Arabic Transparent", 18, SWT.NORMAL)
+    val big = Fonts.font(parent.shell, "Courier New", 12, SWT.NORMAL)
+    val small = Fonts.font(parent.shell, "Courier New", 6, SWT.NORMAL)
 
     val blue: Color = display.getSystemColor(SWT.COLOR_BLUE)
     val green: Color = display.getSystemColor(SWT.COLOR_GREEN)
@@ -110,8 +110,8 @@ fun test4(shell: Shell) {
 }
 
 fun test3(shell: Shell) {
-    val f = font(shell, "Courier New", 14)
-    val f2 = font(shell, "Courier New", 8)
+    val f = Fonts.font(shell, "Courier New", 14)
+    val f2 = Fonts.font(shell, "Courier New", 8)
     val st = listOf(12, 16, 20, 24).map {
         StyleRange().apply {
             start = it
@@ -134,8 +134,8 @@ fun test3(shell: Shell) {
 
 
 fun test2(shell: Shell) {
-    val f = font(shell, "Courier New", 14)
-    val f2 = font(shell, "Courier New", 8)
+    val f = Fonts.font(shell, "Courier New", 14)
+    val f2 = Fonts.font(shell, "Courier New", 8)
     Composite(shell, SWT.NONE).apply {
         background = yellow(display)
         layout = GridLayout(1, false).apply {
@@ -156,8 +156,8 @@ fun test2(shell: Shell) {
 
 
 fun test1(shell: Shell) {
-    val f = font(shell, "Courier New", 14)
-    val f2 = font(shell, "Courier New", 8)
+    val f = Fonts.font(shell, "Courier New", 14)
+    val f2 = Fonts.font(shell, "Courier New", 8)
     val st = listOf(3).map {
         StyleRange().apply {
             start = it

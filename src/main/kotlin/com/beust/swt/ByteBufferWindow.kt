@@ -16,7 +16,7 @@ class ByteBufferWindow(parent: Composite) : Composite(parent, SWT.NONE) {
     private var disk: IDisk? = null
     private val rowSize = 16
     private val browser: Browser
-    private val thisSmallFont = font(shell, "Courier New", 8, SWT.NORMAL)
+    private val thisSmallFont = Fonts.font(shell, "Courier New", 8, SWT.NORMAL)
     private var nibbleTrack: NibbleTrack? = null
     private val timingBitRanges = arrayListOf<StyleRange>()
 
