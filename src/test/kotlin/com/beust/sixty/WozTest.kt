@@ -43,7 +43,8 @@ class WozTest {
                 create("Rescue Raiders.dsk", listOf(0x6105 to 0xad)),
                 create("Ultima4.dsk", listOf(0x6182 to 0x8e), 20),
                 create("Sherwood Forest.dsk", listOf(0x246d to 0x55), 10),
-                create("Blade of Blackpoole.dsk", listOf(0x6067 to 0x88), 10)
+                create("Blade of Blackpoole.dsk", listOf(0x6067 to 0x88), 10),
+                create("Commando - Disk 1, Side A.woz", listOf(0x2056 to 0x1e), 10)
             )
             .map { arrayOf(it) }
             .toTypedArray()
