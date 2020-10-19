@@ -38,10 +38,13 @@ fun main() {
     var c = Apple2Computer(gc)
     gc.reset(c)
 
+    val runner = Runner(gc)
     if (RUN) {
-        Runner(gc).runPeriodically(c)
+        val future = runner.runPeriodically(c)
+        gc.run()
+        runner.stop = true
+        future.cancel(true)
+        fw.stop = true
     }
-    gc.run()
-    fw.stop = true
 }
 

@@ -6,9 +6,12 @@ import com.beust.app.UiState
 import com.beust.swt.PERIOD_MILLISECONDS
 import com.beust.swt.SPEED_FACTOR
 import java.util.concurrent.Executors
+import java.util.concurrent.ScheduledFuture
 import java.util.concurrent.TimeUnit
 
 class Runner(val gc: GraphicContext? = null) {
+    var stop = false
+
     private var runStatus = Computer.RunStatus.RUN
     private var sliceStart = System.currentTimeMillis()
 
@@ -52,12 +55,11 @@ class Runner(val gc: GraphicContext? = null) {
     }
 
     fun runPeriodically(computer: IComputer, maxTimeSeconds: Int = 0, blocking: Boolean = false,
-            onStop: () -> Throwable? = { null }): Computer.RunStatus {
+            onStop: () -> Throwable? = { null }): ScheduledFuture<*> {
         var c = computer
         var result: Throwable? = null
         val command = object: Runnable {
             var runStart = System.currentTimeMillis()
-            var stop = false
             override fun run() {
                 try {
                     if (! stop) {
@@ -105,6 +107,6 @@ class Runner(val gc: GraphicContext? = null) {
             }
         }
 
-        return runStatus
+        return task
     }
 }
