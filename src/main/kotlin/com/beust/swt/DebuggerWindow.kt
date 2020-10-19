@@ -16,13 +16,14 @@ import org.eclipse.swt.widgets.Composite
 import org.eclipse.swt.widgets.Group
 
 class DebuggerWindow(parent: Composite, private val computer: () -> Apple2Computer): Composite(parent, SWT.NONE) {
-    class State(val name: String, val obs: Obs<Boolean>, val statusAddress: Int)
+    class State(val name: String, val onAddress: Int, val offAddress: Int, val statusAddress: Int,
+            val obs: Obs<Boolean>)
 
     private val states = listOf(
-        State("Text", UiState.mainScreenText, 0xc01a),
-        State("Mixed", UiState.mainScreenMixed, 0xc01b),
-        State("Page 2", UiState.mainScreenPage2, 0xc01c),
-        State("Hires", UiState.mainScreenHires, 0xc01d)
+        State("Text", 0xc051, 0xc050, 0xc01a, UiState.mainScreenText),
+        State("Mixed", 0xc053, 0xc052, 0xc01b, UiState.mainScreenMixed),
+        State("Page 2", 0xc055, 0xc054, 0xc01c, UiState.mainScreenPage2),
+        State("Hires", 0xc057, 0xc056, 0xc01d, UiState.mainScreenHires)
     )
 
     init {
@@ -59,6 +60,9 @@ class DebuggerWindow(parent: Composite, private val computer: () -> Apple2Comput
                 label(this, state.name)
                 val checkBox = Button(this, SWT.CHECK).apply {
                     selection = state.obs.value
+                    addListener(SWT.Selection) { e ->
+                        computer().memory[if (selection) state.onAddress else state.offAddress] = 0
+                    }
                 }
                 val status = label(this, "\$00")// computer().memory[state.statusAddress].h())
 
