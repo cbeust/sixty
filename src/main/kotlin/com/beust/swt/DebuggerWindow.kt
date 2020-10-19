@@ -29,7 +29,7 @@ class DebuggerWindow(parent: Composite, private val computer: () -> Apple2Comput
     init {
         layout = GridLayout(1, false)
         Button(this, SWT.CHECK).apply {
-            text = "Show lives 6502 execution"
+            text = "Show 6502 execution"
             addSelectionListener(object: SelectionAdapter() {
                 override fun widgetSelected(e: SelectionEvent?) {
                     UiState.debug.value = selection
