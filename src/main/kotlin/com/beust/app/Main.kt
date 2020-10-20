@@ -24,13 +24,14 @@ val DISKS = listOf(
         disk("King's Quest - A.woz"), // 11
         disk("Karateka.dsk"), // 12
         disk("Karateka.woz"), // 13
-        disk("Commando - Disk 1, Side A.woz") // 14
+        disk("Commando - Disk 1, Side A.woz"), // 14
+        disk("Planetfall - Disk 1, Side A.woz") // 15
 )
 
 val RUN = true
 var DEBUG = false
 val BREAKPOINT: Int? = null // 0x5a0//0xc6a6//0x5f8 // 0x5f8 // 0x5a0 //0x5f8 // 0x59e // null//0x556//0xc2de // 0xc2db
-val DISK = DISKS[14]
+val DISK = DISKS[15]
 
 fun main() {
     val fw = FileWatcher()
