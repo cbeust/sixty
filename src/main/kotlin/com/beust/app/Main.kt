@@ -40,10 +40,9 @@ fun main() {
 
     val runner = Runner(gc)
     if (RUN) {
-        val future = runner.runPeriodically(c)
+        runner.runPeriodically(c)
         gc.run()
-        runner.stop = true
-        future.cancel(true)
+        runner.stop()
         fw.stop = true
     }
 }

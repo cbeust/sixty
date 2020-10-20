@@ -10,10 +10,21 @@ import java.util.concurrent.ScheduledFuture
 import java.util.concurrent.TimeUnit
 
 class Runner(val gc: GraphicContext? = null) {
-    var stop = false
-
+    private var stop = false
+    private val threadPool = Executors.newScheduledThreadPool(1)
     private var runStatus = Computer.RunStatus.RUN
     private var sliceStart = System.currentTimeMillis()
+    private var future: ScheduledFuture<*>? = null
+    private var throwable: Throwable? = null
+
+    fun stop() {
+        stop = true
+        future?.cancel(true)
+        threadPool.shutdown()
+        throwable?.let {
+            throw(it)
+        }
+    }
 
     fun runCycles(computer: IComputer, cycles: Int) {
         repeat(cycles) {
@@ -55,9 +66,8 @@ class Runner(val gc: GraphicContext? = null) {
     }
 
     fun runPeriodically(computer: IComputer, maxTimeSeconds: Int = 0, blocking: Boolean = false,
-            onStop: () -> Throwable? = { null }): ScheduledFuture<*> {
+            onStop: () -> Throwable? = { null }) {
         var c = computer
-        var result: Throwable? = null
         val command = object: Runnable {
             var runStart = System.currentTimeMillis()
             override fun run() {
@@ -82,12 +92,14 @@ class Runner(val gc: GraphicContext? = null) {
 
                         if (maxTimeSeconds > 0 && (System.currentTimeMillis() - runStart) / 1000 >= maxTimeSeconds) {
                             stop = true
-                            result = onStop()
+                            throwable = onStop()
                             synchronized(blocked) {
                                 @Suppress("ConvertLambdaToReference")
                                 blocked.notify()
                             }
                         }
+                    } else {
+                        threadPool.shutdown()
                     }
                 } catch(ex: Throwable) {
                     ex.printStackTrace()
@@ -96,17 +108,11 @@ class Runner(val gc: GraphicContext? = null) {
             }
         }
 
-        val tp = Executors.newScheduledThreadPool(1)
-        val task = tp.scheduleWithFixedDelay(command, 0, PERIOD_MILLISECONDS, TimeUnit.MILLISECONDS)
-        println("Scheduling a new timer thread")
+
+        future = threadPool.scheduleWithFixedDelay(command, 0, PERIOD_MILLISECONDS, TimeUnit.MILLISECONDS)
         if (blocking) synchronized(blocked) {
             blocked.wait()
-            task.cancel(true)
-            if (result != null) {
-                throw result!!
-            }
+            stop()
         }
-
-        return task
     }
 }

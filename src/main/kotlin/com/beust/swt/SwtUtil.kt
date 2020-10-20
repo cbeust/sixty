@@ -62,5 +62,9 @@ object Fonts {
         toDispose.add(result)
         return result
     }
+
+    fun disposeAll() {
+        toDispose.forEach { it.dispose() }
+    }
 }
 

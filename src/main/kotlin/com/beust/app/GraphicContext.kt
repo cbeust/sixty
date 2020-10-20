@@ -67,6 +67,7 @@ class GraphicContext {
             if (!display.readAndDispatch()) display.sleep()
         }
         hiResWindow.stop()
+//        Fonts.disposeAll()
 //        display.dispose()
     }
 

@@ -56,7 +56,6 @@ class WozTest {
         val c = createHeadlessApple2Computer(di.disk)
         val runner = Runner()
         log("Booting " + di.disk.name)
-        var result: Throwable? = null
         runner.runPeriodically(c, di.seconds, blocking = true) {
             di.addresses.forEach {
                 if (c.memory[it.first] != it.second) {
