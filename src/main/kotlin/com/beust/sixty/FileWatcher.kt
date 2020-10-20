@@ -6,12 +6,19 @@ import java.util.concurrent.TimeUnit
 
 class FileWatcher {
     private val log = LoggerFactory.getLogger(FileWatcher::class.java)
-    private val DIR = "D:\\pd\\Apple disks\\"
-    var stop = false
+    private val DIR = "D:/t"
+    private var stop = false
     class WatchedFile(val filename: String, val address: Int)
 
     private val files = listOf(WatchedFile("watched.pic", 0x1ffc),
-            WatchedFile("watched2.pic", 0x3ffc))
+            WatchedFile("watched2.pic", 0x3ffc),
+            WatchedFile("page1.pic", 0x2000),
+            WatchedFile("page2.pic", 0x4000)
+    )
+
+    fun stop() {
+        stop = true
+    }
 
     fun run(memory: IMemory) {
         log.info("Starting FileWatcher")
@@ -41,6 +48,7 @@ class FileWatcher {
                 }
             }
         }
+        log.info("FileWatcher exiting")
         watcher.close()
     }
 }

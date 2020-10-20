@@ -2,6 +2,7 @@ package com.beust.app
 
 import com.beust.sixty.*
 import java.util.*
+import java.util.concurrent.TimeUnit
 
 class DiskController(val slot: Int = 6): MemoryListener() {
     private val slot16 = slot * 16
@@ -29,16 +30,14 @@ class DiskController(val slot: Int = 6): MemoryListener() {
                 } else if (f == MotorState.OFF) {
                     if (field == MotorState.ON) {
                         // Turn off the motor after a second, unless it was turned on in the meantime
-                        val task = object: TimerTask() {
-                            override fun run() {
-                                if (field == MotorState.SPINNING_DOWN) {
-                                    logDisk("Turning motor OFF after a second")
-                                    updateUi(false)
-                                    field = MotorState.OFF
-                                } // Motor was turned on while spinning down: not turning it off
-                            }
+                        val task = Runnable {
+                            if (field == MotorState.SPINNING_DOWN) {
+                                logDisk("Turning motor OFF after a second")
+                                updateUi(false)
+                                field = MotorState.OFF
+                            } // Motor was turned on while spinning down: not turning it off
                         }
-                        Timer().schedule(task, 7500)
+                        Threads.scheduledThreadPool.schedule(task, 7500,TimeUnit.MILLISECONDS)
                         logDisk("Motor spinning down")
                         field = MotorState.SPINNING_DOWN
                     } // we're already OFF or SPINNING_DOWN, nothing to do

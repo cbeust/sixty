@@ -38,12 +38,22 @@ class DebuggerWindow(parent: Composite, private val computer: () -> Apple2Comput
         layout = GridLayout(columns, false)
         Button(this, SWT.CHECK).apply {
             text = "Show 6502 execution"
-            layoutData = GridData().apply {
-                horizontalSpan = columns
-            }
+//            layoutData = GridData().apply {
+//                horizontalSpan = columns - 1
+//            }
             addSelectionListener(object: SelectionAdapter() {
                 override fun widgetSelected(e: SelectionEvent?) {
                     UiState.debug.value = selection
+                }
+            })
+        }
+        button(this, "Dump").apply {
+            addSelectionListener(object: SelectionAdapter() {
+                override fun widgetSelected(e: SelectionEvent?) {
+                    with(computer().memory) {
+                        save("d:/t/page1.pic", 0x2000, 0x2000)
+                        save("d:/t/page2.pic", 0x4000, 0x2000)
+                    }
                 }
             })
         }

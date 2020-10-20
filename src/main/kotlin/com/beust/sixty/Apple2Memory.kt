@@ -561,6 +561,15 @@ class Apple2Memory(val size: Int? = null): IMemory {
         init = false
     }
 
+    fun save(fileName: String, address: Int, length: Int) {
+        val bytes = arrayListOf<Byte>()
+        repeat(length) {
+            bytes.add(this[address + it].toByte())
+        }
+
+        File(fileName).writeBytes(bytes.toByteArray())
+        log("Saved file $fileName, address: \$${address.hh()}, length: ${length.hh()}")
+    }
 }
 
 

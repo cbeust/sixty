@@ -1,11 +1,9 @@
 package com.beust.app
 
-import com.beust.sixty.Computer
 import com.beust.sixty.FileWatcher
 import com.beust.sixty.Runner
 import java.io.File
 import java.util.concurrent.Executors
-import java.util.concurrent.TimeUnit
 
 fun disk(s: String) = File("disks/$s")
 
@@ -31,20 +29,36 @@ val DISKS = listOf(
 val RUN = true
 var DEBUG = false
 val BREAKPOINT: Int? = null // 0x5a0//0xc6a6//0x5f8 // 0x5f8 // 0x5a0 //0x5f8 // 0x59e // null//0x556//0xc2de // 0xc2db
-val DISK = DISKS[15]
+val DISK = DISKS[14]
+const val SPEED_FACTOR = 4
+
+object Threads {
+    val threadPool = Executors.newFixedThreadPool(2)
+    val scheduledThreadPool = Executors.newScheduledThreadPool(2)
+
+    fun stop() {
+        threadPool.shutdown()
+        scheduledThreadPool.shutdown()
+    }
+}
 
 fun main() {
+
     val fw = FileWatcher()
     val gc = GraphicContext()
     var c = Apple2Computer(gc)
     gc.reset(c)
+    Threads.threadPool.submit {
+        fw.run(c.memory)
+    }
 
     val runner = Runner(gc)
     if (RUN) {
         runner.runPeriodically(c)
         gc.run()
         runner.stop()
-        fw.stop = true
+        fw.stop()
+        Threads.stop()
     }
 }
 

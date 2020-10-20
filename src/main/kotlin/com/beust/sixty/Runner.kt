@@ -1,9 +1,6 @@
 package com.beust.sixty
 
-import com.beust.app.Apple2Computer
-import com.beust.app.GraphicContext
-import com.beust.app.SPEED_FACTOR
-import com.beust.app.UiState
+import com.beust.app.*
 import com.beust.swt.PERIOD_MILLISECONDS
 import java.util.concurrent.Executors
 import java.util.concurrent.ScheduledFuture
@@ -100,7 +97,7 @@ class Runner(val gc: GraphicContext? = null) {
                             }
                         }
                     } else {
-                        threadPool.shutdown()
+                        stop()
                     }
                 } catch(ex: Throwable) {
                     ex.printStackTrace()
@@ -110,7 +107,7 @@ class Runner(val gc: GraphicContext? = null) {
         }
 
 
-        future = threadPool.scheduleWithFixedDelay(command, 0, PERIOD_MILLISECONDS, TimeUnit.MILLISECONDS)
+        Threads.scheduledThreadPool.scheduleWithFixedDelay(command, 0, PERIOD_MILLISECONDS, TimeUnit.MILLISECONDS)
         if (blocking) synchronized(blocked) {
             blocked.wait()
             stop()
