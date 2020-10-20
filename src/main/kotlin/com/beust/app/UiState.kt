@@ -79,4 +79,9 @@ object UiState {
     // Other memory switches
     //
     val store80On = Obs("80StoreOn", false)
+    val readAux = Obs("Read aux", false)
+    val writeAux = Obs("Write aux", false)
+    val internalCxRom = Obs("Internal Cx rom", false)
+    val altZp = Obs("Alt Zero Page", false)
+    val slotC3Rom = Obs("Slot C3 rom", false)
 }

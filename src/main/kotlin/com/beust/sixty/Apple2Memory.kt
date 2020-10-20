@@ -18,7 +18,16 @@ class Apple2Memory(val size: Int? = null): IMemory {
         }
 
     private var readAux = false
+        set(f) {
+            field = f
+            UiState.readAux.value = f
+        }
     private var writeAux = false
+        set(f) {
+            field = f
+            UiState.writeAux.value = f
+        }
+
     private var textSet = true
         set(f) {
             field = f
@@ -44,10 +53,12 @@ class Apple2Memory(val size: Int? = null): IMemory {
     var internalCxRom: Boolean = false
         set(f) {
             internalC8Rom = false
+            UiState.internalCxRom.value = f
             field = f
         }
     var slotC3Rom: Boolean = false
         set(f) {
+            UiState.slotC3Rom.value = f
             internalC8Rom = false
             field = f
         }
@@ -60,6 +71,11 @@ class Apple2Memory(val size: Int? = null): IMemory {
 
     /** Affects $0-$1FF and $D000-$FFFF */
     private var altZp = false
+        set(f) {
+            UiState.altZp.value = f
+            field = f
+        }
+
     private val mainZp = IntArray(0x200) { 0 }
     private val auxZp = IntArray(0x200) { 0 }
 
