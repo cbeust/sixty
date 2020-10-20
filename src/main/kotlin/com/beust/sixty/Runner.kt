@@ -2,9 +2,9 @@ package com.beust.sixty
 
 import com.beust.app.Apple2Computer
 import com.beust.app.GraphicContext
+import com.beust.app.SPEED_FACTOR
 import com.beust.app.UiState
 import com.beust.swt.PERIOD_MILLISECONDS
-import com.beust.swt.SPEED_FACTOR
 import java.util.concurrent.Executors
 import java.util.concurrent.ScheduledFuture
 import java.util.concurrent.TimeUnit
@@ -73,6 +73,7 @@ class Runner(val gc: GraphicContext? = null) {
             override fun run() {
                 try {
                     if (! stop) {
+                        val memory = computer.memory
                         val cycleStart = System.currentTimeMillis()
                         val (status, cycles) = runTimedSlice(c)
                         when (status) {
