@@ -13,6 +13,7 @@
 - Fix graphics
 - Fix animations
 - Make keyboard work
+- Double hi res (King's Quest)
 
 ===
 archon.hgr
