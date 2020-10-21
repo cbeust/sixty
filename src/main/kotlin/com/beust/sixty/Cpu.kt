@@ -59,7 +59,7 @@ data class Cpu(val memory: IMemory,
                 adc(content())
                 when(opCode) {
                     ADC_ABS_X, ADC_ABS_Y, ADC_IND_Y -> {
-                        timing += pageCrossed(PC, effectiveAddress)
+                        timing += pageCrossed(memory.word(PC - 2), effectiveAddress)
                     }
                 }
             }
@@ -72,7 +72,7 @@ data class Cpu(val memory: IMemory,
                 P.setNZFlags(A)
                 when(opCode) {
                     AND_ABS_X, AND_ABS_Y, AND_IND_Y -> {
-                        timing += pageCrossed(PC, effectiveAddress)
+                        timing += pageCrossed(memory.word(PC - 2), effectiveAddress)
                     }
                 }
 
@@ -105,7 +105,7 @@ data class Cpu(val memory: IMemory,
                 cmp(A, content())
                 when(opCode) {
                     CMP_ABS_X, CMP_ABS_Y, CMP_IND_Y -> {
-                        timing += pageCrossed(PC, effectiveAddress)
+                        timing += pageCrossed(memory.word(PC - 2), effectiveAddress)
                     }
                 }
 
@@ -129,7 +129,7 @@ data class Cpu(val memory: IMemory,
                 P.setNZFlags(A)
                 when(opCode) {
                     EOR_ABS_X, EOR_ABS_Y, EOR_IND_Y -> {
-                        timing += pageCrossed(PC, effectiveAddress)
+                        timing += pageCrossed(memory.word(PC - 2), effectiveAddress)
                     }
                 }
 
@@ -167,7 +167,7 @@ data class Cpu(val memory: IMemory,
                 P.setNZFlags(A)
                 when(opCode) {
                     LDA_ABS_X, LDA_ABS_Y, LDA_IND_Y -> {
-                        timing += pageCrossed(PC, effectiveAddress)
+                        timing += pageCrossed(memory.word(PC - 2), effectiveAddress)
                     }
 
                 }
@@ -181,7 +181,7 @@ data class Cpu(val memory: IMemory,
                 P.setNZFlags(X)
                 when(opCode) {
                     LDX_ABS_Y -> {
-                        timing += pageCrossed(PC, effectiveAddress)
+                        timing += pageCrossed(memory.word(PC - 2), effectiveAddress)
                     }
                 }
             }
@@ -194,7 +194,7 @@ data class Cpu(val memory: IMemory,
                 P.setNZFlags(Y)
                 when(opCode) {
                     LDY_ABS_X -> {
-                        timing += pageCrossed(PC, effectiveAddress)
+                        timing += pageCrossed(memory.word(PC - 2), effectiveAddress)
                     }
                 }
             }
@@ -206,7 +206,7 @@ data class Cpu(val memory: IMemory,
                 P.setNZFlags(A)
                 when(opCode) {
                     ORA_ABS_X, ORA_ABS_Y, ORA_IND_Y -> {
-                        timing += pageCrossed(PC, effectiveAddress)
+                        timing += pageCrossed(memory.word(PC - 2), effectiveAddress)
                     }
                 }
             }
@@ -270,7 +270,7 @@ data class Cpu(val memory: IMemory,
                 sbc(content())
                 when(opCode) {
                     SBC_ABS_X, SBC_ABS_Y, SBC_IND_Y -> {
-                        timing += pageCrossed(PC, effectiveAddress)
+                        timing += pageCrossed(memory.word(PC - 2), effectiveAddress)
                     }
                 }
             }
