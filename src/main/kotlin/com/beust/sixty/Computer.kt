@@ -144,7 +144,7 @@ class Computer(override val memory: IMemory, override val cpu: Cpu, val pcListen
 
             try {
 //                    DEBUG = cycles >= 15348000
-                debugAsm = DEBUG
+                debugAsm = DEBUG && cpu.PC < 0xc000
                 if (DEBUG) {
                     val (byte, word) = byteWord()
                     val debugString = formatPc(cpu.PC, opCode) + formatInstruction(opCode, cpu.PC, byte, word)
