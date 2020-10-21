@@ -1,9 +1,6 @@
 package com.beust.sixty
 
-import com.beust.app.Apple2MemoryListener
-import com.beust.app.BREAKPOINT
-import com.beust.app.DEBUG
-import com.beust.app.UiState
+import com.beust.app.*
 import org.slf4j.LoggerFactory
 
 //interface MemoryInterceptor {
@@ -120,10 +117,11 @@ class Computer(override val memory: IMemory, override val cpu: Cpu, val pcListen
         if (opCode == 0x60 && cpu.SP.isEmpty()) {
             done = true
         } else {
-            if (BREAKPOINT != null) {
-                if (cpu.PC in (BREAKPOINT - 20)..BREAKPOINT) {
-                    DEBUG = true
-                }
+            if (cpu.PC == BREAKPOINT) {
+                println("BREAKPOINT")
+            }
+            if (BREAKPOINT_RANGE != null) {
+                DEBUG = cpu.PC in BREAKPOINT_RANGE
             }
 ////                if (cycles > 1180035) {
 ////                    println("cycle breakpoint")
@@ -162,7 +160,7 @@ class Computer(override val memory: IMemory, override val cpu: Cpu, val pcListen
                     }
                     cpu.PC += SIZES[opCode]
                     timing = cpu.nextInstruction(previousPc)
-                    if (debugAsm) logAsm(debugString + " " + cpu.toString() + " " + cycles)
+                    if (debugAsm) logAsm(debugString + " ($timing) " + cpu.toString() + " " + cycles)
                     if (true) { // debugMemory) {
                         memory.listeners.forEach {
                             it.logLines.forEach { println(it) }

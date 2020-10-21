@@ -29,7 +29,8 @@ val DISKS = listOf(
 
 val RUN = true
 var DEBUG = false
-val BREAKPOINT: Int? = 0x9e54 // null // 0x5a0//0xc6a6//0x5f8 // 0x5f8 // 0x5a0 //0x5f8 // 0x59e // null//0x556//0xc2de // 0xc2db
+val BREAKPOINT: Int? = null // 0x9e52 // null // 0x5a0//0xc6a6//0x5f8 // 0x5f8 // 0x5a0
+val BREAKPOINT_RANGE: IntRange? = null // 0x9e42..0x9e50
 val BREAKPOINT_WRITE: Int? = null // 0x100
 val DISK = DISKS[16]
 const val SPEED_FACTOR = 2
