@@ -59,7 +59,7 @@ object UiState {
     val addressEpilogue: Obs<String> = Obs("Address epilogue", "deaa")
     val dataPrologue: Obs<String> = Obs("Address prologue", "d5aaad")
     val dataEpilogue: Obs<String> = Obs("Address epilogue", "deaa")
-    val caretSectorInfo: Obs<ByteBufferWindow.SectorInfo?> = Obs("Current sector info", null)
+    val caretSectorInfo: Obs<NibbleTrack.SectorInfo?> = Obs("Current sector info", null)
 
     //
     // DEBUGGER tab

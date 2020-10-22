@@ -1,6 +1,8 @@
 package com.beust.app
 
+import com.beust.sixty.ERROR
 import com.beust.sixty.bit
+import com.beust.sixty.logWoz
 import java.io.InputStream
 
 fun main() {
@@ -40,7 +42,6 @@ class WozDisk(override val name: String, ins: InputStream): BaseDisk() {
 
     private fun updatePosition(oldPhase: Int, newPhase: Int) {
         println("UPDATE POSITION: $oldPhase -> $newPhase")
-        val oldTrack = woz.tmap.offsetFor(oldPhase)
         val newTrack = woz.tmap.offsetFor(newPhase)
 //        if (oldTrack != newTrack) {
             val oldBitStream = woz.bitStreamForPhase(oldPhase)
@@ -49,16 +50,13 @@ class WozDisk(override val name: String, ins: InputStream): BaseDisk() {
             val oldTrackLength = oldBitStream.sizeInBits
             val newTrackLength = newBitStream.sizeInBits
             val position = oldBitStream.bitPosition
-            val newPosition = position.toLong() * newTrackLength / oldTrackLength + 0x150
+            val newPosition = position.toLong() * newTrackLength / oldTrackLength
             if (newPosition < 0) {
-                println("PROBLEM")
+                ERROR("Negative new position, should never happen")
             }
-        if (newTrack != -1) println("New position for new phase $newTrack: " + newPosition)
-            newBitStream.bitPosition = newPosition.toInt()
-            changedTrack = true
-//        } else {
-//            println("Changed phase $oldPhase -> $newPhase but same track $oldTrack, not doing anything")
-//        }
+        if (newTrack != -1) logWoz("New position for new phase $newTrack: " + newPosition)
+        newBitStream.bitPosition = newPosition.toInt()
+        changedTrack = true
     }
 
     val bitStream: IBitStream

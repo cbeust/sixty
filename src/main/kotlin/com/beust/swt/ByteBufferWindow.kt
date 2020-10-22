@@ -2,23 +2,20 @@ package com.beust.swt
 
 import com.beust.app.*
 import com.beust.sixty.h
-import org.eclipse.jface.text.TextPresentation
-import org.eclipse.jface.text.TextViewer
 import org.eclipse.swt.SWT
-import org.eclipse.swt.browser.Browser
+import org.eclipse.swt.browser.*
 import org.eclipse.swt.custom.StyleRange
-import org.eclipse.swt.custom.StyledText
 import org.eclipse.swt.layout.GridData
 import org.eclipse.swt.layout.GridLayout
 import org.eclipse.swt.widgets.Composite
+
 
 class ByteBufferWindow(parent: Composite) : Composite(parent, SWT.NONE) {
     private var disk: IDisk? = null
     private val rowSize = 16
     private val browser: Browser
-    private val thisSmallFont = Fonts.font(shell, "Courier New", 8, SWT.NORMAL)
-    private var nibbleTrack: NibbleTrack? = null
-    private val timingBitRanges = arrayListOf<StyleRange>()
+    private lateinit var nibbleTrack: NibbleTrack
+    private val bufferContent = arrayListOf<TimedByte>()
 
     init {
         // Create a child composite to hold the controls
@@ -54,25 +51,23 @@ class ByteBufferWindow(parent: Composite) : Composite(parent, SWT.NONE) {
         updateBufferContent()
     }
 
-    data class SectorInfo(val volume: Int, val track: Int, val sector: Int, val checksum: Int)
-
     private fun updateBufferContent(passedDisk: IDisk? = null, track: Int = 0,
             byteAlgorithm: ByteAlgorithm = ByteAlgorithm.SHIFTED) {
-        println("Updating buffer with file "+ UiState.diskStates[0].file)
+        bufferContent.clear()
         display.asyncExec { browser.text = "" }
         val disk = passedDisk ?: IDisk.create(UiState.diskStates[0].file.value)
         if (disk != null) {
-            nibbleTrack = NibbleTrack(disk, disk.sizeInBits)
             repeat(160) { disk.decPhase() }
             repeat(track) {
                 disk.incPhase()
             }
+            nibbleTrack = NibbleTrack(disk, disk.sizeInBits, createMarkFinders())
 
             fun nextByte(): TimedByte {
                 val result =
                     when (byteAlgorithm) {
                         ByteAlgorithm.SHIFTED -> {
-                            nibbleTrack!!.nextByte()
+                            nibbleTrack.nextByte()
                         }
                         else -> {
                             TimedByte(disk.nextByte(), 0)
@@ -97,10 +92,9 @@ class ByteBufferWindow(parent: Composite) : Composite(parent, SWT.NONE) {
                 <body>
                     <table>
             """.trimIndent())
-            timingBitRanges.clear()
-            val analyzedTrack = nibbleTrack!!.analyze(createMarkFinders())
+            val analyzedTrack = nibbleTrack.analyzedTrack
             var byteCount = 0
-            while (byteCount < analyzedTrack.sizeInBits / 8 + 1) {
+            while (byteCount < nibbleTrack.sizeInBits / 8 + 1) {
                 if (byteCount % rowSize == 0) {
                     // New offset
                     if (byteCount > 0) html.append("</tr>\n")
@@ -110,29 +104,62 @@ class ByteBufferWindow(parent: Composite) : Composite(parent, SWT.NONE) {
                 }
 
                 val nb = nextByte()
+                bufferContent.add(nb)
                 byteText.append(nb.byte.h())
-                val cls = when(analyzedTrack.typeFor(byteCount)) {
-                    NibbleTrack.AnalyzedTrack.Type.ADDRESS -> " class=\"address\""
-                    NibbleTrack.AnalyzedTrack.Type.DATA -> " class=\"data\""
-                    else -> ""
-                }
+                val clsName = if (analyzedTrack != null) when(analyzedTrack.typeFor(byteCount)) {
+                        NibbleTrack.AnalyzedTrack.Type.ADDRESS -> " address"
+                        NibbleTrack.AnalyzedTrack.Type.DATA -> " data"
+                        else -> ""
+                    } else {
+                        ""
+                    }
+                val cls = " id=\"$byteCount\" class=\"nibble$clsName\""
                 val sup = if (nb.timingBitCount > 0) "<sup>${nb.timingBitCount}</sup>" else ""
                 html.append("<td$cls>" + nb.byte.h() + sup + "</td>")
 
-                // Add the timing bit count
-                if (nb.timingBitCount > 0) {
-                    timingBitRanges.add(StyleRange(byteText.length, 2, black(display), white(display)).apply {
-                        font = thisSmallFont
-                        rise = 4
-                    })
-                }
                 byteText.append(if (nb.timingBitCount > 0) String.format("%-2d", nb.timingBitCount) else "  ")
                 byteCount++
             }
-            html.append("</table></body></html>")
+            val script = """
+                   <script>
+                        var elements = document.getElementsByClassName("nibble");
+                        for (var i = 0; i < elements.length; i++) {
+                            (function (index) {
+                                elements[index].addEventListener("click", function () {
+                                    for (var x = 0; x < elements.length; x++) {
+                                        if (elements[x] === this) nibbleClicked(elements[x].id);
+                                    }
+                        
+                                }, false);
+                            })(i);
+                        }
+                    </script>
+            """.trimIndent()
+            html.append("</table></body>$script</html>")
+
+            CustomFunction(browser, "nibbleClicked")
+
+//            browser.addProgressListener(ProgressListener.completedAdapter({ event ->
+//                browser.addLocationListener(object : LocationAdapter() {
+//                    override fun changed(event: LocationEvent) {
+//                        browser.removeLocationListener(this)
+//                        println("left java function-aware page, so disposed CustomFunction")
+//                        function.dispose()
+//                    }
+//                })
+//            }))
             display.asyncExec {
                 browser.text = html.toString()
             }
+        }
+    }
+
+    inner class CustomFunction(browser: Browser?, name: String?)
+        : BrowserFunction(browser, name) {
+        override fun function(arguments: Array<Any>) {
+            val index = Integer.parseInt(arguments[0].toString())
+            UiState.currentBytes.value = listOf(bufferContent[index], bufferContent[index + 1]).map { it.byte }
+            UiState.caretSectorInfo.value = nibbleTrack.sectorInfoForIndex(index)
         }
     }
 

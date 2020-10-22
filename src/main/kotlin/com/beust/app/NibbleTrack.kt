@@ -1,12 +1,11 @@
 package com.beust.app
 
 import com.beust.sixty.logDisk
-import com.beust.swt.ByteBufferWindow
 
-fun main() {
-    val disk = WozDisk("", DISKS[1].inputStream())
-    NibbleTrack(disk.bitStream, disk.phaseSizeInBits(0))
-}
+//fun main() {
+//    val disk = WozDisk("", DISKS[1].inputStream())
+//    NibbleTrack(disk.bitStream, disk.phaseSizeInBits(0), createMarkFinders())
+//}
 
 class TimedByte(val byte: Int, val timingBitCount: Int = 0)
 
@@ -26,8 +25,9 @@ class BouncingMarkFinders: IMarkFinders {
     override fun isDataEpilogue(bytes: List<Int>) = bytes == listOf(0xda, 0xaa)
 }
 
-class NibbleTrack(bitStream: IBitStream, val sizeInBits: Int) {
+class NibbleTrack(bitStream: IBitStream, val sizeInBits: Int, private val markFinders: IMarkFinders) {
     val bytes = arrayListOf<TimedByte>()
+    var analyzedTrack: AnalyzedTrack? = null
 
     private val tmpBytes = arrayListOf<TimedByte>()
 
@@ -47,7 +47,7 @@ class NibbleTrack(bitStream: IBitStream, val sizeInBits: Int) {
         var readCounts = 0
         var start = -1
         var end = -1
-        while(! done) {
+        while (!done) {
             var byte = 0
             while (byte and 0x80 == 0) {
                 val pair = bitStream.nextBit()
@@ -67,8 +67,33 @@ class NibbleTrack(bitStream: IBitStream, val sizeInBits: Int) {
             tmpBytes.add(TimedByte(byte, zeros))
         }
         bytes.addAll(tmpBytes.slice(start..end))
-        println("Final track: " + bytes.size*8 + " bitCount:" + sizeInBits)
         tmpBytes.clear()
+        analyzeTrack()
+    }
+
+    fun analyzeTrack() {
+        analyzedTrack = analyze(markFinders)
+    }
+
+    data class SectorInfo(val volume: Int, val track: Int, val sector: Int, val checksum: Int)
+
+    fun sectorInfoForIndex(index: Int): SectorInfo? {
+        val result =
+            if (analyzedTrack == null) null
+            else analyzedTrack?.let { at ->
+                val tr = at.trackRanges.filter { it.isAddress }.reversed().firstOrNull { it.range.first < index }
+                if (tr != null) {
+                    val ind = tr.range.start
+                    val volume = SixAndTwo.pair4And4(bytes[ind].byte, bytes[ind + 1].byte)
+                    val track = SixAndTwo.pair4And4(bytes[ind + 2].byte, bytes[ind + 3].byte)
+                    val sector  = SixAndTwo.pair4And4(bytes[ind + 4].byte, bytes[ind + 5].byte)
+                    val checksum  = SixAndTwo.pair4And4(bytes[ind + 6].byte, bytes[ind + 7].byte)
+                    SectorInfo(volume, track, sector, checksum)
+                } else {
+                    null
+                }
+            }
+        return result
     }
 
     private fun peek(pos: Int, count: Int): List<Int> {
@@ -119,21 +144,21 @@ class NibbleTrack(bitStream: IBitStream, val sizeInBits: Int) {
         }
     }
 
-    fun analyze(markFinders: IMarkFinders = DefaultMarkFinders()): AnalyzedTrack {
-        val result = arrayListOf<TrackRange>()
+    private fun analyze(markFinders: IMarkFinders = DefaultMarkFinders()): AnalyzedTrack {
+        val trackRanges = arrayListOf<TrackRange>()
         var i = 0
         var sectors = 0
         while (sectors < 16) {
             val addressRange = findNextChunk(i, markFinders::isAddressPrologue, markFinders::isAddressEpilogue)
             if (addressRange != null) {
                 i = addressRange.endInclusive
-                result.add(TrackRange(true, addressRange))
+                trackRanges.add(TrackRange(true, addressRange))
             }
 
             val dataRange = findNextChunk(i, markFinders::isDataPrologue, markFinders::isDataEpilogue)
             if (dataRange != null) {
                 i = dataRange.endInclusive
-                result.add(TrackRange(false, dataRange))
+                trackRanges.add(TrackRange(false, dataRange))
 
                 // Verify checksum
                 var chesksum = 0
@@ -147,7 +172,7 @@ class NibbleTrack(bitStream: IBitStream, val sizeInBits: Int) {
             sectors++
         }
 
-        return AnalyzedTrack(result, sizeInBits)
+        return AnalyzedTrack(trackRanges, sizeInBits)
     }
 
     private var byteIndex = 0
