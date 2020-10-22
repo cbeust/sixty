@@ -36,15 +36,40 @@ class WozDisk(override val name: String, ins: InputStream): BaseDisk() {
         return woz.bitStreamForPhase(phase).sizeInBits
     }
 
+    private var changedTrack = false
 
-    private fun updatePosition(oldTrack: Int, newTrack: Int) {
-//        val oldTrackLength = woz.trks.trks[oldTrack].bitCount / 8
-//        val newTrackLength = woz.trks.trks[newTrack].bitCount / 8
-//        if (oldTrackLength != 0 && newTrack != 0) {
-//            position = position * newTrackLength / oldTrackLength
-////            println("Update position oldTrack: $oldTrack -> $newTrack, new position: $position")
+    private fun updatePosition(oldPhase: Int, newPhase: Int) {
+        println("UPDATE POSITION: $oldPhase -> $newPhase")
+        val oldTrack = woz.tmap.offsetFor(oldPhase)
+        val newTrack = woz.tmap.offsetFor(newPhase)
+//        if (oldTrack != newTrack) {
+            val oldBitStream = woz.bitStreamForPhase(oldPhase)
+            val newBitStream = woz.bitStreamForPhase(newPhase)
+
+            val oldTrackLength = oldBitStream.sizeInBits
+            val newTrackLength = newBitStream.sizeInBits
+            val position = oldBitStream.bitPosition
+            val newPosition = position.toLong() * newTrackLength / oldTrackLength + 0x150
+            if (newPosition < 0) {
+                println("PROBLEM")
+            }
+        if (newTrack != -1) println("New position for new phase $newTrack: " + newPosition)
+            newBitStream.bitPosition = newPosition.toInt()
+            changedTrack = true
+//        } else {
+//            println("Changed phase $oldPhase -> $newPhase but same track $oldTrack, not doing anything")
 //        }
     }
+
+    val bitStream: IBitStream
+        get() {
+            val result = woz.bitStreamForPhase(phase)
+            if (changedTrack) {
+                println("Changed phase, returning bitstream for phase $phase bitPosition: " + result.bitPosition)
+                changedTrack = false
+            }
+            return result
+        }
 
     private fun movePhase(block: () -> Unit) {
         val t = phase
@@ -89,9 +114,7 @@ class WozDisk(override val name: String, ins: InputStream): BaseDisk() {
     override val sizeInBits: Int
         get() = phaseSizeInBits(phase)
 
-
-    val bitStream: IBitStream
-        get() = woz.bitStreamForTrack(phase)
+    override var bitPosition = bitStream.bitPosition
 
     private var headWindow = 0
 

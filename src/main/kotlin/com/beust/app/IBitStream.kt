@@ -6,6 +6,7 @@ import com.beust.sixty.bit
  * A circular buffer of bits
  */
 interface IBitStream {
+    var bitPosition: Int
     val sizeInBits: Int
     fun save()
     fun restore()
@@ -16,7 +17,7 @@ interface IBitStream {
  * An IBitStream backed up by a list of bits.
  */
 class BitBitStream(val bytes: List<Byte>, bitCount: Int = bytes.size * 8): IBitStream {
-    private var bitPosition = 0
+    override var bitPosition = 0
     private var saved = -1
     private val bits = arrayListOf<Int>()
     init {

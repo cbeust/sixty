@@ -101,12 +101,12 @@ class WozTest {
 }
 
 class BitStream2(val bytes: ByteArray, override val sizeInBits: Int = bytes.size * 8): IBitStream {
+    override var bitPosition = 0
     private val bits = arrayListOf<Int>()
-    private var position = 0
     private var saved = -1
 
-    override fun save() { saved = position }
-    override fun restore() { position = saved }
+    override fun save() { saved = bitPosition }
+    override fun restore() { bitPosition = saved }
 
     init {
         bytes.forEach { b ->
@@ -118,8 +118,8 @@ class BitStream2(val bytes: ByteArray, override val sizeInBits: Int = bytes.size
     }
 
     override fun nextBit(): Int {
-        val result = bits[position]
-        position = (position + 1) % bytes.size
+        val result = bits[bitPosition]
+        bitPosition = (bitPosition + 1) % bytes.size
         return result
     }
 

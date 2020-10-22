@@ -184,9 +184,14 @@ class Woz(private val bytes: ByteArray,
 
     private val bitStreams = mutableMapOf<Int, IBitStream>()
 
-    fun bitStreamForTrack(track: Int) = bitStreamForPhase(track * 2)
+//    fun bitStreamForTrack(track: Int): IBitStream {
+//        val result = bitStreamForPhase(track * 2)
+//        return result
+//    }
 
-    fun bitStreamForPhase(phase: Int): IBitStream {
+    fun bitStreamForPhase(p: Int): IBitStream {
+        val phase = p * 2
+        val existing = bitStreams[phase]
         return bitStreams.getOrPut(phase) {
             val tmapOffset = tmap.offsetFor(phase)
             if (tmapOffset == -1) {
@@ -198,7 +203,7 @@ class Woz(private val bytes: ByteArray,
                 val trackOffset = trk.startingBlock * 512
                 try {
                     val slice = bytes.slice(trackOffset..(trackOffset + streamSizeInBytes))
-                    logWoz("Phase $phase (track $phase) starts at block ${trk.startingBlock} " +
+                    logWoz("Phase $phase (track $tmapOffset) starts at block ${trk.startingBlock} " +
                             "offset ${trackOffset.hh()} size ${streamSizeInBytes} bytes" +
                             " ${trk.bitCount} bits")
                     if (slice.isEmpty()) {
@@ -235,7 +240,7 @@ class Woz(private val bytes: ByteArray,
 //    }
 //}
 
-class FakeBitStream(override val sizeInBits: Int = 0) : IBitStream {
+class FakeBitStream(override val sizeInBits: Int = 51200, override var bitPosition: Int = 0) : IBitStream {
     override fun save() {
     }
 

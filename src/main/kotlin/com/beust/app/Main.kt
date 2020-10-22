@@ -25,15 +25,16 @@ val DISKS = listOf(
         disk("Commando - Disk 1, Side A.woz"), // 14
         disk("Planetfall - Disk 1, Side A.woz"), // 15
         disk("Sammy Lightfoot - Disk 1, Side A.woz"), // 16
-        disk("Stargate - Disk 1, Side A.woz") // 17
+        disk("Stargate - Disk 1, Side A.woz"), // 17
+        disk("Blazing Paddles (Baudville).woz") // 18
 )
 
 val RUN = true
 var DEBUG = false
-val BREAKPOINT: Int? = null // 0x9e52 // null // 0x5a0//0xc6a6//0x5f8 // 0x5f8 // 0x5a0
-val BREAKPOINT_RANGE: IntRange? = null // 0x9e42..0x9e50
+val BREAKPOINT: Int? = 0xbb28 // 0x9e52 // null // 0x5a0//0xc6a6//0x5f8 // 0x5f8 // 0x5a0
+val BREAKPOINT_RANGE: IntRange? = null// 0xbb00..0xbbff
 val BREAKPOINT_WRITE: Int? = null // 0x100
-val DISK = DISKS[17]
+val DISK = DISKS[18]
 const val SPEED_FACTOR = 1
 
 object Threads {

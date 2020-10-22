@@ -9,6 +9,8 @@ fun main() {
 }
 
 class DskDisk(override val name: String, ins: InputStream, override val sizeInBits: Int = TRACK_SIZE_BITS): BaseDisk() {
+    override var bitPosition = 0
+
     companion object {
         const val TRACK_SIZE_BYTES = 16 * 256
         const val TRACK_SIZE_BITS = TRACK_SIZE_BYTES * 8
@@ -20,7 +22,6 @@ class DskDisk(override val name: String, ins: InputStream, override val sizeInBi
 
     /** Bit buffers for each track */
     private val bitBuffers = arrayListOf<List<Int>>()
-    private var positionInTrack = 0
 
     private val isProdos = false
     private val TRACK_SIZE_ENCODED = 6028
@@ -41,12 +42,12 @@ class DskDisk(override val name: String, ins: InputStream, override val sizeInBi
     }
 
     override fun peekBytes(n: Int): List<Int> {
-        var saved = positionInTrack
+        var saved = bitPosition
         val result = arrayListOf<Int>()
         repeat(n) {
             result.add(nextByte())
         }
-        positionInTrack = saved
+        bitPosition = saved
         return result
     }
 
@@ -63,13 +64,14 @@ class DskDisk(override val name: String, ins: InputStream, override val sizeInBi
     }
 
     private var saved = 0
-    override fun save() { saved = positionInTrack }
-    override fun restore() { positionInTrack = saved }
+    override fun save() { saved = bitPosition
+    }
+    override fun restore() { bitPosition = saved }
 
     override fun nextBit(): Int {
         val bitBuffer = bitBuffers[phase / 2]
-        val result = bitBuffer[positionInTrack]
-        positionInTrack = (positionInTrack + 1) % bitBuffer.size
+        val result = bitBuffer[bitPosition]
+        bitPosition = (bitPosition + 1) % bitBuffer.size
         return result
     }
 
