@@ -1,19 +1,21 @@
-- Page flip
-- Find out how to superpose windows in SWT
 - Write to disk
 - updatePosition() when incrementing/decrementing track
 - second drive, other controllers $C500
 - shift/control
 - Prodos
+    - Hard drive
 - Force.woz crashes at Woz.kt:151
 - FileWatcher for Applesoft BASIC
 - Toolbar
-- Tests for booting disks
 - Convert .dsk to .woz
 - Fix graphics
 - Fix animations
 - Make keyboard work
 - Double hi res (King's Quest)
+- Rescue Raiders.woz flickers
+- Joystick
+
+
 
 ===
 archon.hgr
