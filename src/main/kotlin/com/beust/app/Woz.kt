@@ -126,7 +126,14 @@ class Woz(private val bytes: ByteArray,
                 map[it] = stream.read1()
             }
             logWoz("TMAP: ")
-            map.keys.filter { map[it] != -1 }.forEach { logWoz("  Phase $it -> " + map[it]) }
+            val trackToPhases = hashMapOf<Int, ArrayList<Int>>()
+            map.keys.forEach { phase ->
+                val track = map[phase]!!
+                val al = trackToPhases[track] ?: arrayListOf()
+                al.add(phase)
+                trackToPhases[track] = al
+            }
+            trackToPhases.keys.filter { it != -1 }.forEach { println("$it -> " + trackToPhases[it]) }
         }
 
         /**
