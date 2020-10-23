@@ -53,7 +53,7 @@ class Computer(override val memory: IMemory, override val cpu: Cpu, val pcListen
         UiState.debug.addListener { _, new ->
             DEBUG = new
         }
-        UiState.currentSectorInfo.addAfterListener { _, new ->
+        UiState.diskStates[0].currentSector.addAfterListener { _, new ->
             println("New sector read at PC " + cpu.PC.hh() + " : " + new)
             ""
         }
@@ -166,7 +166,8 @@ class Computer(override val memory: IMemory, override val cpu: Cpu, val pcListen
                     }
                     cpu.PC += SIZES[opCode]
                     timing = cpu.nextInstruction(previousPc)
-                    if (debugAsm) logAsm(debugString + " ($timing) " + cpu.toString() + " " + cycles)
+                    val fullString = debugString + " ($timing) " + cpu.toString() + " " + cycles
+                    if (debugAsm) logAsm(fullString)
                     if (true) { // debugMemory) {
                         memory.listeners.forEach {
                             it.logLines.forEach { println(it) }
