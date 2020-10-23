@@ -186,7 +186,7 @@ class DiskController(val slot: Int = 6): MemoryListener() {
                 val result = latch
                 if (result.and(0x80) > 0) {
 //                    println("Nibble: " + result.h())
-                    addressState.readByte(result)
+                    addressState.readByte(result, if (drive1) 0 else 1)
                 }
 //                if (latch.and(0x80) != 0) latch = 0//latch.and(0x7f) // clear bit 7
                 result

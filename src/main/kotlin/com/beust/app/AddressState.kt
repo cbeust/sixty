@@ -16,7 +16,7 @@ class AddressState {
     private var sector = 0
     private var checksum = 0
 
-    fun readByte(byte: Int) {
+    fun readByte(byte: Int, drive: Int /* 0 or 1 */) {
 
         fun reset() {
             state = State.START
@@ -64,7 +64,8 @@ class AddressState {
                 }
                 State.CHECKSUM0 -> {
                     checksum = SixAndTwo.pair4And4(b0, byte)
-                    UiState.currentSectorInfo.value = NibbleTrack.SectorInfo(volume, track, sector, checksum)
+                    UiState.diskStates[drive].currentSector.value =
+                            NibbleTrack.SectorInfo(volume, track, sector, checksum)
                     reset()
                 }
                 else -> {
