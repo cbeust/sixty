@@ -106,8 +106,9 @@ class GraphicContext {
         //
         // Contains the text/graphic windows and below it, the drive1/swap/drive2 buttons
         //
+        val leftContainerColumns = 11
         Composite(shell, SWT.NONE).apply {
-            layout = GridLayout(3, false)
+            layout = GridLayout(leftContainerColumns, false)
             layoutData = GridData().apply {
                 verticalAlignment = SWT.BEGINNING
             }
@@ -117,8 +118,9 @@ class GraphicContext {
             // Span over the three columns
             //
             Composite(this, SWT.NONE).apply {
-                background = blue(display)
-                layoutData = GridData().apply { horizontalSpan = 3 }
+                layoutData = GridData().apply {
+                    horizontalSpan = leftContainerColumns
+                }
                 display.addFilter(SWT.KeyDown) { e ->
 //                    println("Key code: " + e.keyCode.h() + " character: " + e.character)
                     val index = when {
@@ -183,47 +185,53 @@ class GraphicContext {
                 layout = GridLayout(1, true).apply {
                     marginWidth = 0
                 }
+                layoutData = GridData().apply {
+                    horizontalSpan = 5
+                    horizontalAlignment = SWT.FILL
+                    grabExcessHorizontalSpace = true
+                }
                 diskDescription(this, drive).apply {
                     layoutData = GridData(SWT.FILL, SWT.FILL, true, false)
                 }
-                Button(this, SWT.WRAP).apply {
-                    val ins = this::class.java.classLoader.getResource("disk-04.png")!!.openStream()
-                    val imageData = ImageData(ins)
-                    image = Image(display, imageData)
-                    layoutData = GridData().apply {
-                        widthHint = width
-                        heightHint = height
-                    }
-                    addPaintListener { e ->
-                        with(e.gc) {
-                            if (UiState.diskStates[drive].motor.value) {
-                                background = red(display)
-                                foreground = red(display)
-                            } else {
-                                background = black(display)
-                                foreground = black(display)
-                            }
-                            fillOval(42, 102, 13, 13)
-                        }
-                    }
-                    fileDialog(shell, this, UiState.diskStates[drive].file)
-                    obs.addListener { _, _ -> redraw() }
-                }
+//                Button(this, SWT.WRAP).apply {
+//                    val ins = this::class.java.classLoader.getResource("disk-04.png")!!.openStream()
+//                    val imageData = ImageData(ins)
+//                    image = Image(display, imageData)
+//                    layoutData = GridData().apply {
+//                        widthHint = width
+//                        heightHint = height
+//                    }
+//                    addPaintListener { e ->
+//                        with(e.gc) {
+//                            if (UiState.diskStates[drive].motor.value) {
+//                                background = red(display)
+//                                foreground = red(display)
+//                            } else {
+//                                background = black(display)
+//                                foreground = black(display)
+//                            }
+//                            fillOval(42, 102, 13, 13)
+//                        }
+//                    }
+//                    fileDialog(shell, this, UiState.diskStates[drive].file)
+//                    obs.addListener { _, _ -> redraw() }
+//                }
             }
 
             driveButton(this, 0, UiState.diskStates[0].motor)
-            button(this, "Swap").apply {
-                layoutData = GridData().apply {
-                    heightHint = height
-                    widthHint = 50
-                }
-                addListener(SWT.Selection) { e ->
-                    val d1 = UiState.diskStates[0]
-                    UiState.diskStates[0] = UiState.diskStates[1]
-                    UiState.diskStates[1] = d1
-                }
-            }
-            driveButton(this, 1, UiState.diskStates[0].motor)
+//            button(this, "Swap").apply {
+////                layoutData = GridData().apply {
+////                    horizontalSpan = 6
+////                    horizontalAlignment = SWT.FILL
+////                    grabExcessHorizontalSpace = true
+////                }
+//                addListener(SWT.Selection) { e ->
+//                    val d1 = UiState.diskStates[0]
+//                    UiState.diskStates[0] = UiState.diskStates[1]
+//                    UiState.diskStates[1] = d1
+//                }
+//            }
+            driveButton(this, 1, UiState.diskStates[1].motor)
         }
 
         //
@@ -271,12 +279,7 @@ class GraphicContext {
             control = DebuggerWindow(folder, { -> computer })
         }
 
-//    val hiResWindow = HiResWindow(folder)
-//    TabItem(folder, SWT.NONE).apply {
-//        text = "\$2000"
-//        control = hiResWindow
-//    }
-        folder.setSelection(1)
+        folder.setSelection(0)
 
 
 //    folder.setSize(500, 900)
@@ -318,9 +321,10 @@ class GraphicContext {
         val columns = 8
         val fontSize = 12
         val bg = lightGrey(display)
-        var currentDisk: Label? = null
+        var currentDisk: Button? = null
         lateinit var currentDiskType: Label
         lateinit var currentTrack: Label
+        lateinit var currentSector: Label
 
         fun nameAndType(drive: Int): Pair<String, String> {
             val obs = UiState.diskStates[drive].file
@@ -341,16 +345,19 @@ class GraphicContext {
         val result = Composite(parent, SWT.BORDER).apply {
             background = bg
             layout = GridLayout(columns, false)
+            layoutData = GridData(SWT.BEGINNING, SWT.TOGGLE, true, false)
 
             val (diskName, diskType) = nameAndType(drive)
 
-            currentDisk = label(this, diskName).apply {
+            currentDisk = button(this, diskName).apply {
                 background = bg
                 font = Fonts.font(shell, "Roboto", fontSize, SWT.BOLD)
-                layoutData = GridData(SWT.CENTER, SWT.CENTER, true, true).apply {
+                layoutData = GridData(SWT.FILL, SWT.CENTER, true, true).apply {
                     verticalSpan = 2
-                    horizontalSpan = columns - 2
+                    grabExcessHorizontalSpace = true
+                    horizontalSpan = columns
                 }
+                fileDialog(shell, this, UiState.diskStates[drive].file)
             }
 
             fun c1(c: Control) = with(c) {
@@ -372,9 +379,14 @@ class GraphicContext {
             c1(label(this, "Type:"))
             currentDiskType = label(this, diskType)
             c2(currentDiskType!!)
+
             c1(label(this, "Track:"))
             currentTrack = label(this, "0")
             c2(currentTrack)
+
+            c1(label(this, "Sector:"))
+            currentSector = label(this, "0")
+            c2(currentSector)
         }
 
         //
@@ -391,6 +403,9 @@ class GraphicContext {
         }
         UiState.diskStates[drive].currentPhase.addAfterListener { _, new ->
             currentTrack.text = new.toString()
+        }
+        UiState.diskStates[drive].currentSector.addAfterListener { _, new ->
+            currentSector.text = new?.sector.toString() ?: ""
         }
 
         return result
