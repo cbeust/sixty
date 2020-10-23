@@ -212,8 +212,11 @@ class DiskWindow(parent: Composite): Composite(parent, NONE) {
             wordText?.text = word(bytes[0], bytes[1]).hh()
             fourAndFourText?.text = SixAndTwo.pair4And4(bytes[0], bytes[1]).h()
         }
-
     }
+
+    /**
+     * Create a pair of "Label:  [ Text field ]"
+     */
     private fun createLabelText(parent: Composite, label: String): Pair<Composite, Text> {
         val result = Composite(parent, NONE).apply {
             layoutData = GridData(GridData.FILL, GridData.FILL, true, false)
