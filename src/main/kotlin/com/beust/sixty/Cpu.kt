@@ -204,16 +204,16 @@ data class Cpu(val memory: IMemory,
             ORA_IMM -> {
                 A = A.or(byte)
                 P.setNZFlags(A)
-                when(opCode) {
-                    ORA_ABS_X, ORA_ABS_Y, ORA_IND_Y -> {
-                        timing += pageCrossed(memory.word(PC - 2), effectiveAddress)
-                    }
-                }
             }
             ORA_ZP, ORA_ZP_X, ORA_ABS, ORA_ABS_X, ORA_ABS_Y, ORA_IND_X, ORA_IND_Y -> {
                 A.or(content()).let {
                     A = it
                     P.setNZFlags(it)
+                    when(opCode) {
+                        ORA_ABS_X, ORA_ABS_Y, ORA_IND_Y -> {
+                            timing += pageCrossed(memory.word(PC - 2), effectiveAddress)
+                        }
+                    }
                 }
             }
             TAX -> {
