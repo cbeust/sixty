@@ -40,6 +40,7 @@ object UiState {
     //
     // Disk drives
     //
+    val currentSectorInfo: Obs<NibbleTrack.SectorInfo?> = Obs("Sector info", null)
     class DiskState(val file: Obs<File?> = Obs("Disk file", null),
             val motor: Obs<Boolean> = Obs("Motor", false),
             val currentPhase: Obs<Int> = Obs("Current phase", 0))

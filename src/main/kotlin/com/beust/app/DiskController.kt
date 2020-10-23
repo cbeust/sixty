@@ -129,6 +129,8 @@ class DiskController(val slot: Int = 6): MemoryListener() {
         /*B*/ listOf(-1,-2,-2,-3, 0, 0,+3,+2,+2,+1, 0, 0, 0, 0, 0, 0)
     )
 
+    private val addressState = AddressState()
+
     private fun handle(i: Int, value: Int): Int? {
         val a = i - slot16
         val result = when(a) {
@@ -182,6 +184,10 @@ class DiskController(val slot: Int = 6): MemoryListener() {
                 }
                 q6 = false
                 val result = latch
+                if (result.and(0x80) > 0) {
+//                    println("Nibble: " + result.h())
+                    addressState.readByte(result)
+                }
 //                if (latch.and(0x80) != 0) latch = 0//latch.and(0x7f) // clear bit 7
                 result
             }

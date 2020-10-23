@@ -53,6 +53,10 @@ class Computer(override val memory: IMemory, override val cpu: Cpu, val pcListen
         UiState.debug.addListener { _, new ->
             DEBUG = new
         }
+        UiState.currentSectorInfo.addAfterListener { _, new ->
+            println("New sector read at PC " + cpu.PC.hh() + " : " + new)
+            ""
+        }
     }
 
     companion object {
@@ -119,6 +123,8 @@ class Computer(override val memory: IMemory, override val cpu: Cpu, val pcListen
         } else {
             if (cpu.PC == BREAKPOINT) {
                 println("BREAKPOINT")
+//                memory[0xbb2b] = 0xea
+//                memory[0xbb2c] = 0xea
             }
             if (BREAKPOINT_RANGE != null) {
                 DEBUG = cpu.PC in BREAKPOINT_RANGE
