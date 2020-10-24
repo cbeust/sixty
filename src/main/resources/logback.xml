@@ -27,7 +27,9 @@
     <logger name="Disk" level="info" />
     <logger name="Woz" level="info" />
 
-    <logger name="Asm" level="debug"/>
+    <logger name="Asm" level="debug" additivity="false">
+        <appender-ref ref="BARE" />
+    </logger>
     <logger name="Graphics" level="debug" />
     <logger name="Breakpoint" level="debug" />
     <logger name="Default" level="debug" />

@@ -115,7 +115,6 @@ class Computer(override val memory: IMemory, override val cpu: Cpu, val pcListen
         var previousPc = 0
         val opCode = memory[cpu.PC]
         var done = false
-        cycles++
         var timing = 0
 
         if (opCode == 0x60 && cpu.SP.isEmpty()) {
@@ -166,7 +165,8 @@ class Computer(override val memory: IMemory, override val cpu: Cpu, val pcListen
                     }
                     cpu.PC += SIZES[opCode]
                     timing = cpu.nextInstruction(previousPc)
-                    val fullString = debugString + " ($timing) " + cpu.toString() + " " + cycles
+                    val fullString = String.format("%8x| ", cycles) + debugString + " ($timing) " + cpu.toString()
+                    cycles += timing
                     if (debugAsm) logAsm(fullString)
                     if (true) { // debugMemory) {
                         memory.listeners.forEach {
@@ -179,6 +179,7 @@ class Computer(override val memory: IMemory, override val cpu: Cpu, val pcListen
                     previousPc = cpu.PC
                     cpu.PC += SIZES[opCode]
                     timing = cpu.nextInstruction(previousPc)
+                    cycles += timing
                 }
             } catch(ex: Throwable) {
                 ex.printStackTrace()
@@ -209,9 +210,9 @@ class Computer(override val memory: IMemory, override val cpu: Cpu, val pcListen
     private fun formatPc(pc: Int, opCode: Int): String {
         val size = SIZES[opCode]
         val bytes = StringBuffer(opCode.h())
-        bytes.append(if (size > 1) (" " + memory[pc + 1].h()) else "   ")
-        bytes.append(if (size == 3) (" " + memory[pc + 2].h()) else "   ")
-        return String.format("%-5s: %-11s", pc.hh(), bytes.toString())
+        bytes.append(if (size > 1) (" " + memory[pc + 1].h()) else "  ")
+        bytes.append(if (size == 3) (" " + memory[pc + 2].h()) else "  ")
+        return String.format("%-4s: %-11s", pc.hh(), bytes.toString())
     }
 
     private fun formatInstruction(opCode: Int, pc: Int, byte: Int, word: Int): String {
