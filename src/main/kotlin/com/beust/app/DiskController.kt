@@ -1,7 +1,6 @@
 package com.beust.app
 
 import com.beust.sixty.*
-import java.util.*
 import java.util.concurrent.TimeUnit
 
 class DiskController(val slot: Int = 6): MemoryListener() {
@@ -37,7 +36,7 @@ class DiskController(val slot: Int = 6): MemoryListener() {
                                 field = MotorState.OFF
                             } // Motor was turned on while spinning down: not turning it off
                         }
-                        Threads.scheduledThreadPool.schedule(task, 7500,TimeUnit.MILLISECONDS)
+                        Threads.scheduledThreadPool.schedule(task, 7500, TimeUnit.MILLISECONDS)
                         logDisk("Motor spinning down")
                         field = MotorState.SPINNING_DOWN
                     } // we're already OFF or SPINNING_DOWN, nothing to do
@@ -51,7 +50,7 @@ class DiskController(val slot: Int = 6): MemoryListener() {
     }
 
     private fun c(address: Int) = address + slot16
-    override fun isInRange(address:Int) = address in (c(0xc080)..c(0xc08f))
+    override fun isInRange(address: Int) = address in (c(0xc080)..c(0xc08f))
 
     private val useLss = true
 
@@ -114,22 +113,126 @@ class DiskController(val slot: Int = 6): MemoryListener() {
     private val phaseBits = arrayListOf(0, 0, 0, 0)
 
     private val transitions = listOf(
-        //fr\to       9  8  D  C  4  E  6  2  7  3  1  B  0  5  A  F
-        /*9*/ listOf( 0,-1,-1,-2,-3,-3, 0,+3,+3,+2,+1,+1, 0, 0, 0, 0),
-        /*8*/ listOf(+1, 0, 0,-1,-2,-2,-3, 0, 0,+3,+2,+2, 0, 0, 0, 0),
-        /*D*/ listOf(+1, 0, 0,-1,-2,-2,-3, 0, 0,+3,+2,+2, 0, 0, 0, 0),
-        /*C*/ listOf(+2,+1,+1, 0,-1,-1,-2,-3,-3, 0,+3,+3, 0, 0, 0, 0),
-        /*4*/ listOf(+3,+2,+2,+1, 0, 0,-1,-2,-2,-3, 0, 0, 0, 0, 0, 0),
-        /*E*/ listOf(+3,+2,+2,+1, 0, 0,-1,-2,-2,-3, 0, 0, 0, 0, 0, 0),
-        /*6*/ listOf( 0,+3,+3,+2,+1,+1, 0,-1,-1,-2,-3,-3, 0, 0, 0, 0),
-        /*2*/ listOf(-3, 0, 0,+3,+2,+2,+1, 0, 0,-1,-2,-2, 0, 0, 0, 0),
-        /*7*/ listOf(-3, 0, 0,+3,+2,+2,+1, 0, 0,-1,-2,-2, 0, 0, 0, 0),
-        /*3*/ listOf(-2,-3,-3, 0,+3,+3,+2,+1,+1, 0,-1,-1, 0, 0, 0, 0),
-        /*1*/ listOf(-1,-2,-2,-3, 0, 0,+3,+2,+2,+1, 0, 0, 0, 0, 0, 0),
-        /*B*/ listOf(-1,-2,-2,-3, 0, 0,+3,+2,+2,+1, 0, 0, 0, 0, 0, 0)
+            //fr\to       9  8  D  C  4  E  6  2  7  3  1  B  0  5  A  F
+            /*9*/ listOf(0, -1, -1, -2, -3, -3, 0, +3, +3, +2, +1, +1, 0, 0, 0, 0),
+            /*8*/ listOf(+1, 0, 0, -1, -2, -2, -3, 0, 0, +3, +2, +2, 0, 0, 0, 0),
+            /*D*/ listOf(+1, 0, 0, -1, -2, -2, -3, 0, 0, +3, +2, +2, 0, 0, 0, 0),
+            /*C*/ listOf(+2, +1, +1, 0, -1, -1, -2, -3, -3, 0, +3, +3, 0, 0, 0, 0),
+            /*4*/ listOf(+3, +2, +2, +1, 0, 0, -1, -2, -2, -3, 0, 0, 0, 0, 0, 0),
+            /*E*/ listOf(+3, +2, +2, +1, 0, 0, -1, -2, -2, -3, 0, 0, 0, 0, 0, 0),
+            /*6*/ listOf(0, +3, +3, +2, +1, +1, 0, -1, -1, -2, -3, -3, 0, 0, 0, 0),
+            /*2*/ listOf(-3, 0, 0, +3, +2, +2, +1, 0, 0, -1, -2, -2, 0, 0, 0, 0),
+            /*7*/ listOf(-3, 0, 0, +3, +2, +2, +1, 0, 0, -1, -2, -2, 0, 0, 0, 0),
+            /*3*/ listOf(-2, -3, -3, 0, +3, +3, +2, +1, +1, 0, -1, -1, 0, 0, 0, 0),
+            /*1*/ listOf(-1, -2, -2, -3, 0, 0, +3, +2, +2, +1, 0, 0, 0, 0, 0, 0),
+            /*B*/ listOf(-1, -2, -2, -3, 0, 0, +3, +2, +2, +1, 0, 0, 0, 0, 0, 0)
     )
 
     private val addressState = AddressState()
+
+    /**
+     * Magnet states, just 4 bits.
+     */
+    private var magnetStates = 0
+    private var drivePhase = 0x28
+    private var drivePhasePrecise = 0.0f
+
+    private fun toBinaryString(n: Int): String {
+        val sb = arrayListOf<String>()
+        var c = n
+        repeat(4) {
+            sb.add(0, if (c % 2 == 0) "0" else "1")
+            c /= 2
+        }
+
+        return sb.joinToString("")
+    }
+
+//    fun BitSet.toBitString(): String {
+//        val result = arrayListOf<Int>()
+//        repeat(cardinality()) {
+//            result.add(if (this[it]) 1 else 0)
+//        }
+//        val r = result.joinToString("")
+//        return r
+//    }
+
+    private fun updateStepper(address: Int) {
+        // update phases (magnet states)
+        val phase = address.shr(1).and(3)
+        val phaseBit = 1.shl(phase);
+
+        // update the magnet states
+        if (address.and(1) != 0) {
+            magnetStates = magnetStates.or(phaseBit)
+        } else {
+            magnetStates = magnetStates.and(phaseBit.inv())
+        }
+
+        // check for any stepping effect from a magnet
+        // - move only when the magnet opposite the cog is off
+        // - move in the direction of an adjacent magnet if one is on
+        // - do not move if both adjacent magnets are on (ie. quarter track)
+        // momentum and timing are not accounted for ... maybe one day!
+        var direction = 0
+        if (magnetStates and (1.shl((drivePhase + 1).and(3))) != 0) direction += 1
+        if (magnetStates and (1.shl((drivePhase + 3).and(3))) != 0) direction -= 1
+        currentPhase += direction
+
+        if (currentPhase < 0) currentPhase = 0
+        if (currentPhase >= IDisk.PHASE_MAX) currentPhase = IDisk.PHASE_MAX - 1
+//        println("   head direction: " + direction)
+
+        var quarterDirection = 0
+        if (magnetStates === 0xC || // 1100
+                magnetStates === 0x6 || // 0110
+                magnetStates === 0x3 || // 0011
+                magnetStates === 0x9) // 1001
+        {
+            quarterDirection = direction
+            direction = 0
+        }
+
+        drivePhase = Math.max(0, Math.min(79, drivePhase + direction));
+
+        var newPhasePrecise = drivePhase.toFloat() + (quarterDirection * 0.5f)
+        if (newPhasePrecise < 0) newPhasePrecise = 0f
+
+        if (newPhasePrecise != drivePhasePrecise) {
+            drivePhasePrecise = newPhasePrecise
+        }
+
+        val track = currentTrackString()
+        println("Track \$$track magnet: " + toBinaryString(magnetStates)
+                + " direction: " + direction
+                + " drivePhase: " + drivePhase
+                + " phase: " + (address.shr(1).and(3))
+                + " " + (if (address.and(1) == 1) "on " else "off")
+                + " address: " + address.hh())
+
+        if (direction > 0) {
+            repeat(direction) {
+                disk()?.incPhase()
+            }
+        } else if (direction < 0) {
+            repeat(-direction) {
+                disk()?.decPhase()
+            }
+        }
+
+        if (direction != 0) {
+            logDisk("     delta: $direction newTrack: $currentPhase")
+            UiState.diskStates[if (drive1) 0 else 1].currentPhase.value = currentPhase / 2
+        }
+
+        ""
+    }
+
+    fun currentTrackString() : String {
+        val trackInt = (drivePhasePrecise / 2).toInt()
+        val trackFrac = ((drivePhasePrecise / 2 - trackInt) * 100).toInt()
+        return String.format("%02x.%02d", trackInt, trackFrac)
+    }
 
     private fun handle(i: Int, value: Int): Int? {
         val a = i - slot16
@@ -148,13 +251,16 @@ class DiskController(val slot: Int = 6): MemoryListener() {
                         0xc087 -> 3 to true
                         else -> ERROR("SHOULD NEVER HAPPEN")
                     }
+
+                    updateStepper(a)
+//                    disk()?.let { magnet(it, phase, state) }
+
 //                    magnet2(disk()!!, phase, state)
 //                    val oldPhase = phaseBits.int()
 //                    phaseBits[phase] = if (state) 1 else 0
 //                    val newPhase = phaseBits.int()
 //                    val delta = transitions[oldPhase][newPhase]
 //                    println("@@@ Transitioning from $oldPhase to $newPhase, delta: $delta")
-                    disk()?.let { magnet(it, phase, state) }
                 }
                 value
             }
@@ -179,7 +285,7 @@ class DiskController(val slot: Int = 6): MemoryListener() {
                 value
             }
             0xc08c -> {
-                if (! useLss) {
+                if (!useLss) {
                     latch = disk()!!.nextByte()
                 }
                 q6 = false
@@ -222,6 +328,7 @@ class DiskController(val slot: Int = 6): MemoryListener() {
     )
 
     private fun magnet(disk: IDisk, phase: Int, on: Boolean) {
+        logDisk("*** phase($phase, $on)")
         if (on) {
             val delta = phaseDeltas[stepperMotorPhase][phase]
             val oldTrack = currentPhase
@@ -235,65 +342,66 @@ class DiskController(val slot: Int = 6): MemoryListener() {
             if (currentPhase < 0) currentPhase = 0
             if (currentPhase >= IDisk.PHASE_MAX) currentPhase = IDisk.PHASE_MAX - 1
             if (oldTrack != currentPhase) {
-                logDisk("*** phase($phase, $on) delta: $delta newTrack: $currentPhase")
+                logDisk("     delta: $delta newTrack: $currentPhase")
                 UiState.diskStates[if (drive1) 0 else 1].currentPhase.value = currentPhase / 2
             }
         }
     }
 
 
-    private fun magnet2(disk: IDisk, index: Int, state: Boolean) {
-        fun logInc(p1: Int, p2: Int) { logTraceDisk("Phase $p1 -> $p2: Incrementing track")}
-        fun logDec(p1: Int, p2: Int) { logTraceDisk("Phase $p1 -> $p2: Decrementing track")}
-        if (state) {
-            when(phase) {
-                0 -> {
-                    if (index == 1) {
-                        phase = 1
-                        logInc(0, 1)
-                        disk.incPhase()
-                    } else if (index == 3) {
-                        phase = 3
-                        logDec(0, 3)
-                        disk.decPhase()
-                    }
-                }
-                1 -> {
-                    if (index == 2) {
-                        phase = 2
-                        logInc(1, 2)
-                        disk.incPhase()
-                    } else if (index == 0) {
-                        phase = 0
-                        logDec(1, 0)
-                        disk.decPhase()
-                    }
-                }
-                2 -> {
-                    if (index == 3) {
-                        phase = 3
-                        logInc(2, 3)
-                        disk.incPhase()
-                    } else if (index == 1) {
-                        phase = 1
-                        logDec(2, 1)
-                        disk.decPhase()
-                    }
-                }
-                3 -> {
-                    if (index == 0) {
-                        phase = 0
-                        logInc(3, 4)
-                        disk.incPhase()
-                    } else if (index == 2) {
-                        phase = 2
-                        logDec(3, 2)
-                        disk.decPhase()
-                    }
-                }
-            }
-        }
-
-        magnets[index] = state
-    }
+//    private fun magnet2(disk: IDisk, index: Int, state: Boolean) {
+//        fun logInc(p1: Int, p2: Int) { logTraceDisk("Phase $p1 -> $p2: Incrementing track")}
+//        fun logDec(p1: Int, p2: Int) { logTraceDisk("Phase $p1 -> $p2: Decrementing track")}
+//        if (state) {
+//            when(phase) {
+//                0 -> {
+//                    if (index == 1) {
+//                        phase = 1
+//                        logInc(0, 1)
+//                        disk.incPhase()
+//                    } else if (index == 3) {
+//                        phase = 3
+//                        logDec(0, 3)
+//                        disk.decPhase()
+//                    }
+//                }
+//                1 -> {
+//                    if (index == 2) {
+//                        phase = 2
+//                        logInc(1, 2)
+//                        disk.incPhase()
+//                    } else if (index == 0) {
+//                        phase = 0
+//                        logDec(1, 0)
+//                        disk.decPhase()
+//                    }
+//                }
+//                2 -> {
+//                    if (index == 3) {
+//                        phase = 3
+//                        logInc(2, 3)
+//                        disk.incPhase()
+//                    } else if (index == 1) {
+//                        phase = 1
+//                        logDec(2, 1)
+//                        disk.decPhase()
+//                    }
+//                }
+//                3 -> {
+//                    if (index == 0) {
+//                        phase = 0
+//                        logInc(3, 4)
+//                        disk.incPhase()
+//                    } else if (index == 2) {
+//                        phase = 2
+//                        logDec(3, 2)
+//                        disk.decPhase()
+//                    }
+//                }
+//            }
+//        }
+//
+//        magnets[index] = state
+//    }
 }
+

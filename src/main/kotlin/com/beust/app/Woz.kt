@@ -133,7 +133,7 @@ class Woz(private val bytes: ByteArray,
                 al.add(phase)
                 trackToPhases[track] = al
             }
-            trackToPhases.keys.filter { it != -1 }.forEach { println("$it -> " + trackToPhases[it]) }
+            trackToPhases.keys.filter { it != -1 }.forEach { logWoz("    $it -> " + trackToPhases[it]) }
         }
 
         /**

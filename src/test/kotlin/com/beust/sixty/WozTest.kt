@@ -30,7 +30,7 @@ class WozTest {
 
     data class DiskInfo(val disk: IDisk, val addresses: List<Pair<Int, Int>>, val seconds: Int = 5)
 
-    @DataProvider(parallel = false)
+    @DataProvider(parallel = true)
     private fun dp(): Array<Array<DiskInfo>> {
         fun create(name: String, addresses: List<Pair<Int, Int>>, seconds: Int = 5)
             = DiskInfo(IDisk.create(name, diskStream("boot/$name"))!!, addresses, seconds)

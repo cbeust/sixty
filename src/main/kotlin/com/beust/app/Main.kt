@@ -2,6 +2,8 @@ package com.beust.app
 
 import com.beust.sixty.FileWatcher
 import com.beust.sixty.Runner
+import com.beust.sixty.TIMINGS
+import com.beust.sixty.h
 import java.io.File
 import java.util.concurrent.Executors
 
@@ -31,9 +33,10 @@ val DISKS = listOf(
 
 val RUN = true
 var DEBUG = false
-val BREAKPOINT: Int? = 0xbb28 // 0x9e52 // null // 0x5a0//0xc6a6//0x5f8 // 0x5f8 // 0x5a0
+var DEBUG_BITS = false
+val BREAKPOINT: Int? = 0xb9f7// 0xb980 // 0x9e52 // null // 0x5a0//0xc6a6//0x5f8 // 0x5f8 // 0x5a0
 val BREAKPOINT_RANGE: IntRange? = null// 0xbb00..0xbbff
-val BREAKPOINT_WRITE: Int? = null // 0x100
+val BREAKPOINT_WRITE: Int? = 0x2d
 val DISK = DISKS[18]
 const val SPEED_FACTOR = 1
 
@@ -48,7 +51,6 @@ object Threads {
 }
 
 fun main() {
-
     val fw = FileWatcher()
     val gc = GraphicContext()
     var c = Apple2Computer(gc)

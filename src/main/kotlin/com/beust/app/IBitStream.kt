@@ -1,6 +1,7 @@
 package com.beust.app
 
 import com.beust.sixty.bit
+import com.beust.sixty.hh
 
 /**
  * A circular buffer of bits
@@ -45,6 +46,7 @@ class BitBitStream(val bytes: List<Byte>, bitCount: Int = bytes.size * 8): IBitS
     override fun restore() { bitPosition = saved }
     override fun nextBit(): Int = bits[bitPosition].let {
             bitPosition = (bitPosition + 1) % bits.size
+        if (DEBUG_BITS) println("NEW BIT POSITION: " + bitPosition.hh())
             return it
         }
 }

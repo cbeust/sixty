@@ -86,7 +86,7 @@ class Computer(override val memory: IMemory, override val cpu: Cpu, val pcListen
     }
 
     var cycles = 0
-    var track = 0
+    var track = 6
     var sector = 0
     private var wait = 0
 

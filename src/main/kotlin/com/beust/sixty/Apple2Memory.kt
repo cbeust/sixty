@@ -1,5 +1,6 @@
 package com.beust.sixty
 
+import com.beust.app.BREAKPOINT_WRITE
 import com.beust.app.UiState
 import java.io.File
 import java.io.InputStream
@@ -343,6 +344,10 @@ class Apple2Memory(val size: Int? = null): IMemory {
     }
 
     override operator fun set(address: Int, value: Int) {
+        if (address == BREAKPOINT_WRITE && value == 0) {
+            println("MEMORY WRITE BREAKPOINT: ${value.h()}")
+            ""
+        }
         getOrSet(false, address, value)
         listeners.forEach {
             if (it.isInRange(address)) it.onWrite(address, value)
