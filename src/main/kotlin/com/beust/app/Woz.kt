@@ -9,7 +9,8 @@ fun main() {
 }
 
 class Woz(private val bytes: ByteArray,
-        val bitStreamFactory: (bytes: List<Byte>, bitCount: Int) -> IBitStream = ::BitBitStream) {
+        val bitStreamFactory: (bytes: List<Byte>, phase: Int, mappedTrack: Int,
+                bitCount: Int) -> IBitStream = ::BitBitStream) {
     lateinit var info: ChunkInfo
     lateinit var tmap: ChunkTmap
     lateinit var trks: ChunkTrks
@@ -196,7 +197,7 @@ class Woz(private val bytes: ByteArray,
             val tmapOffset = tmap.offsetFor(phase)
             if (tmapOffset == -1) {
                 val trk = trks.trks[phase]
-                FakeBitStream()
+                FakeBitStream(phase, -1)
             } else {
                 val trk = trks.trks[tmapOffset]
                 val streamSizeInBytes = (trk.bitCount / 8) + 1
@@ -209,7 +210,7 @@ class Woz(private val bytes: ByteArray,
                     if (slice.isEmpty()) {
                         println("PROBLEM")
                     }
-                    bitStreamFactory(slice, trk.bitCount)
+                    bitStreamFactory(slice, phase, tmapOffset, trk.bitCount)
                 } catch (ex: Exception) {
                     throw ex
                 }

@@ -69,8 +69,7 @@ class WozDisk(override val name: String, ins: InputStream): BaseDisk() {
         get() {
             val result = woz.bitStreamForPhase(phase)
             if (changedTrack) {
-                println("Changed phase, returning bitstream for phase $phase bitPosition: "
-                        + result.bitPosition + " bytePosition: \$" + (result.bitPosition / 8).hh())
+                println("Changed phase, returning bitstream for phase $phase bitPosition: $result")
                 changedTrack = false
             }
             return result

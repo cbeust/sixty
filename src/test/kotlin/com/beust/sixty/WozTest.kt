@@ -15,7 +15,7 @@ class WozTest {
         val ins = diskStream("woz2/DOS 3.3 System Master.woz")
         val bytes: ByteArray = ins.readAllBytes()
         val slice = bytes.slice(0x600 until bytes.size)
-        val bitStream = BitBitStream(slice)
+        val bitStream = BitBitStream(slice, 0, 0)
         val bitStream2 = BitStream2(slice.toByteArray())
         repeat(slice.size) {
             val b = bitStream.nextBit()
