@@ -54,7 +54,7 @@ class Computer(override val memory: IMemory, override val cpu: Cpu, val pcListen
             DEBUG = new
         }
         UiState.diskStates[0].currentSector.addAfterListener { _, new ->
-            println("New sector read at PC " + cpu.PC.hh() + " : " + new)
+            log("New sector read at PC " + cpu.PC.hh() + " : " + new)
             ""
         }
     }
@@ -85,7 +85,7 @@ class Computer(override val memory: IMemory, override val cpu: Cpu, val pcListen
         return memory[address] to word(memory, address)
     }
 
-    var cycles = 0
+    var cycles = 0L
     var track = 6
     var sector = 0
     private var wait = 0
@@ -150,7 +150,18 @@ class Computer(override val memory: IMemory, override val cpu: Cpu, val pcListen
             try {
 //                    DEBUG = cycles >= 15348000
                 debugAsm = DEBUG && cpu.PC < 0xc000
-                if (DEBUG) {
+                TRACE_RANGE?.let {
+                    if (it.start == cpu.PC) {
+                        TRACE_ON = true
+                        if (it.cycles >= 0L) cycles = it.cycles
+                    }
+                    else if (it.end == cpu.PC) TRACE_ON = false
+                    if (TRACE_ON && it.cycles > 0) {
+                        cycles = it.cycles
+                        it.cycles = 0
+                    }
+                }
+                if (DEBUG || TRACE_ON) {
                     val (byte, word) = byteWord()
                     val debugString = formatPc(cpu.PC, opCode) + formatInstruction(opCode, cpu.PC, byte, word)
                     previousPc = cpu.PC
@@ -158,16 +169,16 @@ class Computer(override val memory: IMemory, override val cpu: Cpu, val pcListen
                         println("BREAKPOINT $memory")
                         println("A: " + cpu.A + " track: " + memory[0x2e] + " sector: " + memory[0x2d]
                                 + " checksum: "  + memory[0x2d6 + cpu.Y].h())
-                        if (cpu.A != 0) {
-                            println("FAILURE")
-                        }
                         ""
                     }
                     cpu.PC += SIZES[opCode]
                     timing = cpu.nextInstruction(previousPc)
-                    val fullString = String.format("%8x| ", cycles) + debugString + " ($timing) " + cpu.toString()
+                    val fullString = String.format("%8X| ", cycles) + debugString + " ($timing) " + cpu.toString()
                     cycles += timing
                     if (debugAsm) logAsm(fullString)
+                    if (TRACE_ON) {
+                        logAsmTrace(fullString)
+                    }
                     if (true) { // debugMemory) {
                         memory.listeners.forEach {
                             it.logLines.forEach { println(it) }
@@ -205,7 +216,7 @@ class Computer(override val memory: IMemory, override val cpu: Cpu, val pcListen
         return timing
     }
 
-    class RunResult(val durationMillis: Long, val cycles: Int)
+    class RunResult(val durationMillis: Long, val cycles: Long)
 
     private fun formatPc(pc: Int, opCode: Int): String {
         val size = SIZES[opCode]

@@ -136,10 +136,6 @@ object SixAndTwo {
                 }
                 disk.nextBytes(3)
 
-                println("Read sector $sector")
-                if (track == 1 && sector == 15) {
-                    println("BREAKPOINT")
-                }
                 val sectorData = decodeData2(disk, track, sector)
 //                val sectorData = decodeData(disk, track, sector)
                 println("Successfully decoded track $track sector \$" + sector.h())

@@ -66,7 +66,9 @@ class NibbleTrack(bitStream: IBitStream, val sizeInBits: Int, private val markFi
             val zeros = peekZeros()
             tmpBytes.add(TimedByte(byte, zeros))
         }
-        bytes.addAll(tmpBytes.slice(start..end))
+        val slice = tmpBytes.slice(start..end)
+        bytes.addAll(tmpBytes)
+//        bytes.addAll(tmpBytes.slice(start..end))
         tmpBytes.clear()
         analyzeTrack()
     }

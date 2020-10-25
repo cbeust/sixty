@@ -18,6 +18,8 @@ interface IDisk: IBitStream {
         fun create(file: File?): IDisk? = create(file?.name ?: "<unknown>", file?.inputStream())
     }
 
+    /* 0..159 */
+    var phase: Int
     val name: String
 
     fun peekZeroBitCount(): Int

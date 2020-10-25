@@ -20,6 +20,14 @@
         </encoder>
     </appender>
 
+    <appender name="BARE_FILE" class="ch.qos.logback.core.FileAppender">
+        <append>false</append>
+        <file>c:/users/cedri/kotlin/sixty/trace-mine.txt</file>
+        <encoder>
+            <pattern>%msg%n</pattern>
+        </encoder>
+    </appender>
+
     <!-- set to debug to display, info to hide -->
     <logger name="Text" level="info" />
     <logger name="Memory" level="info" />
@@ -30,9 +38,12 @@
     <logger name="Asm" level="debug" additivity="false">
         <appender-ref ref="BARE" />
     </logger>
+    <logger name="AsmTrace" level="info" additivity="false">
+        <appender-ref ref="BARE_FILE" />
+    </logger>
     <logger name="Graphics" level="debug" />
-    <logger name="Breakpoint" level="debug" />
-    <logger name="Default" level="debug" />
+    <logger name="Breakpoint" level="info" />
+    <logger name="Default" level="info" />
 
     <root level="debug">
         <appender-ref ref="DEBUG" />

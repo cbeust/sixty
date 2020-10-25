@@ -95,6 +95,12 @@ class Lss {
 
             }
         }
+//        if (latch != previousLatch && (latch and 0x80 > 0)) {
+//            println("  Latch: " + latch.h() + " position: " + (disk.bitPosition / 8).hh())
+//            previousLatch = latch
+//        }
         if (++clock > 7) clock = 0
     }
+
+    private var previousLatch = 0
 }

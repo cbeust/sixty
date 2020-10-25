@@ -9,7 +9,8 @@ fun main() {
 }
 
 class Woz(private val bytes: ByteArray,
-        val bitStreamFactory: (bytes: List<Byte>, bitCount: Int) -> IBitStream = ::BitBitStream) {
+        val bitStreamFactory: (bytes: List<Byte>, bitCount: Int,
+                phase: Int, mappedTrack: Int) -> IPhasedBitStream = ::BitBitStream) {
     lateinit var info: ChunkInfo
     lateinit var tmap: ChunkTmap
     lateinit var trks: ChunkTrks
@@ -190,15 +191,16 @@ class Woz(private val bytes: ByteArray,
 //    }
 
     fun bitStreamForPhase(p: Int): IBitStream {
-        val phase = p * 2
+        val phase = p * 1
         val existing = bitStreams[phase]
         return bitStreams.getOrPut(phase) {
             val tmapOffset = tmap.offsetFor(phase)
             if (tmapOffset == -1) {
                 val trk = trks.trks[phase]
-                FakeBitStream()
+                FakeBitStream(phase, -1)
             } else {
                 val trk = trks.trks[tmapOffset]
+                println("RETURNING STREAM FOR PHASE $p, AFTER TMAP $trk")
                 val streamSizeInBytes = (trk.bitCount / 8) + 1
                 val trackOffset = trk.startingBlock * 512
                 try {
@@ -209,7 +211,7 @@ class Woz(private val bytes: ByteArray,
                     if (slice.isEmpty()) {
                         println("PROBLEM")
                     }
-                    bitStreamFactory(slice, trk.bitCount)
+                    bitStreamFactory(slice, phase, tmapOffset, trk.bitCount)
                 } catch (ex: Exception) {
                     throw ex
                 }
@@ -240,7 +242,8 @@ class Woz(private val bytes: ByteArray,
 //    }
 //}
 
-class FakeBitStream(override val sizeInBits: Int = 51200, override var bitPosition: Int = 0) : IBitStream {
+class FakeBitStream(override val phase: Int, override val mappedTrack: Int, override val sizeInBits: Int = 51200,
+        override var bitPosition: Int = 0) : IPhasedBitStream {
     override fun save() {
     }
 

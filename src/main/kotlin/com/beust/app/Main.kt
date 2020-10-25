@@ -31,13 +31,17 @@ val DISKS = listOf(
         disk("Blazing Paddles (Baudville).woz") // 18
 )
 
+class TraceRangeInfo(val start: Int, val end: Int, var cycles: Long = 0)
+
 val RUN = true
 var DEBUG = false
 var DEBUG_BITS = false
-val BREAKPOINT: Int? = 0xb9f7// 0xb980 // 0x9e52 // null // 0x5a0//0xc6a6//0x5f8 // 0x5f8 // 0x5a0
+val BREAKPOINT: Int? = 0xbb30// 0xb980 // 0x9e52 // null // 0x5a0//0xc6a6//0x5f8 // 0x5f8 // 0x5a0
+val TRACE_RANGE: TraceRangeInfo? = null//TraceRangeInfo(0, 0, 0x08EBCC73)
+var TRACE_ON = false
 val BREAKPOINT_RANGE: IntRange? = null// 0xbb00..0xbbff
 val BREAKPOINT_WRITE: Int? = 0x2d
-val DISK = DISKS[18]
+val DISK = DISKS[1]
 const val SPEED_FACTOR = 1
 
 object Threads {

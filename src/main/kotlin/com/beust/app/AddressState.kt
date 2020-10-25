@@ -55,7 +55,6 @@ class AddressState {
                 }
                 State.SECTOR0 -> {
                     sector = SixAndTwo.pair4And4(b0, byte)
-//                    println("Read sector $sector")
                     state = State.SECTOR1
                 }
                 State.SECTOR1 -> {
@@ -66,6 +65,7 @@ class AddressState {
                     checksum = SixAndTwo.pair4And4(b0, byte)
                     UiState.diskStates[drive].currentSector.value =
                             NibbleTrack.SectorInfo(volume, track, sector, checksum)
+                    println("Read sector " + UiState.diskStates[drive].currentSector.value)
                     reset()
                 }
                 else -> {

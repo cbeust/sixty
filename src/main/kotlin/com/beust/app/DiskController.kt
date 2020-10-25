@@ -134,8 +134,8 @@ class DiskController(val slot: Int = 6): MemoryListener() {
      * Magnet states, just 4 bits.
      */
     private var magnetStates = 0
-    private var drivePhase = 0x28
-    private var drivePhasePrecise = 0.0f
+    private var drivePhase = 39     // 0..39
+    private var drivePhasePrecise = 159 // 0..159
 
     private fun toBinaryString(n: Int): String {
         val sb = arrayListOf<String>()
@@ -183,8 +183,14 @@ class DiskController(val slot: Int = 6): MemoryListener() {
         if (currentPhase >= IDisk.PHASE_MAX) currentPhase = IDisk.PHASE_MAX - 1
 //        println("   head direction: " + direction)
 
+        fun moveDisk(d: Int) {
+            if (d > 0) repeat(d) { disk()?.incPhase() }
+            else if (d < 0) repeat(-d) { disk()?.decPhase() }
+        }
+
         var quarterDirection = 0
-        if (magnetStates === 0xC || // 1100
+        val isWoz = UiState.diskStates[0].file.value?.name?.toLowerCase()?.endsWith("woz") ?: false
+        if (isWoz && magnetStates === 0xC || // 1100
                 magnetStates === 0x6 || // 0110
                 magnetStates === 0x3 || // 0011
                 magnetStates === 0x9) // 1001
@@ -195,30 +201,37 @@ class DiskController(val slot: Int = 6): MemoryListener() {
 
         drivePhase = Math.max(0, Math.min(79, drivePhase + direction));
 
-        var newPhasePrecise = drivePhase.toFloat() + (quarterDirection * 0.5f)
-        if (newPhasePrecise < 0) newPhasePrecise = 0f
-
+        var newPhasePrecise = drivePhasePrecise + quarterDirection
+        if (newPhasePrecise < 0) newPhasePrecise = 0
         if (newPhasePrecise != drivePhasePrecise) {
             drivePhasePrecise = newPhasePrecise
         }
+        disk()?.phase = drivePhasePrecise
+        println("SET DISK PHASE TO " + disk()?.phase)
+
+//        //            direction.let { d ->
+//        (quarterDirection).let { d ->
+////            (if (direction != 0) direction * 2 else quarterDirection).let { d ->
+//            if (d > 0) {
+//                repeat(d) {
+//                    disk()?.incPhase()
+//                }
+//            } else if (d < 0) {
+//                repeat(-d) {
+//                    disk()?.decPhase()
+//                }
+//            }
+//        }
 
         val track = currentTrackString()
-        println("Track \$$track magnet: " + toBinaryString(magnetStates)
+        logGraphics("Track \$$track magnet: " + toBinaryString(magnetStates)
                 + " direction: " + direction
+                + " quarterDirection: " + quarterDirection
                 + " drivePhase: " + drivePhase
+                + " drivePhasePrecise: " + drivePhasePrecise
                 + " phase: " + (address.shr(1).and(3))
                 + " " + (if (address.and(1) == 1) "on " else "off")
                 + " address: " + address.hh())
-
-        if (direction > 0) {
-            repeat(direction) {
-                disk()?.incPhase()
-            }
-        } else if (direction < 0) {
-            repeat(-direction) {
-                disk()?.decPhase()
-            }
-        }
 
         if (direction != 0) {
             logDisk("     delta: $direction newTrack: $currentPhase")
@@ -285,7 +298,7 @@ class DiskController(val slot: Int = 6): MemoryListener() {
                 value
             }
             0xc08c -> {
-                if (!useLss) {
+                if (!useLss && disk() != null) {
                     latch = disk()!!.nextByte()
                 }
                 q6 = false
@@ -334,6 +347,7 @@ class DiskController(val slot: Int = 6): MemoryListener() {
             val oldTrack = currentPhase
             currentPhase += delta
             stepperMotorPhase = phase
+            println("DELTA: $delta CURRENTPHASE:$currentPhase")
             if (delta > 0) {
                 repeat(delta) { disk.incPhase() }
             } else if (delta < 0) {

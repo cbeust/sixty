@@ -14,7 +14,7 @@ class WozDisk(override val name: String, ins: InputStream): BaseDisk() {
     private val MAX_TRACK = 160
 
     /** 0..159 */
-    var phase = 0
+    override var phase = 0
     private val bytes: ByteArray = ins.readAllBytes()
     private val woz = Woz(bytes)
 
@@ -51,11 +51,8 @@ class WozDisk(override val name: String, ins: InputStream): BaseDisk() {
         val newTrackLength = newBitStream.sizeInBits
         val position = oldBitStream.bitPosition
         val newPosition = position.toLong() * newTrackLength / oldTrackLength
-        if (oldPhase == 2 && newPhase == 1) {
-            println("GOING BACK PROBLEM")
-        }
-        println("UPDATE POSITION: $oldPhase -> $newPhase "
-                + " oldPosition:$position newPosition:$newPosition"
+        log("UPDATE POSITION: $oldPhase -> $newPhase "
+                + " oldPosition:${(position / 8).hh()} newPosition:${(newPosition / 8).hh()}"
                 + (if (oldTrack == newTrack) "(same track)" else "(different track)"))
         if (newPosition < 0) {
             ERROR("Negative new position, should never happen")
@@ -65,11 +62,12 @@ class WozDisk(override val name: String, ins: InputStream): BaseDisk() {
         changedTrack = true
     }
 
+    // TODO: Need to hardcode this every time the track is moved
     val bitStream: IBitStream
         get() {
             val result = woz.bitStreamForPhase(phase)
             if (changedTrack) {
-                println("Changed phase, returning bitstream for phase $phase bitPosition: "
+                log("Changed phase, returning bitstream for phase $phase bitPosition: "
                         + result.bitPosition + " bytePosition: \$" + (result.bitPosition / 8).hh())
                 changedTrack = false
             }
@@ -89,11 +87,13 @@ class WozDisk(override val name: String, ins: InputStream): BaseDisk() {
         movePhase {
             phase++
             if (phase >= MAX_TRACK) phase = MAX_TRACK - 1
+            println("Incremented phase to $phase")
         }
     }
 
     override fun decPhase() = movePhase {
         if (phase > 0) phase--
+        println("Decremented phase to $phase")
     }
 
     override fun peekBytes(count: Int): ArrayList<Int> {
@@ -119,7 +119,9 @@ class WozDisk(override val name: String, ins: InputStream): BaseDisk() {
     override val sizeInBits: Int
         get() = phaseSizeInBits(phase)
 
-    override var bitPosition = bitStream.bitPosition
+    override var bitPosition: Int = 0
+        get() = bitStream.bitPosition
+        set(f) { field = f }
 
     private var headWindow = 0
 
@@ -172,6 +174,7 @@ class WozDisk(override val name: String, ins: InputStream): BaseDisk() {
         if (peek) {
             restore()
         }
+        println("   returning byte, new position: \$" + (bitStream.bitPosition / 8).hh())
         return result
     }
 
