@@ -241,12 +241,12 @@ class Woz(private val bytes: ByteArray,
 //    }
 //}
 
-class FakeBitStream(override val sizeInBits: Int = 51200, override var bitPosition: Int = 0) : IBitStream {
-    override fun save() {
-    }
+class FakeBitStream(val phase: Int, val mappedTrack: Int,
+        override val sizeInBits: Int = 51200, override var bitPosition: Int = 0) : IBitStream {
+    override fun toString() = "{FakeBitStream phase:$phase mappedTrack:$mappedTrack}"
 
-    override fun restore() {
-    }
+    override fun save() {}
+    override fun restore() {}
 
     override fun nextBit(): Int {
         return if (Random.nextInt() % 10 < 3) 1 else 0

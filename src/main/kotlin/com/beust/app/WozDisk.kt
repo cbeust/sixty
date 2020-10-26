@@ -54,8 +54,11 @@ class WozDisk(override val name: String, ins: InputStream): BaseDisk() {
         if (oldPhase == 2 && newPhase == 1) {
             println("GOING BACK PROBLEM")
         }
+        if (newPosition == 3L) {
+            println("NEW POSITION BUG")
+        }
         println("UPDATE POSITION: $oldPhase -> $newPhase "
-                + " oldPosition:$position newPosition:$newPosition"
+                + " oldPosition:${(position/8).hh()} newPosition:${(newPosition/8).hh()}"
                 + (if (oldTrack == newTrack) "(same track)" else "(different track)"))
         if (newPosition < 0) {
             ERROR("Negative new position, should never happen")
@@ -69,7 +72,8 @@ class WozDisk(override val name: String, ins: InputStream): BaseDisk() {
         get() {
             val result = woz.bitStreamForPhase(phase)
             if (changedTrack) {
-                println("Changed phase, returning bitstream for phase $phase bitPosition: $result")
+                println("Changed phase, returning bitstream for phase $phase" +
+                        " bitPosition:${(result.bitPosition/8).hh()} $result")
                 changedTrack = false
             }
             return result
