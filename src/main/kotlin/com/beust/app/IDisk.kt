@@ -22,10 +22,9 @@ interface IDisk: IBitStream {
 
     fun peekZeroBitCount(): Int
 
-    fun incPhase()
-    fun decPhase()
     fun peekBytes(n: Int): List<Int>
-    /** Phase: 0-159 */
+    /** Phase: 0-79 */
+    var phase: Int
     fun phaseSizeInBits(phase: Int): Int
 
     fun nextByte(): Int

@@ -57,10 +57,7 @@ class ByteBufferWindow(parent: Composite) : Composite(parent, SWT.NONE) {
         display.asyncExec { browser.text = "" }
         val disk = passedDisk ?: IDisk.create(UiState.diskStates[0].file.value)
         if (disk != null) {
-            repeat(160) { disk.decPhase() }
-            repeat(track) {
-                disk.incPhase()
-            }
+            disk.phase = track
             nibbleTrack = NibbleTrack(disk, disk.sizeInBits, createMarkFinders())
 
             fun nextByte(): TimedByte {

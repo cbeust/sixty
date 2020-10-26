@@ -25,21 +25,9 @@ class DskDisk(override val name: String, ins: InputStream, override val sizeInBi
 
     private val isProdos = false
     private val TRACK_SIZE_ENCODED = 6028
-    private var phase: Int = 0
+    override var phase: Int = 0
 
     override fun peekZeroBitCount() = 0
-
-    override fun incPhase() {
-        if (phase < IDisk.PHASE_MAX - 1) {
-            phase++
-        }
-    }
-
-    override fun decPhase() {
-        if (phase > 0) {
-            phase--
-        }
-    }
 
     override fun peekBytes(n: Int): List<Int> {
         var saved = bitPosition

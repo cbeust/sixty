@@ -152,10 +152,9 @@ object SixAndTwo {
                 sectors[ls] = Sector(ls, sectorData)
 //                println("  Successfully read sector $sector (logical: $ls)")
             }
-            disk.incPhase()
-            disk.incPhase()
+            disk.phase -= 2
         }
-        repeat(40) { disk.decPhase() }
+        disk.phase = 0
     }
 }
 

@@ -134,7 +134,7 @@ class DiskController(val slot: Int = 6): MemoryListener() {
      * Magnet states, just 4 bits.
      */
     private var magnetStates = 0
-    private var drivePhase = 0x28
+    private var drivePhase = 0
     private var drivePhasePrecise = 0.0f
 
     private fun toBinaryString(n: Int): String {
@@ -210,15 +210,7 @@ class DiskController(val slot: Int = 6): MemoryListener() {
                 + " " + (if (address.and(1) == 1) "on " else "off")
                 + " address: " + address.hh())
 
-        if (direction > 0) {
-            repeat(direction) {
-                disk()?.incPhase()
-            }
-        } else if (direction < 0) {
-            repeat(-direction) {
-                disk()?.decPhase()
-            }
-        }
+        disk()?.phase = drivePhase
 
         if (direction != 0) {
             logDisk("     delta: $direction newTrack: $currentPhase")
@@ -334,13 +326,9 @@ class DiskController(val slot: Int = 6): MemoryListener() {
             val oldTrack = currentPhase
             currentPhase += delta
             stepperMotorPhase = phase
-            if (delta > 0) {
-                repeat(delta) { disk.incPhase() }
-            } else if (delta < 0) {
-                repeat(-delta) { disk.decPhase() }
-            }
             if (currentPhase < 0) currentPhase = 0
             if (currentPhase >= IDisk.PHASE_MAX) currentPhase = IDisk.PHASE_MAX - 1
+            disk.phase = currentPhase
             if (oldTrack != currentPhase) {
                 logDisk("     delta: $delta newTrack: $currentPhase")
                 UiState.diskStates[if (drive1) 0 else 1].currentPhase.value = currentPhase / 2

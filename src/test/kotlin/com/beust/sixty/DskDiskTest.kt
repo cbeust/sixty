@@ -15,7 +15,7 @@ class DskDiskTest {
         repeat(2) { disk.nextByte() } // volume
         val (b0, b1) = disk.peekBytes(2)
         val t0 = SixAndTwo.pair4And4(b0, b1)
-        disk.incPhase()
+        disk.phase++
         val b2 = disk.nextByte()
         val b3 = disk.nextByte()
         val t1 = SixAndTwo.pair4And4(b2, b3)
@@ -49,8 +49,7 @@ class DskDiskTest {
                             .isEqualTo(exp)
                 }
             }
-            disk.incPhase()
-            disk.incPhase()
+            disk.phase += 2
         }
     }
 }

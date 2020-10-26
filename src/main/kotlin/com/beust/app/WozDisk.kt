@@ -13,8 +13,13 @@ fun main() {
 class WozDisk(override val name: String, ins: InputStream): BaseDisk() {
     private val MAX_TRACK = 160
 
-    /** 0..159 */
-    var phase = 0
+    /** 0..79 */
+    override var phase = 0
+        set(v) {
+            updatePosition(field, v)
+            field = v
+        }
+
     private val bytes: ByteArray = ins.readAllBytes()
     private val woz = Woz(bytes)
 
@@ -64,31 +69,19 @@ class WozDisk(override val name: String, ins: InputStream): BaseDisk() {
         if (newTrack != -1) logWoz("New position for new phase $newTrack: " + newPosition)
         newBitStream.bitPosition = newPosition.toInt()
 
-        bitStream = woz.bitStreamForPhase(newPhase)
-        println("Changed phase, returning bitstream for phase $phase $bitStream")
+        bitStream = newBitStream
     }
 
     var bitStream: IBitStream = woz.bitStreamForPhase(0)
 
-    private fun movePhase(block: () -> Unit) {
-        val t = phase
-        block()
-        if (t != phase) {
-            updatePosition(t, phase)
-//            println("New track: $" + track.h() + " (" + track / 4.0 + ")")
-        }
-    }
-
-    override fun incPhase() {
-        movePhase {
-            phase++
-            if (phase >= MAX_TRACK) phase = MAX_TRACK - 1
-        }
-    }
-
-    override fun decPhase() = movePhase {
-        if (phase > 0) phase--
-    }
+//    private fun movePhase(block: () -> Unit) {
+//        val t = phase
+//        block()
+//        if (t != phase) {
+//            updatePosition(t, phase)
+////            println("New track: $" + track.h() + " (" + track / 4.0 + ")")
+//        }
+//    }
 
     override fun peekBytes(count: Int): ArrayList<Int> {
         val result = arrayListOf<Int>()

@@ -94,8 +94,7 @@ class WozTest {
                         .isEqualTo(byte2)
                 println("Matched " + byte.h() + " with " + latch.h())
             }
-            disk.incPhase()
-            disk.incPhase()
+            disk.phase += 2
         }
     }
 }
