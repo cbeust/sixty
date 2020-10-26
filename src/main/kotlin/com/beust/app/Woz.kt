@@ -193,9 +193,9 @@ class Woz(private val bytes: ByteArray,
     fun bitStreamForPhase(p: Int): IBitStream {
         val phase = p * 2
         val existing = bitStreams[phase]
-        return bitStreams.getOrPut(phase) {
+        fun createNewBitStream(): IBitStream {
             val tmapOffset = tmap.offsetFor(phase)
-            if (tmapOffset == -1) {
+            return if (tmapOffset == -1) {
                 val trk = trks.trks[phase]
                 FakeBitStream(phase, -1)
             } else {
@@ -216,6 +216,7 @@ class Woz(private val bytes: ByteArray,
                 }
             }
         }
+        return bitStreams.getOrPut(phase) { createNewBitStream() }
     }
 
 

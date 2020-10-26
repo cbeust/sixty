@@ -25,7 +25,8 @@ interface IPhasedBitStream: IBitStream {
 class BitBitStream(val bytes: List<Byte>, override val phase: Int, override val mappedTrack: Int,
         bitCount: Int = bytes.size * 8): IPhasedBitStream {
 
-    override fun toString() = "{BitBitStream phase:$phase mappedTrack:$mappedTrack}"
+    override fun toString() = "{BitBitStream phase:$phase mappedTrack:$mappedTrack" +
+            " bytePosition: ${(bitPosition/8).hh()}}"
 
     override var bitPosition = 0
     private var saved = -1
