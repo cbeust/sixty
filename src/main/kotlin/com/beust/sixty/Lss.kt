@@ -58,24 +58,24 @@ class Lss {
         idx = idx.or(if (q7) 0x08 else 0x00)
         idx = idx.or(state.shl(4))
 
+        // Table 9.3, page 0-16 of Understanding the Apple 2, Jim Sather
         val command = P6[idx]
         when (command.and(0xf)) {
-            0 -> { // CLR
+            0, 1, 2, 3, 4, 5, 6, 7 -> { // CLR
                 latch = 0
             }
-            8 -> {
-            } // NOP
+            8, 0xc -> {} // NOP
             9 -> { // SL0
                 latch = latch.shl(1).and(0xff)
             }
-            0xa -> { // SR
-                latch = latch.shr(1)
+            0xa, 0xe -> { // SR
+                latch = latch.shr(1)  // not write protected
 //                if (_cur.readOnly) {
 //                    _latch = _latch or 0x80
 //                }
 
             }
-            0xb -> { // LD
+            0xb, 0xf -> { // LD
                 NYI("LD command for LSS")
                 // latch = bus
             }
