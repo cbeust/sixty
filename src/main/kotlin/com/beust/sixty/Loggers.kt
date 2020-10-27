@@ -11,6 +11,7 @@ object Loggers {
     val uiStatus = LoggerFactory.getLogger("UiStatus")
     val asm = LoggerFactory.getLogger("Asm")
     val woz = LoggerFactory.getLogger("Woz")
+    val asmTrace = LoggerFactory.getLogger("AsmTrace")
 }
 
 fun logMem(s: String) = Loggers.memory.debug("[MEM] $s")
@@ -23,4 +24,5 @@ fun logAsm(s: String) = Loggers.asm.debug("$s")
 fun logWoz(s: String) = Loggers.woz.debug("$s")
 fun logNyi(s: String) = Loggers.def.warn("!!!!!!!!!!! Not yet implemented: $s")
 fun log(s: String) = Loggers.def.debug(s)
+fun logAsmTrace(s: String) = Loggers.asmTrace.debug(s)
 

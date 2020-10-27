@@ -1,7 +1,6 @@
 package com.beust.sixty
 
 import com.beust.app.*
-import org.slf4j.LoggerFactory
 
 //interface MemoryInterceptor {
 //    /** If override is true, the returned value should be used instead of the one initially provided */
@@ -85,7 +84,7 @@ class Computer(override val memory: IMemory, override val cpu: Cpu, val pcListen
         return memory[address] to word(memory, address)
     }
 
-    var cycles = 0
+    var cycles = 0L
     var track = 6
     var sector = 0
     private var wait = 0
@@ -150,7 +149,11 @@ class Computer(override val memory: IMemory, override val cpu: Cpu, val pcListen
             try {
 //                    DEBUG = cycles >= 15348000
                 debugAsm = DEBUG && cpu.PC < 0xc000
-                if (DEBUG) {
+                if (DEBUG || TRACE_ON) {
+                    if (TRACE_ON && TRACE_CYCLES != 0L) {
+                        cycles = TRACE_CYCLES
+                        TRACE_CYCLES = 0
+                    }
                     val (byte, word) = byteWord()
                     val debugString = formatPc(cpu.PC, opCode) + formatInstruction(opCode, cpu.PC, byte, word)
                     previousPc = cpu.PC
@@ -165,9 +168,10 @@ class Computer(override val memory: IMemory, override val cpu: Cpu, val pcListen
                     }
                     cpu.PC += SIZES[opCode]
                     timing = cpu.nextInstruction(previousPc)
-                    val fullString = String.format("%8x| ", cycles) + debugString + " ($timing) " + cpu.toString()
+                    val fullString = String.format("%08X| ", cycles) + debugString + " ($timing) " + cpu.toString()
                     cycles += timing
                     if (debugAsm) logAsm(fullString)
+                    if (TRACE_ON) logAsmTrace(fullString)
                     if (true) { // debugMemory) {
                         memory.listeners.forEach {
                             it.logLines.forEach { println(it) }
@@ -205,7 +209,7 @@ class Computer(override val memory: IMemory, override val cpu: Cpu, val pcListen
         return timing
     }
 
-    class RunResult(val durationMillis: Long, val cycles: Int)
+    class RunResult(val durationMillis: Long, val cycles: Long)
 
     private fun formatPc(pc: Int, opCode: Int): String {
         val size = SIZES[opCode]
