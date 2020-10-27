@@ -53,6 +53,10 @@ class DiskController(val slot: Int = 6): MemoryListener() {
     override fun isInRange(address: Int) = address in (c(0xc080)..c(0xc08f))
 
     private val useLss = true
+    // 55 works for paddles
+    // 75 for kamungas
+    private val HOLD = 34
+    private var hold = HOLD
 
     fun step(): Computer.RunStatus {
         // Use the LSS
@@ -65,9 +69,17 @@ class DiskController(val slot: Int = 6): MemoryListener() {
 
             // Faster way for unprotected disks
             disk()?.let {
-                if (motor.isOn && latch.and(0x80) == 0) {
-                    //                latch = latch.shl(1).or(it.nextBit())
-                    latch = it.nextByte()
+                if (motor.isOn) {
+                    if (latch.and(0x80) == 0) {
+//                latch = latch.shl(1).or(it.nextBit())
+                        latch = it.nextByte()
+                        hold = HOLD
+                    } else if (hold > 0) {
+                        hold--
+                    } else {
+                        println("Missed nibble: " + latch.h())
+                        latch = 0
+                    }
                 }
             }
         }
@@ -277,16 +289,12 @@ class DiskController(val slot: Int = 6): MemoryListener() {
                 value
             }
             0xc08c -> {
-                if (!useLss) {
-                    disk()?.let { disk ->
-                        latch = disk.nextByte()
-                    }
-                }
                 q6 = false
                 val result = latch
                 if (result.and(0x80) > 0) {
 //                    println("Nibble: " + result.h())
                     addressState.readByte(result, if (drive1) 0 else 1)
+                    latch = 0
                 }
 //                if (latch.and(0x80) != 0) latch = 0//latch.and(0x7f) // clear bit 7
                 result
