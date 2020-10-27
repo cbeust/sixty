@@ -278,7 +278,9 @@ class DiskController(val slot: Int = 6): MemoryListener() {
             }
             0xc08c -> {
                 if (!useLss) {
-                    latch = disk()!!.nextByte()
+                    disk()?.let { disk ->
+                        latch = disk.nextByte()
+                    }
                 }
                 q6 = false
                 val result = latch
