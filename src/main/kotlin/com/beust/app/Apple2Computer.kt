@@ -35,10 +35,12 @@ class Apple2Computer(private val gc: GraphicContext? = null): IComputer {
     }
 
     override fun step() : Computer.RunStatus {
-        repeat(if (NIBBLE_STRATEGY != NibbleStrategy.LSS) 1 else 2) {
+        diskController.step()
+        val result = computer.step()
+        if (NIBBLE_STRATEGY != NibbleStrategy.BYTES) {
             diskController.step()
         }
-        return computer.step()
+        return result
     }
 }
 

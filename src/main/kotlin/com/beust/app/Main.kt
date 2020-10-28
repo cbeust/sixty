@@ -29,7 +29,7 @@ val DISKS = listOf(
         disk("Blazing Paddles (Baudville).woz") // 18
 )
 
-enum class NibbleStrategy(val hold:Int = 0) { LSS, BYTES(36), BITS(36) }
+enum class NibbleStrategy(val hold:Int = 0) { LSS, BYTES(36), BITS(32) }
 val NIBBLE_STRATEGY = NibbleStrategy.LSS
 val RUN = true
 var DEBUG = false
@@ -39,7 +39,7 @@ var TRACE_CYCLES = 0x09D4FD12L
 val BREAKPOINT: Int? = 0xb9f7// 0xb980 // 0x9e52 // null // 0x5a0//0xc6a6//0x5f8 // 0x5f8 // 0x5a0
 val BREAKPOINT_RANGE: IntRange? = null// 0xbb00..0xbbff
 val BREAKPOINT_WRITE: Int? = 0x2d
-val DISK = DISKS[14]
+val DISK = DISKS[18]
 const val SPEED_FACTOR = 1
 
 object Threads {

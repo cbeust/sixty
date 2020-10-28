@@ -344,7 +344,7 @@ class Apple2Memory(val size: Int? = null): IMemory {
     }
 
     override operator fun set(address: Int, value: Int) {
-        if (address == BREAKPOINT_WRITE && (value == 0 || value == 4)) {
+        if (address == BREAKPOINT_WRITE) { //  && (value == 0 || value == 4)) {
             println("MEMORY WRITE BREAKPOINT: ${value.h()}")
             ""
         }
