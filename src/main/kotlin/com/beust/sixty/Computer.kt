@@ -127,28 +127,10 @@ class Computer(override val memory: IMemory, override val cpu: Cpu, val pcListen
             if (BREAKPOINT_RANGE != null) {
                 DEBUG = cpu.PC in BREAKPOINT_RANGE
             }
-////                if (cycles > 1180035) {
-////                    println("cycle breakpoint")
-////                }
-//                if (cpu.PC == BREAKPOINT) {
-//                    log.debug(this.toString())
-//                    log.debug("breakpoint")
-//                }
-//            }
-//                if (cpu.PC == 0xc696) {
-//                    if  (cpu.Y == 1) {
-//                        sector = cpu.A
-//                        if (track == 0 && sector == 10) {
-//                            println("--- Read track $track sector ${cpu.A}")
-//                        }
-//                    } else if (cpu.Y == 2) {
-//                        track = cpu.A
-//                    }
-//                }
 
             try {
 //                    DEBUG = cycles >= 15348000
-                debugAsm = DEBUG && cpu.PC < 0xc000
+                debugAsm = DEBUG // && cpu.PC < 0xc000
                 if (DEBUG || TRACE_ON) {
                     if (TRACE_ON && TRACE_CYCLES != 0L) {
                         cycles = TRACE_CYCLES
