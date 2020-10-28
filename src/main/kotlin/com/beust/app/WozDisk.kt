@@ -108,7 +108,6 @@ class WozDisk(override val name: String, ins: InputStream): BaseDisk() {
 
     override var bitPosition = bitStream.bitPosition
 
-    private var headWindow = 0
 
     override fun peekZeroBitCount(): Int {
         bitStream.save()
@@ -119,17 +118,6 @@ class WozDisk(override val name: String, ins: InputStream): BaseDisk() {
     }
 
     override fun nextBit(): Int = bitStream.nextBit()
-//        bitStream.nextBit(position).let { result ->
-//            bitPosition = result.component1()
-//            return result
-//            headWindow = headWindow shl 1
-//            headWindow = headWindow or bit
-//            return if (headWindow and 0x0f !== 0x00) {
-//                headWindow and 0x02 shr 1
-//            } else {
-//                FAKE_BIT_STREAM.next()
-//            }
-//        }
 
     override fun nextByte() = nextByte(false)
 

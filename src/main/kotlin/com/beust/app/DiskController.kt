@@ -52,35 +52,74 @@ class DiskController(val slot: Int = 6): MemoryListener() {
     private fun c(address: Int) = address + slot16
     override fun isInRange(address: Int) = address in (c(0xc080)..c(0xc08f))
 
-    private val useLss = true
     // 55 works for paddles
     // 75 for kamungas
-    private val HOLD = 34
-    private var hold = HOLD
+//    private val HOLD = 36
+    private var hold = 0
+
+    private var headWindow = 0
+    private val FAKE_BIT_STREAM = FakeBitStream(-1, -1)
+
+    private fun nextBitWithWindow(disk: IDisk): Int {
+        val bit = disk.nextBit()
+        headWindow = headWindow shl 1
+        headWindow = headWindow or bit
+        return if (headWindow and 0x0f !== 0x00) {
+            headWindow and 0x02 shr 1
+        } else {
+            FAKE_BIT_STREAM.nextBit()
+        }
+    }
 
     fun step(): Computer.RunStatus {
         // Use the LSS
-        if (useLss) {
-            disk()?.let { disk ->
-                lss.onPulse(q6, q7, { -> motor.isOn }, disk)
-                latch = lss.latch
+        when(NIBBLE_STRATEGY) {
+            NibbleStrategy.LSS -> {
+                disk()?.let { disk ->
+                    lss.onPulse(q6, q7, { -> motor.isOn }, disk)
+                    latch = lss.latch
+                }
             }
-        } else {
-
-            // Faster way for unprotected disks
-            disk()?.let {
-                if (motor.isOn) {
-                    if (latch.and(0x80) == 0) {
-//                latch = latch.shl(1).or(it.nextBit())
-                        latch = it.nextByte()
-                        hold = HOLD
-                    } else if (hold > 0) {
-                        hold--
-                    } else {
-                        println("Missed nibble: " + latch.h())
-                        latch = 0
+            NibbleStrategy.BYTES -> {
+                // Faster way for unprotected disks
+                disk()?.let {
+                    if (motor.isOn) {
+                        if (latch.and(0x80) == 0) {
+                            //                latch = latch.shl(1).or(it.nextBit())
+                            latch = it.nextByte()
+                            println("Loaded new byte, holding for ${NIBBLE_STRATEGY.hold}")
+                            hold = NIBBLE_STRATEGY.hold
+                        } else if (hold > 0) {
+                            hold--
+                        } else {
+                            println("Missed nibble: " + latch.h())
+                            latch = 0
+                        }
                     }
                 }
+            }
+            NibbleStrategy.BITS -> {
+                disk()?.let {
+                    if (motor.isOn) {
+                        if (latch.and(0x80) == 0) {
+                            latch = latch.shl(1).or(nextBitWithWindow(it))
+                            if (latch.and(0x80) > 0) {
+                                println("Found new nibble ${latch.h()}, holding for ${NIBBLE_STRATEGY.hold}")
+                                hold = NIBBLE_STRATEGY.hold
+                            }
+                        } else {
+                            if (hold == 0) {
+                                println("Missed ${latch.h()}")
+                                latch = 0
+                            } else {
+                                hold--
+                            }
+                        }
+                    }
+                }
+            }
+            else -> {
+                TODO("Unknown nibble strategy: $NIBBLE_STRATEGY")
             }
         }
 
@@ -289,12 +328,17 @@ class DiskController(val slot: Int = 6): MemoryListener() {
                 value
             }
             0xc08c -> {
+//                if (!useLss) {
+//                    disk()?.let { disk ->
+//                        latch = disk.nextByte()
+//                    }
+//                }
                 q6 = false
                 val result = latch
                 if (result.and(0x80) > 0) {
 //                    println("Nibble: " + result.h())
                     addressState.readByte(result, if (drive1) 0 else 1)
-                    latch = 0
+                    latch = 0 // latch.and(0x7f)
                 }
 //                if (latch.and(0x80) != 0) latch = 0//latch.and(0x7f) // clear bit 7
                 result

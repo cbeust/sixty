@@ -1,7 +1,6 @@
 package com.beust.app
 
 import com.beust.sixty.*
-import java.io.File
 
 class Apple2Computer(private val gc: GraphicContext? = null): IComputer {
     override var memory = Apple2Memory()
@@ -36,7 +35,7 @@ class Apple2Computer(private val gc: GraphicContext? = null): IComputer {
     }
 
     override fun step() : Computer.RunStatus {
-        repeat(2) {
+        repeat(if (NIBBLE_STRATEGY != NibbleStrategy.LSS) 1 else 2) {
             diskController.step()
         }
         return computer.step()
