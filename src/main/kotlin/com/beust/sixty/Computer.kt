@@ -45,6 +45,8 @@ class ComputerBuilder {
     }
 }
 
+var cycles = 0L
+
 class Computer(override val memory: IMemory, override val cpu: Cpu, val pcListener: PcListener?): IComputer {
     val pc get() = cpu.PC
 
@@ -84,7 +86,6 @@ class Computer(override val memory: IMemory, override val cpu: Cpu, val pcListen
         return memory[address] to word(memory, address)
     }
 
-    var cycles = 0L
     var track = 6
     var sector = 0
     private var wait = 0

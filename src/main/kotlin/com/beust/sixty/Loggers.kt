@@ -1,5 +1,6 @@
 package com.beust.sixty
 
+import com.beust.app.DEBUG
 import org.slf4j.LoggerFactory
 
 object Loggers {
@@ -25,4 +26,4 @@ fun logWoz(s: String) = Loggers.woz.debug("$s")
 fun logNyi(s: String) = Loggers.def.warn("!!!!!!!!!!! Not yet implemented: $s")
 fun log(s: String) = Loggers.def.debug(s)
 fun logAsmTrace(s: String) = Loggers.asmTrace.debug(s)
-
+fun logCycles(s: String) { if (DEBUG) println(String.format("%08X| $s", cycles)) }
