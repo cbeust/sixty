@@ -36,7 +36,7 @@ class DiskController(val slot: Int = 6): MemoryListener() {
                                 field = MotorState.OFF
                             } // Motor was turned on while spinning down: not turning it off
                         }
-                        Threads.scheduledThreadPool.schedule(task, 7500, TimeUnit.MILLISECONDS)
+                        Threads.scheduledThreadPool.schedule(task, 10_000, TimeUnit.MILLISECONDS)
                         logDisk("Motor spinning down")
                         field = MotorState.SPINNING_DOWN
                     } // we're already OFF or SPINNING_DOWN, nothing to do
@@ -71,6 +71,9 @@ class DiskController(val slot: Int = 6): MemoryListener() {
         }
     }
 
+    private var clock = 0
+    private var nextQa = 0
+
     fun step(): Computer.RunStatus {
         // Use the LSS
         when(NIBBLE_STRATEGY) {
@@ -101,40 +104,28 @@ class DiskController(val slot: Int = 6): MemoryListener() {
             NibbleStrategy.BITS -> {
                 disk()?.let {
                     if (motor.isOn) {
-                        if (latch.and(0x80) == 0) {
-                            latch = latch.shl(1).or(nextBitWithWindow(it))
-                            if (latch.and(0x80) > 0) {
-                                println("Found new nibble ${latch.h()}, holding for ${NIBBLE_STRATEGY.hold}")
-                                hold = NIBBLE_STRATEGY.hold
+                        if (clock++ % 8 == 0) {
+                            val newBit = nextBitWithWindow(it)
+                            if (latch.and(0x80) > 0) { // qa is set
+                                if (newBit == 0 && nextQa == 0) {
+                                    // do nothing, this is how we sync
+                                } else if (newBit == 1 && nextQa == 0) {
+                                    nextQa = 1
+                                } else if (nextQa == 1) {
+                                    latch = 2.or(newBit)
+                                    nextQa = 0
+                                }
+                            } else {// qa not set
+                                latch = latch.shl(1).or(newBit)
                             }
-                        } else {
-                            if (hold == 0) {
-                                println("Missed ${latch.h()}")
-                                latch = 0
-                            } else {
-                                hold--
-                            }
+//                            logAsm("Newbit: $newBit, nextQa: $nextQa, latch: " + latch.h())
+                            ""
                         }
                     }
                 }
             }
-            else -> {
-                TODO("Unknown nibble strategy: $NIBBLE_STRATEGY")
-            }
         }
 
-//        if (motorOn && disk != null) {
-////     More formal way: bit by bit on every pulse
-//            if (latch and 0x80 == 0) {
-//                repeat(8) {
-//                    latch = latch.shl(1).or(disk!!.nextBit()).and(0xff)
-//                }
-//                while (latch and 0x80 == 0) {
-//                    latch = latch.shl(1).or(disk!!.nextBit()).and(0xff)
-//                }
-//            }
-//        }
-////        println("@@@   latch: ${latch.h()}")
         return Computer.RunStatus.RUN
     }
 
@@ -340,12 +331,18 @@ class DiskController(val slot: Int = 6): MemoryListener() {
                 if (result.and(0x80) > 0) {
 //                    println("Nibble: " + result.h())
                     addressState.readByte(result, if (drive1) 0 else 1)
-                    latch = 0 // latch.and(0x7f)
+                    if (NIBBLE_STRATEGY != NibbleStrategy.BITS) {
+                        latch = 0 // latch.and(0x7f)
+                    }
                 }
 //                if (latch.and(0x80) != 0) latch = 0//latch.and(0x7f) // clear bit 7
                 result
             }
             0xc08d -> {
+                // Reset the LSS and clear the latch for the E7 protection to work.
+//                latch = 0
+//                nextQa = 0
+//                lss.reset()
                 q6 = true
                 value
             }
