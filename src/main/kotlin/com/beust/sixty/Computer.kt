@@ -51,13 +51,13 @@ class Computer(override val memory: IMemory, override val cpu: Cpu, val pcListen
     val pc get() = cpu.PC
 
     init {
-        UiState.debug.addListener { _, new ->
-            DEBUG = new
+        UiState.debugAsm.addListener { _, new ->
+            DEBUG_ASM = new
         }
-        UiState.diskStates[0].currentSector.addAfterListener { _, new ->
-            println("New sector read at PC " + cpu.PC.hh() + " : " + new)
-            ""
-        }
+//        UiState.diskStates[0].currentSector.addAfterListener { _, new ->
+//            println("New sector read at PC " + cpu.PC.hh() + " : " + new)
+//            ""
+//        }
     }
 
     companion object {
@@ -111,7 +111,6 @@ class Computer(override val memory: IMemory, override val cpu: Cpu, val pcListen
     }
 
     fun advanceCpu(debugMemory: Boolean = false, _debugAsm: Boolean = false): Int {
-        var debugAsm = _debugAsm
         var previousPc = 0
         val opCode = memory[cpu.PC]
         var done = false
@@ -126,19 +125,18 @@ class Computer(override val memory: IMemory, override val cpu: Cpu, val pcListen
 //                memory[0xbb2c] = 0xea
             }
             if (BREAKPOINT_RANGE != null) {
-                DEBUG = cpu.PC in BREAKPOINT_RANGE
+                DEBUG_ASM_RANGE = cpu.PC in BREAKPOINT_RANGE
+                if (! DEBUG_ASM) DEBUG_ASM = DEBUG_ASM_RANGE
             }
 
             try {
 //                    DEBUG = cycles >= 15348000
-                debugAsm = DEBUG // && cpu.PC < 0xc000
-                if (DEBUG || TRACE_ON) {
+                if (/* cpu.PC < 0xf000 &&*/ (DEBUG || DEBUG_ASM || DEBUG_ASM_RANGE || TRACE_ON)) {
                     if (TRACE_ON && TRACE_CYCLES != 0L) {
                         cycles = TRACE_CYCLES
                         TRACE_CYCLES = 0
                     }
                     val (byte, word) = byteWord()
-                    val debugString = formatPc(cpu.PC, opCode) + formatInstruction(opCode, cpu.PC, byte, word)
                     previousPc = cpu.PC
                     if (cpu.PC == BREAKPOINT) {
                         println("BREAKPOINT $memory")
@@ -151,10 +149,12 @@ class Computer(override val memory: IMemory, override val cpu: Cpu, val pcListen
                     }
                     cpu.PC += SIZES[opCode]
                     timing = cpu.nextInstruction(previousPc)
-                    val fullString = String.format("%08X| ", cycles) + debugString + " ($timing) " + cpu.toString()
-                    cycles += timing
-                    if (debugAsm) logAsm(fullString)
-                    if (TRACE_ON) logAsmTrace(fullString)
+                    if (DEBUG_ASM || TRACE_ON) {
+                        val debugString = formatPc(cpu.PC, opCode) + formatInstruction(opCode, cpu.PC, byte, word)
+                        val fullString = debugString + " ($timing) " + cpu.toString()
+                        if (DEBUG_ASM) logAsm(fullString)
+                        if (TRACE_ON) logAsmTrace(fullString)
+                    }
                     if (true) { // debugMemory) {
                         memory.listeners.forEach {
                             it.logLines.forEach { println(it) }

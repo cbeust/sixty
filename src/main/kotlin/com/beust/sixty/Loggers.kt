@@ -1,6 +1,7 @@
 package com.beust.sixty
 
 import com.beust.app.DEBUG
+import com.beust.app.DEBUG_ASM
 import org.slf4j.LoggerFactory
 
 object Loggers {
@@ -15,15 +16,16 @@ object Loggers {
     val asmTrace = LoggerFactory.getLogger("AsmTrace")
 }
 
+fun cycles(s: String) = String.format("%08X| $s", cycles)
+
 fun logMem(s: String) = Loggers.memory.debug("[MEM] $s")
 fun logText(s: String) = Loggers.text.debug("[TEXT] $s")
 fun logGraphics(s: String) = Loggers.graphics.debug("[GFX] $s")
 fun logDisk(s: String) = Loggers.disk.debug("[DISK] $s")
 fun logTraceDisk(s: String) = Loggers.disk.trace("[DISK] $s")
 fun logUiStatus(s: String) = Loggers.uiStatus.debug("[UI] $s")
-fun logAsm(s: String) = Loggers.asm.debug("$s")
-fun logWoz(s: String) = Loggers.woz.debug("$s")
+fun logAsm(s: String) { if (DEBUG_ASM) { Loggers.asm.debug(cycles(s)) } }
+fun logWoz(s: String) = Loggers.woz.debug(s)
 fun logNyi(s: String) = Loggers.def.warn("!!!!!!!!!!! Not yet implemented: $s")
-fun log(s: String) = Loggers.def.debug(s)
-fun logAsmTrace(s: String) = Loggers.asmTrace.debug(s)
-fun logCycles(s: String) { if (DEBUG) println(String.format("%08X| $s", cycles)) }
+fun log(s: String) { if (DEBUG) Loggers.def.debug(cycles(s)) }
+fun logAsmTrace(s: String) = Loggers.asmTrace.debug(cycles(s))

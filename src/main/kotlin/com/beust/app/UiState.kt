@@ -66,7 +66,7 @@ object UiState {
     //
     // DEBUGGER tab
     //
-    val debug: Obs<Boolean> = Obs("Debug", false)
+    val debugAsm: Obs<Boolean> = Obs("Debug", false)
     val speedMegahertz: Obs<Float> = Obs("Speed", 0.0f)
 
     //

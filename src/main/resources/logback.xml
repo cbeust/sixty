@@ -43,7 +43,9 @@
     </logger>
     <logger name="Graphics" level="debug" />
     <logger name="Breakpoint" level="debug" />
-    <logger name="Default" level="debug" />
+    <logger name="Default" level="debug" additivity="false">
+        <appender-ref ref="BARE" />
+    </logger>
 
     <root level="debug">
         <appender-ref ref="DEBUG" />

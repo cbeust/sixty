@@ -43,7 +43,7 @@ class DebuggerWindow(parent: Composite, private val computer: () -> Apple2Comput
 //            }
             addSelectionListener(object: SelectionAdapter() {
                 override fun widgetSelected(e: SelectionEvent?) {
-                    UiState.debug.value = selection
+                    UiState.debugAsm.value = selection
                 }
             })
         }

@@ -32,10 +32,72 @@ class Lss {
     private var zeros = 0
     var latch = 0
 
+    fun reset() {
+        clock = 0
+        state = 0
+        zeros = 0
+        latch = 0
+    }
+
+    /**
+     * q6 = load, q7 = write
+     */
     fun onPulse(q6: Boolean, q7: Boolean, motorOn: () -> Boolean, disk: IDisk) {
         if (motorOn()) {
             step(q6, q7, motorOn, disk)
         }
+    }
+
+    private var seq = 0
+    private var write = false
+    private var isWriteProtected = true
+    private fun _step(q6: Boolean, q7: Boolean, motorOn: () -> Boolean, disk: IDisk) {
+        var pulse = 0
+        if (clock == 4) {
+            pulse = disk.nextBit()
+            if (pulse == 0) {
+                if (++zeros > 2) {
+                    pulse = if (Math.random() > 0.3) 0 else 1
+                }
+            } else {
+                zeros = 0
+            }
+        }
+
+        clock++
+        if (clock > 7) clock = 0
+        val adr = q7.int().shl(3) or q6.int().shl(2) or latch.and(0x80).shr(7).shl(1) or pulse
+        val idx = seq.or(adr)
+        val cmd = P6[idx]
+        seq = cmd.and(0xf0)
+
+        if (cmd.and(8) > 0) {
+            if (cmd.and(3) > 0) {
+                if (write) {
+                    TODO("WRITE NOT IMPLEMENTED")
+//                    const bool one = (this->seq&0x80u) != (this->prev_seq&0x80u);
+//                    this->prev_seq = this->seq;
+//                    this->currentDrive->writeBit(one);
+                }
+            }
+
+            when(cmd.and(3)) {
+                3 -> {
+//                    this->dataRegister = this->dataBusReadOnlyCopy;
+                }
+                2 -> {
+                    latch = latch.shr(1)
+                    latch = latch.or(isWriteProtected.int().shl(7))
+                }
+                1 -> {
+                    latch = latch.shl(1)
+                    latch = latch.or(cmd.and(4).shl(2))
+                }
+            }
+        } else {
+            latch = 0
+        }
+
     }
 
     private fun step(q6: Boolean, q7: Boolean, motorOn: () -> Boolean, disk: IDisk) {
@@ -92,8 +154,11 @@ class Lss {
                     NYI("WRITE MODE NOT SUPPORTED)")
                     // track[_cur.head] = _state & 0x8 ? 0x01 : 0x00;
                 }
-
             }
+//            log("LSS accepted new pulse:$pulse latch:" + (if (latch.and(0x80) > 0) " full " else " ") + latch.h())
+//            if (latch.and(0x80) > 0) {
+//                log("   got a full byte: ${latch.h()}")
+//            }
         }
         if (++clock > 7) clock = 0
     }
