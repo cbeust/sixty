@@ -54,13 +54,7 @@ class WozDisk(override val name: String, ins: InputStream): BaseDisk() {
         val newTrackLength = newBitStream.sizeInBits
         val position = oldBitStream.bitPosition
         val newPosition = position.toLong() * newTrackLength / oldTrackLength
-        if (oldPhase == 2 && newPhase == 1) {
-            println("GOING BACK PROBLEM")
-        }
-        if (newPosition == 3L) {
-            println("NEW POSITION BUG")
-        }
-        println("UPDATE POSITION: $oldPhase -> $newPhase "
+        logDisk("UPDATE POSITION: $oldPhase -> $newPhase "
                 + " oldPosition:${(position/8).hh()} newPosition:${(newPosition/8).hh()}"
                 + (if (oldTrack == newTrack) "(same track)" else "(different track)"))
         if (newPosition < 0) {
