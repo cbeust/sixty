@@ -30,12 +30,14 @@ class WozTest {
 
     data class DiskInfo(val disk: IDisk, val addresses: List<Pair<Int, Int>>, val seconds: Int = 5)
 
-    @DataProvider(parallel = true)
+    @DataProvider(parallel = false)
     private fun dp(): Array<Array<DiskInfo>> {
         fun create(name: String, addresses: List<Pair<Int, Int>>, seconds: Int = 5)
             = DiskInfo(IDisk.create(name, diskStream("boot/$name"))!!, addresses, seconds)
 
         val result = listOf(
+                create("Blazing Paddles (Baudville).woz", listOf(0xb4bd to 0xad), 20),
+                create("Commando - Disk 1, Side A.woz", listOf(0x2056 to 0x1e), 10),
                 create("Rescue Raiders - Disk 1, Side B.woz", listOf(0x8a8 to 0xe9), 10),
                 create("DOS 3.3.dsk", listOf(0xa000 to 0xad), 10),
                 create("DOS 3.3.woz", listOf(0xa000 to 0xad), 10),
@@ -45,7 +47,6 @@ class WozTest {
                 create("Ultima4.dsk", listOf(0x6182 to 0x8e), 20),
                 create("Sherwood Forest.dsk", listOf(0x246d to 0x55), 10),
                 create("Blade of Blackpoole.dsk", listOf(0x6067 to 0x88), 10),
-                create("Commando - Disk 1, Side A.woz", listOf(0x2056 to 0x1e), 10),
                 create("Planetfall - Disk 1, Side A.woz", listOf(0x154d to 0x10), 5)
             )
             .map { arrayOf(it) }
