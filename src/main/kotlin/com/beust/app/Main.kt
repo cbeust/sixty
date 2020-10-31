@@ -26,19 +26,22 @@ val DISKS = listOf(
         disk("Planetfall - Disk 1, Side A.woz"), // 15
         disk("Sammy Lightfoot - Disk 1, Side A.woz"), // 16
         disk("Stargate - Disk 1, Side A.woz"), // 17
-        disk("Blazing Paddles (Baudville).woz") // 18
+        disk("Blazing Paddles (Baudville).woz"), // 18
+        disk("Hard Hat Mack - Disk 1, Side A.woz") // 19
 )
 
-enum class NibbleStrategy(val hold:Int = 0) { LSS, BYTES(36), BITS(32) }
+enum class NibbleStrategy(val hold:Int = 0) { LSS, BYTES(36), BITS(12) }
 val NIBBLE_STRATEGY = NibbleStrategy.LSS
 val RUN = true
-var DEBUG = false
+var DEBUG = true
+var DEBUG_ASM = false
+var DEBUG_ASM_RANGE = false
 var DEBUG_BITS = false
 var TRACE_ON = false
 var TRACE_CYCLES = 0x09D4FD12L
-val BREAKPOINT: Int? = 0xb9f7// 0xb980 // 0x9e52 // null // 0x5a0//0xc6a6//0x5f8 // 0x5f8 // 0x5a0
-val BREAKPOINT_RANGE: IntRange? = null// 0xbb00..0xbbff
-val BREAKPOINT_WRITE: Int? = 0x2d
+val BREAKPOINT: Int? = 0xd81e// 0xb980 // 0x9e52 // null // 0x5a0//0xc6a6//0x5f8 // 0x5f8 // 0x5a0
+val BREAKPOINT_RANGE: IntRange? = null // 0x9e42..0x9e56 // = null// 0xbb00..0xbbff
+val BREAKPOINT_WRITE: Int? = 0x2d // 0xd89f
 val DISK = DISKS[18]
 const val SPEED_FACTOR = 1
 
