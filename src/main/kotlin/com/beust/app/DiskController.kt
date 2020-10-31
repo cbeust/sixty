@@ -252,13 +252,13 @@ class DiskController(val slot: Int = 6): MemoryListener() {
                 + " " + (if (address.and(1) == 1) "on " else "off")
                 + " address: " + address.hh())
 
-        Threads.scheduledThreadPool.schedule( {
+//        Threads.scheduledThreadPool.schedule( {
             disk()?.phase = drivePhase
             if (direction != 0) {
                 logDisk("     delta: $direction newTrack: $currentPhase")
                 UiState.diskStates[if (drive1) 0 else 1].currentPhase.value = currentPhase / 2
             }
-        }, 300, TimeUnit.MILLISECONDS)
+//        }, 300, TimeUnit.MILLISECONDS)
 
 
         ""
