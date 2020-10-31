@@ -120,9 +120,7 @@ class Computer(override val memory: IMemory, override val cpu: Cpu, val pcListen
             done = true
         } else {
             if (cpu.PC == BREAKPOINT) {
-                println("BREAKPOINT")
-//                memory[0xbb2b] = 0xea
-//                memory[0xbb2c] = 0xea
+                ""
             }
             if (BREAKPOINT_RANGE != null) {
                 DEBUG_ASM_RANGE = cpu.PC in BREAKPOINT_RANGE
@@ -136,20 +134,11 @@ class Computer(override val memory: IMemory, override val cpu: Cpu, val pcListen
                         cycles = TRACE_CYCLES
                         TRACE_CYCLES = 0
                     }
-                    val (byte, word) = byteWord()
                     previousPc = cpu.PC
-                    if (cpu.PC == BREAKPOINT) {
-                        println("BREAKPOINT $memory")
-                        println("A: " + cpu.A + " track: " + memory[0x2e] + " sector: " + memory[0x2d]
-                                + " checksum: "  + memory[0x2d6 + cpu.Y].h())
-                        if (cpu.A != 0) {
-                            println("FAILURE")
-                        }
-                        ""
-                    }
                     cpu.PC += SIZES[opCode]
                     timing = cpu.nextInstruction(previousPc)
                     if (DEBUG_ASM || TRACE_ON) {
+                        val (byte, word) = byteWord()
                         val debugString = formatPc(cpu.PC, opCode) + formatInstruction(opCode, cpu.PC, byte, word)
                         val fullString = debugString + " ($timing) " + cpu.toString()
                         if (DEBUG_ASM) logAsm(fullString)
