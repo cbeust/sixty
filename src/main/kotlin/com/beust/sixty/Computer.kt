@@ -127,7 +127,7 @@ class Computer(override val memory: IMemory, override val cpu: Cpu, val pcListen
 
             try {
 //                    DEBUG = cycles >= 15348000
-                if (/* cpu.PC < 0xf000 &&*/ (DEBUG || DEBUG_ASM || DEBUG_ASM_RANGE || TRACE_ON)) {
+                if (cpu.PC < 0xf000 && (DEBUG || DEBUG_ASM || DEBUG_ASM_RANGE || TRACE_ON)) {
                     if (TRACE_ON && TRACE_CYCLES != 0L) {
                         Cycles.reset(TRACE_CYCLES)
                         TRACE_CYCLES = 0
@@ -136,7 +136,7 @@ class Computer(override val memory: IMemory, override val cpu: Cpu, val pcListen
                     cpu.PC += SIZES[opCode]
                     timing = cpu.nextInstruction(previousPc)
                     if (DEBUG_ASM || TRACE_ON) {
-                        val (byte, word) = byteWord()
+                        val (byte, word) = byteWord(address = previousPc + 1)
                         val debugString = formatPc(cpu.PC, opCode) + formatInstruction(opCode, cpu.PC, byte, word)
                         val fullString = debugString + " ($timing) " + cpu.toString()
                         if (DEBUG_ASM) logAsm(fullString)
