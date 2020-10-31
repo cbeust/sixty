@@ -31,8 +31,10 @@ class Runner(val gc: GraphicContext? = null) {
 
     fun runTimedSlice(computer: IComputer): Pair<Computer.RunStatus, Long> {
         runStatus = Computer.RunStatus.RUN
-        var targetCycles = SPEED_FACTOR * (System.currentTimeMillis() - sliceStart) * 1000
-        val cycles = targetCycles
+        var targetCycles = SPEED_FACTOR * (System.currentTimeMillis() - sliceStart) * 1300
+        val speed = UiState.speedMegahertz.value
+        val adjustedCycles = if (speed > 0.25f) (targetCycles / speed).toLong() else targetCycles
+        val cycles = adjustedCycles
         while (runStatus == Computer.RunStatus.RUN && targetCycles-- > 0) {
             runStatus = computer.step()
         }
