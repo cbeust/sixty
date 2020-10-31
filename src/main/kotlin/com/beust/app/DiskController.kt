@@ -252,16 +252,19 @@ class DiskController(val slot: Int = 6): MemoryListener() {
                 + " " + (if (address.and(1) == 1) "on " else "off")
                 + " address: " + address.hh())
 
-//        Threads.scheduledThreadPool.schedule( {
+        //
+        // Move the head, but we need to insert a small delay if it wasn't in motion already.
+        // For the first move, we put a delay of ~100k cycles, but for subsequent ones, the
+        // head can move right away (hence 1).
+        //
+        val wait = if (Cycles.stepper.isEmpty()) 100_000L else 1
+        Cycles.stepper.add(CycleAction(wait) {
             disk()?.phase = drivePhase
             if (direction != 0) {
                 logDisk("     delta: $direction newTrack: $currentPhase")
                 UiState.diskStates[if (drive1) 0 else 1].currentPhase.value = currentPhase / 2
             }
-//        }, 300, TimeUnit.MILLISECONDS)
-
-
-        ""
+        })
     }
 
     fun currentTrackString() : String {

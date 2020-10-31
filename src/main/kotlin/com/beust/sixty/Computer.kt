@@ -45,8 +45,6 @@ class ComputerBuilder {
     }
 }
 
-var cycles = 0L
-
 class Computer(override val memory: IMemory, override val cpu: Cpu, val pcListener: PcListener?): IComputer {
     val pc get() = cpu.PC
 
@@ -103,11 +101,11 @@ class Computer(override val memory: IMemory, override val cpu: Cpu, val pcListen
         var done = false
         startTime = System.currentTimeMillis()
         while (runStatus == RunStatus.RUN) {
-            cycles++
+            Cycles.cycles++
             val done = advanceCpu(debugMemory, _debugAsm)
         }
 
-        return RunResult(System.currentTimeMillis() - startTime, cycles)
+        return RunResult(System.currentTimeMillis() - startTime, Cycles.cycles)
     }
 
     fun advanceCpu(debugMemory: Boolean = false, _debugAsm: Boolean = false): Int {
@@ -131,7 +129,7 @@ class Computer(override val memory: IMemory, override val cpu: Cpu, val pcListen
 //                    DEBUG = cycles >= 15348000
                 if (/* cpu.PC < 0xf000 &&*/ (DEBUG || DEBUG_ASM || DEBUG_ASM_RANGE || TRACE_ON)) {
                     if (TRACE_ON && TRACE_CYCLES != 0L) {
-                        cycles = TRACE_CYCLES
+                        Cycles.reset(TRACE_CYCLES)
                         TRACE_CYCLES = 0
                     }
                     previousPc = cpu.PC
@@ -155,18 +153,17 @@ class Computer(override val memory: IMemory, override val cpu: Cpu, val pcListen
                     previousPc = cpu.PC
                     cpu.PC += SIZES[opCode]
                     timing = cpu.nextInstruction(previousPc)
-                    cycles += timing
                 }
             } catch(ex: Throwable) {
                 ex.printStackTrace()
-                println("Failed at cycle $cycles")
+                println("Failed at cycle ${Cycles.cycles}")
                 throw ex
             }
 
         if (previousPc == cpu.PC) {
                 // Current functional tests highest score: 158489
                 println(this)
-                println("Forever loop after $cycles cycles")
+                println("Forever loop after ${Cycles.cycles} cycles")
                 println("")
             } else {
                 previousPc = cpu.PC

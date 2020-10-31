@@ -39,7 +39,7 @@ class Apple2Computer(private val gc: GraphicContext? = null): IComputer {
         diskController.step()
         result = computer.step()
         diskController.step()
-        cycles++
+        Cycles.cycles++
 
         return result
     }
