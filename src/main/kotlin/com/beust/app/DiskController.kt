@@ -28,15 +28,16 @@ class DiskController(val slot: Int = 6): MemoryListener() {
                     field = MotorState.ON
                 } else if (f == MotorState.OFF) {
                     if (field == MotorState.ON) {
+                        logDisk("Scheduling motor off")
                         // Turn off the motor after a second, unless it was turned on in the meantime
-                        val task = Runnable {
+                        Cycles.motorOff.add(CycleAction(2_000_000) {
+                            // Make sure we're still spinning down and not back on
                             if (field == MotorState.SPINNING_DOWN) {
-                                logDisk("Turning motor OFF after a second")
+                                logDisk("Turning motor off after a second")
                                 updateUi(false)
                                 field = MotorState.OFF
                             } // Motor was turned on while spinning down: not turning it off
-                        }
-                        Threads.scheduledThreadPool.schedule(task, 10_000, TimeUnit.MILLISECONDS)
+                        })
                         logDisk("Motor spinning down")
                         field = MotorState.SPINNING_DOWN
                     } // we're already OFF or SPINNING_DOWN, nothing to do
@@ -44,7 +45,13 @@ class DiskController(val slot: Int = 6): MemoryListener() {
             }
 
         fun turn(on: Boolean) {
-            status = if (on) MotorState.ON else MotorState.OFF
+            status = if (on) {
+                log("Motor back on, canceling OFF tasks")
+                Cycles.motorOff.clear()
+                MotorState.ON
+            } else {
+                MotorState.OFF
+            }
         }
         val isOn: Boolean get() = status == MotorState.ON || status == MotorState.SPINNING_DOWN
     }
