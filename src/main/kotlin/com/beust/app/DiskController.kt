@@ -261,16 +261,15 @@ class DiskController(val slot: Int = 6): MemoryListener() {
                 + " address: " + address.hh())
 
         //
-        // Move the head, but we need to insert a small delay if it wasn't in motion already.
-        // For the first move, we put a delay of ~100k cycles, but for subsequent ones, the
-        // head can move right away (hence 1).
+        // Move the head, but we need to insert a small delay  for the first move if it wasn't in motion already.
+        // For subsequent ones, the head can move right away (hence delay of 1 cycle)
         //
-        val wait = if (Cycles.stepper.isEmpty()) 100_000L else 1
+        val wait = if (Cycles.stepper.isEmpty()) 30_000L else 1
         Cycles.stepper.add(CycleAction(wait) {
             disk()?.phase = drivePhase
             if (direction != 0) {
                 logDisk("     delta: $direction newTrack: $currentPhase")
-                UiState.diskStates[if (drive1) 0 else 1].currentPhase.value = currentPhase / 2
+                UiState.diskStates[if (drive1) 0 else 1].currentPhase.value = currentPhase / 4
             }
         })
     }
