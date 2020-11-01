@@ -382,22 +382,22 @@ class DiskController(val slot: Int = 6): MemoryListener() {
             listOf(1, -2, -1, 0)
     )
 
-    private fun magnet(disk: IDisk, phase: Int, on: Boolean) {
-        logDisk("*** phase($phase, $on)")
-        if (on) {
-            val delta = phaseDeltas[stepperMotorPhase][phase]
-            val oldTrack = currentPhase
-            currentPhase += delta
-            stepperMotorPhase = phase
-            if (currentPhase < 0) currentPhase = 0
-            if (currentPhase >= IDisk.PHASE_MAX) currentPhase = IDisk.PHASE_MAX - 1
-            disk.phase = currentPhase
-            if (oldTrack != currentPhase) {
-                logDisk("     delta: $delta newTrack: $currentPhase")
-                UiState.diskStates[if (drive1) 0 else 1].currentPhase.value = currentPhase / 2
-            }
-        }
-    }
+//    private fun magnet(disk: IDisk, phase: Int, on: Boolean) {
+//        logDisk("*** phase($phase, $on)")
+//        if (on) {
+//            val delta = phaseDeltas[stepperMotorPhase][phase]
+//            val oldTrack = currentPhase
+//            currentPhase += delta
+//            stepperMotorPhase = phase
+//            if (currentPhase < 0) currentPhase = 0
+//            if (currentPhase >= IDisk.PHASE_MAX) currentPhase = IDisk.PHASE_MAX - 1
+//            disk.phase = currentPhase
+//            if (oldTrack != currentPhase) {
+//                logDisk("     delta: $delta newTrack: $currentPhase")
+//                UiState.diskStates[if (drive1) 0 else 1].currentPhase.value = currentPhase / 2
+//            }
+//        }
+//    }
 
 
 //    private fun magnet2(disk: IDisk, index: Int, state: Boolean) {
