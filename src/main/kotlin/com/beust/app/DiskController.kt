@@ -30,7 +30,7 @@ class DiskController(val slot: Int = 6): MemoryListener() {
                     if (field == MotorState.ON) {
                         logDisk("Scheduling motor off")
                         // Turn off the motor after a second, unless it was turned on in the meantime
-                        Cycles.motorOff.add(CycleAction(3_000_000) {
+                        Cycles.motorOff.add(CycleAction(4_000_000) {
                             // Make sure we're still spinning down and not back on
                             if (field == MotorState.SPINNING_DOWN) {
                                 logDisk("Turning motor off after a second")
