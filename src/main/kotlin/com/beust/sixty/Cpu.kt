@@ -1,6 +1,7 @@
 package com.beust.sixty
 
 import com.beust.app.StackPointer
+import com.beust.app.UiState
 import java.lang.IllegalArgumentException
 
 /**
@@ -321,7 +322,9 @@ data class Cpu(val memory: IMemory,
                 memory[effectiveAddress] = Y
             }
             else -> {
-                TODO("Unknown opcode: ${opCode.h()}")
+                val message = "Unknown opcode: ${opCode.h()}"
+                UiState.error.value = message
+//                TODO("")
             }
         }
         return timing
