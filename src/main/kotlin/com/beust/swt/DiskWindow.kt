@@ -191,11 +191,7 @@ class DiskWindow(parent: Composite): Composite(parent, NONE) {
 
         createHeader(this)
         createRightSide(this)
-        byteBufferWindow = ByteBufferWindow(this).apply {
-            layoutData = GridData(GridData.FILL, GridData.FILL, true, true).apply {
-                horizontalSpan = 2
-            }
-        }
+        byteBufferWindow = ByteBufferWindow(this)
 
         UiState.diskStates[0].file.addListener { _, new ->
             display.asyncExec {
@@ -239,7 +235,6 @@ class DiskWindow(parent: Composite): Composite(parent, NONE) {
         return Composite(parent, SWT.NONE).apply {
             layout = FillLayout(SWT.VERTICAL)
             layoutData = GridData(SWT.FILL, SWT.FILL, true, true).apply {
-                widthHint = 400
                 verticalSpan = 2
             }
             createTrackInfo(this)

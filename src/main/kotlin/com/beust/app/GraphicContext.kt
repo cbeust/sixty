@@ -285,7 +285,7 @@ class GraphicContext {
 //    mainWindow.pack()
 //    folder.pack()
         shell.pack()
-        shell.setSize(shell.bounds.width + 150, MAIN_WINDOW_HEIGHT)
+        shell.setSize(shell.bounds.width + 300, MAIN_WINDOW_HEIGHT)
 //        rebootButton.addListener(SWT.Selection) { e ->
 //            computer.reboot()
 //        }
