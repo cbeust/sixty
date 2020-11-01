@@ -17,36 +17,37 @@ class DiskController(val slot: Int = 6): MemoryListener() {
     }
 
     class Motor(private val drive1: () -> Boolean) {
-        private fun updateUi(b: Boolean) {
-            UiState.diskStates[if (drive1()) 0 else 1].motor.value = b
+        private fun updateUi(state: MotorState) {
+            UiState.diskStates[if (drive1()) 0 else 1].motor.value = state
         }
 
         private var status: MotorState = MotorState.OFF
             set(f) {
                 if (f == MotorState.ON) {
-                    updateUi(true)
+                    updateUi(MotorState.ON)
                     field = MotorState.ON
                 } else if (f == MotorState.OFF) {
                     if (field == MotorState.ON) {
                         logDisk("Scheduling motor off")
                         // Turn off the motor after a second, unless it was turned on in the meantime
-                        Cycles.motorOff.add(CycleAction(2_000_000) {
+                        Cycles.motorOff.add(CycleAction(3_000_000) {
                             // Make sure we're still spinning down and not back on
                             if (field == MotorState.SPINNING_DOWN) {
                                 logDisk("Turning motor off after a second")
-                                updateUi(false)
+                                updateUi(MotorState.OFF)
                                 field = MotorState.OFF
                             } // Motor was turned on while spinning down: not turning it off
                         })
                         logDisk("Motor spinning down")
                         field = MotorState.SPINNING_DOWN
+                        updateUi(MotorState.SPINNING_DOWN)
                     } // we're already OFF or SPINNING_DOWN, nothing to do
                 }
             }
 
         fun turn(on: Boolean) {
             status = if (on) {
-                log("Motor back on, canceling OFF tasks")
+//                log("Motor back on, canceling OFF tasks")
                 Cycles.motorOff.clear()
                 MotorState.ON
             } else {

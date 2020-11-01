@@ -6,13 +6,11 @@ import com.beust.sixty.h
 import com.beust.swt.*
 import org.eclipse.jface.dialogs.MessageDialog
 import org.eclipse.swt.SWT
-import org.eclipse.swt.graphics.Font
-import org.eclipse.swt.graphics.Image
-import org.eclipse.swt.graphics.ImageData
-import org.eclipse.swt.graphics.Rectangle
+import org.eclipse.swt.graphics.*
 import org.eclipse.swt.layout.GridData
 import org.eclipse.swt.layout.GridLayout
 import org.eclipse.swt.widgets.*
+import java.awt.Color
 
 class GraphicContext {
     private lateinit var computer: Apple2Computer
@@ -181,7 +179,7 @@ class GraphicContext {
             //
             val width = 250
             val height = 150
-            fun driveButton(parent: Composite, drive: Int, obs: Obs<Boolean>) = Composite(parent, SWT.NONE).apply {
+            fun driveButton(parent: Composite, drive: Int) = Composite(parent, SWT.NONE).apply {
                 layout = GridLayout(1, true).apply {
                     marginWidth = 0
                 }
@@ -218,7 +216,7 @@ class GraphicContext {
 //                }
             }
 
-            driveButton(this, 0, UiState.diskStates[0].motor)
+            driveButton(this, 0)
 //            button(this, "Swap").apply {
 ////                layoutData = GridData().apply {
 ////                    horizontalSpan = 6
@@ -231,7 +229,7 @@ class GraphicContext {
 //                    UiState.diskStates[1] = d1
 //                }
 //            }
-            driveButton(this, 1, UiState.diskStates[1].motor)
+            driveButton(this, 1)
         }
 
         //
@@ -325,6 +323,7 @@ class GraphicContext {
         lateinit var currentDiskType: Label
         lateinit var currentTrack: Label
         lateinit var currentSector: Label
+        lateinit var light: Composite
 
         fun nameAndType(drive: Int): Pair<String, String> {
             val obs = UiState.diskStates[drive].file
@@ -387,6 +386,25 @@ class GraphicContext {
             c1(label(this, "Sector:"))
             currentSector = label(this, "0")
             c2(currentSector)
+
+            val size = 32
+            light = Composite(this, SWT.NONE).apply {
+                background = bg
+                addPaintListener { e -> with(e.gc) {
+                    val color = when (UiState.diskStates[drive].motor.value) {
+                        DiskController.MotorState.ON -> red(display)
+                        DiskController.MotorState.SPINNING_DOWN -> yellow(display)
+                        else -> bg
+                    }
+                    foreground = color
+                    background = color
+                    fillOval(size / 4, size / 4, size / 2, size / 2)
+                } }
+                layoutData = GridData().apply {
+                    widthHint = size
+                    heightHint = size
+                }
+            }
         }
 
         //
@@ -406,6 +424,9 @@ class GraphicContext {
         }
         UiState.diskStates[drive].currentSector.addAfterListener { _, new ->
             currentSector.text = new?.sector.toString() ?: ""
+        }
+        UiState.diskStates[drive].motor.addAfterListener { _, _ ->
+            light.redraw()
         }
 
         return result
