@@ -28,4 +28,5 @@ fun logAsm(s: String) { if (DEBUG_ASM) { Loggers.asm.debug(cycles(s)) } }
 fun logWoz(s: String) = Loggers.woz.debug(s)
 fun logNyi(s: String) = Loggers.def.warn("!!!!!!!!!!! Not yet implemented: $s")
 fun log(s: String) { if (DEBUG) Loggers.def.debug(cycles(s)) }
+fun warn(s: String) { Loggers.def.warn(cycles(s)) }
 fun logAsmTrace(s: String) = Loggers.asmTrace.debug(cycles(s))

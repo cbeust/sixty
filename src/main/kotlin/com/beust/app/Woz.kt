@@ -96,6 +96,9 @@ class Woz(private val bytes: ByteArray,
 
         init {
             version = stream.read1()
+            if (version == 1) {
+                warn("WOZ V1 NOT SUPPORTED")
+            }
             diskType = if (stream.read1() == 1) "5.25" else "3.5"
             writeProtected = stream.read1() == 1
             synchronized = stream.read1() == 1
