@@ -22,4 +22,25 @@ enum class AddressingType {
         }
     }
 
+    fun deref(memory: IMemory, pc: Int, cpu: Cpu): Pair<Int, () -> Int> {
+        fun byte() = memory[pc + 1]
+        fun word() = memory[pc + 1].or(memory[pc + 2].shl(8))
+
+        val result = when(this) {
+            ABSOLUTE -> word().let { word -> word to { -> memory[word] } }
+            ZP -> byte().let { byte -> byte to { -> memory[byte] } }
+            ZP_X -> byte().let { byte -> (byte + cpu.X).and(0xff).let { it to { -> memory[it] } } }
+            ZP_Y -> byte().let { byte -> (byte + cpu.Y).and(0xff).let { it to { -> memory[it] } } }
+            ABSOLUTE -> word().let { word -> word to { -> memory.word(word) } }
+            ABSOLUTE_X -> word().let { word -> (word + cpu.X).let { it to { -> memory[it] } } }
+            ABSOLUTE_Y -> word().let { word -> (word + cpu.Y).let { it to { -> memory[it] } } }
+            INDIRECT -> word().let { word -> word to { -> memory.word(word) } }
+            INDIRECT_X -> byte().let { byte -> memory.word((byte + cpu.X).and(0xff)).let { it to { -> memory[it] } } }
+            INDIRECT_Y -> byte().let { byte -> memory[byte].or(memory[(byte + 1).and(0xff)].shl(8))
+                    .let { (it + cpu.Y) to { -> memory[it + cpu.Y] } } }
+            else -> 0 to { -> 0 }
+        }
+
+        return result
+    }
 }
