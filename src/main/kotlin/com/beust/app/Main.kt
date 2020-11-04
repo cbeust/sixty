@@ -27,7 +27,8 @@ val DISKS = listOf(
         disk("Sammy Lightfoot - Disk 1, Side A.woz"), // 16
         disk("Stargate - Disk 1, Side A.woz"), // 17
         disk("Blazing Paddles (Baudville).woz"), // 18
-        disk("Hard Hat Mack - Disk 1, Side A.woz") // 19
+        disk("Hard Hat Mack - Disk 1, Side A.woz"),// 19
+        disk("Stellar 7.woz") // 20
 )
 
 enum class NibbleStrategy(val hold:Int = 0) { LSS, BYTES(36), BITS(12) }

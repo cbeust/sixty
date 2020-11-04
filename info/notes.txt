@@ -8,14 +8,45 @@
 - FileWatcher for Applesoft BASIC
 - Toolbar
 - Convert .dsk to .woz
+- Support WOZ1 (test disk: Stellar 7)
 - Fix graphics
 - Fix animations
 - Make keyboard work
 - Double hi res (King's Quest)
 - Rescue Raiders.woz flickers
 - Joystick
+- Turn off the motor at exactly 1M cycles ahead in time
+- Find out why Commando doesn't boot when NibbleStrategy is BITS
 
+===
 
+Disks that fail:
+
+- Adventure to Atlantis.dsk
+
+===
+// qa = bit 7 of latch
+// assume next_qa = 0
+new_bit = read next bit at bit time interval
+if(latch & 0x80) { // qa is set
+	if(new_bit == 0 && next_qa == 0) break; // this is how we sync to bit stream
+	if(new_bit == 1 && next_qa == 0) {
+		next_qa = 1;
+		break;
+	}
+	if(next_qa) {
+		latch = 0x02 |= new_bit;
+		next_qa = 0;
+	}
+} else { // qa is not set
+	latch <<= 1;
+	latch |= new_bit
+} (edited)
+
+stivo:jack_o_lantern:  20 hours ago
+And don’t forget the stepper is very slow at responding. So track changes require a stepper start delay, a movement delay and a settling delay. Things are pretty sloppy in that regard.
+
+===
 
 ===
 archon.hgr
