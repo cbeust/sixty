@@ -13,10 +13,10 @@ enum class AddressingType {
             ABSOLUTE -> " $${word.hh()}"
             ABSOLUTE_X -> " $${word.hh()},X"
             ABSOLUTE_Y -> " $${word.hh()},Y"
+            INDIRECT -> " ($${word.hh()})"
             INDIRECT_X -> " ($${byte.h()},X)"
             INDIRECT_Y -> " ($${byte.h()}),Y"
             REGISTER_A -> ""
-            INDIRECT -> " ($${word.hh()})"
             RELATIVE -> " $${(pc + byte.toByte() + 2).hh()}"
             ZPI, AIX, NONE -> ""
         }
@@ -24,14 +24,13 @@ enum class AddressingType {
 
     fun deref(memory: IMemory, pc: Int, cpu: Cpu): Pair<Int, () -> Int> {
         fun byte() = memory[pc + 1]
-        fun word() = memory[pc + 1].or(memory[pc + 2].shl(8))
+        fun word() = memory.word(pc + 1)
 
         val result = when(this) {
-            ABSOLUTE -> word().let { word -> word to { -> memory[word] } }
             ZP -> byte().let { byte -> byte to { -> memory[byte] } }
             ZP_X -> byte().let { byte -> (byte + cpu.X).and(0xff).let { it to { -> memory[it] } } }
             ZP_Y -> byte().let { byte -> (byte + cpu.Y).and(0xff).let { it to { -> memory[it] } } }
-            ABSOLUTE -> word().let { word -> word to { -> memory.word(word) } }
+            ABSOLUTE -> word().let { word -> word to { -> memory[word] } }
             ABSOLUTE_X -> word().let { word -> (word + cpu.X).let { it to { -> memory[it] } } }
             ABSOLUTE_Y -> word().let { word -> (word + cpu.Y).let { it to { -> memory[it] } } }
             INDIRECT -> word().let { word -> word to { -> memory.word(word) } }
