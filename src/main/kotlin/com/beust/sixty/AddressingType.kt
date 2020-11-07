@@ -22,22 +22,24 @@ enum class AddressingType {
         }
     }
 
-    fun deref(memory: IMemory, pc: Int, cpu: Cpu): Pair<Int, () -> Int> {
+    /**
+     * @return the correct address based on the addressing mode and the registers.
+     */
+    fun address(memory: IMemory, pc: Int, cpu: Cpu): Int {
         fun byte() = memory[pc + 1]
         fun word() = memory.word(pc + 1)
 
         val result = when(this) {
-            ZP -> byte().let { byte -> byte to { -> memory[byte] } }
-            ZP_X -> byte().let { byte -> (byte + cpu.X).and(0xff).let { it to { -> memory[it] } } }
-            ZP_Y -> byte().let { byte -> (byte + cpu.Y).and(0xff).let { it to { -> memory[it] } } }
-            ABSOLUTE -> word().let { word -> word to { -> memory[word] } }
-            ABSOLUTE_X -> word().let { word -> (word + cpu.X).let { it to { -> memory[it] } } }
-            ABSOLUTE_Y -> word().let { word -> (word + cpu.Y).let { it to { -> memory[it] } } }
-            INDIRECT -> word().let { word -> word to { -> memory.word(word) } }
-            INDIRECT_X -> byte().let { byte -> memory.word((byte + cpu.X).and(0xff)).let { it to { -> memory[it] } } }
-            INDIRECT_Y -> byte().let { byte -> memory[byte].or(memory[(byte + 1).and(0xff)].shl(8))
-                    .let { (it + cpu.Y) to { -> memory[it + cpu.Y] } } }
-            else -> 0 to { -> 0 }
+            ZP -> byte().and(0xff)
+            ZP_X -> (byte() + cpu.X).and(0xff)
+            ZP_Y -> (byte() + cpu.Y).and(0xff)
+            ABSOLUTE -> word()
+            ABSOLUTE_X -> word() + cpu.X
+            ABSOLUTE_Y -> word() + cpu.Y
+            INDIRECT -> word()
+            INDIRECT_X -> memory.word((byte() + cpu.X).and(0xff))
+            INDIRECT_Y -> memory.word(byte()) + cpu.Y
+            else -> ERROR("UNEXPECTED ADDRESSING TYPE")
         }
 
         return result

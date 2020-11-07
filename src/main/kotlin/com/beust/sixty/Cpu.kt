@@ -27,19 +27,26 @@ data class Cpu(val memory: IMemory,
         var timing = TIMINGS[opCode]
         val addressingType = ADDRESSING_TYPES[opCode]
 
+        fun runInst(effectiveAddress: Int, indY: Int, absX: Int, absY: Int, closure: () -> Unit): Int {
+            closure()
+            P.setNZFlags(A)
+            val result =
+                if (opCode == indY) {
+                    pageCrossed(memory.word(memory[PC - 1]), effectiveAddress)
+                } else if (opCode == absX || opCode == absY) {
+                    pageCrossed(memory.word(PC - 2), effectiveAddress)
+                } else {
+                    0
+                }
+            return result
+        }
+
         when(opCode) {
-            ADC_IMM -> {
-                adc(memory[pc + 1])
-            }
+            ADC_IMM -> adc(memory[pc + 1])
             ADC_ZP, ADC_ZP_X, ADC_ABS, ADC_ABS_X, ADC_ABS_Y, ADC_IND_X, ADC_IND_Y -> {
-                val (effectiveAddress, content) = addressingType.deref(memory, pc, this)
-                adc(content())
-                when(opCode) {
-                    ADC_IND_Y -> {
-                        timing += pageCrossed(memory.word(memory[PC - 1]), effectiveAddress)
-                    }
-                    ADC_ABS_X, ADC_ABS_Y -> {
-                        timing += pageCrossed(memory.word(PC - 2), effectiveAddress)
+                addressingType.address(memory, pc, this).let { address ->
+                    timing += runInst(address, ADC_IND_Y, ADC_ABS_X, ADC_ABS_Y) {
+                        adc(memory[address])
                     }
                 }
             }
@@ -48,32 +55,25 @@ data class Cpu(val memory: IMemory,
                 P.setNZFlags(A)
             }
             AND_ZP, AND_ZP_X, AND_ABS, AND_ABS_X, AND_ABS_Y, AND_IND_X, AND_IND_Y -> {
-                val (effectiveAddress, content) = addressingType.deref(memory, pc, this)
-                A = A.and(content())
-                P.setNZFlags(A)
-                when(opCode) {
-                    AND_IND_Y -> {
-                        timing += pageCrossed(memory.word(memory[PC - 1]), effectiveAddress)
-                    }
-                    AND_ABS_X, AND_ABS_Y -> {
-                        timing += pageCrossed(memory.word(PC - 2), effectiveAddress)
+                addressingType.address(memory, pc, this).let { address ->
+                    timing += runInst(address, AND_IND_Y, AND_ABS_X, AND_ABS_Y) {
+                        A = A.and(memory[address])
                     }
                 }
-
             }
-            ASL -> {
-                A = asl(A)
-            }
+            ASL -> A = asl(A)
             ASL_ZP, ASL_ZP_X, ASL_ABS, ASL_ABS_X -> {
-                val (effectiveAddress, content) = addressingType.deref(memory, pc, this)
-                memory[effectiveAddress] = asl(content())
+                addressingType.address(memory, pc, this).let { address ->
+                    memory[address] = asl(memory[address])
+                }
             }
             BIT_ZP, BIT_ABS -> {
-                val (effectiveAddress, content) = addressingType.deref(memory, pc, this)
-                content().let { v ->
-                    P.Z = (v and A) == 0
-                    P.N = (v and 0x80) != 0
-                    P.V = (v and 0x40) != 0
+                addressingType.address(memory, pc, this).let { address ->
+                    memory[address].let { v ->
+                        P.Z = (v and A) == 0
+                        P.N = (v and 0x80) != 0
+                        P.V = (v and 0x40) != 0
+                    }
                 }
             }
             BPL -> timing += branch(memory[pc + 1]) { !P.N }
@@ -90,27 +90,28 @@ data class Cpu(val memory: IMemory,
             }
             CMP_IMM -> cmp(A, memory[pc + 1])
             CMP_ZP, CMP_ZP_X, CMP_ABS, CMP_ABS_X, CMP_ABS_Y, CMP_IND_X, CMP_IND_Y -> {
-                val (effectiveAddress, content) = addressingType.deref(memory, pc, this)
-                cmp(A, content())
-                when(opCode) {
-                    CMP_IND_Y -> {
-                        timing += pageCrossed(memory.word(memory[PC - 1]), effectiveAddress)
-                    }
-                    CMP_ABS_X, CMP_ABS_Y -> {
-                        timing += pageCrossed(memory.word(PC - 2), effectiveAddress)
-                    }
+                addressingType.address(memory, pc, this).let { address ->
+                    cmp(A, memory[address])
                 }
-
             }
             CPX_IMM -> cmp(X, memory[pc + 1])
-            CPX_ZP, CPX_ABS -> cmp(X, addressingType.deref(memory, pc, this).second())
+            CPX_ZP, CPX_ABS -> {
+                addressingType.address(memory, pc, this).let { address ->
+                    cmp(X, memory[address])
+                }
+            }
             CPY_IMM -> cmp(Y, memory[pc + 1])
-            CPY_ZP, CPY_ABS -> cmp(Y, addressingType.deref(memory, pc, this).second())
+            CPY_ZP, CPY_ABS -> {
+                addressingType.address(memory, pc, this).let { address ->
+                    cmp(Y, memory[address])
+                }
+            }
             DEC_ZP, DEC_ZP_X, DEC_ABS, DEC_ABS_X -> {
-                val (effectiveAddress, content) = addressingType.deref(memory, pc, this)
-                (content() - 1).and(0xff).let {
-                    memory[effectiveAddress] = it
-                    P.setNZFlags(it)
+                addressingType.address(memory, pc, this).let { address ->
+                    (memory[address] - 1).and(0xff).let {
+                        memory[address] = it
+                        P.setNZFlags(it)
+                    }
                 }
             }
             EOR_IMM -> {
@@ -118,18 +119,10 @@ data class Cpu(val memory: IMemory,
                 P.setNZFlags(A)
             }
             EOR_ZP, EOR_ZP_X, EOR_ABS, EOR_ABS_X, EOR_ABS_Y, EOR_IND_Y, EOR_IND_X -> {
-                val (effectiveAddress, content) = addressingType.deref(memory, pc, this)
-                A = A.xor(content())
-                P.setNZFlags(A)
-                when(opCode) {
-                    EOR_IND_Y -> {
-                        timing += pageCrossed(memory.word(memory[PC - 1]), effectiveAddress)
-                    }
-                    EOR_ABS_X, EOR_ABS_Y -> {
-                        timing += pageCrossed(memory.word(PC - 2), effectiveAddress)
-                    }
+                addressingType.address(memory, pc, this).let { address ->
+                    A = A.xor(memory[address])
+                    P.setNZFlags(A)
                 }
-
             }
             CLC -> P.C = false
             SEC -> P.C = true
@@ -139,20 +132,22 @@ data class Cpu(val memory: IMemory,
             SED -> P.D = true
             CLV -> P.V = false
             INC_ZP, INC_ZP_X, INC_ABS, INC_ABS_X -> {
-                val (effectiveAddress, content) = addressingType.deref(memory, pc, this)
-                val word = memory.word(pc + 1)
-                if (opCode == INC_ABS_X && word == 0xc083) {
-                    // Special case to support "false reads": https://github.com/AppleWin/AppleWin/issues/404
-                    // inc $c083,x will actually cause an additional read on $c083
-                    content()
-                }
-                (content() + 1).and(0xff).let {
-                    memory[effectiveAddress] = it
-                    P.setNZFlags(it)
+                addressingType.address(memory, pc, this).let { address ->
+                    val content = memory[address]
+                    val word = memory.word(pc + 1)
+                    if (opCode == INC_ABS_X && word == 0xc083) {
+                        // Special case to support "false reads": https://github.com/AppleWin/AppleWin/issues/404
+                        // inc $c083,x will actually cause an additional read on $c083
+                        content
+                    }
+                    (content+ 1).and(0xff).let {
+                        memory[address] = it
+                        P.setNZFlags(it)
+                    }
                 }
             }
             JMP -> PC = memory.word(pc + 1)
-            JMP_IND -> PC = addressingType.deref(memory, pc, this).second()
+            JMP_IND -> { PC = memory.word(addressingType.address(memory, pc, this)) }
             JSR -> {
                 SP.pushWord(PC - 1)
                 PC = memory.word(pc + 1)
@@ -162,17 +157,9 @@ data class Cpu(val memory: IMemory,
                 P.setNZFlags(A)
             }
             LDA_ZP, LDA_ZP_X, LDA_ABS, LDA_ABS_X, LDA_ABS_Y, LDA_IND_X, LDA_IND_Y -> {
-                val (effectiveAddress, content) = addressingType.deref(memory, pc, this)
-                A = content()
-                P.setNZFlags(A)
-                when(opCode) {
-                    LDA_IND_Y -> {
-                        timing += pageCrossed(memory.word(memory[PC - 1]), effectiveAddress)
-                    }
-                    LDA_ABS_X, LDA_ABS_Y -> {
-                        timing += pageCrossed(memory.word(PC - 2), effectiveAddress)
-                    }
-
+                addressingType.address(memory, pc, this).let { address ->
+                    A = memory[address]
+                    P.setNZFlags(A)
                 }
             }
             LDX_IMM -> {
@@ -180,13 +167,9 @@ data class Cpu(val memory: IMemory,
                 P.setNZFlags(X)
             }
             LDX_ZP, LDX_ZP_Y, LDX_ABS, LDX_ABS_Y -> {
-                val (effectiveAddress, content) = addressingType.deref(memory, pc, this)
-                X = content()
-                P.setNZFlags(X)
-                when(opCode) {
-                    LDX_ABS_Y -> {
-                        timing += pageCrossed(memory.word(PC - 2), effectiveAddress)
-                    }
+                addressingType.address(memory, pc, this).let { address ->
+                    X = memory[address]
+                    P.setNZFlags(X)
                 }
             }
             LDY_IMM -> {
@@ -194,19 +177,16 @@ data class Cpu(val memory: IMemory,
                 P.setNZFlags(Y)
             }
             LDY_ZP, LDY_ZP_X, LDY_ABS, LDY_ABS_X -> {
-                val (effectiveAddress, content) = addressingType.deref(memory, pc, this)
-                Y = content()
-                P.setNZFlags(Y)
-                when(opCode) {
-                    LDY_ABS_X -> {
-                        timing += pageCrossed(memory.word(PC - 2), effectiveAddress)
-                    }
+                addressingType.address(memory, pc, this).let { address ->
+                    Y = memory[address]
+                    P.setNZFlags(Y)
                 }
             }
             LSR -> A = lsr(A)
             LSR_ZP, LSR_ZP_X, LSR_ABS, LSR_ABS_X -> {
-                val (effectiveAddress, content) = addressingType.deref(memory, pc, this)
-                memory[effectiveAddress] = lsr(content())
+                addressingType.address(memory, pc, this).let { address ->
+                    memory[address] = lsr(memory[address])
+                }
             }
             NOP -> {}
             ORA_IMM -> {
@@ -214,17 +194,10 @@ data class Cpu(val memory: IMemory,
                 P.setNZFlags(A)
             }
             ORA_ZP, ORA_ZP_X, ORA_ABS, ORA_ABS_X, ORA_ABS_Y, ORA_IND_X, ORA_IND_Y -> {
-                val (effectiveAddress, content) = addressingType.deref(memory, pc, this)
-                A.or(content()).let {
-                    A = it
-                    P.setNZFlags(it)
-                    when(opCode) {
-                        ORA_IND_Y -> {
-                            timing += pageCrossed(memory.word(memory[PC - 1]), effectiveAddress)
-                        }
-                        ORA_ABS_X, ORA_ABS_Y -> {
-                            timing += pageCrossed(memory.word(PC - 2), effectiveAddress)
-                        }
+                addressingType.address(memory, pc, this).let { address ->
+                    A.or(memory[address]).let {
+                        A = it
+                        P.setNZFlags(it)
                     }
                 }
             }
@@ -262,13 +235,15 @@ data class Cpu(val memory: IMemory,
             }
             ROL -> A = rol(A)
             ROL_ZP, ROL_ZP_X, ROL_ABS, ROL_ABS_X -> {
-                val (effectiveAddress, content) = addressingType.deref(memory, pc, this)
-                memory[effectiveAddress] = rol(content())
+                addressingType.address(memory, pc, this).let { address ->
+                    memory[address] = rol(memory[address])
+                }
             }
             ROR -> A = ror(A)
             ROR_ZP, ROR_ZP_X, ROR_ABS, ROR_ABS_X -> {
-                val (effectiveAddress, content) = addressingType.deref(memory, pc, this)
-                memory[effectiveAddress] = ror(content())
+                addressingType.address(memory, pc, this).let { address ->
+                    memory[address] = ror(memory[address])
+                }
             }
             RTI -> {
                 P.fromByte(SP.popByte())
@@ -281,20 +256,14 @@ data class Cpu(val memory: IMemory,
                 sbc(memory[pc + 1])
             }
             SBC_ZP, SBC_ZP_X, SBC_ABS, SBC_ABS_X, SBC_ABS_Y, SBC_IND_X, SBC_IND_Y -> {
-                val (effectiveAddress, content) = addressingType.deref(memory, pc, this)
-                sbc(content())
-                when(opCode) {
-                    SBC_IND_Y -> {
-                        timing += pageCrossed(memory.word(memory[PC - 1]), effectiveAddress)
-                    }
-                    SBC_ABS_X, SBC_ABS_Y -> {
-                        timing += pageCrossed(memory.word(PC - 2), effectiveAddress)
-                    }
+                addressingType.address(memory, pc, this).let { address ->
+                    sbc(memory[address])
                 }
             }
             STA_ZP, STA_ZP_X, STA_ABS, STA_ABS_X, STA_ABS_Y, STA_IND_X, STA_IND_Y -> {
-                val (effectiveAddress, content) = addressingType.deref(memory, pc, this)
-                memory[effectiveAddress] = A
+                addressingType.address(memory, pc, this).let { address ->
+                    memory[address] = A
+                }
             }
             TXS -> SP.S = X
             TSX -> {
@@ -313,12 +282,14 @@ data class Cpu(val memory: IMemory,
             }
             PLP -> P.fromByte(SP.popByte())
             STX_ZP, STX_ZP_Y, STX_ABS -> {
-                val (effectiveAddress, content) = addressingType.deref(memory, pc, this)
-                memory[effectiveAddress] = X
+                addressingType.address(memory, pc, this).let { address ->
+                    memory[address] = X
+                }
             }
             STY_ZP, STY_ZP_X, STY_ABS -> {
-                val (effectiveAddress, content) = addressingType.deref(memory, pc, this)
-                memory[effectiveAddress] = Y
+                addressingType.address(memory, pc, this).let { address ->
+                    memory[address] = Y
+                }
             }
             else -> {
                 val message = "Unknown opcode: ${opCode.h()}"
