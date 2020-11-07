@@ -29,7 +29,7 @@ enum class AddressingType {
         fun byte() = memory[pc + 1]
         fun word() = memory.word(pc + 1)
 
-        val result = when(this) {
+        return when(this) {
             ZP -> byte().and(0xff)
             ZP_X -> (byte() + cpu.X).and(0xff)
             ZP_Y -> (byte() + cpu.Y).and(0xff)
@@ -39,9 +39,7 @@ enum class AddressingType {
             INDIRECT -> word()
             INDIRECT_X -> memory.word((byte() + cpu.X).and(0xff))
             INDIRECT_Y -> memory.word(byte()) + cpu.Y
-            else -> ERROR("UNEXPECTED ADDRESSING TYPE")
+            else -> ERROR("Unexpected addressing type: $this")
         }
-
-        return result
     }
 }
