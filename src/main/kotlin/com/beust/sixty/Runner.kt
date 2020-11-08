@@ -72,7 +72,6 @@ class Runner(val gc: GraphicContext? = null) {
             override fun run() {
                 try {
                     if (! stop) {
-                        val memory = computer.memory
                         val cycleStart = System.currentTimeMillis()
                         val (status, cycles) = runTimedSlice(c)
                         when (status) {
