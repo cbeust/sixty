@@ -354,7 +354,7 @@ data class Cpu(val memory: IMemory,
     }
     
     private fun asl(v: Int): Int {
-        P.C = if (v.and(0x80) != 0) true else false
+        P.C = v.and(0x80) != 0
         val result = v.shl(1).and(0xff)
         P.setNZFlags(result)
         return result
