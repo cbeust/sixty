@@ -1,7 +1,6 @@
 package com.beust.app
 
-import com.beust.sixty.FileWatcher
-import com.beust.sixty.Runner
+import com.beust.sixty.*
 import java.io.File
 import java.util.concurrent.Executors
 
@@ -57,6 +56,16 @@ object Threads {
 }
 
 fun main() {
+
+//    val lines = arrayListOf<String>()
+//    File("src/main/kotlin/com/beust/sixty/Constants.kt").forEachLine { lines.add(it) }
+//    repeat(256) {
+//        val op = OPCODES[it]
+//        val n = op.name + (if (op.addressingType != AddressingType.NONE) ("_" + op.addressingType.name) else "")
+//        val name = if (n == "NOP") "NOP_${op.opcode.h()}" else n
+//        println("$name(0x" + op.opcode.h().toLowerCase() + ", \"${op.name}\", ${op.size}, ${op.timing}, ${op.addressingType.name}),")
+//    }
+
     val fw = FileWatcher()
     val gc = GraphicContext()
     var c = Apple2Computer(gc)

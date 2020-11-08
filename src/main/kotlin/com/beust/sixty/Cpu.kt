@@ -23,7 +23,8 @@ data class Cpu(val memory: IMemory,
         }
 
     fun nextInstruction(pc: Int = PC, debugMemory: Boolean = false, debugAsm: Boolean = false): Int {
-        var opCode = memory[pc]
+        val opCode = memory[pc]
+//        var op = Op.find(opCode)
         val op = OPCODES[opCode]
         var timing = op.timing
         val addressingType = op.addressingType
