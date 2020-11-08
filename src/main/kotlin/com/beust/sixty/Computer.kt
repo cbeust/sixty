@@ -13,6 +13,8 @@ import com.beust.app.*
 
 interface IKeyProvider {
     fun keyPressed(memory: IMemory, value: Int, shift: Boolean = false, control: Boolean = false)
+    fun keyReleased(memory: IMemory, value: Int, shift: Boolean = false, control: Boolean = false)
+    fun onController(memory: IMemory, c: GraphicContext.Controller)
 }
 
 abstract class MemoryListener {
@@ -133,7 +135,7 @@ class Computer(override val memory: IMemory, override val cpu: Cpu, val pcListen
                         TRACE_CYCLES = 0
                     }
                     previousPc = cpu.PC
-                    cpu.PC += SIZES[opCode]
+                    cpu.PC += OPCODES[opCode].size
                     timing = cpu.nextInstruction(previousPc)
                     if (DEBUG_ASM || TRACE_ON) {
                         val (byte, word) = byteWord(address = previousPc + 1)
@@ -151,7 +153,7 @@ class Computer(override val memory: IMemory, override val cpu: Cpu, val pcListen
                     ""
                 } else {
                     previousPc = cpu.PC
-                    cpu.PC += SIZES[opCode]
+                    cpu.PC += OPCODES[opCode].size
                     timing = cpu.nextInstruction(previousPc)
                 }
             } catch(ex: Throwable) {
@@ -181,7 +183,7 @@ class Computer(override val memory: IMemory, override val cpu: Cpu, val pcListen
     class RunResult(val durationMillis: Long, val cycles: Long)
 
     private fun formatPc(pc: Int, opCode: Int): String {
-        val size = SIZES[opCode]
+        val size = OPCODES[opCode].size
         val bytes = StringBuffer(opCode.h())
         bytes.append(if (size > 1) (" " + memory[pc + 1].h()) else "  ")
         bytes.append(if (size == 3) (" " + memory[pc + 2].h()) else "  ")
@@ -189,8 +191,8 @@ class Computer(override val memory: IMemory, override val cpu: Cpu, val pcListen
     }
 
     private fun formatInstruction(opCode: Int, pc: Int, byte: Int, word: Int): String {
-        val addressing = ADDRESSING_TYPES[opCode]
-        val name = OPCODE_NAMES[opCode]
+        val addressing = OPCODES[opCode].addressingType
+        val name = OPCODES[opCode].name
         return String.format("%s %-12s", name, addressing.toString(pc, byte, word))
     }
 
@@ -202,11 +204,11 @@ class Computer(override val memory: IMemory, override val cpu: Cpu, val pcListen
         var pc = start
         repeat(length) {
             val opCode = memory[pc]
-            val addressing = ADDRESSING_TYPES[opCode]
+            val addressing = OPCODES[opCode].addressingType
             val byte = memory[pc + 1]
             val word = memory[pc + 1].or(memory[pc + 2].shl(8))
             println(formatPc(pc, opCode) + formatInstruction(opCode, pc, byte, word) + " " + cpu.toString())
-            pc += SIZES[opCode]
+            pc += OPCODES[opCode].size
         }
         println("===================")
     }

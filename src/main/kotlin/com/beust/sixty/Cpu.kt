@@ -24,8 +24,9 @@ data class Cpu(val memory: IMemory,
 
     fun nextInstruction(pc: Int = PC, debugMemory: Boolean = false, debugAsm: Boolean = false): Int {
         var opCode = memory[pc]
-        var timing = TIMINGS[opCode]
-        val addressingType = ADDRESSING_TYPES[opCode]
+        val op = OPCODES[opCode]
+        var timing = op.timing
+        val addressingType = op.addressingType
 
         fun runInst(effectiveAddress: Int, indY: Int, absX: Int, absY: Int, closure: () -> Unit): Int {
             closure()
@@ -147,7 +148,7 @@ data class Cpu(val memory: IMemory,
                 }
             }
             JMP -> PC = memory.word(pc + 1)
-            JMP_IND -> { PC = memory.word(addressingType.address(memory, pc, this)) }
+            JMP_IND -> PC = memory.word(addressingType.address(memory, pc, this))
             JSR -> {
                 SP.pushWord(PC - 1)
                 PC = memory.word(pc + 1)
