@@ -77,14 +77,14 @@ data class Cpu(val memory: IMemory,
                     }
                 }
             }
-            BPL -> timing += branch(memory[pc + 1]) { !P.N }
-            BMI -> timing += branch(memory[pc + 1]) { P.N }
-            BNE -> timing += branch(memory[pc + 1]) { ! P.Z }
-            BEQ -> timing += branch(memory[pc + 1]) { P.Z }
-            BCC -> timing += branch(memory[pc + 1]) { ! P.C }
-            BCS -> timing += branch(memory[pc + 1]) { P.C }
-            BVC -> timing += branch(memory[pc + 1]) { ! P.V }
-            BVS -> timing += branch(memory[pc + 1]) { P.V }
+            BPL -> timing += branch(memory[pc + 1], !P.N)
+            BMI -> timing += branch(memory[pc + 1], P.N )
+            BNE -> timing += branch(memory[pc + 1], ! P.Z)
+            BEQ -> timing += branch(memory[pc + 1], P.Z)
+            BCC -> timing += branch(memory[pc + 1], ! P.C)
+            BCS -> timing += branch(memory[pc + 1], P.C)
+            BVC -> timing += branch(memory[pc + 1], ! P.V)
+            BVS -> timing += branch(memory[pc + 1], P.V)
             BRK -> {
 //                throw IllegalArgumentException("BRK")
                 handleInterrupt(true, IRQ_VECTOR_H, IRQ_VECTOR_L)
@@ -342,9 +342,9 @@ data class Cpu(val memory: IMemory,
     /**
      * @return the value to add to the timing
      */
-    private fun branch(byte: Int, condition: () -> Boolean): Int {
+    private fun branch(byte: Int, condition: Boolean): Int {
         var result = 0
-        if (condition()) {
+        if (condition) {
             val old = PC
             PC += byte.toByte()
             result++
