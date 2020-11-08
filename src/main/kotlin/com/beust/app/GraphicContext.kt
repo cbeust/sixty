@@ -3,6 +3,7 @@ package com.beust.app
 import com.beust.sixty.IKeyProvider
 import com.beust.sixty.IMemory
 import com.beust.sixty.h
+import com.beust.sixty.log
 import com.beust.swt.*
 import org.eclipse.jface.dialogs.MessageDialog
 import org.eclipse.swt.SWT
@@ -30,10 +31,36 @@ class GraphicContext {
         textWindow.clear()
     }
 
+    enum class Controller {
+        MAX_LEFT, MAX_RIGHT, MAX_UP, MAX_DOWN;
+    }
+
     private val keyProvider = object: IKeyProvider {
         override fun keyPressed(memory: IMemory, value: Int, shift: Boolean, control: Boolean) {
-            memory.forceInternalRomValue(0xc000, value.or(0x80))
-            memory.forceInternalRomValue(0xc010, 0x80)
+            with(memory) {
+                forceInternalRomValue(0xc000, value.or(0x80))
+                forceInternalRomValue(0xc010, 0x80)
+            }
+        }
+
+        override fun keyReleased(memory: IMemory, value: Int, shift: Boolean, control: Boolean) {
+            log("Key released")
+            with(memory) {
+                forceInternalRomValue(0xc064, 0x80)
+                forceInternalRomValue(0xc065, 0x80)
+            }
+        }
+
+        override fun onController(memory: IMemory, c: Controller) {
+            log("onController: $c")
+            with(memory) {
+                when (c) {
+                    Controller.MAX_LEFT -> forceInternalRomValue(0xc064, 0x0)
+                    Controller.MAX_RIGHT -> forceInternalRomValue(0xc064, 0x7f)
+                    Controller.MAX_UP -> forceInternalRomValue(0xc065, 0x00)
+                    Controller.MAX_DOWN -> forceInternalRomValue(0xc065, 0x7f)
+                }
+            }
         }
     }
 
@@ -120,6 +147,9 @@ class GraphicContext {
                     horizontalSpan = leftContainerColumns
                 }
                 display.addFilter(SWT.KeyDown) { e ->
+                    keyProvider.keyReleased(computer.memory, e.keyCode)
+                }
+                display.addFilter(SWT.KeyDown) { e ->
 //                    println("Key code: " + e.keyCode.h() + " character: " + e.character)
                     val index = when {
                         e.stateMask.and(SWT.SHIFT) != 0 -> 1
@@ -135,6 +165,22 @@ class GraphicContext {
                             SWT.ARROW_RIGHT -> 0x95
                             SWT.ARROW_UP -> 0x8b
                             SWT.ARROW_DOWN -> 0x8a
+                            SWT.KEYPAD_4 -> {
+                                keyProvider.onController(computer.memory, Controller.MAX_LEFT)
+                                e.keyCode
+                            }
+                            SWT.KEYPAD_6 -> {
+                                keyProvider.onController(computer.memory, Controller.MAX_RIGHT)
+                                e.keyCode
+                            }
+                            SWT.KEYPAD_8 -> {
+                                keyProvider.onController(computer.memory, Controller.MAX_UP)
+                                e.keyCode
+                            }
+                            SWT.KEYPAD_2 -> {
+                                keyProvider.onController(computer.memory, Controller.MAX_DOWN)
+                                e.keyCode
+                            }
                             in 0x61..0x7a -> e.keyCode - 0x20
                             else -> {
                                 val l = KEY_MAP[e.keyCode]
@@ -149,7 +195,8 @@ class GraphicContext {
                     }
                 }
                 display.addFilter(SWT.Traverse) { e ->
-                    if (e.keyCode == 0xd && e.widget is Shell) {
+                    val ignore = e.keyCode == 0xd || e.keyCode == 0x20
+                    if (ignore && e.widget is Shell) {
                         keyProvider.keyPressed(computer.memory, e.keyCode)
                         e.doit = false
                     }

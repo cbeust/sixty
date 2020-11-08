@@ -196,6 +196,19 @@ class Apple2Memory(val size: Int? = null): IMemory {
     private fun getOrSet(get: Boolean, i: Int, value: Int = 0): Int? {
         var result: Int? = null
 
+//        if (get) {
+//            val result = when(i) {
+//                0xc405 -> 0x38
+//                0xc407 -> 0x18
+//                0xc40b -> 0x1
+//                0xc40c -> 0x20
+//                0xc4fb -> 0xd6
+//                else -> null
+//
+//            }
+//            if (result != null) return result
+//        }
+
         fun correctMem(condition: Boolean): IntArray {
             return if (condition) {
                 if (page2) auxMemory else mainMemory
