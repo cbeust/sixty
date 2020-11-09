@@ -192,11 +192,8 @@ class Computer(override val memory: IMemory, override val cpu: Cpu, val pcListen
     }
 
     private fun formatInstruction(opCode: Int, pc: Int, byte: Int, word: Int): String {
-        Op.opCodes[opCode].let { op ->
-            val addressing = op.addressingType
-            val name = op.opName
-            return String.format("%s %-12s", name, addressing.toString(pc, byte, word))
-        }
+        val op = Op.opCodes[opCode]
+        return String.format("%s %-12s", op.opName, op.addressingType.toString(pc, byte, word))
     }
 
     private fun formatInstruction(inst: Instruction, byte: Int, word: Int): String {
