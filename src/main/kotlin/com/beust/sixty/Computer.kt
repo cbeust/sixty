@@ -139,7 +139,8 @@ class Computer(override val memory: IMemory, override val cpu: Cpu, val pcListen
                     timing = cpu.nextInstruction(previousPc)
                     if (DEBUG_ASM || TRACE_ON) {
                         val (byte, word) = byteWord(address = previousPc + 1)
-                        val debugString = formatPc(cpu.PC, opCode) + formatInstruction(opCode, cpu.PC, byte, word)
+                        val debugString = formatPc(previousPc, opCode) + formatInstruction(opCode, previousPc,
+                                byte, word)
                         val fullString = debugString + " ($timing) " + cpu.toString()
                         if (DEBUG_ASM) logAsm(fullString)
                         if (TRACE_ON) logAsmTrace(fullString)
@@ -191,9 +192,11 @@ class Computer(override val memory: IMemory, override val cpu: Cpu, val pcListen
     }
 
     private fun formatInstruction(opCode: Int, pc: Int, byte: Int, word: Int): String {
-        val addressing = Op.opCodes[opCode].addressingType
-        val name = Op.opCodes[opCode].name
-        return String.format("%s %-12s", name, addressing.toString(pc, byte, word))
+        Op.opCodes[opCode].let { op ->
+            val addressing = op.addressingType
+            val name = op.opName
+            return String.format("%s %-12s", name, addressing.toString(pc, byte, word))
+        }
     }
 
     private fun formatInstruction(inst: Instruction, byte: Int, word: Int): String {
