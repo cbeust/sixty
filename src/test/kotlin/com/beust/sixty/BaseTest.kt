@@ -1,6 +1,6 @@
 package com.beust.sixty
 
-import com.beust.app.Apple2Computer
+import com.beust.sixty.Op.*
 import org.assertj.core.api.Assertions.assertThat
 import org.testng.annotations.DataProvider
 import org.testng.annotations.Test
@@ -26,7 +26,7 @@ abstract class BaseTest {
     private lateinit var computer: IComputer
 
     fun computer(vararg bytes: Int): IComputer {
-        val result = with(createComputer(*bytes, RTS)) {
+        val result = with(createComputer(*bytes, RTS.opcode)) {
             computer = this
             return this
         }
@@ -53,7 +53,7 @@ abstract class BaseTest {
                 0xa9, 0x12,     // lda #$12
                 0x60,
                 0xea, 0xea,  // nop
-                RTS
+                RTS.opcode
         )) {
             assertNotRegister(cpu.A, 0x12)
             run()
@@ -155,11 +155,11 @@ abstract class BaseTest {
     }
 
     fun bmi() {
-        with(computer(LDA_IMM, 0x10, // lda #$10
-                CMP_IMM, 0x11,       // cmp #$11
-                BMI, 1,          // bmi 7
+        with(computer(LDA_IMM.opcode, 0x10, // lda #$10
+                CMP_IMM.opcode, 0x11,       // cmp #$11
+                BMI.opcode, 1,          // bmi 7
                 0x60,
-                LDA_IMM, 0x42        // 0007: lda #$42
+                LDA_IMM.opcode, 0x42        // 0007: lda #$42
                 )) {
             assertRegister(cpu.A, 0)
             run()
@@ -168,7 +168,7 @@ abstract class BaseTest {
     }
 
     fun bcc() {
-        with(computer(LDA_IMM, 0, 0x90, 1, 0x60, 0xa9, 1)) {
+        with(computer(LDA_IMM.opcode, 0, 0x90, 1, 0x60, 0xa9, 1)) {
             assertRegister(cpu.A, 0)
             run()
             assertRegister(cpu.A, 1)
@@ -237,7 +237,7 @@ abstract class BaseTest {
                 0xa5, 0x4,  // LDA $04
                 0xc9, 0x04, // CMP #$03
                 0x90, 0xf1, // BCC $5
-                BRK)) {
+                BRK.opcode)) {
 
             // Make sure the entire memory is 0 before the run
             assertMemory(memory, 0x30, 0x1ff, 0)
@@ -370,7 +370,7 @@ abstract class BaseTest {
     }
 
     fun asl() {
-        with(computer(LDA_IMM, 2, ASL)) {
+        with(computer(LDA_IMM.opcode, 2, ASL.opcode)) {
             assertRegister(cpu.A, 0)
             run()
             assertRegister(cpu.A, 4)
@@ -413,7 +413,7 @@ abstract class BaseTest {
     }
 
     fun php() {
-        with(computer(PHP)) {
+        with(computer(PHP.opcode)) {
             with(cpu.P) {
                 N = true
                 V = false
@@ -435,7 +435,7 @@ abstract class BaseTest {
     }
 
     fun plp() {
-        with(computer(PLP)) {
+        with(computer(PLP.opcode)) {
             with(cpu.P) {
                 // Push 1000_1010 on the stack, then PLP
                 cpu.SP.pushByte(0x8a.toByte())
@@ -508,30 +508,30 @@ abstract class BaseTest {
 
     fun ldZp() {
         // Lda ZP
-        with(computer(LDA_IMM, 0x42, // LDA #$42
-            STA_ZP, 0x12,           // STA $12
-            LDA_IMM, 0,    // LDA #0
-            LDA_ZP, 0x12  // LDA $12
+        with(computer(LDA_IMM.opcode, 0x42, // LDA #$42
+            STA_ZP.opcode, 0x12,           // STA $12
+            LDA_IMM.opcode, 0,    // LDA #0
+            LDA_ZP.opcode, 0x12  // LDA $12
         )) {
             run()
             assertRegister(cpu.A, 0x42)
         }
 
         // Ldx ZP
-        with(computer(LDX_IMM, 0x42, // LDX #$42
-                STX_ZP, 0x12,           // STX $12
-                LDX_IMM, 0,    // LDX #0
-                LDX_ZP, 0x12  // LDA $12
+        with(computer(LDX_IMM.opcode, 0x42, // LDX #$42
+                STX_ZP.opcode, 0x12,           // STX $12
+                LDX_IMM.opcode, 0,    // LDX #0
+                LDX_ZP.opcode, 0x12  // LDA $12
         )) {
             run()
             assertRegister(cpu.X, 0x42)
         }
 
         // Ldy ZP
-        with(computer(LDY_IMM, 0x42, // LDY #$42
-                STY_ZP, 0x12,           // STY $12
-                LDY_IMM, 0,    // LDY #0
-                LDY_ZP, 0x12  // LDY $12
+        with(computer(LDY_IMM.opcode, 0x42, // LDY #$42
+                STY_ZP.opcode, 0x12,           // STY $12
+                LDY_IMM.opcode, 0,    // LDY #0
+                LDY_ZP.opcode, 0x12  // LDY $12
         )) {
             run()
             assertRegister(cpu.Y, 0x42)
@@ -542,13 +542,13 @@ abstract class BaseTest {
         // memory[0x12] = 0x11
         // load A with 0x33
         // then subtract: a = 0x33 - 0x11 == 0x21
-        with(computer(CLC, LDA_IMM, 0x33, SBC_ZP, 0x12)) {
+        with(computer(CLC.opcode, LDA_IMM.opcode, 0x33, SBC_ZP.opcode, 0x12)) {
             memory[0x12] = 0x11
             run()
             assertRegister(cpu.A, 0x21)
         }
 
-        with(computer(SEC, LDA_IMM, 0x33, SBC_ZP, 0x12)) {
+        with(computer(SEC.opcode, LDA_IMM.opcode, 0x33, SBC_ZP.opcode, 0x12)) {
             memory[0x12] = 0x11
             run()
             assertRegister(cpu.A, 0x22)
@@ -556,28 +556,29 @@ abstract class BaseTest {
     }
 
     fun bcs() {
-        with(computer(CLC, BCS, 2, LDA_IMM, 1)) {
+        with(computer(CLC.opcode, BCS.opcode, 2, LDA_IMM.opcode, 1)) {
             run()
             assertRegister(cpu.A, 1)
         }
     }
 
     fun bvc() {
-        with(computer(LDA_IMM, 0x7f, ADC_IMM, 0x7f, BVC, 2, LDA_IMM, 1)) {
+        with(computer(LDA_IMM.opcode, 0x7f, ADC_IMM.opcode, 0x7f, BVC.opcode, 2, LDA_IMM.opcode, 1)) {
             run()
             assertRegister(cpu.A, 1)
         }
     }
 
     fun beq() {
-        with(computer(LDA_IMM, 0x32, CMP_IMM, 0x32, BEQ, 3, LDA_IMM, 2, RTS, LDA_IMM, 1)) {
+        with(computer(LDA_IMM.opcode, 0x32, CMP_IMM.opcode, 0x32, BEQ.opcode, 3, LDA_IMM.opcode, 2,
+                RTS.opcode, LDA_IMM.opcode, 1)) {
             run()
             assertRegister(cpu.A, 1)
         }
     }
 
     fun test() {
-        with(computer(LDA_IMM, 0x41, STA_ABS, 0, 4)) {
+        with(computer(LDA_IMM.opcode, 0x41, STA_ABS.opcode, 0, 4)) {
             run()
         }
     }

@@ -1,8 +1,10 @@
+@file:Suppress("PropertyName")
+
 package com.beust.sixty
 
 import com.beust.app.StackPointer
 import com.beust.app.UiState
-import java.lang.IllegalArgumentException
+import com.beust.sixty.Op.*
 
 /**
  * Specs used:
@@ -24,26 +26,23 @@ data class Cpu(val memory: IMemory,
 
     fun nextInstruction(pc: Int = PC, debugMemory: Boolean = false, debugAsm: Boolean = false): Int {
         val opCode = memory[pc]
-//        var op = Op.find(opCode)
-        val op = OPCODES[opCode]
+        val op = Op.opCodes[opCode]
         var timing = op.timing
         val addressingType = op.addressingType
 
-        fun runInst(effectiveAddress: Int, indY: Int, absX: Int, absY: Int, closure: () -> Unit): Int {
+        fun runInst(effectiveAddress: Int, indY: Op, absX: Op, absY: Op, closure: () -> Unit): Int {
             closure()
             P.setNZFlags(A)
-            val result =
-                if (opCode == indY) {
-                    pageCrossed(memory.word(memory[PC - 1]), effectiveAddress)
-                } else if (opCode == absX || opCode == absY) {
-                    pageCrossed(memory.word(PC - 2), effectiveAddress)
-                } else {
-                    0
-                }
-            return result
+            return if (op == indY) {
+                pageCrossed(memory.word(memory[PC - 1]), effectiveAddress)
+            } else if (op == absX || op == absY) {
+                pageCrossed(memory.word(PC - 2), effectiveAddress)
+            } else {
+                0
+            }
         }
 
-        when(opCode) {
+        when(op) {
             ADC_IMM -> adc(memory[pc + 1])
             ADC_ZP, ADC_ZP_X, ADC_ABS, ADC_ABS_X, ADC_ABS_Y, ADC_IND_X, ADC_IND_Y -> {
                 addressingType.address(memory, pc, this).let { address ->
@@ -92,21 +91,15 @@ data class Cpu(val memory: IMemory,
             }
             CMP_IMM -> cmp(A, memory[pc + 1])
             CMP_ZP, CMP_ZP_X, CMP_ABS, CMP_ABS_X, CMP_ABS_Y, CMP_IND_X, CMP_IND_Y -> {
-                addressingType.address(memory, pc, this).let { address ->
-                    cmp(A, memory[address])
-                }
+                cmp(A, memory[addressingType.address(memory, pc, this)])
             }
             CPX_IMM -> cmp(X, memory[pc + 1])
             CPX_ZP, CPX_ABS -> {
-                addressingType.address(memory, pc, this).let { address ->
-                    cmp(X, memory[address])
-                }
+                cmp(X, memory[addressingType.address(memory, pc, this)])
             }
             CPY_IMM -> cmp(Y, memory[pc + 1])
             CPY_ZP, CPY_ABS -> {
-                addressingType.address(memory, pc, this).let { address ->
-                    cmp(Y, memory[address])
-                }
+                cmp(Y, memory[addressingType.address(memory, pc, this)])
             }
             DEC_ZP, DEC_ZP_X, DEC_ABS, DEC_ABS_X -> {
                 addressingType.address(memory, pc, this).let { address ->
@@ -137,7 +130,7 @@ data class Cpu(val memory: IMemory,
                 addressingType.address(memory, pc, this).let { address ->
                     val content = memory[address]
                     val word = memory.word(pc + 1)
-                    if (opCode == INC_ABS_X && word == 0xc083) {
+                    if (op == INC_ABS_X && word == 0xc083) {
                         // Special case to support "false reads": https://github.com/AppleWin/AppleWin/issues/404
                         // inc $c083,x will actually cause an additional read on $c083
                         content
@@ -284,14 +277,10 @@ data class Cpu(val memory: IMemory,
             }
             PLP -> P.fromByte(SP.popByte())
             STX_ZP, STX_ZP_Y, STX_ABS -> {
-                addressingType.address(memory, pc, this).let { address ->
-                    memory[address] = X
-                }
+                memory[addressingType.address(memory, pc, this)] = X
             }
             STY_ZP, STY_ZP_X, STY_ABS -> {
-                addressingType.address(memory, pc, this).let { address ->
-                    memory[address] = Y
-                }
+                memory[addressingType.address(memory, pc, this)] = Y
             }
             else -> {
                 val message = "Unknown opcode: ${opCode.h()}"

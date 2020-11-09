@@ -1,5 +1,7 @@
 package com.beust.sixty
 
+import com.beust.sixty.Op.*
+
 class CpuTest: BaseTest() {
     override fun createComputer(vararg bytes: Int): IComputer {
         return Computer.create {
@@ -9,7 +11,7 @@ class CpuTest: BaseTest() {
             pcListener = object : PcListener {
                 override fun onPcChanged(c: Computer) {
                     val opCode = memory[c.cpu.PC]
-                    if (opCode == BRK || (opCode == RTS && c.cpu.SP.isEmpty())) {
+                    if (opCode == BRK.opcode || (opCode == RTS.opcode && c.cpu.SP.isEmpty())) {
                         c.stop()
                     }
                 }
