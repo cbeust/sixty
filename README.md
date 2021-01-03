@@ -1,3 +1,5 @@
+![Cédric's Apple 2 emulator](history/15-ultima-4.png)
+
 # Sixty
 
 A 6502 emulator written in Kotlin.
