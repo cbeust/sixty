@@ -1,3 +1,5 @@
+![Cédric's Apple 2 emulator](history/15-ultima-4.png)
+
 # Sixty
 
 An Apple ][ emulator written in Kotlin.
