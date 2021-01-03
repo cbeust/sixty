@@ -43,7 +43,7 @@ var TRACE_CYCLES = 0x09D4FD12L
 val BREAKPOINT: Int? = 0xd81e// 0xb980 // 0x9e52 // null // 0x5a0//0xc6a6//0x5f8 // 0x5f8 // 0x5a0
 val BREAKPOINT_RANGE: IntRange? = null // 0x9e42..0x9e56 // = null// 0xbb00..0xbbff
 val BREAKPOINT_WRITE: Int? = 0x2d // 0xd89f
-val DISK = DISKS[18]
+val DISK = DISKS[7]
 const val SPEED_FACTOR = 1
 
 object Threads {

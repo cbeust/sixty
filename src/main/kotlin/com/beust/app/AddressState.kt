@@ -65,9 +65,9 @@ class AddressState {
                 }
                 State.CHECKSUM0 -> {
                     checksum = SixAndTwo.pair4And4(b0, byte)
-                    if (checksum.xor(volume).xor(track).xor(sector) != 0) {
-                        ERROR("BAD CHECKSUM")
-                    }
+//                    if (checksum.xor(volume).xor(track).xor(sector) != 0) {
+//                        ERROR("BAD CHECKSUM")
+//                    }
                     UiState.diskStates[drive].currentSector.value =
                             NibbleTrack.SectorInfo(volume, track, sector, checksum)
                     reset()
