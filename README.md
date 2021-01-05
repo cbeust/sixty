@@ -67,7 +67,7 @@ Other than that, rough TODO list:
 
 # Protected disks
 
-I started paying more attention to protected disks, amid all the other items I want to add to the emulator. I kept a small diary of the protection issues that I faced and solved or didn't solve [this document](https://docs.google.com/document/d/19xY3f80Y9kQurvek7vWUfV_BRGbJj-B5Sbjn_ax8hqY/edit?usp=sharing).
+I started paying more attention to protected disks, amid all the other items I want to add to the emulator. I kept a small diary of the protection issues that I faced and solved or didn't solve in [this document](https://docs.google.com/document/d/19xY3f80Y9kQurvek7vWUfV_BRGbJj-B5Sbjn_ax8hqY/edit?usp=sharing).
 
 
 
