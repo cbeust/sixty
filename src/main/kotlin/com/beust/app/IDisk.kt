@@ -10,8 +10,8 @@ interface IDisk: IBitStream {
 
         fun create(name: String, ins: InputStream?): IDisk? = when {
             ins == null -> null
-            name.endsWith(".woz") -> WozDisk(name, ins)
-            name.endsWith(".dsk") -> DskDisk(name, ins)
+            name.toLowerCase().endsWith(".woz") -> WozDisk(name, ins)
+            name.toLowerCase().endsWith(".dsk") -> DskDisk(name, ins)
             else -> ERROR("Unsupported disk format: $name")
         }
 
