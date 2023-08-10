@@ -68,6 +68,7 @@ Other than that, rough TODO list:
 As for the CPU:
 
 - Run against [Tom Harte's Processor Tests](https://github.com/TomHarte/ProcessorTests)
+- [Cycle timing tests](https://github.com/BigEd/6502timing) (some instructions, e.g. ORA, are not counting cycles correctly)
 
 # Protected disks
 
