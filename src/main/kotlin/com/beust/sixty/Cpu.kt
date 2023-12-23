@@ -115,8 +115,10 @@ data class Cpu(val memory: IMemory,
             }
             EOR_ZP, EOR_ZP_X, EOR_ABS, EOR_ABS_X, EOR_ABS_Y, EOR_IND_Y, EOR_IND_X -> {
                 addressingType.address(memory, pc, this).let { address ->
-                    A = A.xor(memory[address])
-                    P.setNZFlags(A)
+                    timing += runInst(address, EOR_IND_Y, EOR_ABS_X, EOR_ABS_Y) {
+                        A = A.xor(memory[address])
+                        P.setNZFlags(A)
+                    }
                 }
             }
             CLC -> P.C = false
@@ -153,8 +155,10 @@ data class Cpu(val memory: IMemory,
             }
             LDA_ZP, LDA_ZP_X, LDA_ABS, LDA_ABS_X, LDA_ABS_Y, LDA_IND_X, LDA_IND_Y -> {
                 addressingType.address(memory, pc, this).let { address ->
-                    A = memory[address]
-                    P.setNZFlags(A)
+                    timing += runInst(address, LDA_IND_Y, LDA_ABS_X, LDA_ABS_Y) {
+                        A = memory[address]
+                        P.setNZFlags(A)
+                    }
                 }
             }
             LDX_IMM -> {
