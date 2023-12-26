@@ -129,6 +129,10 @@ class DiskController(val slot: Int = 6): MemoryListener() {
 //                            logAsm("Newbit: $newBit, nextQa: $nextQa, latch: " + latch.h())
                             ""
                         }
+                        if (TRACE_ON) {
+                            val l = String.format("%1$02X", latch)
+                            logAsmTrace("@@ clock=$clock bitPosition=${disk()!!.bitPosition} latch=$l")
+                        }
                     }
                 }
             }
@@ -140,7 +144,7 @@ class DiskController(val slot: Int = 6): MemoryListener() {
     private var disk1: IDisk? = null
     private var disk2: IDisk? = null
 
-    private fun disk() = if (drive1) disk1 else disk2
+    fun disk() = if (drive1) disk1 else disk2
     /** @param drive 0 for drive 1, 1 for drive 2 */
     fun loadDisk(disk: IDisk?, drive: Int = 0) {
         logDisk("Loading disk $disk in drive " + (drive + 1))
@@ -215,8 +219,12 @@ class DiskController(val slot: Int = 6): MemoryListener() {
         // update the magnet states
         if (address.and(1) != 0) {
             magnetStates = magnetStates.or(phaseBit)
+            if (TRACE_ON)
+                logAsmTrace("@@ magnetStates=$magnetStates")
         } else {
             magnetStates = magnetStates.and(phaseBit.inv())
+            if (TRACE_ON)
+                logAsmTrace("@@ magnetStates=$magnetStates")
         }
 
         // check for any stepping effect from a magnet
@@ -264,14 +272,22 @@ class DiskController(val slot: Int = 6): MemoryListener() {
         // Move the head, but we need to insert a small delay  for the first move if it wasn't in motion already.
         // For subsequent ones, the head can move right away (hence delay of 1 cycle)
         //
-        val wait = if (Cycles.stepper.isEmpty()) 30_000L else 1
-        Cycles.stepper.add(CycleAction(wait) {
+        if (Cycles.stepper.isEmpty()) {
+            if (disk()?.phase != drivePhase) {
+                logAsmTrace("@@ updatePhase=${disk()?.phase}->${drivePhase}")
+            }
+
             disk()?.phase = drivePhase
             if (direction != 0) {
                 logDisk("     delta: $direction newTrack: $currentPhase")
                 UiState.diskStates[if (drive1) 0 else 1].currentPhase.value = currentPhase / 4
             }
-        })
+        } else {
+            disk()?.phase = drivePhase
+        }
+
+        if (TRACE_ON)
+            logAsmTrace("@@ direction=$direction phase=${drivePhase} magnetStates=$magnetStates")
     }
 
     fun currentTrackString() : String {
@@ -371,10 +387,10 @@ class DiskController(val slot: Int = 6): MemoryListener() {
     }
 
     private var magnets = BooleanArray(4) { false }
-    private var phase = 0
+//    var phase = 0
 
     private var stepperMotorPhase = 0
-    private var currentPhase = 0
+    var currentPhase = 0
     private val phaseDeltas = listOf(
             listOf(0, 1, 2, -1),
             listOf(-1, 0, 1, 2),

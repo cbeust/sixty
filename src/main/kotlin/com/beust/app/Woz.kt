@@ -9,8 +9,7 @@ fun main() {
 }
 
 class Woz(private val bytes: ByteArray,
-        val bitStreamFactory: (bytes: List<Byte>, phase: Int, mappedTrack: Int,
-                bitCount: Int) -> IBitStream = ::BitBitStream) {
+        val bitStreamFactory: (bytes: List<Byte>, mappedTrack: Int, bitCount: Int) -> IBitStream = ::BitBitStream) {
     lateinit var info: ChunkInfo
     lateinit var tmap: ChunkTmap
     lateinit var trks: ChunkTrks
@@ -213,7 +212,7 @@ class Woz(private val bytes: ByteArray,
                     if (slice.isEmpty()) {
                         println("PROBLEM")
                     }
-                    bitStreamFactory(slice, phase, tmapOffset, trk.bitCount)
+                    bitStreamFactory(slice, tmapOffset, trk.bitCount)
                 } catch (ex: Exception) {
                     throw ex
                 }

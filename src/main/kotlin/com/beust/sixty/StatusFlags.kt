@@ -5,6 +5,11 @@ import java.util.*
 class StatusFlags {
     private val bits = BitSet(8)
 
+    init {
+        bits.set(5)
+        bits.set(4)
+    }
+
     private fun bit(n: Int) = bits.get(n)
     private fun bit(n: Int, value: Boolean) = bits.set(n, value)
 
@@ -26,7 +31,7 @@ class StatusFlags {
         N = b.and(0x80).shr(7).toBoolean()
         V = b.and(0x40).shr(6).toBoolean()
         reserved = true//b.and(0x20).shr(5).toBoolean()
-        B = true//b.and(0x10).shr(4).toBoolean()
+        B = b.and(0x10).shr(4).toBoolean()
         D = b.and(0x8).shr(3).toBoolean()
         I = b.and(0x4).shr(2).toBoolean()
         Z = b.and(0x2).shr(1).toBoolean()
@@ -41,11 +46,11 @@ class StatusFlags {
         get() = bit(6)
         set(v) = bit(6, v)
 
-    var reserved: Boolean // Overflow
+    var reserved: Boolean // Reserved
         get() = bit(5)
         set(v) = bit(5, v)
 
-    var B: Boolean // Overflow
+    var B: Boolean // Break
         get() = bit(4)
         set(v) = bit(4, v)
 

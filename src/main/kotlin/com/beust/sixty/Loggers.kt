@@ -16,7 +16,7 @@ object Loggers {
     val asmTrace = LoggerFactory.getLogger("AsmTrace")
 }
 
-fun cycles(s: String) = String.format("%08X| $s", Cycles.cycles)
+fun cycles(s: String) = String.format("%08d| $s", Cycles.cycles)
 
 fun logMem(s: String) = Loggers.memory.debug("[MEM] $s")
 fun logText(s: String) = Loggers.text.debug("[TEXT] $s")

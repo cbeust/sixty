@@ -31,18 +31,18 @@ val DISKS = listOf(
 )
 
 enum class NibbleStrategy(val hold:Int = 0) { LSS, BYTES(36), BITS(12) }
-val NIBBLE_STRATEGY = NibbleStrategy.LSS
+val NIBBLE_STRATEGY = NibbleStrategy.BITS
 val RUN = true
-var DEBUG = true
+var DEBUG = false
 var DEBUG_ASM = false
 var DEBUG_ASM_RANGE = false
 var DEBUG_BITS = false
 var TRACE_ON = false
-var TRACE_CYCLES = 0x09D4FD12L
+var TRACE_CYCLES = 0L
 val BREAKPOINT: Int? = 0xd81e// 0xb980 // 0x9e52 // null // 0x5a0//0xc6a6//0x5f8 // 0x5f8 // 0x5a0
 val BREAKPOINT_RANGE: IntRange? = null // 0x9e42..0x9e56 // = null// 0xbb00..0xbbff
 val BREAKPOINT_WRITE: Int? = 0x2d // 0xd89f
-val DISK = DISKS[7]
+val DISK = DISKS[0]
 const val SPEED_FACTOR = 1
 
 object Threads {
@@ -55,16 +55,28 @@ object Threads {
     }
 }
 
-fun main() {
+fun testDisk() {
+    val diskController = DiskController(6).apply {
+        loadDisk(IDisk.create(File("d:\\pd\\Apple Disks\\Apple DOS 3.3.dsk")), 0)
+    }
+    println("Disk: ${diskController.disk()}")
+    diskController.disk()?.let { disk ->
+        val phase = 8
+//        for (phase in 0..69) {
+            listOf(22759, 22760, 22761, 22762).forEach { bitPosition ->
+                println("Phase $phase")
+                disk.bitPosition = bitPosition
+                disk.phase = phase
+                val byte = disk.nextByte()
+                println("phase: $phase $bitPosition: ${Integer.toHexString(byte)} ${Integer.toBinaryString(byte)}")
+            }
+//        }
+    }
+}
 
-//    val lines = arrayListOf<String>()
-//    File("src/main/kotlin/com/beust/sixty/Constants.kt").forEachLine { lines.add(it) }
-//    repeat(256) {
-//        val op = OPCODES[it]
-//        val n = op.name + (if (op.addressingType != AddressingType.NONE) ("_" + op.addressingType.name) else "")
-//        val name = if (n == "NOP") "NOP_${op.opcode.h()}" else n
-//        println("$name(0x" + op.opcode.h().toLowerCase() + ", \"${op.name}\", ${op.size}, ${op.timing}, ${op.addressingType.name}),")
-//    }
+fun main() {
+//    testDisk()
+//    System.exit(0)
 
     val fw = FileWatcher()
     val gc = GraphicContext()

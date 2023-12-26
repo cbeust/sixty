@@ -15,17 +15,16 @@ interface IBitStream {
 }
 
 interface IPhasedBitStream: IBitStream {
-    val phase: Int
     val mappedTrack: Int
 }
 
 /**
  * An IBitStream backed up by a list of bits.
  */
-class BitBitStream(val bytes: List<Byte>, override val phase: Int, override val mappedTrack: Int,
+class BitBitStream(val bytes: List<Byte>, override val mappedTrack: Int,
         bitCount: Int = bytes.size * 8): IPhasedBitStream {
 
-    override fun toString() = "{BitBitStream phase:$phase mappedTrack:$mappedTrack" +
+    override fun toString() = "{BitBitStream mappedTrack:$mappedTrack" +
             " bytePosition: ${(bitPosition/8).hh()}}"
 
     override var bitPosition = 0

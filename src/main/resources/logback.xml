@@ -22,7 +22,7 @@
 
     <appender name="BARE_FILE" class="ch.qos.logback.core.FileAppender">
         <append>false</append>
-        <file>c:/users/cedri/kotlin/sixty/trace-mine.txt</file>
+        <file>d:/t/trace-kotlin.txt</file>
         <encoder>
             <pattern>%msg%n</pattern>
         </encoder>

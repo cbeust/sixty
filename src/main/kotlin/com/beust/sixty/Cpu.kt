@@ -2,6 +2,7 @@
 
 package com.beust.sixty
 
+import com.beust.app.DEBUG_ASM
 import com.beust.app.StackPointer
 import com.beust.app.UiState
 import com.beust.sixty.Op.*
@@ -16,7 +17,9 @@ data class Cpu(val memory: IMemory,
         var A: Int = 0, var X: Int = 0, var Y: Int = 0,
         val P: StatusFlags = StatusFlags()) {
     val SP: StackPointer = StackPointer(memory)
-    var PC: Int = 0
+    private var PC: Int = 0
+    private var cycles: Int = 0
+
         set(n) {
 //            if (n < 0x100) {
 //                TODO("SHOULD NOT HAPPEN")
@@ -292,6 +295,19 @@ data class Cpu(val memory: IMemory,
 //                TODO("")
             }
         }
+
+//        if (PC == 0x3e30) {
+//            val last = cycles - lastCycles;
+//            lastCycles = cycles;
+//            println("$last Looking for sector ${A}, found ${memory.get(0x2d)}")
+//        }
+
+//        if (PC == 0xbd00) {
+//            println("Reached 0xBD00, cycles: $cycles")
+//            System.exit(0)
+//        }
+
+        cycles += timing
         return timing
     }
 
