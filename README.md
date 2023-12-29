@@ -67,8 +67,9 @@ Other than that, rough TODO list:
 
 As for the CPU:
 
-- Run against [Tom Harte's Processor Tests](https://github.com/TomHarte/ProcessorTests)
-- [Cycle timing tests](https://github.com/BigEd/6502timing) (some instructions, e.g. ORA, are not counting cycles correctly)
+- Run against [Tom Harte's Processor Tests](https://github.com/TomHarte/ProcessorTests).
+- [Cycle timing tests](https://github.com/BigEd/6502timing): double check cycle timing
+- [a2audit](https://github.com/zellyn/a2audit): a test suite for memory banks and various other behaviors.
 
 # Protected disks
 
