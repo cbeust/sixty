@@ -4,7 +4,7 @@
 
 An Apple ][ emulator written in Kotlin.
 
-Very much a work in progress.
+Very much a work in progress, and I ended up writing [another Apple ][ emulator in Rust](https://github.com/cbeust/maple-2), which pushed further than this emulator did.
 
 # Goals
 
